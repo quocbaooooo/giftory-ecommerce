@@ -151,8 +151,20 @@ import { Product, Category } from '../../../core/models';
             </div>
 
             <div class="space-y-1.5">
-              <label class="text-xs font-bold text-giftory-ink">Link Ảnh chính (Cloudinary / CDN)</label>
-              <input type="text" formControlName="imageUrl" placeholder="https://images.unsplash.com/..." class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]" />
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-giftory-ink">Ảnh sản phẩm (Cloudinary / CDN)</label>
+                <label class="cursor-pointer text-[11px] font-bold text-[#7C3AED] hover:underline flex items-center gap-1 bg-[#7C3AED]/10 px-2 py-0.5 rounded-lg transition-all">
+                  <span class="material-symbols-outlined text-[14px]">cloud_upload</span>
+                  <span>{{ isUploading() ? 'Đang tải lên...' : 'Tải ảnh từ máy' }}</span>
+                  <input type="file" accept="image/*" (change)="onFileSelected($event)" class="hidden" [disabled]="isUploading()" />
+                </label>
+              </div>
+              <div class="flex gap-2 items-center">
+                <input type="text" formControlName="imageUrl" placeholder="https://images.unsplash.com/... hoặc tải ảnh lên" class="flex-1 px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]" />
+                @if (productForm.get('imageUrl')?.value) {
+                  <img [src]="productForm.get('imageUrl')?.value" alt="Preview" class="w-10 h-10 rounded-xl object-cover border border-giftory-border shadow-sm shrink-0" />
+                }
+              </div>
             </div>
 
             <div class="space-y-1.5">
@@ -199,6 +211,7 @@ export class AdminProductsComponent implements OnInit {
   searchQuery = '';
   isModalOpen = signal<boolean>(false);
   isSaving = signal<boolean>(false);
+  isUploading = signal<boolean>(false);
   editingProduct = signal<Product | null>(null);
 
   productForm!: FormGroup;
@@ -207,6 +220,28 @@ export class AdminProductsComponent implements OnInit {
     this.loadProducts();
     this.loadCategories();
     this.initForm();
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      this.isUploading.set(true);
+      this.adminService.uploadImage(file).subscribe({
+        next: (res: any) => {
+          this.isUploading.set(false);
+          const uploadedUrl = res?.url || res?.data?.url || (typeof res === 'string' ? res : '');
+          if (uploadedUrl) {
+            this.productForm.patchValue({ imageUrl: uploadedUrl });
+          }
+        },
+        error: (err) => {
+          this.isUploading.set(false);
+          console.error('Lỗi tải ảnh:', err);
+          alert('Không thể tải ảnh lên Cloudinary: ' + (err?.error?.message || err.message));
+        }
+      });
+    }
   }
 
   initForm() {

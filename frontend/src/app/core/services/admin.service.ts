@@ -59,4 +59,10 @@ export class AdminService {
   deleteProduct(id: string): Observable<any> {
     return this.api.delete(`products/${id}`);
   }
+
+  uploadImage(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.api.post('upload/image', formData);
+  }
 }
