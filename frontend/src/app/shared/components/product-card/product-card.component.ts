@@ -10,10 +10,13 @@ import { AuthService } from '../../../core/services/auth.service';
   selector: 'app-product-card',
   standalone: true,
   imports: [CommonModule, RouterModule],
+  host: {
+    class: 'flex flex-col h-full w-full'
+  },
   template: `
-    <article class="bg-white rounded-2xl p-4 sm:p-5 shadow-shop-card border border-[#DDD6FE]/60 hover:shadow-floating hover:border-purple-300 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
+    <article class="w-full h-full bg-white rounded-2xl p-4 sm:p-5 shadow-shop-card border border-[#DDD6FE]/60 hover:shadow-floating hover:border-purple-300 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
       <!-- Top Image with Floating Badges -->
-      <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-slate-50 mb-3.5 flex items-center justify-center">
+      <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-slate-50 mb-3.5 flex items-center justify-center shrink-0">
         <img 
           [src]="product.images && product.images.length ? product.images[0] : 'https://placehold.co/400'" 
           [alt]="product.name" 
@@ -48,7 +51,7 @@ import { AuthService } from '../../../core/services/auth.service';
 
         <!-- 3D/AR Preview Badge if Bespoke -->
         @if (product.isCustomizable) {
-          <div class="absolute bottom-2 left-2 right-2 py-1 px-2 rounded-lg bg-white/90 backdrop-blur-sm text-center shadow-sm">
+          <div class="absolute bottom-2 left-2 right-2 py-1 px-2 rounded-lg bg-white/95 backdrop-blur-sm text-center shadow-sm pointer-events-none">
             <span class="text-[11px] text-[#7C3AED] font-semibold flex items-center justify-center gap-1">
               <span class="material-symbols-outlined text-[13px]">view_in_ar</span>
               Mô phỏng 3D Khắc Laser
@@ -57,61 +60,80 @@ import { AuthService } from '../../../core/services/auth.service';
         }
       </div>
 
-      <!-- Product Meta -->
+      <!-- Product Meta Body -->
       <div class="flex-1 flex flex-col justify-between">
         <div>
-          <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
-            <span class="truncate">{{ getCategoryName() }}</span>
-            <div class="flex items-center gap-1 text-amber-500 font-semibold shrink-0">
+          <!-- Category & Rating Row: Fixed height 20px -->
+          <div class="flex items-center justify-between text-xs text-slate-500 mb-1.5 h-5 shrink-0">
+            <span class="truncate font-medium text-slate-500 max-w-[62%]">{{ getCategoryName() }}</span>
+            <div class="flex items-center gap-1 text-amber-500 font-semibold shrink-0 text-xs">
               <span class="material-symbols-outlined text-[14px]">star</span>
-              {{ product.rating || 4.9 }}
+              <span>{{ product.rating || 4.9 }}</span>
               <span class="text-slate-400 font-normal">({{ product.soldCount || 100 }}+)</span>
             </div>
           </div>
 
-          <a [routerLink]="['/products', product.slug]" class="font-semibold text-sm sm:text-base text-[#1E1B4B] hover:text-[#7C3AED] transition-colors line-clamp-2 leading-snug" [title]="product.name">
-            {{ product.name }}
-          </a>
+          <!-- Title: Standardized fixed 2-line height so 1-line and 2-line titles align perfectly -->
+          <div class="h-10 sm:h-11 mb-1 flex items-start">
+            <a [routerLink]="['/products', product.slug]" 
+               class="font-bold text-sm sm:text-base text-[#1E1B4B] hover:text-[#7C3AED] transition-colors line-clamp-2 leading-snug" 
+               [title]="product.name">
+              {{ product.name }}
+            </a>
+          </div>
         </div>
 
-        <!-- Price & Action Button -->
+        <!-- Price & Action Row: Pinned to bottom, identical vertical space across all cards -->
         <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-          <div>
+          <div class="min-w-0 flex-1">
             <div class="flex items-baseline gap-1.5 flex-wrap">
-              <span class="text-base sm:text-lg font-bold text-[#7C3AED]">
+              <span class="text-base sm:text-lg font-bold text-[#7C3AED] leading-none">
                 {{ (product.salePrice && product.salePrice > 0 ? product.salePrice : product.price) | number:'1.0-0' }}đ
               </span>
               @if (product.salePrice && product.salePrice > 0 && product.salePrice < product.price) {
-                <span class="text-xs text-slate-400 line-through">
+                <span class="text-xs text-slate-400 line-through leading-none">
                   {{ product.price | number:'1.0-0' }}đ
                 </span>
               }
             </div>
-            @if (product.isCustomizable) {
-              <div class="text-[10px] text-emerald-600 font-medium">Cọc 50% chỉ từ {{ ((product.salePrice || product.price) * 0.5) | number:'1.0-0' }}đ</div>
-            }
+            <!-- Subtitle / Deposit guarantee row: Always reserved 18px height -->
+            <div class="h-4.5 min-h-[18px] flex items-center mt-1">
+              @if (product.isCustomizable) {
+                <span class="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5 truncate">
+                  <span class="material-symbols-outlined text-[12px]">payments</span>
+                  Cọc 50% chỉ từ {{ ((product.salePrice || product.price) * 0.5) | number:'1.0-0' }}đ
+                </span>
+              } @else {
+                <span class="text-[10px] text-slate-400 font-medium flex items-center gap-0.5 truncate">
+                  <span class="material-symbols-outlined text-[12px] text-emerald-500">verified</span>
+                  Chính hãng • Giao nhanh
+                </span>
+              }
+            </div>
           </div>
 
-          <!-- Quick Action Button -->
-          @if (product.isCustomizable) {
-            <a 
-              [routerLink]="['/custom-studio']"
-              [queryParams]="{ productId: product._id }"
-              class="px-3 py-1.5 rounded-xl bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#7C3AED] font-semibold text-xs flex items-center gap-1 transition-all active:scale-95 shrink-0"
-              title="Mở Studio chế tác cá nhân"
-            >
-              <span class="material-symbols-outlined text-[15px]">draw</span>
-              <span>Chế tác</span>
-            </a>
-          } @else {
-            <button 
-              (click)="quickAddToCart($event)"
-              class="w-8 h-8 rounded-xl bg-[#EDE9FE] hover:bg-[#7C3AED] text-[#7C3AED] hover:text-white flex items-center justify-center transition-all active:scale-95 shrink-0"
-              title="Thêm nhanh vào giỏ"
-            >
-              <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-            </button>
-          }
+          <!-- Quick Action Button: Standardized height (h-9) -->
+          <div class="shrink-0 flex items-center">
+            @if (product.isCustomizable) {
+              <a 
+                [routerLink]="['/custom-studio']"
+                [queryParams]="{ productId: product._id }"
+                class="h-9 px-3 rounded-xl bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#7C3AED] font-semibold text-xs flex items-center gap-1 transition-all active:scale-95 shadow-sm"
+                title="Mở Studio chế tác cá nhân"
+              >
+                <span class="material-symbols-outlined text-[15px]">draw</span>
+                <span>Chế tác</span>
+              </a>
+            } @else {
+              <button 
+                (click)="quickAddToCart($event)"
+                class="w-9 h-9 rounded-xl bg-[#EDE9FE] hover:bg-[#7C3AED] text-[#7C3AED] hover:text-white flex items-center justify-center transition-all active:scale-95 shadow-sm"
+                title="Thêm nhanh vào giỏ"
+              >
+                <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
+              </button>
+            }
+          </div>
         </div>
       </div>
     </article>
