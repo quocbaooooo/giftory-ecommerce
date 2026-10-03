@@ -3,6 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+import { environment } from '../../../environments/environment';
+
 export interface ApiResponse<T = any> {
   success: boolean;
   statusCode: number;
@@ -15,7 +17,7 @@ export interface ApiResponse<T = any> {
   providedIn: 'root'
 })
 export class ApiService {
-  private readonly baseUrl = 'http://localhost:3000/api';
+  private readonly baseUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 

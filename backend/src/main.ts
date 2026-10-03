@@ -16,7 +16,14 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: [frontendUrl, 'http://localhost:4200', 'http://127.0.0.1:4200'],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl) or localhost, vercel.app, or configured FRONTEND_URL
+      if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('vercel.app') || origin === frontendUrl) {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    },
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type,Accept,Authorization',
