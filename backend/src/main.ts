@@ -14,19 +14,32 @@ async function bootstrap() {
   const port = configService.get<number>('PORT', 3000);
   const frontendUrl = configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
 
-  // Enable CORS
+  // Bulletproof CORS middleware for Vercel and local origins
+  app.use((req: any, res: any, next: any) => {
+    const origin = req.headers.origin;
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Accept,Authorization,X-Requested-With,Origin');
+    }
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(204);
+    }
+    next();
+  });
+
+  // Enable NestJS CORS
   app.enableCors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl) or localhost, vercel.app, or configured FRONTEND_URL
-      if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('vercel.app') || origin === frontendUrl) {
-        callback(null, true);
-      } else {
-        callback(null, true);
-      }
-    },
+    origin: [
+      'https://giftory-ecommerce.vercel.app',
+      'http://localhost:4200',
+      'http://127.0.0.1:4200',
+      frontendUrl,
+    ],
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type,Accept,Authorization',
+    allowedHeaders: 'Content-Type,Accept,Authorization,X-Requested-With,Origin',
   });
 
   // Global Prefix
