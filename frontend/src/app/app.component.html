@@ -1,0 +1,110 @@
+<!-- ADMIN PORTAL (When inside /admin routes) -->
+<ng-container *ngIf="isAdminRoute()">
+  <router-outlet></router-outlet>
+</ng-container>
+
+<!-- CUSTOMER STOREFRONT LAYOUT (Matching Stitch Project 6741314524921336108) -->
+<ng-container *ngIf="!isAdminRoute()">
+  <div class="min-h-screen bg-[#F3EBF9] font-sans text-giftory-ink selection:bg-[#7C3AED] selection:text-white relative">
+    <!-- 8-Icon Fixed Vertical Sidebar Rail on the Left Edge (Always Visible) -->
+    <app-sidebar-rail></app-sidebar-rail>
+
+    <!-- Main Content Canvas (Offset by pl-16 md:pl-20 to clear sidebar rail) -->
+    <div class="pl-16 md:pl-20 min-h-screen flex flex-col">
+      <!-- Optional Subtle Top Announcement Bar -->
+      <div class="bg-gradient-to-r from-[#7C3AED] via-[#9333EA] to-[#EC4899] text-white text-[11px] font-semibold py-1.5 px-6 text-center tracking-wide flex items-center justify-between shadow-xs">
+        <div class="flex items-center gap-2 mx-auto">
+          <span class="material-symbols-outlined text-sm">stars</span>
+          <span>Hệ sinh thái Quà Tặng Bespoke Giftory • Miễn phí vận chuyển cho đơn từ 499k & Tặng kèm thiệp chúc mừng viết tay độc bản</span>
+        </div>
+        <a routerLink="/loyalty" class="underline hover:text-white/80 text-[10px] font-bold hidden lg:inline">
+          Nhận 100 điểm thưởng
+        </a>
+      </div>
+
+      <!-- Main Router Outlet Page View -->
+      <main class="flex-1 w-full p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
+        <router-outlet></router-outlet>
+      </main>
+
+      <!-- Stitch Storefront Footer -->
+      <footer class="bg-white/80 backdrop-blur-md border-t border-[#DDD6FE] mt-16 pt-12 pb-8">
+        <div class="max-w-7xl mx-auto px-6 space-y-12">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- Col 1: Brand Info -->
+            <div class="space-y-4">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl bg-[#7C3AED] text-white flex items-center justify-center font-display font-black text-lg">
+                  G
+                </div>
+                <span class="font-display font-black text-xl text-giftory-ink">Giftory</span>
+              </div>
+              <p class="text-xs text-giftory-ink/60 leading-relaxed">
+                Hệ sinh thái thương mại điện tử quà tặng cá nhân hóa cao cấp. Tự tay thiết kế, khắc laser độc bản và đóng gói nơ lụa trao gửi yêu thương.
+              </p>
+              <div class="flex items-center gap-3 text-giftory-ink/50 text-xs">
+                <span class="material-symbols-outlined text-sm text-[#7C3AED]">pin_drop</span>
+                <span>Quận 1, TP. Hồ Chí Minh & Hoàn Kiếm, Hà Nội</span>
+              </div>
+            </div>
+
+            <!-- Col 2: Về Giftory -->
+            <div class="space-y-3">
+              <h4 class="text-xs font-bold text-giftory-ink uppercase tracking-wider">Khám Phá & Trải Nghiệm</h4>
+              <ul class="space-y-2 text-xs text-giftory-ink/70">
+                <li><a routerLink="/products" class="hover:text-[#7C3AED] transition">Tất Cả Sản Phẩm</a></li>
+                <li><a routerLink="/custom-studio" class="hover:text-[#7C3AED] transition">Custom Studio Bespoke</a></li>
+                <li><a routerLink="/flash-sale" class="hover:text-[#7C3AED] transition">Flash Sale Khung Giờ Vàng</a></li>
+                <li><a routerLink="/shopping-guide" class="hover:text-[#7C3AED] transition">Cẩm Nang Mua Hàng</a></li>
+                <li><a routerLink="/loyalty" class="hover:text-[#7C3AED] transition">Giftory Rewards Club</a></li>
+              </ul>
+            </div>
+
+            <!-- Col 3: Chính Sách Quà Tặng -->
+            <div class="space-y-3">
+              <h4 class="text-xs font-bold text-giftory-ink uppercase tracking-wider">Chính Sách & Hỗ Trợ</h4>
+              <ul class="space-y-2 text-xs text-giftory-ink/70">
+                <li><a routerLink="/shopping-guide" class="hover:text-[#7C3AED] transition">Chính sách cọc 50% Bespoke</a></li>
+                <li><a routerLink="/orders" class="hover:text-[#7C3AED] transition">Tra cứu tiến độ đơn hàng</a></li>
+                <li><a routerLink="/shopping-guide" class="hover:text-[#7C3AED] transition">Quy chuẩn đóng gói quà tặng</a></li>
+                <li><a routerLink="/shopping-guide" class="hover:text-[#7C3AED] transition">Đổi trả & bảo hành thủ công</a></li>
+              </ul>
+            </div>
+
+            <!-- Col 4: Cam Kết Chất Lượng -->
+            <div class="space-y-3">
+              <h4 class="text-xs font-bold text-giftory-ink uppercase tracking-wider">Thanh Toán An Toàn</h4>
+              <p class="text-xs text-giftory-ink/60">Hỗ trợ thanh toán bảo mật chuẩn ngân hàng:</p>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2.5 py-1 rounded bg-white border border-[#DDD6FE] text-[10px] font-bold text-[#7C3AED]">VietQR</span>
+                <span class="px-2.5 py-1 rounded bg-white border border-[#DDD6FE] text-[10px] font-bold text-pink-600">MoMo</span>
+                <span class="px-2.5 py-1 rounded bg-white border border-[#DDD6FE] text-[10px] font-bold text-gray-700">COD Tiền Mặt</span>
+              </div>
+              <div class="pt-2 text-[11px] text-giftory-ink/50">
+                Hotline xưởng quà: <span class="font-bold text-giftory-ink">1900 888 999</span> (8h00 - 22h00)
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-8 border-t border-[#DDD6FE]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-[11px] text-giftory-ink/50">
+            <p>© 2026 Giftory Inc. Thiết kế & phát triển dựa trên Stitch Project 6741314524921336108.</p>
+            <div class="flex items-center gap-4">
+              <a routerLink="/shopping-guide" class="hover:underline">Điều khoản dịch vụ</a>
+              <a routerLink="/shopping-guide" class="hover:underline">Chính sách bảo mật</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- AI Concierge Floating Assistant & Zalo (Bottom Right as in Screenshot) -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-center gap-3">
+      <!-- AI Concierge Sparkle Button -->
+      <app-ai-concierge></app-ai-concierge>
+      <!-- Quick Zalo Button -->
+      <a href="https://zalo.me" target="_blank" class="w-12 h-12 rounded-full bg-[#0068FF] text-white flex items-center justify-center font-bold text-xs shadow-lg hover:scale-105 transition-transform cursor-pointer" title="Chat Zalo hỗ trợ tức thì">
+        Zalo
+      </a>
+    </div>
+  </div>
+</ng-container>

@@ -1,0 +1,41 @@
+export enum UserRole {
+  CUSTOMER = 'CUSTOMER',
+  ADMIN = 'ADMIN'
+}
+
+export enum OrderStatus {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  PROCESSING = 'PROCESSING',
+  SHIPPING = 'SHIPPING',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED'
+}
+
+export enum PaymentStatus {
+  UNPAID = 'UNPAID',
+  PARTIALLY_PAID_DEPOSIT_50 = 'PARTIALLY_PAID_DEPOSIT_50',
+  PAID_FULL = 'PAID_FULL',
+  REFUNDED = 'REFUNDED'
+}
+
+export enum FulfillmentStatus {
+  AWAITING_DEPOSIT = 'AWAITING_DEPOSIT',
+  AT_WORKSHOP = 'AT_WORKSHOP',
+  QUALITY_INSPECTION = 'QUALITY_INSPECTION',
+  PACKAGED = 'PACKAGED',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED'
+}
+
+export enum PaymentMode {
+  DEPOSIT_50 = 'DEPOSIT_50',
+  FULL_PAYMENT = 'FULL_PAYMENT'
+}
+
+export enum PaymentMethod {
+  VIETQR = 'VIETQR',
+  VNPAY = 'VNPAY',
+  MOMO = 'MOMO',
+  COD = 'COD'
+}

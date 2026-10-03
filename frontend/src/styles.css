@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-page: #E9DCF8;
+  --apple-ink: #1E1B4B;
+  --regal-purple: #7C3AED;
+  --purple-hover: #6D28D9;
+  --purple-light: #DDD6FE;
+  --border-subtle: #DDD6FE;
+  --pure-white: #ffffff;
+  --success-jade: #10B981;
+}
+
+body {
+  background-color: #E9DCF8;
+  color: #1E1B4B;
+  font-family: 'Plus Jakarta Sans', Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Material Symbols Outlined Icon variations */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.fill-1 {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Scrollbar utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Single Row Infinite Wave Marquee */
+@keyframes singleStreamScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-single-marquee {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  animation: singleStreamScroll 40s linear infinite;
+}
+
+.animate-single-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Vertical undulating wave bobbing animations from Stitch */
+@keyframes waveBob1 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(1.2deg); }
+}
+@keyframes waveBob2 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(8px) rotate(-1.5deg); }
+}
+@keyframes waveBob3 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(-1deg); }
+}
+@keyframes waveBob4 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(7px) rotate(1.3deg); }
+}
+
+.wave-item-1 { animation: waveBob1 4.2s ease-in-out infinite; }
+.wave-item-2 { animation: waveBob2 3.6s ease-in-out infinite; }
+.wave-item-3 { animation: waveBob3 4.8s ease-in-out infinite; }
+.wave-item-4 { animation: waveBob4 3.9s ease-in-out infinite; }

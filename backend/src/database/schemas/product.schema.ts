@@ -1,0 +1,105 @@
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
+
+export type ProductDocument = Product & Document;
+
+@Schema()
+export class ProductVariant {
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: true })
+  price: number;
+
+  @Prop({ default: 100 })
+  stock: number;
+
+  @Prop({ default: '' })
+  sku: string;
+
+  @Prop({ default: '' })
+  image: string;
+}
+
+export const ProductVariantSchema = SchemaFactory.createForClass(ProductVariant);
+
+@Schema()
+export class ProductSpec {
+  @Prop({ required: true })
+  key: string;
+
+  @Prop({ required: true })
+  value: string;
+}
+
+export const ProductSpecSchema = SchemaFactory.createForClass(ProductSpec);
+
+@Schema({ timestamps: true })
+export class Product {
+  @Prop({ required: true, trim: true })
+  name: string;
+
+  @Prop({ required: true, unique: true, lowercase: true, trim: true })
+  slug: string;
+
+  @Prop({ required: true })
+  description: string;
+
+  @Prop({ type: [ProductSpecSchema], default: [] })
+  specs: ProductSpec[];
+
+  @Prop({ required: true, min: 0 })
+  price: number;
+
+  @Prop({ default: 0, min: 0 })
+  salePrice: number;
+
+  @Prop({ type: Types.ObjectId, ref: 'Category', required: true })
+  category: Types.ObjectId;
+
+  @Prop({ type: [String], default: [] })
+  images: string[];
+
+  @Prop({ type: [ProductVariantSchema], default: [] })
+  variants: ProductVariant[];
+
+  @Prop({ default: 50, min: 0 })
+  stock: number;
+
+  @Prop({ default: '' })
+  sku: string;
+
+  @Prop({ type: [String], default: [] })
+  tags: string[];
+
+  @Prop({ default: false })
+  isCustomizable: boolean; // Bespoke product (triggers 50% deposit)
+
+  @Prop({ default: false })
+  isFlashSale: boolean;
+
+  @Prop({ default: 0 })
+  flashSaleDiscountPercent: number;
+
+  @Prop({ default: 4.9 })
+  rating: number;
+
+  @Prop({ default: 0 })
+  reviewCount: number;
+
+  @Prop({ default: 0 })
+  soldCount: number;
+
+  @Prop({ default: 'ACTIVE', enum: ['ACTIVE', 'INACTIVE', 'DRAFT'] })
+  status: string;
+
+  @Prop({ default: 0 })
+  customBaseFee: number; // e.g., 30000 VND for laser engraving / UV printing
+}
+
+export const ProductSchema = SchemaFactory.createForClass(Product);
+ProductSchema.index({ slug: 1 });
+ProductSchema.index({ category: 1 });
+ProductSchema.index({ isCustomizable: 1 });
+ProductSchema.index({ isFlashSale: 1 });
+ProductSchema.index({ name: 'text', description: 'text', tags: 'text' });
