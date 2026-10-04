@@ -604,14 +604,15 @@ BẮT BUỘC trả về DUY NHẤT một chuỗi JSON thuần túy (không dùng
     let budget: number | undefined;
     let preferences: string | undefined;
 
-    // Recipient
-    if (cleanText.includes('me') || cleanText.includes('me yeu')) recipient = 'Mẹ';
-    else if (cleanText.includes('bo') || cleanText.includes('ba') || cleanText.includes('cha')) recipient = 'Bố';
-    else if (cleanText.includes('nguoi yeu') || cleanText.includes('ban gai') || cleanText.includes('crush') || cleanText.includes('vo')) recipient = 'Người yêu';
-    else if (cleanText.includes('ban trai') || cleanText.includes('chong')) recipient = 'Bạn trai';
-    else if (cleanText.includes('ban than') || cleanText.includes('ban be')) recipient = 'Bạn bè';
-    else if (cleanText.includes('sep') || cleanText.includes('dong nghiep')) recipient = 'Đồng nghiệp / Sếp';
-    else if (cleanText.includes('thay') || cleanText.includes('co giao')) recipient = 'Thầy cô';
+    // Recipient (dùng regex từ nguyên vẹn để tránh từ như 'bo cap' hay 'combo' bị khớp nhầm 'bo')
+    if (/\b(nguoi yeu|ban gai|crush|vo)\b/.test(cleanText)) recipient = 'Người yêu';
+    else if (/\b(ban trai|chong)\b/.test(cleanText)) recipient = 'Bạn trai';
+    else if (/\b(me|me yeu|ma)\b/.test(cleanText)) recipient = 'Mẹ';
+    else if (/\b(bo|ba|cha|bo yeu)\b/.test(cleanText) && !cleanText.includes('bo cap') && !cleanText.includes('combo')) recipient = 'Bố';
+    else if (/\b(ban than|ban be|ban)\b/.test(cleanText)) recipient = 'Bạn bè';
+    else if (/\b(sep|dong nghiep)\b/.test(cleanText)) recipient = 'Đồng nghiệp / Sếp';
+    else if (/\b(thay|co giao|thay co)\b/.test(cleanText)) recipient = 'Thầy cô';
+    else if (/\b(be|be yeu|con gai|con trai)\b/.test(cleanText)) recipient = 'Bé yêu';
 
     // Occasion
     if (cleanText.includes('sinh nhat')) occasion = 'Sinh nhật';
