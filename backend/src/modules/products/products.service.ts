@@ -5,6 +5,7 @@ import { Product, ProductDocument } from '../../database/schemas/product.schema'
 import { Category, CategoryDocument } from '../../database/schemas/category.schema';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductQueryDto } from './dto/product-query.dto';
+import { buildVietnameseRegex } from '../../common/utils/vietnamese.util';
 
 @Injectable()
 export class ProductsService {
@@ -16,14 +17,43 @@ export class ProductsService {
   async findAll(query: ProductQueryDto) {
     const filter: any = { status: 'ACTIVE' };
 
-    // Search by Vietnamese keyword in name, description, or tags
+    // Search by Vietnamese keyword in name, description, or tags with unaccented support
     if (query.search && query.search.trim()) {
-      const searchRegex = new RegExp(query.search.trim(), 'i');
+      const searchRegex = buildVietnameseRegex(query.search.trim());
       filter.$or = [
         { name: searchRegex },
         { description: searchRegex },
         { tags: searchRegex }
       ];
+    }
+
+    // Occasion filter (Sinh nhật, Kỷ niệm, Tri ân, Tình yêu, Tân gia, Giáng sinh...)
+    if (query.occasion && query.occasion.trim()) {
+      const occasionRegex = buildVietnameseRegex(query.occasion.trim());
+      filter.$and = filter.$and || [];
+      filter.$and.push({
+        $or: [{ tags: occasionRegex }, { description: occasionRegex }, { name: occasionRegex }]
+      });
+    }
+
+    // Recipient filter (Mẹ, Bố, Người yêu, Bạn bè, Đồng nghiệp, Sếp...)
+    if (query.recipient && query.recipient.trim()) {
+      const recipientRegex = buildVietnameseRegex(query.recipient.trim());
+      filter.$and = filter.$and || [];
+      filter.$and.push({
+        $or: [{ tags: recipientRegex }, { description: recipientRegex }, { name: recipientRegex }]
+      });
+    }
+
+    // Tags filter
+    if (query.tags && query.tags.trim()) {
+      const tagRegex = buildVietnameseRegex(query.tags.trim());
+      filter.tags = tagRegex;
+    }
+
+    // Minimum rating filter
+    if (query.minRating !== undefined && !isNaN(Number(query.minRating))) {
+      filter.rating = { $gte: Number(query.minRating) };
     }
 
     // Category filter (support slug or ObjectId)
@@ -60,6 +90,8 @@ export class ProductsService {
     if (query.sort === 'price_asc') sortOption = { price: 1 };
     else if (query.sort === 'price_desc') sortOption = { price: -1 };
     else if (query.sort === 'popular') sortOption = { soldCount: -1, rating: -1 };
+    else if (query.sort === 'rating') sortOption = { rating: -1, reviewCount: -1 };
+    else if (query.sort === 'newest') sortOption = { createdAt: -1 };
 
     const page = Math.max(1, Number(query.page || 1));
     const limit = Math.max(1, Math.min(100, Number(query.limit || 12)));
@@ -85,6 +117,67 @@ export class ProductsService {
         totalPages: Math.ceil(total / limit)
       }
     };
+  }
+
+  async getSearchSuggestions(keyword: string) {
+    if (!keyword || keyword.trim().length < 2) {
+      return { products: [], keywords: [] };
+    }
+
+    const regex = buildVietnameseRegex(keyword.trim());
+    
+    // Find up to 5 matching products
+    const products = await this.productModel
+      .find({
+        status: 'ACTIVE',
+        $or: [{ name: regex }, { tags: regex }]
+      })
+      .select('name slug price salePrice images rating isCustomizable category')
+      .populate('category', 'name slug')
+      .sort({ soldCount: -1, rating: -1 })
+      .limit(5)
+      .exec();
+
+    // Suggest 3-5 popular keywords/tags matching
+    const sampleKeywords = [
+      'Bình giữ nhiệt khắc tên',
+      'Hộp quà sinh nhật',
+      'Bút ký kim loại cao cấp',
+      'Ví da khắc tên',
+      'Đèn ngủ 3D khắc chân dung',
+      'Cốc sứ in hình',
+      'Sổ tay bìa da khắc laser',
+      'Set quà tặng doanh nghiệp',
+      'Vòng tay handmade'
+    ];
+
+    const matchingKeywords = sampleKeywords
+      .filter(k => regex.test(k))
+      .slice(0, 4);
+
+    // If matching keywords < 3, add popular default suggestions
+    if (matchingKeywords.length < 3) {
+      for (const kw of sampleKeywords) {
+        if (!matchingKeywords.includes(kw)) {
+          matchingKeywords.push(kw);
+          if (matchingKeywords.length >= 3) break;
+        }
+      }
+    }
+
+    return {
+      products,
+      keywords: matchingKeywords
+    };
+  }
+
+  async getBestSellers(limit = 4) {
+    return this.productModel
+      .find({ status: 'ACTIVE' })
+      .populate('category', 'name slug emoji icon')
+      .sort({ soldCount: -1, rating: -1, createdAt: -1 })
+      .limit(Number(limit) || 4)
+      .exec();
   }
 
   async findBySlug(slug: string) {

@@ -37,6 +37,28 @@ export class ProductQueryDto {
   @Min(0)
   maxPrice?: number;
 
+  @ApiPropertyOptional({ description: 'Dịp tặng (Sinh nhật, Kỷ niệm, Tri ân, Tình yêu, Tân gia...)' })
+  @IsOptional()
+  @IsString()
+  occasion?: string;
+
+  @ApiPropertyOptional({ description: 'Đối tượng người nhận (Mẹ, Bố, Người yêu, Bạn bè, Sếp...)' })
+  @IsOptional()
+  @IsString()
+  recipient?: string;
+
+  @ApiPropertyOptional({ description: 'Đánh giá tối thiểu (ví dụ: 4 hoặc 5 sao)' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  minRating?: number;
+
+  @ApiPropertyOptional({ description: 'Tag sản phẩm' })
+  @IsOptional()
+  @IsString()
+  tags?: string;
+
   @ApiPropertyOptional({ description: 'Sắp xếp: latest, price_asc, price_desc, popular' })
   @IsOptional()
   @IsString()

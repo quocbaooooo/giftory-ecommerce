@@ -21,7 +21,16 @@ export class ProductService {
     return this.api.get<Product[]>('products/flash-sale');
   }
 
+  getSearchSuggestions(keyword: string): Observable<{ products: any[]; keywords: string[] }> {
+    return this.api.get<{ products: any[]; keywords: string[] }>('products/search-suggest', { keyword });
+  }
+
+  getBestSellers(limit = 4): Observable<Product[]> {
+    return this.api.get<Product[]>('products/best-sellers', { limit });
+  }
+
   getCategories(): Observable<Category[]> {
     return this.api.get<Category[]>('categories');
   }
 }
+

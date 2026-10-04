@@ -16,13 +16,26 @@ import { Product, ProductVariant } from '../../../core/models';
     @if (product(); as prod) {
       <div class="max-w-7xl mx-auto px-4 md:px-8 py-8">
         <!-- Breadcrumb -->
-        <div class="flex items-center gap-2 text-xs text-slate-500 mb-6">
+        <div class="flex items-center gap-2 text-xs text-slate-500 mb-4">
           <a routerLink="/" class="hover:text-[#7C3AED]">Trang chủ</a>
           <span>/</span>
           <a routerLink="/products" class="hover:text-[#7C3AED]">Sản phẩm</a>
           <span>/</span>
           <span class="text-[#1E1B4B] font-semibold truncate">{{ prod.name }}</span>
         </div>
+
+        <!-- AI Recommendation Referral Banner (US-PD-05.3) -->
+        @if (isFromAiRecommendation()) {
+          <div class="mb-6 p-3.5 rounded-2xl bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 border border-purple-200/90 text-[#7C3AED] flex items-center justify-between shadow-2xs">
+            <div class="flex items-center gap-2.5 text-xs font-semibold">
+              <span class="material-symbols-outlined text-[20px] text-pink-500 animate-spin">auto_awesome</span>
+              <span>Món quà này được <strong>Trợ lý Giftory AI</strong> gợi ý riêng dựa theo sở thích và ngân sách của bạn!</span>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-200/80 font-bold uppercase tracking-wider text-purple-800">
+              AI Match
+            </span>
+          </div>
+        }
 
         <!-- Main Product Section: 6 Cols Left (Gallery) / 6 Cols Right (Details) -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 bg-white rounded-3xl p-6 md:p-8 shadow-shop-card border border-[#DDD6FE] mb-12">
@@ -233,8 +246,18 @@ export class ProductDetailComponent implements OnInit {
   activeImage = signal<string>('');
   selectedVariant = signal<string>('Tiêu chuẩn');
   quantity = signal<number>(1);
+  isFromAiRecommendation = signal<boolean>(false);
 
   ngOnInit(): void {
+    // Track AI Recommendation referral (US-PD-05.3)
+    this.route.queryParams.subscribe(qParams => {
+      if (qParams['ref'] === 'ai_recommendation') {
+        this.isFromAiRecommendation.set(true);
+        const sessionId = qParams['session_id'];
+        console.log(`[Analytics Event] Product viewed via AI Recommendation. Session: ${sessionId}`);
+      }
+    });
+
     this.route.paramMap.subscribe(params => {
       const slug = params.get('slug');
       if (slug) {

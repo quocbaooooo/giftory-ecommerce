@@ -12,6 +12,7 @@ import { LoyaltyModule } from './modules/loyalty/loyalty.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { AiChatbotModule } from './modules/ai-chatbot/ai-chatbot.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { AdminModule } from './modules/admin/admin.module';
     WishlistModule,
     CloudinaryModule,
     AdminModule,
+    AiChatbotModule,
   ],
 })
 export class AppModule {}

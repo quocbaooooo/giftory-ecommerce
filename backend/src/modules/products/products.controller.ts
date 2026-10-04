@@ -35,6 +35,18 @@ export class ProductsController {
     return this.productsService.getFlashSaleProducts();
   }
 
+  @Get('search-suggest')
+  @ApiOperation({ summary: 'Gợi ý từ khóa và sản phẩm tìm kiếm thời gian thực (US-PD-01)' })
+  async getSearchSuggestions(@Query('keyword') keyword: string) {
+    return this.productsService.getSearchSuggestions(keyword || '');
+  }
+
+  @Get('best-sellers')
+  @ApiOperation({ summary: 'Lấy danh sách sản phẩm bán chạy nhất làm fallback (US-PD-01.3)' })
+  async getBestSellers(@Query('limit') limit?: number) {
+    return this.productsService.getBestSellers(limit ? Number(limit) : 4);
+  }
+
   @Get('slug/:slug')
   @ApiOperation({ summary: 'Lấy chi tiết sản phẩm theo slug' })
   async findBySlug(@Param('slug') slug: string) {
