@@ -12,10 +12,8 @@ import { CartService } from '../../../core/services/cart.service';
     <aside class="fixed left-0 top-0 bottom-0 h-screen w-16 md:w-20 bg-white/95 backdrop-blur-md border-r border-[#DDD6FE] z-50 flex flex-col justify-between items-center py-4 shadow-sm select-none">
       <!-- Top Section: Brand Icon Logo (Matching Stitch) -->
       <div class="flex flex-col items-center flex-shrink-0 pt-1">
-        <a routerLink="/" class="w-11 h-11 rounded-2xl flex items-center justify-center hover:scale-105 transition-transform cursor-pointer overflow-hidden p-0.5" title="Giftory Home">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#7C3AED] via-[#9333EA] to-[#EC4899] text-white flex items-center justify-center font-display font-black text-xl shadow-md">
-            G
-          </div>
+        <a routerLink="/" class="w-11 h-11 rounded-2xl flex items-center justify-center hover:scale-110 transition-transform cursor-pointer overflow-hidden p-0.5" title="Giftory Home">
+          <img src="/logo.png" alt="Giftory Logo" class="w-10 h-10 object-contain drop-shadow-sm" />
         </a>
       </div>
 

@@ -14,9 +14,7 @@ import { AuthService } from '../../core/services/auth.service';
         <div class="space-y-8">
           <!-- Admin Brand -->
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-giftory-primary text-white flex items-center justify-center font-display font-black text-xl shadow">
-              G
-            </div>
+            <img src="/logo.png" alt="Giftory Logo" class="w-10 h-10 object-contain drop-shadow-sm" />
             <div>
               <h2 class="font-display font-black text-lg text-giftory-ink leading-tight">Giftory Admin</h2>
               <span class="text-[10px] font-bold text-giftory-primary uppercase tracking-widest block">Xưởng Quà & Vận Hành</span>

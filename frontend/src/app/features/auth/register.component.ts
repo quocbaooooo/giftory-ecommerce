@@ -13,10 +13,8 @@ import { AuthService } from '../../core/services/auth.service';
       <div class="max-w-md w-full bg-white rounded-3xl p-8 border border-giftory-border shadow-xl space-y-6">
         <!-- Logo & Header (Stitch Screen 15677325011445543384) -->
         <div class="text-center space-y-2">
-          <a routerLink="/" class="inline-flex items-center gap-2 justify-center">
-            <span class="w-10 h-10 rounded-2xl bg-giftory-primary text-white flex items-center justify-center font-display font-black text-xl shadow">
-              G
-            </span>
+          <a routerLink="/" class="inline-flex items-center gap-3 justify-center">
+            <img src="/logo.png" alt="Giftory Logo" class="w-10 h-10 object-contain drop-shadow-sm" />
             <span class="font-display font-black text-2xl text-giftory-ink tracking-tight">Giftory</span>
           </a>
           <h2 class="text-xl font-bold text-giftory-ink">Đăng Ký Hội Viên Mới</h2>

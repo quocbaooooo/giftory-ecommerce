@@ -11,8 +11,8 @@ import { Router } from '@angular/router';
     <div class="relative z-10 w-full max-w-2xl mx-auto px-4">
       <form (ngSubmit)="onSearch()" class="relative flex items-center bg-white rounded-full shadow-pill border border-[#DDD6FE] hover:border-purple-300 transition-all p-1.5 pl-3">
         <!-- Giftory Brand Emblem -->
-        <div class="w-9 h-9 flex items-center justify-center mr-2 flex-shrink-0 bg-transparent border-none">
-          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHcYvZgRtmgxBU2zYJxnQukzcJZ-J3IwU5MKxxBhNwSlFq3lwWF4L4O-3_KD2sqL9MorD2OoojeNe6kMlpOqAz5DTUVInTnIicRXM4pw0ws7e8Xd6rLHZanc99abr7NcHKvGVue1lIn4JVsGsBN2Kyga2YTlq6G2StEIvP1yDJ_kCOap3pN3hiJKoItEyMUtCLziFRxs_iA0aFOpmufoFMXl-tCoVThItiV-A2BpGzGQ2TkTPmmGGkrE2vOE6_tUwT0Zg" alt="Giftory" class="w-full h-full object-contain mix-blend-multiply">
+        <div class="w-8 h-8 flex items-center justify-center mr-2 flex-shrink-0 bg-transparent border-none">
+          <img src="/logo.png" alt="Giftory" class="w-full h-full object-contain">
         </div>
 
         <span class="material-symbols-outlined text-slate-400 text-2xl mr-2 select-none">search</span>

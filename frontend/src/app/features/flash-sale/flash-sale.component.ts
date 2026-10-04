@@ -66,7 +66,7 @@ interface VoucherItem {
           <div class="flex-1 text-center lg:text-left space-y-4">
             <div class="flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
               <div class="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-white border border-[#DDD6FE] shadow-xs">
-                <span class="w-2 h-2 rounded-full bg-[#7C3AED]"></span>
+                <img src="/logo.png" alt="Giftory" class="w-4 h-4 object-contain" />
                 <span class="text-xs font-bold text-[#7C3AED]">Giftory Official Deal Hub</span>
               </div>
               <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F43F5E] text-white shadow-xs text-xs font-bold uppercase tracking-wider">
