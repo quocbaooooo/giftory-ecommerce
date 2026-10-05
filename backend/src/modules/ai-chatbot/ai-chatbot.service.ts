@@ -61,9 +61,11 @@ export class AiChatbotService {
     const rawMessage = dto.message.trim();
     const cleanMessage = removeVietnameseAccents(rawMessage).toLowerCase();
 
-    // 1. Safety Guardrail: Kiểm tra từ ngữ nhạy cảm / chửi thề
+    // 1. Safety Guardrail: Kiểm tra từ ngữ nhạy cảm / chửi thề (dùng ranh giới từ \b để tránh bắt nhầm 'nguoi' thành 'ngu')
     for (const badWord of this.profanities) {
-      if (cleanMessage.includes(badWord)) {
+      const cleanBadWord = removeVietnameseAccents(badWord).toLowerCase();
+      const regex = new RegExp(`\\b${cleanBadWord}\\b`, 'i');
+      if (regex.test(cleanMessage)) {
         return {
           reply: 'Giftory luôn tôn trọng và lắng nghe bạn. Xin vui lòng sử dụng ngôn từ lịch sự để trợ lý có thể hỗ trợ bạn trải nghiệm mua sắm tốt nhất nhé ạ! ❤️',
           intent: 'SAFETY_GUARD',
