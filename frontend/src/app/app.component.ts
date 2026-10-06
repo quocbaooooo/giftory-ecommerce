@@ -25,13 +25,21 @@ export class AppComponent {
   cartService = inject(CartService);
 
   isAdminRoute = signal<boolean>(false);
+  isCustomStudioRoute = signal<boolean>(false);
   mobileMenuOpen = signal<boolean>(false);
 
   constructor() {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      this.isAdminRoute.set(path.startsWith('/admin'));
+      this.isCustomStudioRoute.set(path.startsWith('/custom-studio'));
+    }
+
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
       this.isAdminRoute.set(event.urlAfterRedirects.startsWith('/admin'));
+      this.isCustomStudioRoute.set(event.urlAfterRedirects.startsWith('/custom-studio'));
       window.scrollTo(0, 0);
     });
   }

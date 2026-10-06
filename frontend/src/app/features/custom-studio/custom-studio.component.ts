@@ -27,33 +27,44 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
   selector: 'app-custom-studio',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
+  styles: [`
+    :host {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 0%;
+      height: 100%;
+      min-height: 0;
+      width: 100%;
+      overflow: hidden;
+    }
+  `],
   template: `
-    <div class="max-w-[1600px] mx-auto px-2 sm:px-4 md:px-6 py-4 flex flex-col gap-4 min-h-[calc(100vh-80px)]">
+    <div class="w-full h-full flex flex-col gap-2 min-h-0 overflow-hidden select-none">
       
       <!-- TOP STUDIO APP BAR -->
-      <header class="bg-white rounded-2xl px-5 py-3.5 shadow-xs border border-[#DDD6FE]/70 flex flex-wrap items-center justify-between gap-3">
+      <header class="bg-white rounded-2xl px-3.5 py-2 shadow-xs border border-[#DDD6FE]/70 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
         <!-- Left: Product switcher & Breadcrumb -->
-        <div class="flex items-center gap-3">
-          <a routerLink="/products" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-purple-100 text-slate-700 hover:text-[#7C3AED] flex items-center justify-center transition" title="Quay lại danh mục">
-            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        <div class="flex items-center gap-2.5">
+          <a routerLink="/products" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-100 hover:bg-purple-100 text-slate-700 hover:text-[#7C3AED] flex items-center justify-center transition" title="Quay lại danh mục">
+            <span class="material-symbols-outlined text-[17px]">arrow_back</span>
           </a>
 
           <div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-[#7C3AED] uppercase tracking-wider flex items-center gap-1">
-                <span class="material-symbols-outlined text-[15px]">palette</span>
-                Konva 2D Design Studio (BP-02)
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] font-bold text-[#7C3AED] uppercase tracking-wider flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">palette</span>
+                Konva 2D Design Studio
               </span>
               <span class="text-slate-300">•</span>
-              <span class="text-xs text-slate-500 font-medium hidden sm:inline">Phôi Chế Tác Độc Bản</span>
+              <span class="text-[11px] text-slate-500 font-medium hidden sm:inline">Phôi Chế Tác Độc Bản</span>
             </div>
             <div class="flex items-center gap-2">
-              <h1 class="font-bold text-sm sm:text-base text-[#1E1B4B] truncate max-w-[280px] sm:max-w-md">
+              <h1 class="font-bold text-xs sm:text-sm text-[#1E1B4B] truncate max-w-[240px] sm:max-w-md">
                 {{ activeTemplate()?.name || 'Bình Giữ Nhiệt Nordic' }}
               </h1>
               @if (isEditingCartItem()) {
-                <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300">
-                  Đang sửa món #{{ editingCartItemIndex()! + 1 }}
+                <span class="bg-amber-100 text-amber-800 text-[9px] font-bold px-2 py-0.5 rounded-full border border-amber-300">
+                  Sửa món #{{ editingCartItemIndex()! + 1 }}
                 </span>
               }
             </div>
@@ -61,621 +72,683 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
         </div>
 
         <!-- Center: Blank Template Quick Rail -->
-        <div class="hidden lg:flex items-center gap-2 overflow-x-auto no-scrollbar max-w-md py-1">
+        <div class="hidden xl:flex items-center gap-1.5 overflow-x-auto no-scrollbar max-w-sm py-0.5">
           @for (tpl of templates(); track tpl._id) {
             <button 
               (click)="selectTemplate(tpl)"
-              class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold shrink-0 cursor-pointer transition-all"
-              [ngClass]="activeTemplate()?._id === tpl._id ? 'bg-[#7C3AED] text-white border-[#7C3AED] shadow-xs' : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-purple-200'"
+              class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[11px] font-semibold shrink-0 cursor-pointer transition-all"
+              [ngClass]="activeTemplate()?._id === tpl._id ? 'bg-[#7C3AED] text-white border-[#7C3AED] shadow-2xs' : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-purple-200'"
             >
-              <img [src]="tpl.images[0]" [alt]="tpl.name" class="w-5 h-5 rounded-md object-cover bg-white">
-              <span class="truncate max-w-[120px]">{{ tpl.name.split('&')[0].trim() }}</span>
+              <img [src]="tpl.images[0]" [alt]="tpl.name" class="w-4 h-4 rounded-md object-cover bg-white">
+              <span class="truncate max-w-[100px]">{{ tpl.name.split('&')[0].trim() }}</span>
             </button>
           }
         </div>
 
         <!-- Right: Status & Quick Actions -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
           @if (lastAutoSavedTime()) {
-            <div class="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Lưu nháp {{ lastAutoSavedTime() }}</span>
+            <div class="hidden md:flex items-center gap-1.5 text-[10px] text-slate-500 bg-slate-50 px-2 py-1 rounded-full border border-slate-200">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Đã lưu {{ lastAutoSavedTime() }}</span>
             </div>
           }
 
-          <div class="flex items-center gap-1.5 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 text-xs font-bold text-[#10B981]">
-            <span class="material-symbols-outlined text-[16px]">verified</span>
-            <span>Cọc 50% (BR-PAY05)</span>
+          <div class="flex items-center gap-1 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 text-[11px] font-bold text-[#10B981]">
+            <span class="material-symbols-outlined text-[14px]">verified</span>
+            <span>Cọc 50%</span>
           </div>
 
           <button 
             (click)="onSaveDesignClick()"
-            class="px-3.5 py-1.5 rounded-xl border border-[#DDD6FE] bg-white hover:bg-purple-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+            class="px-3 py-1 rounded-xl border border-[#DDD6FE] bg-white hover:bg-purple-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
             title="Lưu bản thiết kế này (AC12)"
           >
-            <span class="material-symbols-outlined text-[16px] text-[#7C3AED]">bookmark</span>
+            <span class="material-symbols-outlined text-[15px] text-[#7C3AED]">bookmark</span>
             <span class="hidden sm:inline">Lưu Nháp</span>
           </button>
         </div>
       </header>
 
-      <!-- RESTORED DRAFT BANNER -->
+      <!-- RESTORED DRAFT BANNER (Compact & Dismissible) -->
       @if (hasRestoredDraft() && !isEditingCartItem()) {
-        <div class="px-4 py-2 rounded-xl bg-purple-50 border border-purple-200 text-[#7C3AED] text-xs flex items-center justify-between shadow-2xs">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-[16px]">history</span>
-            <span>✨ Đã tự động khôi phục bản thiết kế dở dang của bạn từ LocalStorage!</span>
+        <div class="px-3 py-1 rounded-xl bg-purple-50 border border-purple-200 text-[#7C3AED] text-xs flex items-center justify-between shadow-2xs shrink-0">
+          <div class="flex items-center gap-1.5 text-[11px]">
+            <span class="material-symbols-outlined text-[15px]">history</span>
+            <span>Đã tự động khôi phục thiết kế dở dang của bạn từ LocalStorage!</span>
           </div>
-          <button (click)="resetToDefaults()" class="text-[11px] underline font-bold hover:text-purple-900 cursor-pointer">
-            Làm mới từ đầu
-          </button>
+          <div class="flex items-center gap-2.5">
+            <button (click)="resetToDefaults()" class="text-[10px] underline font-bold hover:text-purple-900 cursor-pointer">
+              Làm mới từ đầu
+            </button>
+            <button (click)="hasRestoredDraft.set(false)" class="text-slate-400 hover:text-slate-700 text-xs cursor-pointer" title="Đóng thông báo">
+              ✕
+            </button>
+          </div>
         </div>
       }
 
       <!-- ================= MAIN 3-ZONE STUDIO WORKSPACE ================= -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 items-stretch">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-2.5 flex-1 min-h-0 h-full overflow-hidden" style="grid-template-rows: minmax(0, 1fr);">
         
         <!-- ================= ZONE 1: TOOL NAVIGATION & DRAWER (5 COLS) ================= -->
-        <div class="lg:col-span-5 flex bg-white rounded-3xl border border-[#DDD6FE] shadow-shop-card overflow-hidden min-h-[580px]">
+        <div class="lg:col-span-5 flex bg-white rounded-2xl sm:rounded-3xl border border-[#DDD6FE] shadow-shop-card overflow-hidden h-full min-h-0 flex-col sm:flex-row">
           
           <!-- Slim Left Tool Dock -->
-          <div class="w-20 bg-slate-50 border-r border-slate-200 flex flex-col items-center py-4 gap-2 shrink-0">
+          <div class="w-full sm:w-16 md:w-18 bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-200 flex sm:flex-col items-center py-2 sm:py-3 gap-1 shrink-0 overflow-x-auto sm:overflow-y-auto overflow-y-hidden no-scrollbar justify-around sm:justify-start h-full">
             <!-- Tool 1: Colors -->
             <button
               (click)="activeToolTab.set('COLOR')"
-              class="w-14 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer"
+              class="w-11 sm:w-13 py-1.5 sm:py-2 rounded-xl flex flex-col items-center gap-0.5 transition-all cursor-pointer"
               [ngClass]="activeToolTab() === 'COLOR' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
               title="Phối màu vỏ phôi"
             >
-              <span class="material-symbols-outlined text-[20px]">palette</span>
-              <span class="text-[9px] font-bold">Màu phôi</span>
+              <span class="material-symbols-outlined text-[18px]">palette</span>
+              <span class="text-[8.5px] font-bold">Màu phôi</span>
             </button>
 
             <!-- Tool 2: Text / Engraving -->
             <button
               (click)="activeToolTab.set('TEXT')"
-              class="w-14 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer"
+              class="w-12 sm:w-14 py-2 sm:py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer"
               [ngClass]="activeToolTab() === 'TEXT' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
               title="Nội dung khắc laser"
             >
-              <span class="material-symbols-outlined text-[20px]">format_shapes</span>
+              <span class="material-symbols-outlined text-[19px] sm:text-[20px]">format_shapes</span>
               <span class="text-[9px] font-bold">Khắc chữ</span>
             </button>
 
             <!-- Tool 3: Photo Upload -->
             <button
               (click)="activeToolTab.set('IMAGE')"
-              class="w-14 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer relative"
+              class="w-12 sm:w-14 py-2 sm:py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer relative"
               [ngClass]="activeToolTab() === 'IMAGE' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
               title="Tải ảnh cá nhân"
             >
-              <span class="material-symbols-outlined text-[20px]">add_photo_alternate</span>
+              <span class="material-symbols-outlined text-[19px] sm:text-[20px]">add_photo_alternate</span>
               <span class="text-[9px] font-bold">Tải ảnh</span>
               @if (uploadedImage()) {
-                <span class="w-2 h-2 rounded-full bg-emerald-500 absolute top-2 right-2 border-2 border-white"></span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 absolute top-1.5 right-1.5 sm:top-2 sm:right-2 border-2 border-white"></span>
               }
             </button>
 
             <!-- Tool 4: Stickers (From Admin) -->
             <button
               (click)="activeToolTab.set('STICKER')"
-              class="w-14 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer relative"
+              class="w-12 sm:w-14 py-2 sm:py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer relative"
               [ngClass]="activeToolTab() === 'STICKER' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
               title="Sticker & Icon"
             >
-              <span class="material-symbols-outlined text-[20px]">sentiment_satisfied</span>
+              <span class="material-symbols-outlined text-[19px] sm:text-[20px]">sentiment_satisfied</span>
               <span class="text-[9px] font-bold">Sticker</span>
               @if (activeStickers().length > 0) {
-                <span class="w-2 h-2 rounded-full bg-pink-500 absolute top-2 right-2 border-2 border-white"></span>
+                <span class="w-2 h-2 rounded-full bg-pink-500 absolute top-1.5 right-1.5 sm:top-2 sm:right-2 border-2 border-white"></span>
               }
             </button>
 
             <!-- Tool 5: Patterns -->
             <button
               (click)="activeToolTab.set('PATTERN')"
-              class="w-14 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer"
+              class="w-12 sm:w-14 py-2 sm:py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer"
               [ngClass]="activeToolTab() === 'PATTERN' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
               title="Hoa văn phủ"
             >
-              <span class="material-symbols-outlined text-[20px]">texture</span>
+              <span class="material-symbols-outlined text-[19px] sm:text-[20px]">texture</span>
               <span class="text-[9px] font-bold">Họa tiết</span>
             </button>
 
-            <div class="w-8 border-t border-slate-200 my-1"></div>
+            <div class="hidden sm:block w-8 border-t border-slate-200 my-0.5"></div>
 
             <!-- Tool 6: Price & Specs -->
             <button
               (click)="activeToolTab.set('SUMMARY')"
-              class="w-14 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer"
+              class="w-12 sm:w-14 py-2 sm:py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer"
               [ngClass]="activeToolTab() === 'SUMMARY' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
               title="Bảng giá & Đặt hàng"
             >
-              <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+              <span class="material-symbols-outlined text-[19px] sm:text-[20px]">receipt_long</span>
               <span class="text-[9px] font-bold">Bảng giá</span>
             </button>
           </div>
 
-          <!-- Active Tool Drawer Content Panel -->
-          <div class="flex-1 p-5 overflow-y-auto max-h-[680px] flex flex-col justify-between">
+          <!-- Active Tool Drawer Content Panel (Fixed Header + Internal Scrollable Body + Fixed Bottom CTA) -->
+          <div class="flex-1 flex flex-col h-full min-h-0 bg-white overflow-hidden">
             
-            <!-- DRAWER 1: COLORS -->
-            @if (activeToolTab() === 'COLOR') {
-              <div class="space-y-4 animate-fade-in">
+            <!-- A. STICKY DRAWER HEADER -->
+            <div class="px-4 py-2.5 border-b border-slate-100 bg-white/95 backdrop-blur-xs shrink-0 flex items-center justify-between z-10">
+              @if (activeToolTab() === 'COLOR') {
                 <div>
-                  <h3 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-1.5">
+                  <h3 class="font-bold text-xs sm:text-sm text-[#1E1B4B] flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">palette</span>
-                    Phối Màu Vỏ Phôi Sản Phẩm
+                    Phối Màu Vỏ Phôi
                   </h3>
-                  <p class="text-[11px] text-slate-500 mt-0.5">Lựa chọn chất liệu và màu vỏ phôi thực tế do xưởng Giftory gia công</p>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Sơn tĩnh điện vi sinh bền màu chuẩn Giftory</p>
                 </div>
-
-                <div class="grid grid-cols-2 gap-2.5">
-                  @for (c of availableColorOptions(); track c.name) {
-                    <div 
-                      (click)="setColor(c.name)"
-                      class="p-3 rounded-2xl border-2 flex items-center gap-3 cursor-pointer transition-all hover:border-[#7C3AED]/70"
-                      [ngClass]="selectedColor() === c.name ? 'border-[#7C3AED] bg-purple-50/60 shadow-xs' : 'border-slate-200 bg-white'"
-                    >
-                      <div 
-                        class="w-8 h-8 rounded-full border shadow-inner flex items-center justify-center shrink-0"
-                        [style.backgroundColor]="c.hex"
-                      >
-                        @if (selectedColor() === c.name) {
-                          <span class="material-symbols-outlined text-xs font-bold" [style.color]="c.hex === '#FFFFFF' ? '#000' : '#FFF'">check</span>
-                        }
-                      </div>
-                      <div>
-                        <span class="text-xs font-bold text-slate-800 block leading-tight">{{ c.name }}</span>
-                        <span class="text-[10px] text-slate-400">Sơn tĩnh điện vi sinh</span>
-                      </div>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-
-            <!-- DRAWER 2: TEXT & ENGRAVING -->
-            @if (activeToolTab() === 'TEXT') {
-              <div class="space-y-4 animate-fade-in">
+                <span class="text-[11px] font-bold text-[#7C3AED] bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                  {{ selectedColor() }}
+                </span>
+              }
+              @if (activeToolTab() === 'TEXT') {
                 <div>
-                  <h3 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-1.5">
+                  <h3 class="font-bold text-xs sm:text-sm text-[#1E1B4B] flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">format_shapes</span>
-                    Khắc Laser 2 Mặt & Kiểu Chữ (Konva Text)
+                    Khắc Laser 2 Mặt
                   </h3>
-                  <p class="text-[11px] text-slate-500 mt-0.5">Khắc vi điểm sắc nét tên người nhận, thông điệp và ngày kỷ niệm</p>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Khắc vi điểm sắc nét tên & lời chúc</p>
                 </div>
-
-                <!-- Face Active Switch Tab in Text Drawer -->
-                <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-xl">
-                  <button 
-                    (click)="switchFace(true)"
-                    class="flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1"
-                    [ngClass]="isFrontFace() ? 'bg-white text-[#7C3AED] shadow-xs' : 'text-slate-600'"
-                  >
-                    <span>Mặt Trước (Front)</span>
-                  </button>
-                  <button 
-                    (click)="switchFace(false)"
-                    class="flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1"
-                    [ngClass]="!isFrontFace() ? 'bg-white text-[#7C3AED] shadow-xs' : 'text-slate-600'"
-                  >
-                    <span>Mặt Sau (Back)</span>
-                  </button>
-                </div>
-
-                <!-- Input for Active Face -->
-                @if (isFrontFace()) {
-                  <div class="space-y-1">
-                    <div class="flex items-center justify-between">
-                      <label class="text-xs font-bold text-slate-700">Lời nhắn mặt trước: <span class="text-red-500">*</span></label>
-                      <span class="text-[10px] text-slate-400 font-mono">{{ frontMessage().length }}/{{ maxTextLength() }}</span>
-                    </div>
-                    <div class="relative">
-                      <input 
-                        [(ngModel)]="frontMessage"
-                        (ngModelChange)="onFrontMessageChange($event)"
-                        [maxlength]="maxTextLength()"
-                        class="w-full px-3.5 py-2.5 rounded-xl border text-xs font-medium outline-none text-slate-800 pr-8"
-                        [ngClass]="formErrors.frontMessage ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-[#7C3AED]'"
-                        placeholder="VD: Happy Anniversary Minh Anh ❤️"
-                      />
-                      @if (frontMessage()) {
-                        <button (click)="onFrontMessageChange('')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
-                          <span class="material-symbols-outlined text-[15px]">close</span>
-                        </button>
-                      }
-                    </div>
-                    @if (formErrors.frontMessage) {
-                      <span class="text-[10px] text-red-500">{{ formErrors.frontMessage }}</span>
-                    }
-                  </div>
-                } @else {
-                  <div class="space-y-1">
-                    <div class="flex items-center justify-between">
-                      <label class="text-xs font-bold text-slate-700">Lời nhắn mặt sau (Ngày kỷ niệm, ký tên):</label>
-                      <span class="text-[10px] text-slate-400 font-mono">{{ backMessage().length }}/{{ maxTextLength() }}</span>
-                    </div>
-                    <div class="relative">
-                      <input 
-                        [(ngModel)]="backMessage"
-                        (ngModelChange)="onBackMessageChange($event)"
-                        [maxlength]="maxTextLength()"
-                        class="w-full px-3.5 py-2.5 rounded-xl border text-xs font-medium outline-none text-slate-800 pr-8"
-                        [ngClass]="formErrors.backMessage ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-[#7C3AED]'"
-                        placeholder="VD: 14.02.2024 • Yêu Em Mãi Mãi"
-                      />
-                      @if (backMessage()) {
-                        <button (click)="onBackMessageChange('')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
-                          <span class="material-symbols-outlined text-[15px]">close</span>
-                        </button>
-                      }
-                    </div>
-                    <span class="text-[10px] text-[#7C3AED] font-medium">+20.000đ phụ phí khắc laser mặt sau nếu có chữ</span>
-                  </div>
-                }
-
-                <!-- Font Selection -->
+                <span class="text-[11px] font-bold text-[#7C3AED] bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                  {{ isFrontFace() ? 'Mặt Trước' : 'Mặt Sau' }}
+                </span>
+              }
+              @if (activeToolTab() === 'IMAGE') {
                 <div>
-                  <label class="text-xs font-bold text-slate-700 block mb-1.5">Font chữ nghệ thuật:</label>
-                  <div class="grid grid-cols-2 gap-2">
-                    @for (f of fontOptions; track f.name) {
-                      <button 
-                        (click)="setFont(f.name)"
-                        class="p-2.5 rounded-xl border text-left transition-all cursor-pointer"
-                        [ngClass]="selectedFont() === f.name ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED] font-bold shadow-2xs' : 'border-slate-200 hover:border-slate-300 text-slate-700'"
-                      >
-                        <div class="text-[10px] font-semibold text-slate-500">{{ f.name }}</div>
-                        <div class="text-xs mt-0.5 truncate" [ngClass]="f.class">Minh Anh & Hoàng</div>
-                      </button>
-                    }
-                  </div>
-                </div>
-
-                <!-- Engrave Color -->
-                <div>
-                  <label class="text-xs font-bold text-slate-700 block mb-1.5">Màu lớp phủ khắc laser:</label>
-                  <div class="flex items-center gap-1.5 flex-wrap">
-                    @for (ec of engraveColors; track ec.name) {
-                      <button 
-                        (click)="setEngraveColor(ec.name)"
-                        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all"
-                        [ngClass]="selectedEngraveColor() === ec.name ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED]' : 'border-slate-200 text-slate-600'"
-                      >
-                        <span class="w-3 h-3 rounded-full border border-slate-300 shrink-0" [style.backgroundColor]="ec.hex"></span>
-                        <span class="text-[11px]">{{ ec.name }}</span>
-                        @if (ec.surcharge > 0) {
-                          <span class="text-[9px] text-amber-600 font-bold">+10k</span>
-                        }
-                      </button>
-                    }
-                  </div>
-                </div>
-
-                <!-- Text Typography & Styling Controls (Konva Text Properties) -->
-                <div class="space-y-2 pt-3 border-t border-slate-100">
-                  <div class="flex items-center justify-between">
-                    <label class="text-xs font-bold text-slate-700">Kích thước chữ ({{ textSize() }}px):</label>
-                    <div class="flex items-center gap-1.5">
-                      <button 
-                        (click)="setTextSize(textSize() - 2)"
-                        [disabled]="textSize() <= 10"
-                        class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs cursor-pointer disabled:opacity-40"
-                      >-</button>
-                      <button 
-                        (click)="setTextSize(textSize() + 2)"
-                        [disabled]="textSize() >= 32"
-                        class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs cursor-pointer disabled:opacity-40"
-                      >+</button>
-                    </div>
-                  </div>
-                  <input 
-                    type="range" 
-                    min="10" 
-                    max="32" 
-                    [ngModel]="textSize()" 
-                    (ngModelChange)="setTextSize($event)"
-                    class="w-full accent-[#7C3AED] h-1.5 bg-slate-200 rounded-lg cursor-pointer"
-                  />
-
-                  <div class="flex items-center justify-between pt-1">
-                    <!-- Text Align -->
-                    <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-                      <button 
-                        (click)="setTextAlign('left')"
-                        class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
-                        [ngClass]="textAlign() === 'left' ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
-                        title="Căn trái"
-                      >
-                        <span class="material-symbols-outlined text-[16px]">format_align_left</span>
-                      </button>
-                      <button 
-                        (click)="setTextAlign('center')"
-                        class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
-                        [ngClass]="textAlign() === 'center' ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
-                        title="Căn giữa"
-                      >
-                        <span class="material-symbols-outlined text-[16px]">format_align_center</span>
-                      </button>
-                      <button 
-                        (click)="setTextAlign('right')"
-                        class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
-                        [ngClass]="textAlign() === 'right' ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
-                        title="Căn phải"
-                      >
-                        <span class="material-symbols-outlined text-[16px]">format_align_right</span>
-                      </button>
-                    </div>
-
-                    <!-- Bold & Italic -->
-                    <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-                      <button 
-                        (click)="toggleBold()"
-                        class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
-                        [ngClass]="isTextBold() ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
-                        title="Chữ in đậm"
-                      >
-                        <span class="material-symbols-outlined text-[16px]">format_bold</span>
-                      </button>
-                      <button 
-                        (click)="toggleItalic()"
-                        class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
-                        [ngClass]="isTextItalic() ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
-                        title="Chữ nghiêng"
-                      >
-                        <span class="material-symbols-outlined text-[16px]">format_italic</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- DRAWER 3: PHOTO UPLOAD -->
-            @if (activeToolTab() === 'IMAGE') {
-              <div class="space-y-4 animate-fade-in">
-                <div>
-                  <h3 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-1.5">
+                  <h3 class="font-bold text-xs sm:text-sm text-[#1E1B4B] flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">add_photo_alternate</span>
-                    In Ảnh Kỷ Niệm Cá Nhân (Konva Image)
+                    In Ảnh Cá Nhân
                   </h3>
-                  <p class="text-[11px] text-slate-500 mt-0.5">In màu HD chống nước công nghệ Nano UV trên bề mặt phôi (+30.000đ)</p>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Công nghệ in Nano UV HD chống bay màu</p>
                 </div>
-
-                @if (!uploadedImage()) {
-                  <label class="border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors hover:border-[#7C3AED] hover:bg-purple-50/40 text-center"
-                         [ngClass]="formErrors.image ? 'border-red-400 bg-red-50/20' : 'border-slate-300'">
-                    <input 
-                      type="file" 
-                      accept="image/jpeg,image/png,image/jpg" 
-                      (change)="onImageFileSelected($event)" 
-                      class="hidden"
-                    />
-                    <span class="material-symbols-outlined text-4xl text-[#7C3AED]">cloud_upload</span>
-                    <div>
-                      <p class="text-xs font-bold text-slate-700">Tải ảnh kỷ niệm (.JPG, .PNG)</p>
-                      <p class="text-[10px] text-slate-400 mt-0.5">Dung lượng tối đa 5MB • Phụ phí in ảnh HD: 30.000đ</p>
-                    </div>
-                  </label>
-                } @else {
-                  <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                    <div class="flex items-center gap-3">
-                      <img [src]="uploadedImage()" alt="Preview" class="w-14 h-14 rounded-xl object-cover border border-slate-300 shadow-xs">
-                      <div class="flex-1">
-                        <span class="text-xs font-bold text-slate-800 block">Ảnh đã đưa lên Canvas</span>
-                        <span class="text-[10px] text-emerald-600 font-medium">Kéo thả & xoay chỉnh tự do trên Canvas</span>
-                      </div>
-                      <button (click)="removeImage()" class="w-8 h-8 rounded-xl bg-red-50 border border-red-200 hover:bg-red-100 flex items-center justify-center text-red-600 cursor-pointer" title="Xóa ảnh">
-                        <span class="material-symbols-outlined text-[16px]">delete</span>
-                      </button>
-                    </div>
-
-                    <div class="p-2.5 rounded-xl bg-purple-50 border border-purple-200 text-[#7C3AED] text-[11px] font-medium flex items-center gap-1.5">
-                      <span class="material-symbols-outlined text-[15px]">touch_app</span>
-                      <span>Chạm vào ảnh trên canvas để phóng to, thu nhỏ và xoay bằng khung Transformer!</span>
-                    </div>
-                  </div>
-                }
-
-                @if (formErrors.image) {
-                  <div class="text-[11px] text-red-600 font-medium flex items-center gap-1">
-                    <span class="material-symbols-outlined text-[14px]">error</span>
-                    <span>{{ formErrors.image }}</span>
-                  </div>
-                }
-              </div>
-            }
-
-            <!-- DRAWER 4: STICKERS (DYNAMIC FROM ADMIN & DATABASE) -->
-            @if (activeToolTab() === 'STICKER') {
-              <div class="space-y-4 animate-fade-in">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <h3 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-1.5">
-                      <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">sentiment_satisfied</span>
-                      Thư Viện Sticker & Icon Đồ Họa (Konva Nodes)
-                    </h3>
-                    <p class="text-[11px] text-slate-500 mt-0.5">Chọn tối đa 3 icon trang trí (đồng bộ từ Quản trị Admin)</p>
-                  </div>
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-[#7C3AED]">
-                    {{ activeStickers().length }}/3 icon
+                @if (uploadedImage()) {
+                  <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    Đã tải ảnh
                   </span>
-                </div>
-
-                <!-- Sticker Grid -->
-                <div class="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[360px] overflow-y-auto pr-1">
-                  @for (stk of dynamicStickers(); track stk._id || stk.name) {
-                    <button 
-                      (click)="toggleSticker(stk)"
-                      class="p-2.5 rounded-2xl border flex flex-col items-center gap-1 transition-all cursor-pointer"
-                      [ngClass]="isStickerActive(stk.name) ? 'border-[#7C3AED] bg-purple-50 shadow-xs ring-2 ring-purple-200' : 'border-slate-100 hover:border-purple-200 bg-slate-50/70'"
-                    >
-                      <span class="text-2xl select-none">{{ stk.icon }}</span>
-                      <span class="text-[9px] text-slate-600 truncate w-full text-center">{{ stk.name }}</span>
-                    </button>
-                  }
-                </div>
-              </div>
-            }
-
-            <!-- DRAWER 5: PATTERNS -->
-            @if (activeToolTab() === 'PATTERN') {
-              <div class="space-y-4 animate-fade-in">
+                }
+              }
+              @if (activeToolTab() === 'STICKER') {
                 <div>
-                  <h3 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-1.5">
+                  <h3 class="font-bold text-xs sm:text-sm text-[#1E1B4B] flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">sentiment_satisfied</span>
+                    Kho Sticker & Icon
+                  </h3>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Icon bản quyền đồng bộ từ Admin</p>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-[#7C3AED]">
+                  {{ activeStickers().length }}/3 icon
+                </span>
+              }
+              @if (activeToolTab() === 'PATTERN') {
+                <div>
+                  <h3 class="font-bold text-xs sm:text-sm text-[#1E1B4B] flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">texture</span>
-                    Họa Tiết Phủ Mặt (Bespoke Pattern)
+                    Họa Tiết Phủ Mặt
                   </h3>
-                  <p class="text-[11px] text-slate-500 mt-0.5">Hoa văn chạm khắc chìm/nổi phủ quanh thân sản phẩm</p>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Hoa văn chìm tinh tế quanh thân phôi</p>
                 </div>
-
-                <div class="grid grid-cols-2 gap-2.5">
-                  @for (pat of patternLibrary; track pat.id) {
-                    <button 
-                      (click)="setPattern(pat.id)"
-                      class="p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between"
-                      [ngClass]="selectedPattern() === pat.id ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED] font-bold shadow-xs' : 'border-slate-200 hover:border-slate-300 text-slate-700'"
-                    >
-                      <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[18px] text-[#7C3AED]">{{ pat.icon }}</span>
-                        <span class="text-xs font-semibold">{{ pat.name }}</span>
-                      </div>
-                      <div class="text-[10px] text-slate-500 mt-2">
-                        {{ pat.surcharge === 0 ? 'Miễn phí' : '+15.000đ' }}
-                      </div>
-                    </button>
-                  }
-                </div>
-              </div>
-            }
-
-            <!-- DRAWER 6: PRICE SUMMARY & SPECIFICATION -->
-            @if (activeToolTab() === 'SUMMARY') {
-              <div class="space-y-4 animate-fade-in">
+              }
+              @if (activeToolTab() === 'SUMMARY') {
                 <div>
-                  <h3 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-1.5">
+                  <h3 class="font-bold text-xs sm:text-sm text-[#1E1B4B] flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">receipt_long</span>
-                    Bảng Kê Chi Phí & Chính Sách Cọc (AC10)
+                    Bảng Kê Chi Phí & Chính Sách Cọc
                   </h3>
-                  <p class="text-[11px] text-slate-500 mt-0.5">Minh bạch 100% giá phôi và phụ phí chế tác theo quy định BR-PAY05</p>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Minh bạch giá & cọc 50% (BR-PAY05)</p>
                 </div>
+              }
+            </div>
 
-                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
-                  <div class="flex items-center justify-between text-slate-600">
-                    <span>Giá phôi gốc ({{ activeTemplate()?.name }}):</span>
-                    <strong class="text-slate-800">{{ baseProductPrice() | number:'1.0-0' }}đ</strong>
+            <!-- B. INTERNAL SCROLLABLE DRAWER BODY (overflow-y: auto) -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 custom-scrollbar">
+              
+              <!-- DRAWER 1: COLORS -->
+              @if (activeToolTab() === 'COLOR') {
+                <div class="space-y-4 animate-fade-in">
+                  <div class="grid grid-cols-2 gap-2.5">
+                    @for (c of availableColorOptions(); track c.name) {
+                      <div 
+                        (click)="setColor(c.name)"
+                        class="p-3 rounded-2xl border-2 flex items-center gap-3 cursor-pointer transition-all hover:border-[#7C3AED]/70"
+                        [ngClass]="selectedColor() === c.name ? 'border-[#7C3AED] bg-purple-50/60 shadow-xs' : 'border-slate-200 bg-white'"
+                      >
+                        <div 
+                          class="w-8 h-8 rounded-full border shadow-inner flex items-center justify-center shrink-0"
+                          [style.backgroundColor]="c.hex"
+                        >
+                          @if (selectedColor() === c.name) {
+                            <span class="material-symbols-outlined text-xs font-bold" [style.color]="c.hex === '#FFFFFF' ? '#000' : '#FFF'">check</span>
+                          }
+                        </div>
+                        <div>
+                          <span class="text-xs font-bold text-slate-800 block leading-tight">{{ c.name }}</span>
+                          <span class="text-[10px] text-slate-400">Sơn tĩnh điện vi sinh</span>
+                        </div>
+                      </div>
+                    }
                   </div>
-                  @for (sc of surchargeList(); track sc.label) {
-                    <div class="flex items-center justify-between text-[#7C3AED]">
-                      <span>+ {{ sc.label }}:</span>
-                      <strong class="font-bold">+{{ sc.amount | number:'1.0-0' }}đ</strong>
+                </div>
+              }
+
+              <!-- DRAWER 2: TEXT & ENGRAVING -->
+              @if (activeToolTab() === 'TEXT') {
+                <div class="space-y-4 animate-fade-in">
+                  <!-- Face Active Switch Tab in Text Drawer -->
+                  <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-xl">
+                    <button 
+                      (click)="switchFace(true)"
+                      class="flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1"
+                      [ngClass]="isFrontFace() ? 'bg-white text-[#7C3AED] shadow-xs' : 'text-slate-600'"
+                    >
+                      <span>Mặt Trước (Front)</span>
+                    </button>
+                    <button 
+                      (click)="switchFace(false)"
+                      class="flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1"
+                      [ngClass]="!isFrontFace() ? 'bg-white text-[#7C3AED] shadow-xs' : 'text-slate-600'"
+                    >
+                      <span>Mặt Sau (Back)</span>
+                    </button>
+                  </div>
+
+                  <!-- Input for Active Face -->
+                  @if (isFrontFace()) {
+                    <div class="space-y-1">
+                      <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-slate-700">Lời nhắn mặt trước: <span class="text-red-500">*</span></label>
+                        <span class="text-[10px] text-slate-400 font-mono">{{ frontMessage().length }}/{{ maxTextLength() }}</span>
+                      </div>
+                      <div class="relative">
+                        <input 
+                          [(ngModel)]="frontMessage"
+                          (ngModelChange)="onFrontMessageChange($event)"
+                          [maxlength]="maxTextLength()"
+                          class="w-full px-3.5 py-2.5 rounded-xl border text-xs font-medium outline-none text-slate-800 pr-8"
+                          [ngClass]="formErrors.frontMessage ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-[#7C3AED]'"
+                          placeholder="VD: Happy Anniversary Minh Anh ❤️"
+                        />
+                        @if (frontMessage()) {
+                          <button (click)="onFrontMessageChange('')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
+                            <span class="material-symbols-outlined text-[15px]">close</span>
+                          </button>
+                        }
+                      </div>
+                      @if (formErrors.frontMessage) {
+                        <span class="text-[10px] text-red-500">{{ formErrors.frontMessage }}</span>
+                      }
+                    </div>
+                  } @else {
+                    <div class="space-y-1">
+                      <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-slate-700">Lời nhắn mặt sau (Ngày kỷ niệm, ký tên):</label>
+                        <span class="text-[10px] text-slate-400 font-mono">{{ backMessage().length }}/{{ maxTextLength() }}</span>
+                      </div>
+                      <div class="relative">
+                        <input 
+                          [(ngModel)]="backMessage"
+                          (ngModelChange)="onBackMessageChange($event)"
+                          [maxlength]="maxTextLength()"
+                          class="w-full px-3.5 py-2.5 rounded-xl border text-xs font-medium outline-none text-slate-800 pr-8"
+                          [ngClass]="formErrors.backMessage ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-[#7C3AED]'"
+                          placeholder="VD: 14.02.2024 • Yêu Em Mãi Mãi"
+                        />
+                        @if (backMessage()) {
+                          <button (click)="onBackMessageChange('')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
+                            <span class="material-symbols-outlined text-[15px]">close</span>
+                          </button>
+                        }
+                      </div>
+                      <span class="text-[10px] text-[#7C3AED] font-medium">+20.000đ phụ phí khắc laser mặt sau nếu có chữ</span>
                     </div>
                   }
-                  <div class="pt-2 border-t border-slate-200 flex items-center justify-between font-bold text-sm text-[#1E1B4B]">
-                    <span>Giá cuối cùng:</span>
-                    <span class="text-[#7C3AED] font-extrabold text-base">{{ finalProductPrice() | number:'1.0-0' }}đ</span>
+
+                  <!-- Font Selection -->
+                  <div>
+                    <label class="text-xs font-bold text-slate-700 block mb-1.5">Font chữ nghệ thuật:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                      @for (f of fontOptions; track f.name) {
+                        <button 
+                          (click)="setFont(f.name)"
+                          class="p-2.5 rounded-xl border text-left transition-all cursor-pointer"
+                          [ngClass]="selectedFont() === f.name ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED] font-bold shadow-2xs' : 'border-slate-200 hover:border-slate-300 text-slate-700'"
+                        >
+                          <div class="text-[10px] font-semibold text-slate-500">{{ f.name }}</div>
+                          <div class="text-xs mt-0.5 truncate" [ngClass]="f.class">Minh Anh & Hoàng</div>
+                        </button>
+                      }
+                    </div>
                   </div>
-                  <div class="flex items-center justify-between font-bold text-xs text-[#10B981]">
-                    <span>Cọc trước 50% (BR-PAY05):</span>
-                    <span>{{ depositPrice() | number:'1.0-0' }}đ</span>
+
+                  <!-- Engrave Color -->
+                  <div>
+                    <label class="text-xs font-bold text-slate-700 block mb-1.5">Màu lớp phủ khắc laser:</label>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      @for (ec of engraveColors; track ec.name) {
+                        <button 
+                          (click)="setEngraveColor(ec.name)"
+                          class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all"
+                          [ngClass]="selectedEngraveColor() === ec.name ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED]' : 'border-slate-200 text-slate-600'"
+                        >
+                          <span class="w-3 h-3 rounded-full border border-slate-300 shrink-0" [style.backgroundColor]="ec.hex"></span>
+                          <span class="text-[11px]">{{ ec.name }}</span>
+                          @if (ec.surcharge > 0) {
+                            <span class="text-[9px] text-amber-600 font-bold">+10k</span>
+                          }
+                        </button>
+                      }
+                    </div>
                   </div>
-                  <div class="flex items-center justify-between text-[11px] text-slate-500">
-                    <span>Còn lại COD nhận hàng:</span>
-                    <span>{{ (finalProductPrice() - depositPrice()) | number:'1.0-0' }}đ</span>
+
+                  <!-- Text Typography & Styling Controls (Konva Text Properties) -->
+                  <div class="space-y-2 pt-3 border-t border-slate-100">
+                    <div class="flex items-center justify-between">
+                      <label class="text-xs font-bold text-slate-700">Kích thước chữ ({{ textSize() }}px):</label>
+                      <div class="flex items-center gap-1.5">
+                        <button 
+                          (click)="setTextSize(textSize() - 2)"
+                          [disabled]="textSize() <= 10"
+                          class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs cursor-pointer disabled:opacity-40"
+                        >-</button>
+                        <button 
+                          (click)="setTextSize(textSize() + 2)"
+                          [disabled]="textSize() >= 32"
+                          class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs cursor-pointer disabled:opacity-40"
+                        >+</button>
+                      </div>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="10" 
+                      max="32" 
+                      [ngModel]="textSize()" 
+                      (ngModelChange)="setTextSize($event)"
+                      class="w-full accent-[#7C3AED] h-1.5 bg-slate-200 rounded-lg cursor-pointer"
+                    />
+
+                    <div class="flex items-center justify-between pt-1">
+                      <!-- Text Align -->
+                      <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                        <button 
+                          (click)="setTextAlign('left')"
+                          class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
+                          [ngClass]="textAlign() === 'left' ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+                          title="Căn trái"
+                        >
+                          <span class="material-symbols-outlined text-[16px]">format_align_left</span>
+                        </button>
+                        <button 
+                          (click)="setTextAlign('center')"
+                          class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
+                          [ngClass]="textAlign() === 'center' ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+                          title="Căn giữa"
+                        >
+                          <span class="material-symbols-outlined text-[16px]">format_align_center</span>
+                        </button>
+                        <button 
+                          (click)="setTextAlign('right')"
+                          class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
+                          [ngClass]="textAlign() === 'right' ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+                          title="Căn phải"
+                        >
+                          <span class="material-symbols-outlined text-[16px]">format_align_right</span>
+                        </button>
+                      </div>
+
+                      <!-- Bold & Italic -->
+                      <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                        <button 
+                          (click)="toggleBold()"
+                          class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
+                          [ngClass]="isTextBold() ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+                          title="Chữ in đậm"
+                        >
+                          <span class="material-symbols-outlined text-[16px]">format_bold</span>
+                        </button>
+                        <button 
+                          (click)="toggleItalic()"
+                          class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
+                          [ngClass]="isTextItalic() ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+                          title="Chữ nghiêng"
+                        >
+                          <span class="material-symbols-outlined text-[16px]">format_italic</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              }
+
+              <!-- DRAWER 3: PHOTO UPLOAD -->
+              @if (activeToolTab() === 'IMAGE') {
+                <div class="space-y-4 animate-fade-in">
+                  @if (!uploadedImage()) {
+                    <label class="border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors hover:border-[#7C3AED] hover:bg-purple-50/40 text-center"
+                           [ngClass]="formErrors.image ? 'border-red-400 bg-red-50/20' : 'border-slate-300'">
+                      <input 
+                        type="file" 
+                        accept="image/jpeg,image/png,image/jpg" 
+                        (change)="onImageFileSelected($event)" 
+                        class="hidden"
+                      />
+                      <span class="material-symbols-outlined text-4xl text-[#7C3AED]">cloud_upload</span>
+                      <div>
+                        <p class="text-xs font-bold text-slate-700">Tải ảnh kỷ niệm (.JPG, .PNG)</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Dung lượng tối đa 5MB • Phụ phí in ảnh HD: 30.000đ</p>
+                      </div>
+                    </label>
+                  } @else {
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                      <div class="flex items-center gap-3">
+                        <img [src]="uploadedImage()" alt="Preview" class="w-14 h-14 rounded-xl object-cover border border-slate-300 shadow-xs">
+                        <div class="flex-1">
+                          <span class="text-xs font-bold text-slate-800 block">Ảnh đã đưa lên Canvas</span>
+                          <span class="text-[10px] text-emerald-600 font-medium">Kéo thả & xoay chỉnh tự do trên Canvas</span>
+                        </div>
+                        <button (click)="removeImage()" class="w-8 h-8 rounded-xl bg-red-50 border border-red-200 hover:bg-red-100 flex items-center justify-center text-red-600 cursor-pointer" title="Xóa ảnh">
+                          <span class="material-symbols-outlined text-[16px]">delete</span>
+                        </button>
+                      </div>
+
+                      <div class="p-2.5 rounded-xl bg-purple-50 border border-purple-200 text-[#7C3AED] text-[11px] font-medium flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[15px]">touch_app</span>
+                        <span>Chạm vào ảnh trên canvas để phóng to, thu nhỏ và xoay bằng khung Transformer!</span>
+                      </div>
+                    </div>
+                  }
+
+                  @if (formErrors.image) {
+                    <div class="text-[11px] text-red-600 font-medium flex items-center gap-1">
+                      <span class="material-symbols-outlined text-[14px]">error</span>
+                      <span>{{ formErrors.image }}</span>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- DRAWER 4: STICKERS (DYNAMIC FROM ADMIN & DATABASE) -->
+              @if (activeToolTab() === 'STICKER') {
+                <div class="space-y-4 animate-fade-in">
+                  <!-- Sticker Grid -->
+                  <div class="grid grid-cols-4 sm:grid-cols-5 gap-2 pr-1">
+                    @for (stk of dynamicStickers(); track stk._id || stk.name) {
+                      <button 
+                        (click)="toggleSticker(stk)"
+                        class="p-2.5 rounded-2xl border flex flex-col items-center gap-1 transition-all cursor-pointer"
+                        [ngClass]="isStickerActive(stk.name) ? 'border-[#7C3AED] bg-purple-50 shadow-xs ring-2 ring-purple-200' : 'border-slate-100 hover:border-purple-200 bg-slate-50/70'"
+                      >
+                        <span class="text-2xl select-none">{{ stk.icon }}</span>
+                        <span class="text-[9px] text-slate-600 truncate w-full text-center">{{ stk.name }}</span>
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- DRAWER 5: PATTERNS -->
+              @if (activeToolTab() === 'PATTERN') {
+                <div class="space-y-4 animate-fade-in">
+                  <div class="grid grid-cols-2 gap-2.5">
+                    @for (pat of patternLibrary; track pat.id) {
+                      <button 
+                        (click)="setPattern(pat.id)"
+                        class="p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between"
+                        [ngClass]="selectedPattern() === pat.id ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED] font-bold shadow-xs' : 'border-slate-200 hover:border-slate-300 text-slate-700'"
+                      >
+                        <div class="flex items-center gap-2">
+                          <span class="material-symbols-outlined text-[18px] text-[#7C3AED]">{{ pat.icon }}</span>
+                          <span class="text-xs font-semibold">{{ pat.name }}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-500 mt-2">
+                          {{ pat.surcharge === 0 ? 'Miễn phí' : '+15.000đ' }}
+                        </div>
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- DRAWER 6: PRICE SUMMARY & SPECIFICATION -->
+              @if (activeToolTab() === 'SUMMARY') {
+                <div class="space-y-4 animate-fade-in">
+                  <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+                    <div class="flex items-center justify-between text-slate-600">
+                      <span>Giá phôi gốc ({{ activeTemplate()?.name }}):</span>
+                      <strong class="text-slate-800">{{ baseProductPrice() | number:'1.0-0' }}đ</strong>
+                    </div>
+                    @for (sc of surchargeList(); track sc.label) {
+                      <div class="flex items-center justify-between text-[#7C3AED]">
+                        <span>+ {{ sc.label }}:</span>
+                        <strong class="font-bold">+{{ sc.amount | number:'1.0-0' }}đ</strong>
+                      </div>
+                    }
+                    <div class="pt-2 border-t border-slate-200 flex items-center justify-between font-bold text-sm text-[#1E1B4B]">
+                      <span>Giá cuối cùng:</span>
+                      <span class="text-[#7C3AED] font-extrabold text-base">{{ finalProductPrice() | number:'1.0-0' }}đ</span>
+                    </div>
+                    <div class="flex items-center justify-between font-bold text-xs text-[#10B981]">
+                      <span>Cọc trước 50% (BR-PAY05):</span>
+                      <span>{{ depositPrice() | number:'1.0-0' }}đ</span>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] text-slate-500">
+                      <span>Còn lại COD nhận hàng:</span>
+                      <span>{{ (finalProductPrice() - depositPrice()) | number:'1.0-0' }}đ</span>
+                    </div>
+                  </div>
+                </div>
+              }
+
+            </div>
+
+            <!-- C. STICKY BOTTOM CHECKOUT CTA BAR (Always Visible) -->
+            <div class="p-3.5 sm:p-4 border-t border-slate-200 bg-gradient-to-t from-purple-50/40 via-white to-white shrink-0 shadow-[0_-4px_14px_rgba(0,0,0,0.05)] z-10">
+              <!-- Realtime Price & Deposit callout -->
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-baseline gap-1.5">
+                  <span class="text-xs text-slate-500 font-medium">Giá sản phẩm:</span>
+                  <span class="text-base sm:text-lg font-black text-[#7C3AED] leading-none">
+                    {{ finalProductPrice() | number:'1.0-0' }}đ
+                  </span>
+                  @if (surchargeList().length > 0) {
+                    <span class="text-[10px] text-purple-600 bg-purple-100 font-bold px-1.5 py-0.5 rounded-md hidden sm:inline">
+                      +{{ (finalProductPrice() - baseProductPrice()) | number:'1.0-0' }}đ
+                    </span>
+                  }
+                </div>
+                
+                <div class="flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  <span class="material-symbols-outlined text-[13px]">payments</span>
+                  <span>Cọc 50%: {{ depositPrice() | number:'1.0-0' }}đ</span>
+                </div>
               </div>
-            }
 
-            <!-- Drawer Bottom Quick CTA -->
-            <div class="pt-4 border-t border-slate-100 flex items-center gap-2 mt-4">
-              <button 
-                (click)="onPrimaryActionClick()"
-                class="flex-1 py-3 px-4 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition cursor-pointer"
-                [ngClass]="isFormInvalid() ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-[#7C3AED] hover:bg-[#6D28D9] shadow-purple-300'"
-              >
-                <span class="material-symbols-outlined text-[18px]">shopping_bag</span>
-                <span>{{ isEditingCartItem() ? 'Cập Nhật Giỏ Hàng' : 'Thêm Vào Giỏ & Cọc 50%' }}</span>
-              </button>
+              <!-- Action Buttons -->
+              <div class="flex items-center gap-2">
+                <button 
+                  (click)="onPrimaryActionClick()"
+                  class="flex-1 py-2.5 px-3 rounded-xl text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer active:scale-[0.99]"
+                  [ngClass]="isFormInvalid() ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] shadow-purple-300'"
+                >
+                  <span class="material-symbols-outlined text-[17px]">shopping_bag</span>
+                  <span>{{ isEditingCartItem() ? 'Cập Nhật Giỏ Hàng' : 'Thêm Vào Giỏ & Cọc 50%' }}</span>
+                </button>
 
-              <button 
-                (click)="activeToolTab.set('SUMMARY')"
-                class="px-3 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition cursor-pointer"
-                title="Xem chi tiết giá"
-              >
-                {{ finalProductPrice() | number:'1.0-0' }}đ
-              </button>
+                <button 
+                  (click)="activeToolTab.set('SUMMARY')"
+                  class="px-2.5 py-2.5 rounded-xl border border-slate-200 hover:border-purple-300 hover:bg-purple-50 text-slate-700 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+                  title="Xem bảng chiết tính giá chi tiết"
+                >
+                  <span class="material-symbols-outlined text-[16px] text-[#7C3AED]">receipt_long</span>
+                  <span class="hidden sm:inline">Bảng giá</span>
+                </button>
+              </div>
+
+              <!-- Trust Assurance Note -->
+              <div class="flex items-center justify-between text-[10px] text-slate-400 mt-1 px-0.5">
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[11px] text-emerald-500">verified</span>
+                  <span>Chuẩn phôi 100%</span>
+                </span>
+                <span>Cọc 50% an tâm</span>
+              </div>
             </div>
 
           </div>
         </div>
 
         <!-- ================= ZONE 2: CENTRAL INTERACTIVE KONVA.JS STAGE (7 COLS) ================= -->
-        <div class="lg:col-span-7 flex flex-col gap-4">
-          <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#DDD6FE] flex flex-col items-center justify-between relative overflow-hidden flex-1">
+        <div class="lg:col-span-7 flex flex-col h-full min-h-0 overflow-hidden">
+          <div class="bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 shadow-shop-card border border-[#DDD6FE] flex flex-col items-center justify-between relative overflow-hidden h-full min-h-0">
             
             <!-- Canvas Floating Controls Header -->
-            <div class="w-full flex flex-wrap items-center justify-between gap-2 mb-2 z-10">
+            <div class="w-full flex flex-wrap items-center justify-between gap-1.5 mb-1 shrink-0 z-10">
               <!-- Front / Back Face Switcher (AC8 & AC9) -->
-              <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl shadow-inner border border-slate-200">
+              <div class="flex items-center gap-1 bg-slate-100 p-0.5 sm:p-1 rounded-2xl shadow-inner border border-slate-200">
                 <button 
                   (click)="switchFace(true)"
-                  class="flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl transition cursor-pointer"
-                  [ngClass]="isFrontFace() ? 'bg-white text-[#7C3AED] shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                  class="flex items-center gap-1 text-[11px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 rounded-xl transition cursor-pointer"
+                  [ngClass]="isFrontFace() ? 'bg-white text-[#7C3AED] shadow-2xs' : 'text-slate-600 hover:text-slate-900'"
                 >
-                  <span class="material-symbols-outlined text-[16px]">flip_to_front</span>
+                  <span class="material-symbols-outlined text-[15px]">flip_to_front</span>
                   <span>Mặt Trước</span>
                 </button>
                 <button 
                   (click)="switchFace(false)"
-                  class="flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl transition cursor-pointer"
-                  [ngClass]="!isFrontFace() ? 'bg-white text-[#7C3AED] shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                  class="flex items-center gap-1 text-[11px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 rounded-xl transition cursor-pointer"
+                  [ngClass]="!isFrontFace() ? 'bg-white text-[#7C3AED] shadow-2xs' : 'text-slate-600 hover:text-slate-900'"
                 >
-                  <span class="material-symbols-outlined text-[16px]">flip_to_back</span>
+                  <span class="material-symbols-outlined text-[15px]">flip_to_back</span>
                   <span>Mặt Sau</span>
                 </button>
               </div>
 
               <!-- Quick action icon buttons -->
-              <div class="flex items-center gap-1.5 flex-wrap">
+              <div class="flex items-center gap-1 flex-wrap">
                 @if (selectedNodeName()) {
-                  <div class="flex items-center gap-1 bg-purple-50 text-[#7C3AED] px-2.5 py-1 rounded-xl text-xs font-bold border border-purple-200 animate-fade-in">
-                    <span class="material-symbols-outlined text-[14px]">touch_app</span>
-                    <span class="truncate max-w-[90px]">{{ selectedNodeName() }}</span>
+                  <div class="flex items-center gap-1 bg-purple-50 text-[#7C3AED] px-2 py-0.5 rounded-lg text-[11px] font-bold border border-purple-200 animate-fade-in">
+                    <span class="material-symbols-outlined text-[13px]">touch_app</span>
+                    <span class="truncate max-w-[80px]">{{ selectedNodeName() }}</span>
                   </div>
                   <!-- Layer order buttons -->
                   <button 
                     (click)="bringForward()" 
-                    class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-purple-100 text-slate-600 hover:text-[#7C3AED] flex items-center justify-center transition cursor-pointer" 
+                    class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-purple-100 text-slate-600 hover:text-[#7C3AED] flex items-center justify-center transition cursor-pointer" 
                     title="Đưa lên trên (Bring Forward)"
                   >
-                    <span class="material-symbols-outlined text-[17px]">vertical_align_top</span>
+                    <span class="material-symbols-outlined text-[15px]">vertical_align_top</span>
                   </button>
                   <button 
                     (click)="sendBackward()" 
-                    class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-purple-100 text-slate-600 hover:text-[#7C3AED] flex items-center justify-center transition cursor-pointer" 
+                    class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-purple-100 text-slate-600 hover:text-[#7C3AED] flex items-center justify-center transition cursor-pointer" 
                     title="Đưa xuống dưới (Send Backward)"
                   >
-                    <span class="material-symbols-outlined text-[17px]">vertical_align_bottom</span>
+                    <span class="material-symbols-outlined text-[15px]">vertical_align_bottom</span>
                   </button>
                 }
 
                 <!-- Zoom Controls -->
-                <div class="hidden sm:flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+                <div class="hidden sm:flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
                   <button 
                     (click)="setZoom(0.85)" 
-                    class="px-1.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                    class="px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer"
                     [ngClass]="canvasZoom() === 0.85 ? 'bg-white text-[#7C3AED] shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
                     title="Thu nhỏ 85%"
                   >85%</button>
                   <button 
                     (click)="setZoom(1.0)" 
-                    class="px-1.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                    class="px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer"
                     [ngClass]="canvasZoom() === 1.0 ? 'bg-white text-[#7C3AED] shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
-                    title="Kích thước gốc 100%"
+                    title="Kích thước chuẩn"
                   >100%</button>
                   <button 
                     (click)="setZoom(1.15)" 
-                    class="px-1.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                    class="px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer"
                     [ngClass]="canvasZoom() === 1.15 ? 'bg-white text-[#7C3AED] shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
                     title="Phóng to 115%"
                   >115%</button>
@@ -683,74 +756,74 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
 
                 <!-- Guides & Safe Area Controls -->
                 <button 
-                  (click)="toggleGuides()"
-                  class="w-8 h-8 rounded-xl flex items-center justify-center transition cursor-pointer"
+                  (click)="toggleGuides()" 
+                  class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
                   [ngClass]="showGuides() ? 'bg-purple-100 text-[#7C3AED]' : 'bg-slate-100 text-slate-400 hover:text-slate-600'"
-                  [title]="showGuides() ? 'Đang hiện Vùng in & An toàn (Bấm để ẩn)' : 'Đang ẩn Vùng in & An toàn (Bấm để hiện)'"
+                  [title]="showGuides() ? 'Đang hiện Khung in (Bấm để ẩn)' : 'Đang ẩn Khung in (Bấm để hiện)'"
                 >
-                  <span class="material-symbols-outlined text-[17px]">{{ showGuides() ? 'crop_free' : 'crop' }}</span>
+                  <span class="material-symbols-outlined text-[15px]">{{ showGuides() ? 'crop_free' : 'crop' }}</span>
                 </button>
                 <button 
-                  (click)="fitIntoSafeArea()"
-                  class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 flex items-center justify-center transition cursor-pointer"
-                  title="Căn phần tử vào Vùng An Toàn (Tránh mép cong gây lỗi in)"
+                  (click)="fitIntoSafeArea()" 
+                  class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 flex items-center justify-center transition cursor-pointer"
+                  title="Căn phần tử vào Vùng An Toàn"
                 >
-                  <span class="material-symbols-outlined text-[17px]">aspect_ratio</span>
+                  <span class="material-symbols-outlined text-[15px]">aspect_ratio</span>
                 </button>
 
                 <button 
-                  (click)="centerSelectedNode()"
-                  class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-purple-100 text-slate-600 hover:text-[#7C3AED] flex items-center justify-center transition cursor-pointer"
+                  (click)="centerSelectedNode()" 
+                  class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-purple-100 text-slate-600 hover:text-[#7C3AED] flex items-center justify-center transition cursor-pointer"
                   title="Căn giữa đối tượng"
                 >
-                  <span class="material-symbols-outlined text-[17px]">filter_center_focus</span>
+                  <span class="material-symbols-outlined text-[15px]">filter_center_focus</span>
                 </button>
                 <button 
-                  (click)="deleteSelectedNode()"
-                  class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 flex items-center justify-center transition cursor-pointer"
-                  title="Xóa đối tượng đang chọn (Phím Delete)"
+                  (click)="deleteSelectedNode()" 
+                  class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 flex items-center justify-center transition cursor-pointer"
+                  title="Xóa đối tượng đang chọn"
                 >
-                  <span class="material-symbols-outlined text-[17px]">delete</span>
+                  <span class="material-symbols-outlined text-[15px]">delete</span>
                 </button>
                 <button 
-                  (click)="downloadSnapshot()"
-                  class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-600 flex items-center justify-center transition cursor-pointer"
+                  (click)="downloadSnapshot()" 
+                  class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-600 flex items-center justify-center transition cursor-pointer"
                   title="Tải ảnh mô phỏng 1:1"
                 >
-                  <span class="material-symbols-outlined text-[17px]">download</span>
+                  <span class="material-symbols-outlined text-[15px]">download</span>
                 </button>
                 <button 
-                  (click)="resetToDefaults()"
-                  class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer"
+                  (click)="resetToDefaults()" 
+                  class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer"
                   title="Đặt lại mặc định"
                 >
-                  <span class="material-symbols-outlined text-[17px]">restart_alt</span>
+                  <span class="material-symbols-outlined text-[15px]">restart_alt</span>
                 </button>
               </div>
             </div>
 
             <!-- CURVED EDGE OVERFLOW WARNING BANNER -->
             @if (isOverflowWarning()) {
-              <div class="w-full max-w-[460px] p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center justify-between gap-2 shadow-sm animate-fade-in mb-1">
+              <div class="w-full max-w-md py-1 px-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center justify-between gap-2 shadow-2xs animate-fade-in mb-0.5 shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
-                  <span class="material-symbols-outlined text-amber-600 text-[18px] shrink-0">warning</span>
-                  <span class="font-medium text-[11px] truncate leading-tight">{{ overflowWarningMessage() }}</span>
+                  <span class="material-symbols-outlined text-amber-600 text-[15px] shrink-0">warning</span>
+                  <span class="font-medium text-[10px] truncate leading-tight">{{ overflowWarningMessage() }}</span>
                 </div>
                 <button 
                   (click)="fitIntoSafeArea()" 
-                  class="shrink-0 px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] rounded-lg cursor-pointer transition shadow-2xs"
+                  class="shrink-0 px-2 py-0.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[9px] rounded-md cursor-pointer transition"
                 >
                   Căn an toàn
                 </button>
               </div>
             }
 
-            <!-- KONVA.JS CANVAS STAGE CONTAINER -->
-            <div class="relative w-full max-w-[500px] my-2 flex flex-col items-center justify-center">
+            <!-- KONVA.JS CANVAS STAGE CONTAINER (Flex-1 Responsive wrapper) -->
+            <div #stageWrapper class="relative w-full flex-1 min-h-0 flex items-center justify-center overflow-hidden my-0.5">
               <div 
                 #konvaContainer
                 id="konva-container"
-                class="w-[460px] h-[460px] max-w-full rounded-3xl overflow-hidden shadow-2xl border-2 relative cursor-crosshair transition-all"
+                class="rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 relative cursor-crosshair transition-all"
                 [ngClass]="isOverflowWarning() ? 'border-amber-400 ring-2 ring-amber-200' : 'border-purple-100'"
                 [style.backgroundColor]="getColorCanvasBackground()"
                 [style.backgroundImage]="getActivePatternCss()"
@@ -758,45 +831,45 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
               </div>
 
               <!-- Canvas floating watermark -->
-              <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-md rounded-lg px-2.5 py-1 text-[10px] font-bold text-slate-700 border border-slate-200/80 shadow-sm flex items-center gap-1 pointer-events-none">
-                <span class="w-2 h-2 rounded-full" [ngClass]="isOverflowWarning() ? 'bg-amber-500 animate-ping' : 'bg-emerald-500 animate-pulse'"></span>
-                <span>Konva.js • {{ isFrontFace() ? 'Mặt Trước' : 'Mặt Sau' }} (Kích Thước Chuẩn)</span>
+              <div class="absolute top-2 right-2 bg-white/90 backdrop-blur-md rounded-md px-2 py-0.5 text-[9px] font-bold text-slate-700 border border-slate-200/80 shadow-2xs flex items-center gap-1 pointer-events-none z-10">
+                <span class="w-1.5 h-1.5 rounded-full" [ngClass]="isOverflowWarning() ? 'bg-amber-500 animate-ping' : 'bg-emerald-500 animate-pulse'"></span>
+                <span>Konva • {{ isFrontFace() ? 'Mặt Trước' : 'Mặt Sau' }}</span>
               </div>
             </div>
 
             <!-- PRINT AREA & SAFE AREA GUIDES LEGEND -->
-            <div class="w-full flex items-center justify-between text-[11px] text-slate-500 pt-1 pb-2 px-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="inline-flex items-center gap-1 text-[#7C3AED] font-semibold text-[10px]">
+            <div class="w-full flex items-center justify-between text-[10px] text-slate-500 pt-0.5 pb-0.5 px-1 shrink-0">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="inline-flex items-center gap-1 text-[#7C3AED] font-semibold text-[9.5px]">
                   <span class="w-2 h-2 border border-dashed border-[#7C3AED] rounded-xs inline-block"></span>
-                  Vùng in chuẩn: {{ currentPrintArea().width }}% × {{ currentPrintArea().height }}%
+                  Vùng in: {{ currentPrintArea().width }}% × {{ currentPrintArea().height }}%
                 </span>
                 <span>•</span>
-                <span class="inline-flex items-center gap-1 text-emerald-700 font-semibold text-[10px]">
+                <span class="inline-flex items-center gap-1 text-emerald-700 font-semibold text-[9.5px]">
                   <span class="w-2 h-2 border border-dashed border-emerald-600 rounded-xs inline-block"></span>
-                  Vùng an toàn (tránh mép cong): {{ currentSafeArea().width }}% × {{ currentSafeArea().height }}%
+                  Vùng an toàn: {{ currentSafeArea().width }}% × {{ currentSafeArea().height }}%
                 </span>
               </div>
               <button 
                 (click)="toggleGuides()" 
-                class="text-[10px] font-bold text-[#7C3AED] hover:underline flex items-center gap-0.5 cursor-pointer"
+                class="text-[9.5px] font-bold text-[#7C3AED] hover:underline flex items-center gap-0.5 cursor-pointer"
               >
-                <span class="material-symbols-outlined text-[13px]">{{ showGuides() ? 'visibility' : 'visibility_off' }}</span>
+                <span class="material-symbols-outlined text-[12px]">{{ showGuides() ? 'visibility' : 'visibility_off' }}</span>
                 <span>{{ showGuides() ? 'Ẩn khung' : 'Hiện khung' }}</span>
               </button>
             </div>
 
             <!-- Canvas Bottom Meta Info Bar -->
-            <div class="w-full flex items-center justify-between text-xs pt-3 border-t border-slate-100 text-slate-500">
-              <div class="flex items-center gap-3">
+            <div class="w-full flex items-center justify-between text-xs pt-1.5 border-t border-slate-100 text-slate-500 shrink-0">
+              <div class="flex items-center gap-2.5 text-[10px] sm:text-[11px]">
                 <span>Vỏ: <strong class="text-[#7C3AED]">{{ selectedColor() }}</strong></span>
                 <span>•</span>
                 <span>Font: <strong class="text-[#7C3AED]">{{ selectedFont() }}</strong></span>
                 <span>•</span>
                 <span>Khắc: <strong class="text-[#7C3AED]">{{ selectedEngraveColor() }}</strong></span>
               </div>
-              <div class="text-[11px] text-slate-400">
-                Chạm để xoay / phóng to / kéo thả trực quan
+              <div class="text-[10px] text-slate-400 hidden sm:block">
+                Kéo thả / xoay chỉnh trực quan
               </div>
             </div>
 
@@ -916,6 +989,8 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
 })
 export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('konvaContainer') konvaContainerRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('stageWrapper') stageWrapperRef?: ElementRef<HTMLDivElement>;
+  private resizeObserver: ResizeObserver | null = null;
 
   private studioService = inject(CustomStudioService);
   private cartService = inject(CartService);
@@ -1231,12 +1306,43 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.initKonvaStage();
+    this.fitStageToWrapper();
+
+    if (typeof ResizeObserver !== 'undefined' && this.stageWrapperRef) {
+      this.resizeObserver = new ResizeObserver(() => {
+        this.fitStageToWrapper();
+      });
+      this.resizeObserver.observe(this.stageWrapperRef.nativeElement);
+    }
   }
 
   ngOnDestroy(): void {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
     if (this.stage) {
       this.stage.destroy();
     }
+  }
+
+  fitStageToWrapper(): void {
+    if (!this.stage || !this.stageWrapperRef) return;
+    const wrapper = this.stageWrapperRef.nativeElement;
+    const w = wrapper.clientWidth;
+    const h = wrapper.clientHeight;
+    if (w <= 0 || h <= 0) return;
+
+    // Available size for square canvas (leave 8px padding)
+    const availableSize = Math.max(160, Math.min(w - 8, h - 8, 460));
+    const baseScale = availableSize / 460;
+    const zoom = this.canvasZoom();
+    const finalScale = baseScale * zoom;
+
+    this.stage.width(availableSize);
+    this.stage.height(availableSize);
+    this.stage.scale({ x: finalScale, y: finalScale });
+    this.stage.batchDraw();
   }
 
   // ================= KONVA.JS INITIALIZATION =================
@@ -1715,13 +1821,13 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   // Canvas Action Toolbars
   centerSelectedNode(): void {
     const selected = this.transformer?.nodes()[0];
-    if (selected && this.stage) {
-      selected.x((this.stage.width() - (selected.width() * selected.scaleX())) / 2);
+    if (selected) {
+      selected.x((460 - (selected.width() * selected.scaleX())) / 2);
       this.drawLayer?.batchDraw();
       this.uiLayer?.batchDraw();
       this.checkOverflowWarning();
-    } else if (this.textNode && this.stage) {
-      this.textNode.x((this.stage.width() - this.textNode.width()) / 2);
+    } else if (this.textNode) {
+      this.textNode.x((460 - this.textNode.width()) / 2);
       this.drawLayer?.batchDraw();
       this.uiLayer?.batchDraw();
       this.checkOverflowWarning();
@@ -1819,10 +1925,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   setZoom(zoom: number): void {
     this.canvasZoom.set(zoom);
-    if (this.stage) {
-      this.stage.scale({ x: zoom, y: zoom });
-      this.stage.batchDraw();
-    }
+    this.fitStageToWrapper();
   }
 
   @HostListener('window:keydown', ['$event'])
@@ -1875,7 +1978,9 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       this.guidesLayer.batchDraw();
     }
 
-    const dataUrl = this.stage.toDataURL({ pixelRatio: 2 });
+    const currentScale = this.stage.scaleX() || 1;
+    const pixelRatio = Math.max(1, 2 / currentScale);
+    const dataUrl = this.stage.toDataURL({ pixelRatio });
 
     if (wasGuidesShown && this.guidesLayer) {
       this.guidesLayer.show();
