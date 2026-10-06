@@ -142,19 +142,47 @@ import { AuthService } from '../../core/services/auth.service';
                       {{ item.productId?.name || 'Sản phẩm quà tặng Giftory' }}
                     </h2>
 
-                    <!-- Custom details callout if custom -->
+                    <!-- Custom details callout if custom (AC14 & BR-CUS06) -->
                     @if (item.isCustom && item.customDetails) {
-                      <div class="my-2 p-2.5 rounded-xl bg-purple-50/70 border border-purple-100 text-xs text-slate-700 flex flex-col gap-1">
+                      <div class="my-2 p-3 rounded-xl bg-purple-50/80 border border-purple-100 text-xs text-slate-700 flex flex-col gap-1.5">
                         @if (item.customDetails.frontMessage) {
-                          <div class="flex items-center gap-1.5 truncate">
-                            <span class="text-slate-400 font-medium">Lời nhắn:</span>
+                          <div class="flex items-center gap-1.5">
+                            <span class="text-slate-400 font-medium shrink-0">Mặt trước:</span>
                             <span class="font-bold text-[#7C3AED] truncate">“{{ item.customDetails.frontMessage }}”</span>
                           </div>
                         }
-                        <div class="flex items-center gap-3 text-[11px] text-slate-500">
-                          <span>Font: {{ item.customDetails.fontFamily || 'Signature' }}</span>
-                          <span>Phủ màu: {{ item.customDetails.engraveColor || 'Gold' }}</span>
+                        @if (item.customDetails.backMessage) {
+                          <div class="flex items-center gap-1.5">
+                            <span class="text-slate-400 font-medium shrink-0">Mặt sau:</span>
+                            <span class="font-bold text-[#7C3AED] truncate">“{{ item.customDetails.backMessage }}”</span>
+                          </div>
+                        }
+
+                        <div class="flex items-center gap-2 flex-wrap text-[11px] text-slate-500 pt-1 border-t border-purple-200/50">
+                          <span>Màu phôi: <strong class="text-slate-700">{{ item.customDetails.selectedColor || item.variantName || 'Chuẩn' }}</strong></span>
+                          <span>•</span>
+                          <span>Font: <strong class="text-slate-700">{{ item.customDetails.fontFamily || 'Signature' }}</strong></span>
+                          <span>•</span>
+                          <span>Khắc: <strong class="text-slate-700">{{ item.customDetails.engraveColor || 'Gold' }}</strong></span>
+                          @if (item.customDetails.pattern && item.customDetails.pattern !== 'none') {
+                            <span>•</span>
+                            <span>Họa tiết: <strong class="text-[#7C3AED]">{{ item.customDetails.pattern }}</strong></span>
+                          }
+                          @if (item.customDetails.uploadedImage) {
+                            <span>•</span>
+                            <span class="text-emerald-700 font-bold flex items-center gap-0.5">
+                              <span class="material-symbols-outlined text-[13px]">image</span>
+                              Ảnh cá nhân HD
+                            </span>
+                          }
                         </div>
+
+                        <!-- Surcharges breakdown pill -->
+                        @if (item.customDetails.customFee && item.customDetails.customFee > 0) {
+                          <div class="text-[10px] text-[#7C3AED] font-semibold bg-white/70 px-2 py-0.5 rounded-md border border-purple-100 w-fit">
+                            Phụ phí tùy biến: +{{ item.customDetails.customFee | number:'1.0-0' }}đ
+                          </div>
+                        }
                       </div>
                     }
 
@@ -177,11 +205,12 @@ import { AuthService } from '../../core/services/auth.service';
                         @if (item.isCustom) {
                           <a 
                             routerLink="/custom-studio" 
-                            [queryParams]="{ productId: item.productId?._id }"
-                            class="px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs flex items-center gap-1"
+                            [queryParams]="{ productId: item.productId?._id, cartItemIndex: $index }"
+                            class="px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                            title="Chỉnh sửa cấu hình bản thiết kế này (AC14)"
                           >
                             <span class="material-symbols-outlined text-[14px]">tune</span>
-                            <span>Sửa</span>
+                            <span>Sửa cấu hình</span>
                           </a>
                         }
 

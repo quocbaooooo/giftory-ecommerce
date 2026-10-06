@@ -99,4 +99,17 @@ export class CreateProductDto {
     key: string;
     value: string;
   }>;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  customConfig?: {
+    frontBlankImage?: string;
+    backBlankImage?: string;
+    supportedColors?: string[];
+    maxTextLength?: number;
+    backEngraveFee?: number;
+    photoPrintFee?: number;
+    printArea?: { x: number; y: number; width: number; height: number };
+    safeArea?: { x: number; y: number; width: number; height: number };
+  };
 }

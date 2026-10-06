@@ -42,6 +42,35 @@ export interface ProductSpec {
   value: string;
 }
 
+export interface AreaBox {
+  x: number;      // % từ mép trái ảnh mockup (0-100)
+  y: number;      // % từ mép trên ảnh mockup (0-100)
+  width: number;  // % chiều rộng so với ảnh mockup (0-100)
+  height: number; // % chiều cao so với ảnh mockup (0-100)
+}
+
+export interface CustomBlankConfig {
+  frontBlankImage?: string;
+  backBlankImage?: string;
+  supportedColors?: string[];
+  maxTextLength?: number;
+  backEngraveFee?: number;
+  photoPrintFee?: number;
+  printArea?: AreaBox;
+  safeArea?: AreaBox;
+}
+
+export interface StudioAsset {
+  _id: string;
+  name: string;
+  icon: string;
+  type: 'STICKER' | 'PATTERN';
+  category?: string;
+  surcharge?: number;
+  isActive?: boolean;
+  order?: number;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -62,6 +91,7 @@ export interface Product {
   rating?: number;
   soldCount?: number;
   customBaseFee?: number;
+  customConfig?: CustomBlankConfig;
   status?: string;
   relatedProducts?: Product[];
   createdAt?: string;
@@ -80,9 +110,16 @@ export interface CustomDesign {
   engraveColor?: string;
   colorHex?: string;
   selectedColor?: string;
+  pattern?: string;
+  uploadedImage?: string;
+  imageScale?: number;
   stickers?: any[];
   previewImage?: string;
+  frontPreviewImage?: string;
+  backPreviewImage?: string;
   customFee?: number;
+  surcharges?: Record<string, number>;
+  isDraft?: boolean;
   price?: number;
   designData?: any;
 }
@@ -102,8 +139,15 @@ export interface CartItem {
     engraveColor?: string;
     colorHex?: string;
     selectedColor?: string;
+    pattern?: string;
+    uploadedImage?: string;
+    imageScale?: number;
+    stickers?: any[];
     previewImage?: string;
+    frontPreviewImage?: string;
+    backPreviewImage?: string;
     customFee?: number;
+    surcharges?: Record<string, number>;
     designData?: any;
   };
   price: number;

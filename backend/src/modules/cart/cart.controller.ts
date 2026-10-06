@@ -56,6 +56,20 @@ export class CartController {
     return this.cartService.updateItemQuantity(Number(index), quantity, userId, sessionId);
   }
 
+  @Patch('items/:index/custom')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cập nhật cấu hình tùy biến (customDetails) của sản phẩm trong giỏ hàng' })
+  async updateCustomDetails(
+    @Param('index') index: number,
+    @Body('customDetails') customDetails: any,
+    @Body('variantName') variantName?: string,
+    @Query('sessionId') sessionId?: string,
+    @CurrentUser('sub') userId?: string
+  ) {
+    return this.cartService.updateItemCustomDetails(Number(index), customDetails, variantName, userId, sessionId);
+  }
+
   @Delete('items/:index')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()

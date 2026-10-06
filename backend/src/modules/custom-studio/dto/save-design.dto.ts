@@ -37,6 +37,21 @@ export class SaveDesignDto {
   @IsString()
   selectedColor?: string;
 
+  @ApiProperty({ example: 'none', required: false })
+  @IsOptional()
+  @IsString()
+  pattern?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  uploadedImage?: string;
+
+  @ApiProperty({ required: false, default: 1 })
+  @IsOptional()
+  @IsNumber()
+  imageScale?: number;
+
   @ApiProperty({ required: false, default: [] })
   @IsOptional()
   @IsArray()
@@ -47,10 +62,28 @@ export class SaveDesignDto {
   @IsString()
   previewImage?: string;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  frontPreviewImage?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  backPreviewImage?: string;
+
   @ApiProperty({ required: false, default: 30000 })
   @IsOptional()
   @IsNumber()
   customFee?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  surcharges?: Record<string, number>;
+
+  @ApiProperty({ required: false, default: false })
+  @IsOptional()
+  isDraft?: boolean;
 
   @ApiProperty({ required: false })
   @IsOptional()

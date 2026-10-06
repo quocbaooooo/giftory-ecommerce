@@ -77,6 +77,16 @@ export class CartService {
     );
   }
 
+  updateCustomDetails(index: number, customDetails: any, variantName?: string) {
+    const sessionId = this.getSessionId();
+    return this.api.patch<Cart>(`cart/items/${index}/custom?sessionId=${sessionId}`, {
+      customDetails,
+      variantName
+    }).pipe(
+      tap(cart => this.cart.set(cart))
+    );
+  }
+
   removeItem(index: number) {
     const sessionId = this.getSessionId();
     return this.api.delete<Cart>(`cart/items/${index}?sessionId=${sessionId}`).pipe(

@@ -122,13 +122,28 @@ import { Product, ProductVariant } from '../../../core/models';
                 </div>
               </div>
 
-              <!-- Bespoke Notice Banner (BR-PAY05) -->
+              <!-- Bespoke Notice Banner (BR-PAY05 & BP-02) -->
               @if (prod.isCustomizable) {
-                <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-slate-700 text-xs leading-relaxed flex items-start gap-3">
-                  <span class="material-symbols-outlined text-emerald-600 text-xl shrink-0 mt-0.5">verified_user</span>
-                  <div>
-                    <strong class="text-emerald-800 font-bold block mb-0.5">Chính Sách Chế Tác Quà Tặng Theo Yêu Cầu (BR-PAY05)</strong>
-                    Sản phẩm này được khắc laser vi điểm hoặc may thêu thủ công độc bản. Bạn chỉ cần thanh toán cọc 50% khi đặt hàng, 50% còn lại thanh toán COD khi nhận hàng và kiểm tra trọn vẹn.
+                <div class="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-purple-50 to-emerald-50 border border-emerald-200 text-slate-700 text-xs leading-relaxed flex flex-col gap-2.5">
+                  <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-emerald-600 text-xl shrink-0 mt-0.5">verified_user</span>
+                    <div>
+                      <strong class="text-emerald-800 font-bold block mb-0.5">Chính Sách Chế Tác Quà Tặng Theo Yêu Cầu (BR-PAY05 & BP-02)</strong>
+                      Sản phẩm này hỗ trợ tùy chỉnh cá nhân hóa 2D/3D trực quan. Bạn chỉ cần cọc trước 50% khi đặt hàng, 50% còn lại thanh toán COD khi nhận hàng và kiểm tra trọn vẹn.
+                    </div>
+                  </div>
+
+                  <!-- Customizable Attributes List (AC1 & BR-CUS01) -->
+                  <div class="pt-2 border-t border-emerald-200/60 flex items-center gap-1.5 flex-wrap text-[11px] font-medium text-slate-600">
+                    <span class="font-bold text-[#7C3AED] flex items-center gap-1">
+                      <span class="material-symbols-outlined text-[14px]">tune</span>
+                      Thuộc tính tùy biến:
+                    </span>
+                    <span class="px-2 py-0.5 rounded-md bg-white border border-purple-200 text-[#7C3AED]">Khắc 2 mặt (Trước/Sau)</span>
+                    <span class="px-2 py-0.5 rounded-md bg-white border border-purple-200 text-[#7C3AED]">Font chữ nghệ thuật</span>
+                    <span class="px-2 py-0.5 rounded-md bg-white border border-purple-200 text-[#7C3AED]">Phủ màu Gold/Silver/Ruby</span>
+                    <span class="px-2 py-0.5 rounded-md bg-white border border-purple-200 text-[#7C3AED]">Tải ảnh cá nhân</span>
+                    <span class="px-2 py-0.5 rounded-md bg-white border border-purple-200 text-[#7C3AED]">Sticker đồ họa</span>
                   </div>
                 </div>
               }
@@ -193,10 +208,10 @@ import { Product, ProductVariant } from '../../../core/models';
                 <a 
                   [routerLink]="['/custom-studio']"
                   [queryParams]="{ productId: prod._id }"
-                  class="w-full sm:flex-1 py-3.5 px-4 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95"
+                  class="w-full sm:flex-1 py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95"
                 >
-                  <span class="material-symbols-outlined text-[20px]">palette</span>
-                  <span>Tự Tay Chế Tác Trong Studio</span>
+                  <span class="material-symbols-outlined text-[20px]">view_in_ar</span>
+                  <span>Custom 2D/3D Trong Studio (BP-02)</span>
                 </a>
               }
 

@@ -11,6 +11,7 @@ import { Order, OrderSchema } from './schemas/order.schema';
 import { Payment, PaymentSchema } from './schemas/payment.schema';
 import { LoyaltyTransaction, LoyaltyTransactionSchema } from './schemas/loyalty-transaction.schema';
 import { Wishlist, WishlistSchema } from './schemas/wishlist.schema';
+import { StudioAsset, StudioAssetSchema } from './schemas/studio-asset.schema';
 
 const MODELS = [
   { name: User.name, schema: UserSchema },
@@ -24,6 +25,7 @@ const MODELS = [
   { name: Payment.name, schema: PaymentSchema },
   { name: LoyaltyTransaction.name, schema: LoyaltyTransactionSchema },
   { name: Wishlist.name, schema: WishlistSchema },
+  { name: StudioAsset.name, schema: StudioAssetSchema },
 ];
 
 @Global()

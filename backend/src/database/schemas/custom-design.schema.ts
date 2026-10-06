@@ -32,6 +32,15 @@ export class CustomDesign {
   @Prop({ default: 'Navy Blue' })
   selectedColor: string;
 
+  @Prop({ default: 'none' })
+  pattern: string;
+
+  @Prop({ default: '' })
+  uploadedImage: string;
+
+  @Prop({ default: 1 })
+  imageScale: number;
+
   @Prop({ type: Array, default: [] })
   stickers: Array<{
     id: string;
@@ -45,8 +54,20 @@ export class CustomDesign {
   @Prop({ default: '' })
   previewImage: string;
 
+  @Prop({ default: '' })
+  frontPreviewImage: string;
+
+  @Prop({ default: '' })
+  backPreviewImage: string;
+
   @Prop({ default: 30000 })
   customFee: number;
+
+  @Prop({ type: Object, default: {} })
+  surcharges: Record<string, number>;
+
+  @Prop({ default: false })
+  isDraft: boolean;
 }
 
 export const CustomDesignSchema = SchemaFactory.createForClass(CustomDesign);

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Param,
   Query,
@@ -24,6 +25,30 @@ export class CustomStudioController {
     return this.studioService.getCustomizableTemplates();
   }
 
+  @Get('assets')
+  @ApiOperation({ summary: 'Lấy danh sách icon/sticker/họa tiết dùng trong Custom Studio' })
+  async getStudioAssets(@Query('type') type?: string) {
+    return this.studioService.getStudioAssets(type);
+  }
+
+  @Get('admin/assets')
+  @ApiOperation({ summary: 'Admin lấy danh sách toàn bộ icon/sticker/họa tiết' })
+  async getAllAssetsAdmin() {
+    return this.studioService.getAllStudioAssetsAdmin();
+  }
+
+  @Post('admin/assets')
+  @ApiOperation({ summary: 'Admin thêm mới icon/sticker/họa tiết vào thư viện' })
+  async createStudioAsset(@Body() body: any) {
+    return this.studioService.createStudioAsset(body);
+  }
+
+  @Delete('admin/assets/:id')
+  @ApiOperation({ summary: 'Admin xóa icon/sticker khỏi thư viện' })
+  async deleteStudioAsset(@Param('id') id: string) {
+    return this.studioService.deleteStudioAsset(id);
+  }
+
   @Post('save-design')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()
@@ -33,6 +58,17 @@ export class CustomStudioController {
     @CurrentUser('sub') userId?: string
   ) {
     return this.studioService.saveDesign(dto, userId);
+  }
+
+  @Post('sync-draft')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Đồng bộ bản thiết kế từ LocalStorage vào CSDL tài khoản khi Đăng nhập 1-click (SyncDesignDraft)' })
+  async syncDraft(
+    @Body() dto: SaveDesignDto,
+    @CurrentUser('sub') userId?: string
+  ) {
+    return this.studioService.syncDesignDraft(dto, userId || '');
   }
 
   @Get('my-designs')

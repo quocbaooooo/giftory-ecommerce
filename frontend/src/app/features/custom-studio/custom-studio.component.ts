@@ -1,421 +1,1988 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, HostListener, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import Konva from 'konva';
 import { CustomStudioService } from '../../core/services/custom-studio.service';
 import { CartService } from '../../core/services/cart.service';
-import { Product } from '../../core/models';
+import { AuthService } from '../../core/services/auth.service';
+import { Product, StudioAsset, AreaBox } from '../../core/models';
+
+interface CustomPattern {
+  id: string;
+  name: string;
+  surcharge: number;
+  icon: string;
+  cssPattern: string;
+}
+
+interface SurchargeBreakdown {
+  label: string;
+  amount: number;
+}
+
+type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMARY';
 
 @Component({
   selector: 'app-custom-studio',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   template: `
-    <div class="max-w-[1520px] mx-auto px-4 md:px-8 py-6">
+    <div class="max-w-[1600px] mx-auto px-2 sm:px-4 md:px-6 py-4 flex flex-col gap-4 min-h-[calc(100vh-80px)]">
       
-      <!-- Studio Header Bar -->
-      <div class="bg-white rounded-2xl p-4 shadow-sm border border-[#DDD6FE]/60 mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <span class="material-symbols-outlined text-[#7C3AED]">palette</span>
-          <span class="font-bold text-[#1E1B4B]">Studio Chế Tác Quà Tặng Giftory (BP-02)</span>
-          <span class="text-slate-400">•</span>
-          <span class="text-slate-600 font-medium">{{ activeTemplate()?.name || 'Bình Giữ Nhiệt Nordic' }}</span>
-          <span class="bg-purple-100 text-[#7C3AED] text-xs font-semibold px-2 py-0.5 rounded-full">Bespoke 1:1</span>
-        </div>
+      <!-- TOP STUDIO APP BAR -->
+      <header class="bg-white rounded-2xl px-5 py-3.5 shadow-xs border border-[#DDD6FE]/70 flex flex-wrap items-center justify-between gap-3">
+        <!-- Left: Product switcher & Breadcrumb -->
         <div class="flex items-center gap-3">
-          <div class="flex items-center gap-1.5 text-xs text-emerald-600 font-medium bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Độ trễ render 3D: 12ms
-          </div>
-          <span class="text-xs font-bold text-[#10B981] bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-            Áp dụng cọc 50% (BR-PAY05)
-          </span>
-        </div>
-      </div>
+          <a routerLink="/products" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-purple-100 text-slate-700 hover:text-[#7C3AED] flex items-center justify-center transition" title="Quay lại danh mục">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+          </a>
 
-      <!-- 7 Product Category Rail -->
-      <div class="bg-white rounded-2xl p-4 shadow-sm border border-[#DDD6FE]/60 mb-6">
-        <div class="flex items-center justify-between mb-2">
-          <div class="flex items-center gap-1.5 font-bold text-xs text-[#1E1B4B]">
-            <span class="material-symbols-outlined text-[16px] text-[#7C3AED]">category</span>
-            <span>Chọn Dòng Sản Phẩm Phôi Chế Tác:</span>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-[#7C3AED] uppercase tracking-wider flex items-center gap-1">
+                <span class="material-symbols-outlined text-[15px]">palette</span>
+                Konva 2D Design Studio (BP-02)
+              </span>
+              <span class="text-slate-300">•</span>
+              <span class="text-xs text-slate-500 font-medium hidden sm:inline">Phôi Chế Tác Độc Bản</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <h1 class="font-bold text-sm sm:text-base text-[#1E1B4B] truncate max-w-[280px] sm:max-w-md">
+                {{ activeTemplate()?.name || 'Bình Giữ Nhiệt Nordic' }}
+              </h1>
+              @if (isEditingCartItem()) {
+                <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300">
+                  Đang sửa món #{{ editingCartItemIndex()! + 1 }}
+                </span>
+              }
+            </div>
           </div>
-          <span class="text-[11px] font-semibold text-[#7C3AED] bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
-            Miễn phí khắc laser & thiết kế bản mẫu
-          </span>
         </div>
 
-        <div class="flex items-center gap-2.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+        <!-- Center: Blank Template Quick Rail -->
+        <div class="hidden lg:flex items-center gap-2 overflow-x-auto no-scrollbar max-w-md py-1">
           @for (tpl of templates(); track tpl._id) {
             <button 
               (click)="selectTemplate(tpl)"
-              class="flex items-center gap-2 px-3.5 py-2 rounded-xl border transition-all shrink-0 font-medium cursor-pointer"
-              [ngClass]="activeTemplate()?._id === tpl._id ? 'bg-[#7C3AED] text-white border-[#7C3AED] shadow-sm' : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-purple-200'"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold shrink-0 cursor-pointer transition-all"
+              [ngClass]="activeTemplate()?._id === tpl._id ? 'bg-[#7C3AED] text-white border-[#7C3AED] shadow-xs' : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-purple-200'"
             >
-              <img [src]="tpl.images[0]" [alt]="tpl.name" class="w-6 h-6 rounded-md object-cover bg-white">
-              <span class="whitespace-nowrap">{{ tpl.name.split('&')[0].trim() }}</span>
+              <img [src]="tpl.images[0]" [alt]="tpl.name" class="w-5 h-5 rounded-md object-cover bg-white">
+              <span class="truncate max-w-[120px]">{{ tpl.name.split('&')[0].trim() }}</span>
             </button>
           }
         </div>
-      </div>
 
-      <!-- Main Layout: 7 Cols Left (Interactive Preview Canvas) / 5 Cols Right (Controls) -->
-      <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+        <!-- Right: Status & Quick Actions -->
+        <div class="flex items-center gap-3">
+          @if (lastAutoSavedTime()) {
+            <div class="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Lưu nháp {{ lastAutoSavedTime() }}</span>
+            </div>
+          }
+
+          <div class="flex items-center gap-1.5 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 text-xs font-bold text-[#10B981]">
+            <span class="material-symbols-outlined text-[16px]">verified</span>
+            <span>Cọc 50% (BR-PAY05)</span>
+          </div>
+
+          <button 
+            (click)="onSaveDesignClick()"
+            class="px-3.5 py-1.5 rounded-xl border border-[#DDD6FE] bg-white hover:bg-purple-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+            title="Lưu bản thiết kế này (AC12)"
+          >
+            <span class="material-symbols-outlined text-[16px] text-[#7C3AED]">bookmark</span>
+            <span class="hidden sm:inline">Lưu Nháp</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- RESTORED DRAFT BANNER -->
+      @if (hasRestoredDraft() && !isEditingCartItem()) {
+        <div class="px-4 py-2 rounded-xl bg-purple-50 border border-purple-200 text-[#7C3AED] text-xs flex items-center justify-between shadow-2xs">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px]">history</span>
+            <span>✨ Đã tự động khôi phục bản thiết kế dở dang của bạn từ LocalStorage!</span>
+          </div>
+          <button (click)="resetToDefaults()" class="text-[11px] underline font-bold hover:text-purple-900 cursor-pointer">
+            Làm mới từ đầu
+          </button>
+        </div>
+      }
+
+      <!-- ================= MAIN 3-ZONE STUDIO WORKSPACE ================= -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 items-stretch">
         
-        <!-- LEFT: INTERACTIVE PREVIEW CANVAS -->
-        <div class="xl:col-span-7 flex flex-col gap-6">
-          <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#DDD6FE] flex flex-col items-center relative overflow-hidden">
+        <!-- ================= ZONE 1: TOOL NAVIGATION & DRAWER (5 COLS) ================= -->
+        <div class="lg:col-span-5 flex bg-white rounded-3xl border border-[#DDD6FE] shadow-shop-card overflow-hidden min-h-[580px]">
+          
+          <!-- Slim Left Tool Dock -->
+          <div class="w-20 bg-slate-50 border-r border-slate-200 flex flex-col items-center py-4 gap-2 shrink-0">
+            <!-- Tool 1: Colors -->
+            <button
+              (click)="activeToolTab.set('COLOR')"
+              class="w-14 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer"
+              [ngClass]="activeToolTab() === 'COLOR' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
+              title="Phối màu vỏ phôi"
+            >
+              <span class="material-symbols-outlined text-[20px]">palette</span>
+              <span class="text-[9px] font-bold">Màu phôi</span>
+            </button>
+
+            <!-- Tool 2: Text / Engraving -->
+            <button
+              (click)="activeToolTab.set('TEXT')"
+              class="w-14 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer"
+              [ngClass]="activeToolTab() === 'TEXT' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
+              title="Nội dung khắc laser"
+            >
+              <span class="material-symbols-outlined text-[20px]">format_shapes</span>
+              <span class="text-[9px] font-bold">Khắc chữ</span>
+            </button>
+
+            <!-- Tool 3: Photo Upload -->
+            <button
+              (click)="activeToolTab.set('IMAGE')"
+              class="w-14 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer relative"
+              [ngClass]="activeToolTab() === 'IMAGE' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
+              title="Tải ảnh cá nhân"
+            >
+              <span class="material-symbols-outlined text-[20px]">add_photo_alternate</span>
+              <span class="text-[9px] font-bold">Tải ảnh</span>
+              @if (uploadedImage()) {
+                <span class="w-2 h-2 rounded-full bg-emerald-500 absolute top-2 right-2 border-2 border-white"></span>
+              }
+            </button>
+
+            <!-- Tool 4: Stickers (From Admin) -->
+            <button
+              (click)="activeToolTab.set('STICKER')"
+              class="w-14 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer relative"
+              [ngClass]="activeToolTab() === 'STICKER' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
+              title="Sticker & Icon"
+            >
+              <span class="material-symbols-outlined text-[20px]">sentiment_satisfied</span>
+              <span class="text-[9px] font-bold">Sticker</span>
+              @if (activeStickers().length > 0) {
+                <span class="w-2 h-2 rounded-full bg-pink-500 absolute top-2 right-2 border-2 border-white"></span>
+              }
+            </button>
+
+            <!-- Tool 5: Patterns -->
+            <button
+              (click)="activeToolTab.set('PATTERN')"
+              class="w-14 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer"
+              [ngClass]="activeToolTab() === 'PATTERN' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
+              title="Hoa văn phủ"
+            >
+              <span class="material-symbols-outlined text-[20px]">texture</span>
+              <span class="text-[9px] font-bold">Họa tiết</span>
+            </button>
+
+            <div class="w-8 border-t border-slate-200 my-1"></div>
+
+            <!-- Tool 6: Price & Specs -->
+            <button
+              (click)="activeToolTab.set('SUMMARY')"
+              class="w-14 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer"
+              [ngClass]="activeToolTab() === 'SUMMARY' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
+              title="Bảng giá & Đặt hàng"
+            >
+              <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+              <span class="text-[9px] font-bold">Bảng giá</span>
+            </button>
+          </div>
+
+          <!-- Active Tool Drawer Content Panel -->
+          <div class="flex-1 p-5 overflow-y-auto max-h-[680px] flex flex-col justify-between">
             
-            <!-- Canvas Controls Header -->
-            <div class="w-full flex items-center justify-between mb-4">
-              <div class="flex items-center gap-2">
+            <!-- DRAWER 1: COLORS -->
+            @if (activeToolTab() === 'COLOR') {
+              <div class="space-y-4 animate-fade-in">
+                <div>
+                  <h3 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">palette</span>
+                    Phối Màu Vỏ Phôi Sản Phẩm
+                  </h3>
+                  <p class="text-[11px] text-slate-500 mt-0.5">Lựa chọn chất liệu và màu vỏ phôi thực tế do xưởng Giftory gia công</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                  @for (c of availableColorOptions(); track c.name) {
+                    <div 
+                      (click)="setColor(c.name)"
+                      class="p-3 rounded-2xl border-2 flex items-center gap-3 cursor-pointer transition-all hover:border-[#7C3AED]/70"
+                      [ngClass]="selectedColor() === c.name ? 'border-[#7C3AED] bg-purple-50/60 shadow-xs' : 'border-slate-200 bg-white'"
+                    >
+                      <div 
+                        class="w-8 h-8 rounded-full border shadow-inner flex items-center justify-center shrink-0"
+                        [style.backgroundColor]="c.hex"
+                      >
+                        @if (selectedColor() === c.name) {
+                          <span class="material-symbols-outlined text-xs font-bold" [style.color]="c.hex === '#FFFFFF' ? '#000' : '#FFF'">check</span>
+                        }
+                      </div>
+                      <div>
+                        <span class="text-xs font-bold text-slate-800 block leading-tight">{{ c.name }}</span>
+                        <span class="text-[10px] text-slate-400">Sơn tĩnh điện vi sinh</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- DRAWER 2: TEXT & ENGRAVING -->
+            @if (activeToolTab() === 'TEXT') {
+              <div class="space-y-4 animate-fade-in">
+                <div>
+                  <h3 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">format_shapes</span>
+                    Khắc Laser 2 Mặt & Kiểu Chữ (Konva Text)
+                  </h3>
+                  <p class="text-[11px] text-slate-500 mt-0.5">Khắc vi điểm sắc nét tên người nhận, thông điệp và ngày kỷ niệm</p>
+                </div>
+
+                <!-- Face Active Switch Tab in Text Drawer -->
+                <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-xl">
+                  <button 
+                    (click)="switchFace(true)"
+                    class="flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1"
+                    [ngClass]="isFrontFace() ? 'bg-white text-[#7C3AED] shadow-xs' : 'text-slate-600'"
+                  >
+                    <span>Mặt Trước (Front)</span>
+                  </button>
+                  <button 
+                    (click)="switchFace(false)"
+                    class="flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1"
+                    [ngClass]="!isFrontFace() ? 'bg-white text-[#7C3AED] shadow-xs' : 'text-slate-600'"
+                  >
+                    <span>Mặt Sau (Back)</span>
+                  </button>
+                </div>
+
+                <!-- Input for Active Face -->
+                @if (isFrontFace()) {
+                  <div class="space-y-1">
+                    <div class="flex items-center justify-between">
+                      <label class="text-xs font-bold text-slate-700">Lời nhắn mặt trước: <span class="text-red-500">*</span></label>
+                      <span class="text-[10px] text-slate-400 font-mono">{{ frontMessage().length }}/{{ maxTextLength() }}</span>
+                    </div>
+                    <div class="relative">
+                      <input 
+                        [(ngModel)]="frontMessage"
+                        (ngModelChange)="onFrontMessageChange($event)"
+                        [maxlength]="maxTextLength()"
+                        class="w-full px-3.5 py-2.5 rounded-xl border text-xs font-medium outline-none text-slate-800 pr-8"
+                        [ngClass]="formErrors.frontMessage ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-[#7C3AED]'"
+                        placeholder="VD: Happy Anniversary Minh Anh ❤️"
+                      />
+                      @if (frontMessage()) {
+                        <button (click)="onFrontMessageChange('')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
+                          <span class="material-symbols-outlined text-[15px]">close</span>
+                        </button>
+                      }
+                    </div>
+                    @if (formErrors.frontMessage) {
+                      <span class="text-[10px] text-red-500">{{ formErrors.frontMessage }}</span>
+                    }
+                  </div>
+                } @else {
+                  <div class="space-y-1">
+                    <div class="flex items-center justify-between">
+                      <label class="text-xs font-bold text-slate-700">Lời nhắn mặt sau (Ngày kỷ niệm, ký tên):</label>
+                      <span class="text-[10px] text-slate-400 font-mono">{{ backMessage().length }}/{{ maxTextLength() }}</span>
+                    </div>
+                    <div class="relative">
+                      <input 
+                        [(ngModel)]="backMessage"
+                        (ngModelChange)="onBackMessageChange($event)"
+                        [maxlength]="maxTextLength()"
+                        class="w-full px-3.5 py-2.5 rounded-xl border text-xs font-medium outline-none text-slate-800 pr-8"
+                        [ngClass]="formErrors.backMessage ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-[#7C3AED]'"
+                        placeholder="VD: 14.02.2024 • Yêu Em Mãi Mãi"
+                      />
+                      @if (backMessage()) {
+                        <button (click)="onBackMessageChange('')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
+                          <span class="material-symbols-outlined text-[15px]">close</span>
+                        </button>
+                      }
+                    </div>
+                    <span class="text-[10px] text-[#7C3AED] font-medium">+20.000đ phụ phí khắc laser mặt sau nếu có chữ</span>
+                  </div>
+                }
+
+                <!-- Font Selection -->
+                <div>
+                  <label class="text-xs font-bold text-slate-700 block mb-1.5">Font chữ nghệ thuật:</label>
+                  <div class="grid grid-cols-2 gap-2">
+                    @for (f of fontOptions; track f.name) {
+                      <button 
+                        (click)="setFont(f.name)"
+                        class="p-2.5 rounded-xl border text-left transition-all cursor-pointer"
+                        [ngClass]="selectedFont() === f.name ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED] font-bold shadow-2xs' : 'border-slate-200 hover:border-slate-300 text-slate-700'"
+                      >
+                        <div class="text-[10px] font-semibold text-slate-500">{{ f.name }}</div>
+                        <div class="text-xs mt-0.5 truncate" [ngClass]="f.class">Minh Anh & Hoàng</div>
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <!-- Engrave Color -->
+                <div>
+                  <label class="text-xs font-bold text-slate-700 block mb-1.5">Màu lớp phủ khắc laser:</label>
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    @for (ec of engraveColors; track ec.name) {
+                      <button 
+                        (click)="setEngraveColor(ec.name)"
+                        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all"
+                        [ngClass]="selectedEngraveColor() === ec.name ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED]' : 'border-slate-200 text-slate-600'"
+                      >
+                        <span class="w-3 h-3 rounded-full border border-slate-300 shrink-0" [style.backgroundColor]="ec.hex"></span>
+                        <span class="text-[11px]">{{ ec.name }}</span>
+                        @if (ec.surcharge > 0) {
+                          <span class="text-[9px] text-amber-600 font-bold">+10k</span>
+                        }
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <!-- Text Typography & Styling Controls (Konva Text Properties) -->
+                <div class="space-y-2 pt-3 border-t border-slate-100">
+                  <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-slate-700">Kích thước chữ ({{ textSize() }}px):</label>
+                    <div class="flex items-center gap-1.5">
+                      <button 
+                        (click)="setTextSize(textSize() - 2)"
+                        [disabled]="textSize() <= 10"
+                        class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs cursor-pointer disabled:opacity-40"
+                      >-</button>
+                      <button 
+                        (click)="setTextSize(textSize() + 2)"
+                        [disabled]="textSize() >= 32"
+                        class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs cursor-pointer disabled:opacity-40"
+                      >+</button>
+                    </div>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="10" 
+                    max="32" 
+                    [ngModel]="textSize()" 
+                    (ngModelChange)="setTextSize($event)"
+                    class="w-full accent-[#7C3AED] h-1.5 bg-slate-200 rounded-lg cursor-pointer"
+                  />
+
+                  <div class="flex items-center justify-between pt-1">
+                    <!-- Text Align -->
+                    <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                      <button 
+                        (click)="setTextAlign('left')"
+                        class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
+                        [ngClass]="textAlign() === 'left' ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+                        title="Căn trái"
+                      >
+                        <span class="material-symbols-outlined text-[16px]">format_align_left</span>
+                      </button>
+                      <button 
+                        (click)="setTextAlign('center')"
+                        class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
+                        [ngClass]="textAlign() === 'center' ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+                        title="Căn giữa"
+                      >
+                        <span class="material-symbols-outlined text-[16px]">format_align_center</span>
+                      </button>
+                      <button 
+                        (click)="setTextAlign('right')"
+                        class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
+                        [ngClass]="textAlign() === 'right' ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+                        title="Căn phải"
+                      >
+                        <span class="material-symbols-outlined text-[16px]">format_align_right</span>
+                      </button>
+                    </div>
+
+                    <!-- Bold & Italic -->
+                    <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                      <button 
+                        (click)="toggleBold()"
+                        class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
+                        [ngClass]="isTextBold() ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+                        title="Chữ in đậm"
+                      >
+                        <span class="material-symbols-outlined text-[16px]">format_bold</span>
+                      </button>
+                      <button 
+                        (click)="toggleItalic()"
+                        class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
+                        [ngClass]="isTextItalic() ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+                        title="Chữ nghiêng"
+                      >
+                        <span class="material-symbols-outlined text-[16px]">format_italic</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- DRAWER 3: PHOTO UPLOAD -->
+            @if (activeToolTab() === 'IMAGE') {
+              <div class="space-y-4 animate-fade-in">
+                <div>
+                  <h3 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">add_photo_alternate</span>
+                    In Ảnh Kỷ Niệm Cá Nhân (Konva Image)
+                  </h3>
+                  <p class="text-[11px] text-slate-500 mt-0.5">In màu HD chống nước công nghệ Nano UV trên bề mặt phôi (+30.000đ)</p>
+                </div>
+
+                @if (!uploadedImage()) {
+                  <label class="border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors hover:border-[#7C3AED] hover:bg-purple-50/40 text-center"
+                         [ngClass]="formErrors.image ? 'border-red-400 bg-red-50/20' : 'border-slate-300'">
+                    <input 
+                      type="file" 
+                      accept="image/jpeg,image/png,image/jpg" 
+                      (change)="onImageFileSelected($event)" 
+                      class="hidden"
+                    />
+                    <span class="material-symbols-outlined text-4xl text-[#7C3AED]">cloud_upload</span>
+                    <div>
+                      <p class="text-xs font-bold text-slate-700">Tải ảnh kỷ niệm (.JPG, .PNG)</p>
+                      <p class="text-[10px] text-slate-400 mt-0.5">Dung lượng tối đa 5MB • Phụ phí in ảnh HD: 30.000đ</p>
+                    </div>
+                  </label>
+                } @else {
+                  <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div class="flex items-center gap-3">
+                      <img [src]="uploadedImage()" alt="Preview" class="w-14 h-14 rounded-xl object-cover border border-slate-300 shadow-xs">
+                      <div class="flex-1">
+                        <span class="text-xs font-bold text-slate-800 block">Ảnh đã đưa lên Canvas</span>
+                        <span class="text-[10px] text-emerald-600 font-medium">Kéo thả & xoay chỉnh tự do trên Canvas</span>
+                      </div>
+                      <button (click)="removeImage()" class="w-8 h-8 rounded-xl bg-red-50 border border-red-200 hover:bg-red-100 flex items-center justify-center text-red-600 cursor-pointer" title="Xóa ảnh">
+                        <span class="material-symbols-outlined text-[16px]">delete</span>
+                      </button>
+                    </div>
+
+                    <div class="p-2.5 rounded-xl bg-purple-50 border border-purple-200 text-[#7C3AED] text-[11px] font-medium flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-[15px]">touch_app</span>
+                      <span>Chạm vào ảnh trên canvas để phóng to, thu nhỏ và xoay bằng khung Transformer!</span>
+                    </div>
+                  </div>
+                }
+
+                @if (formErrors.image) {
+                  <div class="text-[11px] text-red-600 font-medium flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">error</span>
+                    <span>{{ formErrors.image }}</span>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- DRAWER 4: STICKERS (DYNAMIC FROM ADMIN & DATABASE) -->
+            @if (activeToolTab() === 'STICKER') {
+              <div class="space-y-4 animate-fade-in">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">sentiment_satisfied</span>
+                      Thư Viện Sticker & Icon Đồ Họa (Konva Nodes)
+                    </h3>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Chọn tối đa 3 icon trang trí (đồng bộ từ Quản trị Admin)</p>
+                  </div>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-[#7C3AED]">
+                    {{ activeStickers().length }}/3 icon
+                  </span>
+                </div>
+
+                <!-- Sticker Grid -->
+                <div class="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[360px] overflow-y-auto pr-1">
+                  @for (stk of dynamicStickers(); track stk._id || stk.name) {
+                    <button 
+                      (click)="toggleSticker(stk)"
+                      class="p-2.5 rounded-2xl border flex flex-col items-center gap-1 transition-all cursor-pointer"
+                      [ngClass]="isStickerActive(stk.name) ? 'border-[#7C3AED] bg-purple-50 shadow-xs ring-2 ring-purple-200' : 'border-slate-100 hover:border-purple-200 bg-slate-50/70'"
+                    >
+                      <span class="text-2xl select-none">{{ stk.icon }}</span>
+                      <span class="text-[9px] text-slate-600 truncate w-full text-center">{{ stk.name }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- DRAWER 5: PATTERNS -->
+            @if (activeToolTab() === 'PATTERN') {
+              <div class="space-y-4 animate-fade-in">
+                <div>
+                  <h3 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">texture</span>
+                    Họa Tiết Phủ Mặt (Bespoke Pattern)
+                  </h3>
+                  <p class="text-[11px] text-slate-500 mt-0.5">Hoa văn chạm khắc chìm/nổi phủ quanh thân sản phẩm</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                  @for (pat of patternLibrary; track pat.id) {
+                    <button 
+                      (click)="setPattern(pat.id)"
+                      class="p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between"
+                      [ngClass]="selectedPattern() === pat.id ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED] font-bold shadow-xs' : 'border-slate-200 hover:border-slate-300 text-slate-700'"
+                    >
+                      <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px] text-[#7C3AED]">{{ pat.icon }}</span>
+                        <span class="text-xs font-semibold">{{ pat.name }}</span>
+                      </div>
+                      <div class="text-[10px] text-slate-500 mt-2">
+                        {{ pat.surcharge === 0 ? 'Miễn phí' : '+15.000đ' }}
+                      </div>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- DRAWER 6: PRICE SUMMARY & SPECIFICATION -->
+            @if (activeToolTab() === 'SUMMARY') {
+              <div class="space-y-4 animate-fade-in">
+                <div>
+                  <h3 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">receipt_long</span>
+                    Bảng Kê Chi Phí & Chính Sách Cọc (AC10)
+                  </h3>
+                  <p class="text-[11px] text-slate-500 mt-0.5">Minh bạch 100% giá phôi và phụ phí chế tác theo quy định BR-PAY05</p>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+                  <div class="flex items-center justify-between text-slate-600">
+                    <span>Giá phôi gốc ({{ activeTemplate()?.name }}):</span>
+                    <strong class="text-slate-800">{{ baseProductPrice() | number:'1.0-0' }}đ</strong>
+                  </div>
+                  @for (sc of surchargeList(); track sc.label) {
+                    <div class="flex items-center justify-between text-[#7C3AED]">
+                      <span>+ {{ sc.label }}:</span>
+                      <strong class="font-bold">+{{ sc.amount | number:'1.0-0' }}đ</strong>
+                    </div>
+                  }
+                  <div class="pt-2 border-t border-slate-200 flex items-center justify-between font-bold text-sm text-[#1E1B4B]">
+                    <span>Giá cuối cùng:</span>
+                    <span class="text-[#7C3AED] font-extrabold text-base">{{ finalProductPrice() | number:'1.0-0' }}đ</span>
+                  </div>
+                  <div class="flex items-center justify-between font-bold text-xs text-[#10B981]">
+                    <span>Cọc trước 50% (BR-PAY05):</span>
+                    <span>{{ depositPrice() | number:'1.0-0' }}đ</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[11px] text-slate-500">
+                    <span>Còn lại COD nhận hàng:</span>
+                    <span>{{ (finalProductPrice() - depositPrice()) | number:'1.0-0' }}đ</span>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- Drawer Bottom Quick CTA -->
+            <div class="pt-4 border-t border-slate-100 flex items-center gap-2 mt-4">
+              <button 
+                (click)="onPrimaryActionClick()"
+                class="flex-1 py-3 px-4 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition cursor-pointer"
+                [ngClass]="isFormInvalid() ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-[#7C3AED] hover:bg-[#6D28D9] shadow-purple-300'"
+              >
+                <span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+                <span>{{ isEditingCartItem() ? 'Cập Nhật Giỏ Hàng' : 'Thêm Vào Giỏ & Cọc 50%' }}</span>
+              </button>
+
+              <button 
+                (click)="activeToolTab.set('SUMMARY')"
+                class="px-3 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition cursor-pointer"
+                title="Xem chi tiết giá"
+              >
+                {{ finalProductPrice() | number:'1.0-0' }}đ
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ================= ZONE 2: CENTRAL INTERACTIVE KONVA.JS STAGE (7 COLS) ================= -->
+        <div class="lg:col-span-7 flex flex-col gap-4">
+          <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#DDD6FE] flex flex-col items-center justify-between relative overflow-hidden flex-1">
+            
+            <!-- Canvas Floating Controls Header -->
+            <div class="w-full flex flex-wrap items-center justify-between gap-2 mb-2 z-10">
+              <!-- Front / Back Face Switcher (AC8 & AC9) -->
+              <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl shadow-inner border border-slate-200">
                 <button 
-                  (click)="isFrontFace.set(true)"
-                  class="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition-all"
-                  [ngClass]="isFrontFace() ? 'bg-[#7C3AED] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                  (click)="switchFace(true)"
+                  class="flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl transition cursor-pointer"
+                  [ngClass]="isFrontFace() ? 'bg-white text-[#7C3AED] shadow-sm' : 'text-slate-600 hover:text-slate-900'"
                 >
                   <span class="material-symbols-outlined text-[16px]">flip_to_front</span>
-                  Mặt Trước (Front)
+                  <span>Mặt Trước</span>
                 </button>
                 <button 
-                  (click)="isFrontFace.set(false)"
-                  class="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition-all"
-                  [ngClass]="!isFrontFace() ? 'bg-[#7C3AED] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                  (click)="switchFace(false)"
+                  class="flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl transition cursor-pointer"
+                  [ngClass]="!isFrontFace() ? 'bg-white text-[#7C3AED] shadow-sm' : 'text-slate-600 hover:text-slate-900'"
                 >
                   <span class="material-symbols-outlined text-[16px]">flip_to_back</span>
-                  Mặt Sau (Back)
+                  <span>Mặt Sau</span>
                 </button>
               </div>
 
-              <div class="flex items-center gap-1.5 text-xs font-semibold text-[#7C3AED] bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-200">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#7C3AED]"></span>
-                Real-time Preview • Khắc Laser Thật 1:1
-              </div>
-            </div>
-
-            <!-- Central Mockup Image with Live Engraving Overlay -->
-            <div class="relative w-full max-w-[440px] my-3 flex flex-col items-center justify-center">
-              <div class="relative w-full rounded-2xl overflow-hidden shadow-xl border-2 border-purple-100 bg-[#F5ECE9] flex items-center justify-center p-6 min-h-[460px]">
-                <img 
-                  [src]="activeTemplate()?.images?.[0] || 'https://placehold.co/400'" 
-                  [alt]="activeTemplate()?.name" 
-                  class="h-[380px] w-auto object-contain drop-shadow-2xl transition-all duration-300"
-                >
-
-                <!-- Live Laser Engraved Badge Overlay -->
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-12 flex flex-col items-center text-center pointer-events-none px-5 py-3 rounded-2xl bg-slate-900/40 backdrop-blur-[2px] border border-amber-300/40 shadow-inner max-w-[280px]">
-                  <!-- Stickers Row -->
-                  <div class="flex items-center gap-1.5 mb-1.5">
-                    @for (stk of activeStickers(); track stk.id) {
-                      <span class="text-base animate-bounce">{{ stk.icon }}</span>
-                    }
+              <!-- Quick action icon buttons -->
+              <div class="flex items-center gap-1.5 flex-wrap">
+                @if (selectedNodeName()) {
+                  <div class="flex items-center gap-1 bg-purple-50 text-[#7C3AED] px-2.5 py-1 rounded-xl text-xs font-bold border border-purple-200 animate-fade-in">
+                    <span class="material-symbols-outlined text-[14px]">touch_app</span>
+                    <span class="truncate max-w-[90px]">{{ selectedNodeName() }}</span>
                   </div>
-
-                  <!-- Engraved Message -->
-                  <div 
-                    class="font-semibold text-sm tracking-wide drop-shadow break-words"
-                    [ngClass]="getFontClass()"
-                    [style.color]="getEngraveColorCode()"
+                  <!-- Layer order buttons -->
+                  <button 
+                    (click)="bringForward()" 
+                    class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-purple-100 text-slate-600 hover:text-[#7C3AED] flex items-center justify-center transition cursor-pointer" 
+                    title="Đưa lên trên (Bring Forward)"
                   >
-                    {{ isFrontFace() ? (frontMessage() || 'Happy Anniversary') : (backMessage() || 'Bespoke 2026') }}
-                  </div>
+                    <span class="material-symbols-outlined text-[17px]">vertical_align_top</span>
+                  </button>
+                  <button 
+                    (click)="sendBackward()" 
+                    class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-purple-100 text-slate-600 hover:text-[#7C3AED] flex items-center justify-center transition cursor-pointer" 
+                    title="Đưa xuống dưới (Send Backward)"
+                  >
+                    <span class="material-symbols-outlined text-[17px]">vertical_align_bottom</span>
+                  </button>
+                }
 
-                  <div class="text-[9px] text-amber-100/70 tracking-widest mt-1.5 uppercase">
-                    EST. 2026 • GIFTORY BESPOKE
-                  </div>
+                <!-- Zoom Controls -->
+                <div class="hidden sm:flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+                  <button 
+                    (click)="setZoom(0.85)" 
+                    class="px-1.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                    [ngClass]="canvasZoom() === 0.85 ? 'bg-white text-[#7C3AED] shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                    title="Thu nhỏ 85%"
+                  >85%</button>
+                  <button 
+                    (click)="setZoom(1.0)" 
+                    class="px-1.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                    [ngClass]="canvasZoom() === 1.0 ? 'bg-white text-[#7C3AED] shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                    title="Kích thước gốc 100%"
+                  >100%</button>
+                  <button 
+                    (click)="setZoom(1.15)" 
+                    class="px-1.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                    [ngClass]="canvasZoom() === 1.15 ? 'bg-white text-[#7C3AED] shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                    title="Phóng to 115%"
+                  >115%</button>
                 </div>
 
-                <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-lg px-2.5 py-1 text-[10px] font-bold text-slate-700 border border-slate-200/80 shadow-sm flex items-center gap-1">
-                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Khắc Laser Thật 1:1
-                </div>
+                <!-- Guides & Safe Area Controls -->
+                <button 
+                  (click)="toggleGuides()"
+                  class="w-8 h-8 rounded-xl flex items-center justify-center transition cursor-pointer"
+                  [ngClass]="showGuides() ? 'bg-purple-100 text-[#7C3AED]' : 'bg-slate-100 text-slate-400 hover:text-slate-600'"
+                  [title]="showGuides() ? 'Đang hiện Vùng in & An toàn (Bấm để ẩn)' : 'Đang ẩn Vùng in & An toàn (Bấm để hiện)'"
+                >
+                  <span class="material-symbols-outlined text-[17px]">{{ showGuides() ? 'crop_free' : 'crop' }}</span>
+                </button>
+                <button 
+                  (click)="fitIntoSafeArea()"
+                  class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 flex items-center justify-center transition cursor-pointer"
+                  title="Căn phần tử vào Vùng An Toàn (Tránh mép cong gây lỗi in)"
+                >
+                  <span class="material-symbols-outlined text-[17px]">aspect_ratio</span>
+                </button>
+
+                <button 
+                  (click)="centerSelectedNode()"
+                  class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-purple-100 text-slate-600 hover:text-[#7C3AED] flex items-center justify-center transition cursor-pointer"
+                  title="Căn giữa đối tượng"
+                >
+                  <span class="material-symbols-outlined text-[17px]">filter_center_focus</span>
+                </button>
+                <button 
+                  (click)="deleteSelectedNode()"
+                  class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 flex items-center justify-center transition cursor-pointer"
+                  title="Xóa đối tượng đang chọn (Phím Delete)"
+                >
+                  <span class="material-symbols-outlined text-[17px]">delete</span>
+                </button>
+                <button 
+                  (click)="downloadSnapshot()"
+                  class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-600 flex items-center justify-center transition cursor-pointer"
+                  title="Tải ảnh mô phỏng 1:1"
+                >
+                  <span class="material-symbols-outlined text-[17px]">download</span>
+                </button>
+                <button 
+                  (click)="resetToDefaults()"
+                  class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer"
+                  title="Đặt lại mặc định"
+                >
+                  <span class="material-symbols-outlined text-[17px]">restart_alt</span>
+                </button>
               </div>
             </div>
 
-            <!-- Canvas Bottom Controls -->
-            <div class="w-full flex items-center justify-between text-xs pt-4 border-t border-slate-100 text-slate-500">
-              <span>Màu đang chọn: <strong class="text-[#7C3AED]">{{ selectedColor() }}</strong></span>
-              <span>Font chữ: <strong class="text-[#7C3AED]">{{ selectedFont() }}</strong></span>
-              <span>Màu khắc: <strong class="text-[#7C3AED]">{{ selectedEngraveColor() }}</strong></span>
+            <!-- CURVED EDGE OVERFLOW WARNING BANNER -->
+            @if (isOverflowWarning()) {
+              <div class="w-full max-w-[460px] p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center justify-between gap-2 shadow-sm animate-fade-in mb-1">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="material-symbols-outlined text-amber-600 text-[18px] shrink-0">warning</span>
+                  <span class="font-medium text-[11px] truncate leading-tight">{{ overflowWarningMessage() }}</span>
+                </div>
+                <button 
+                  (click)="fitIntoSafeArea()" 
+                  class="shrink-0 px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] rounded-lg cursor-pointer transition shadow-2xs"
+                >
+                  Căn an toàn
+                </button>
+              </div>
+            }
+
+            <!-- KONVA.JS CANVAS STAGE CONTAINER -->
+            <div class="relative w-full max-w-[500px] my-2 flex flex-col items-center justify-center">
+              <div 
+                #konvaContainer
+                id="konva-container"
+                class="w-[460px] h-[460px] max-w-full rounded-3xl overflow-hidden shadow-2xl border-2 relative cursor-crosshair transition-all"
+                [ngClass]="isOverflowWarning() ? 'border-amber-400 ring-2 ring-amber-200' : 'border-purple-100'"
+                [style.backgroundColor]="getColorCanvasBackground()"
+                [style.backgroundImage]="getActivePatternCss()"
+              >
+              </div>
+
+              <!-- Canvas floating watermark -->
+              <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-md rounded-lg px-2.5 py-1 text-[10px] font-bold text-slate-700 border border-slate-200/80 shadow-sm flex items-center gap-1 pointer-events-none">
+                <span class="w-2 h-2 rounded-full" [ngClass]="isOverflowWarning() ? 'bg-amber-500 animate-ping' : 'bg-emerald-500 animate-pulse'"></span>
+                <span>Konva.js • {{ isFrontFace() ? 'Mặt Trước' : 'Mặt Sau' }} (Kích Thước Chuẩn)</span>
+              </div>
             </div>
+
+            <!-- PRINT AREA & SAFE AREA GUIDES LEGEND -->
+            <div class="w-full flex items-center justify-between text-[11px] text-slate-500 pt-1 pb-2 px-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="inline-flex items-center gap-1 text-[#7C3AED] font-semibold text-[10px]">
+                  <span class="w-2 h-2 border border-dashed border-[#7C3AED] rounded-xs inline-block"></span>
+                  Vùng in chuẩn: {{ currentPrintArea().width }}% × {{ currentPrintArea().height }}%
+                </span>
+                <span>•</span>
+                <span class="inline-flex items-center gap-1 text-emerald-700 font-semibold text-[10px]">
+                  <span class="w-2 h-2 border border-dashed border-emerald-600 rounded-xs inline-block"></span>
+                  Vùng an toàn (tránh mép cong): {{ currentSafeArea().width }}% × {{ currentSafeArea().height }}%
+                </span>
+              </div>
+              <button 
+                (click)="toggleGuides()" 
+                class="text-[10px] font-bold text-[#7C3AED] hover:underline flex items-center gap-0.5 cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-[13px]">{{ showGuides() ? 'visibility' : 'visibility_off' }}</span>
+                <span>{{ showGuides() ? 'Ẩn khung' : 'Hiện khung' }}</span>
+              </button>
+            </div>
+
+            <!-- Canvas Bottom Meta Info Bar -->
+            <div class="w-full flex items-center justify-between text-xs pt-3 border-t border-slate-100 text-slate-500">
+              <div class="flex items-center gap-3">
+                <span>Vỏ: <strong class="text-[#7C3AED]">{{ selectedColor() }}</strong></span>
+                <span>•</span>
+                <span>Font: <strong class="text-[#7C3AED]">{{ selectedFont() }}</strong></span>
+                <span>•</span>
+                <span>Khắc: <strong class="text-[#7C3AED]">{{ selectedEngraveColor() }}</strong></span>
+              </div>
+              <div class="text-[11px] text-slate-400">
+                Chạm để xoay / phóng to / kéo thả trực quan
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <!-- RIGHT: CUSTOMIZER CONTROLS -->
-        <div class="xl:col-span-5 flex flex-col gap-6">
-          
-          <!-- Control Step 1: Color Swatch -->
-          <div class="bg-white rounded-3xl p-6 shadow-shop-card border border-[#DDD6FE]">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2 font-bold text-sm text-[#1E1B4B]">
-                <span class="w-6 h-6 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-xs font-bold">1</span>
-                <span>Chọn Phối Màu Vỏ Phôi:</span>
-              </div>
-              <span class="text-xs text-[#7C3AED] font-semibold">{{ selectedColor() }}</span>
+      </div>
+
+      <!-- ================= MODALS ================= -->
+
+      <!-- MODAL 1: Save Design Login Modal (AC12 / AF2) -->
+      @if (showSaveLoginModal()) {
+        <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-purple-200 relative">
+            <button (click)="showSaveLoginModal.set(false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+
+            <div class="w-12 h-12 rounded-2xl bg-purple-100 text-[#7C3AED] flex items-center justify-center mb-4">
+              <span class="material-symbols-outlined text-2xl">loyalty</span>
             </div>
 
-            <div class="grid grid-cols-5 gap-3 text-center text-xs">
-              @for (c of colorOptions; track c.name) {
-                <div 
-                  (click)="selectedColor.set(c.name)"
-                  class="flex flex-col items-center gap-1 cursor-pointer group"
-                >
-                  <div 
-                    class="w-10 h-10 rounded-full border-2 flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-110"
-                    [style.backgroundColor]="c.hex"
-                    [class.border-[#7C3AED]]="selectedColor() === c.name"
-                    [class.ring-2]="selectedColor() === c.name"
-                    [class.ring-purple-300]="selectedColor() === c.name"
-                    [class.border-slate-300]="selectedColor() !== c.name"
-                  >
-                    @if (selectedColor() === c.name) {
-                      <span class="material-symbols-outlined text-xs font-bold" [style.color]="c.hex === '#FFFFFF' ? '#000' : '#FFF'">check</span>
-                    }
-                  </div>
-                  <span class="text-[11px] font-medium" [class.text-[#7C3AED]]="selectedColor() === c.name">{{ c.name }}</span>
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- Control Step 2: Message & Font -->
-          <div class="bg-white rounded-3xl p-6 shadow-shop-card border border-[#DDD6FE]">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2 font-bold text-sm text-[#1E1B4B]">
-                <span class="w-6 h-6 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-xs font-bold">2</span>
-                <span>Nội Dung Khắc Laser / Thông Điệp:</span>
-              </div>
-              <span class="text-xs text-emerald-600 font-bold">Miễn phí</span>
-            </div>
-
-            <!-- Front Message Input -->
-            <div class="mb-3">
-              <label class="text-xs font-bold text-slate-700 block mb-1">Mặt Trước (Tên người nhận / Lời chúc):</label>
-              <div class="relative">
-                <input 
-                  [(ngModel)]="frontMessage"
-                  maxlength="35"
-                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] outline-none font-medium pr-16 text-slate-800"
-                  placeholder="VD: Happy Anniversary Minh Anh ❤️"
-                >
-                <span class="absolute right-3 top-3 text-[11px] text-slate-400 font-medium">
-                  {{ frontMessage().length }}/35
-                </span>
-              </div>
-            </div>
-
-            <!-- Back Message Input -->
-            <div class="mb-4">
-              <label class="text-xs font-bold text-slate-700 block mb-1">Mặt Sau (Ngày kỷ niệm / Tọa độ / Ký tên):</label>
-              <div class="relative">
-                <input 
-                  [(ngModel)]="backMessage"
-                  maxlength="35"
-                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] outline-none font-medium pr-16 text-slate-800"
-                  placeholder="VD: 14.02.2024 • Yêu Em Mãi Mãi"
-                >
-                <span class="absolute right-3 top-3 text-[11px] text-slate-400 font-medium">
-                  {{ backMessage().length }}/35
-                </span>
-              </div>
-            </div>
-
-            <!-- Font Picker -->
-            <div class="mb-4">
-              <div class="text-xs font-bold text-slate-700 mb-2">Chọn Font Chữ Nghệ Thuật:</div>
-              <div class="grid grid-cols-2 gap-2 text-xs">
-                @for (f of fontOptions; track f.name) {
-                  <button 
-                    (click)="selectedFont.set(f.name)"
-                    class="p-2.5 rounded-xl border text-left transition-all cursor-pointer"
-                    [ngClass]="selectedFont() === f.name ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED] font-bold' : 'border-slate-200 hover:border-slate-300 text-slate-700'"
-                  >
-                    <div class="text-[11px] font-semibold">{{ f.name }}</div>
-                    <div class="text-sm mt-0.5 truncate" [ngClass]="f.class">Minh Anh & Hoàng</div>
-                  </button>
-                }
-              </div>
-            </div>
-
-            <!-- Engrave Color -->
-            <div>
-              <div class="text-xs font-bold text-slate-700 mb-2">Màu Lớp Khắc / Phủ Ánh Kim:</div>
-              <div class="flex items-center gap-3">
-                @for (ec of engraveColors; track ec.name) {
-                  <button 
-                    (click)="selectedEngraveColor.set(ec.name)"
-                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all"
-                    [ngClass]="selectedEngraveColor() === ec.name ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED]' : 'border-slate-200 text-slate-600'"
-                  >
-                    <span class="w-3.5 h-3.5 rounded-full border border-slate-300" [style.backgroundColor]="ec.hex"></span>
-                    <span>{{ ec.name }}</span>
-                  </button>
-                }
-              </div>
-            </div>
-          </div>
-
-          <!-- Control Step 3: Stickers Library -->
-          <div class="bg-white rounded-3xl p-6 shadow-shop-card border border-[#DDD6FE]">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2 font-bold text-sm text-[#1E1B4B]">
-                <span class="w-6 h-6 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-xs font-bold">3</span>
-                <span>Thêm Icon / Sticker Đồ Họa:</span>
-              </div>
-              <span class="text-xs text-slate-400">Chọn tối đa 3 icon</span>
-            </div>
-
-            <div class="grid grid-cols-6 gap-2 text-center text-xs">
-              @for (stk of stickerLibrary; track stk.name) {
-                <button 
-                  (click)="toggleSticker(stk)"
-                  class="p-2 rounded-xl border flex flex-col items-center gap-1 transition-all cursor-pointer"
-                  [ngClass]="isStickerActive(stk.name) ? 'border-[#7C3AED] bg-purple-50 shadow-sm' : 'border-slate-100 hover:border-purple-200 bg-slate-50'"
-                >
-                  <span class="text-xl">{{ stk.icon }}</span>
-                  <span class="text-[9px] text-slate-600 truncate w-full">{{ stk.name }}</span>
-                </button>
-              }
-            </div>
-          </div>
-
-          <!-- Checkout & Deposit Summary Action Card -->
-          <div class="bg-gradient-to-br from-purple-50 to-white rounded-3xl p-6 shadow-shop-card border-2 border-[#7C3AED]/30">
-            <div class="flex items-center justify-between mb-3">
-              <div>
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Giá Sản Phẩm Chế Tác:</span>
-                <div class="text-2xl font-extrabold text-[#7C3AED]">
-                  {{ totalProductPrice() | number:'1.0-0' }}đ
-                </div>
-              </div>
-              <div class="text-right">
-                <span class="text-xs font-bold text-[#10B981] uppercase tracking-wide">CỌC 50% THANH TOÁN TRƯỚC:</span>
-                <div class="text-xl font-bold text-[#10B981]">
-                  {{ depositPrice() | number:'1.0-0' }}đ
-                </div>
-              </div>
-            </div>
-
-            <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">
-              Theo quy tắc <strong>BR-PAY05</strong>, xưởng tiếp nhận cọc 50% ({{ depositPrice() | number:'1.0-0' }}đ) để cắt phôi inox/nung men và khắc laser theo thiết kế riêng. Số tiền 50% còn lại thanh toán COD khi nhận hàng.
+            <h3 class="text-lg font-bold text-[#1E1B4B] mb-1">Lưu Vĩnh Viễn & Nhận +50 Điểm Thưởng</h3>
+            <p class="text-xs text-slate-500 mb-5 leading-relaxed">
+              Bạn đang ở chế độ Khách vãng lai. Đăng nhập 1-Click để lưu bản thiết kế vào tài khoản vĩnh viễn và nhận ngay <strong class="text-[#7C3AED]">+50 điểm tích lũy Giftory</strong>!
             </p>
 
-            <div class="flex items-center gap-3">
+            <div class="space-y-3">
               <button 
-                (click)="addToCartAndCheckout()"
-                class="flex-1 py-3.5 px-4 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95 cursor-pointer"
+                (click)="performQuickLoginAndSync('google')"
+                class="w-full py-3 px-4 rounded-xl border border-slate-300 hover:bg-slate-50 font-bold text-xs text-slate-700 flex items-center justify-center gap-2 cursor-pointer transition-all"
               >
-                <span class="material-symbols-outlined text-[20px]">shopping_bag</span>
-                <span>Thêm Vào Giỏ & Đặt Cọc 50%</span>
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" class="w-4 h-4">
+                <span>Đăng nhập 1-Click với Google</span>
               </button>
 
               <button 
-                (click)="saveDesignOnly()"
-                class="px-4 py-3.5 rounded-xl border border-[#DDD6FE] bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer"
-                title="Lưu lại vào bộ sưu tập thiết kế"
+                (click)="performQuickLoginAndSync('otp')"
+                class="w-full py-3 px-4 rounded-xl bg-purple-50 hover:bg-purple-100 text-[#7C3AED] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
               >
-                <span class="material-symbols-outlined text-[18px]">bookmark</span>
-                <span class="hidden sm:inline">Lưu</span>
+                <span class="material-symbols-outlined text-[18px]">smartphone</span>
+                <span>Xác thực nhanh bằng Số điện thoại OTP</span>
               </button>
+
+              <div class="text-center pt-2">
+                <a routerLink="/login" class="text-xs text-slate-500 hover:text-[#7C3AED] font-medium underline">
+                  Đến trang Đăng nhập / Đăng ký chi tiết
+                </a>
+              </div>
             </div>
           </div>
-
         </div>
-      </div>
+      }
+
+      <!-- MODAL 2: Guest Add to Cart Choice Modal (AC13 / AF3) -->
+      @if (showGuestChoiceModal()) {
+        <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-purple-200 relative">
+            <button (click)="showGuestChoiceModal.set(false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+
+            <div class="w-12 h-12 rounded-2xl bg-[#7C3AED] text-white flex items-center justify-center mb-4 shadow-md">
+              <span class="material-symbols-outlined text-2xl">verified</span>
+            </div>
+
+            <h3 class="text-xl font-bold text-[#1E1B4B] mb-2">Đưa Thiết Kế Vào Giỏ Hàng (AC13)</h3>
+            <p class="text-xs text-slate-500 mb-6 leading-relaxed">
+              Bản thiết kế độc bản đã được tạo thành công! Hãy lựa chọn cách thức tiếp tục theo mong muốn của bạn:
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              <!-- Choice 1: 1-Click Login & Sync (AC 13.1) -->
+              <div 
+                (click)="handleGuestLoginAndSync()"
+                class="p-4 rounded-2xl border-2 border-[#7C3AED] bg-purple-50/50 hover:bg-purple-50 transition-all cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-[#7C3AED]">13.1. Đăng Nhập 1-Click</span>
+                    <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[9px] font-bold">+50 Điểm</span>
+                  </div>
+                  <p class="text-[11px] text-slate-600 leading-snug">
+                    Kích hoạt <strong>SyncDesignDraft()</strong>, đồng bộ thiết kế vào tài khoản thành Member Cart Item.
+                  </p>
+                </div>
+                <button class="mt-4 w-full py-2 bg-[#7C3AED] text-white rounded-xl text-xs font-bold">
+                  Đăng nhập & Đồng bộ
+                </button>
+              </div>
+
+              <!-- Choice 2: Continue as Guest (AC 13.2 / AF3) -->
+              <div 
+                (click)="handleContinueAsGuest()"
+                class="p-4 rounded-2xl border-2 border-slate-200 hover:border-slate-300 bg-white transition-all cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-slate-700">13.2. Mua Dưới Dạng Khách</span>
+                    <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[9px] font-bold">Nhanh chóng</span>
+                  </div>
+                  <p class="text-[11px] text-slate-600 leading-snug">
+                    Giữ nguyên thiết kế trong <strong>Guest Cart</strong> và chuyển thẳng sang luồng Checkout mà không cần tài khoản.
+                  </p>
+                </div>
+                <button class="mt-4 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold">
+                  Tiếp tục làm Khách
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
     </div>
   `
 })
-export class CustomStudioComponent implements OnInit {
+export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('konvaContainer') konvaContainerRef!: ElementRef<HTMLDivElement>;
+
   private studioService = inject(CustomStudioService);
   private cartService = inject(CartService);
+  authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+
+  // Active Tool Tab in Left Drawer
+  activeToolTab = signal<StudioToolTab>('TEXT');
 
   templates = signal<Product[]>([]);
   activeTemplate = signal<Product | null>(null);
 
   isFrontFace = signal<boolean>(true);
-  frontMessage = signal<string>('Happy Anniversary Minh Anh ❤️');
-  backMessage = signal<string>('14.02.2024 • Bespoke');
+  frontMessage = signal<string>('');
+  backMessage = signal<string>('');
   selectedColor = signal<string>('Navy Blue');
   selectedFont = signal<string>('Signature');
   selectedEngraveColor = signal<string>('Vàng Kim (Gold)');
-  activeStickers = signal<Array<{ id: string; icon: string; name: string }>>([
-    { id: '1', icon: '❤️', name: 'Trái tim' },
-    { id: '2', icon: '✨', name: 'Tinh tú' }
-  ]);
+  selectedPattern = signal<string>('none');
+  uploadedImage = signal<string>('');
+  imageScale = signal<number>(1);
+  activeStickers = signal<Array<{ id: string; icon: string; name: string }>>([]);
+
+  // Dynamic Stickers from Admin Asset API
+  dynamicStickers = signal<StudioAsset[]>([]);
+
+  // Editing state (AC14)
+  isEditingCartItem = signal<boolean>(false);
+  editingCartItemIndex = signal<number | null>(null);
+
+  // Auto-save state (AC11)
+  lastAutoSavedTime = signal<string>('');
+  hasRestoredDraft = signal<boolean>(false);
+
+  // Modals state
+  showSaveLoginModal = signal<boolean>(false);
+  showGuestChoiceModal = signal<boolean>(false);
+
+  // Validation Form Errors (AC6, AC7, EF1)
+  formErrors = {
+    frontMessage: '',
+    backMessage: '',
+    image: ''
+  };
 
   colorOptions = [
     { name: 'Navy Blue', hex: '#1E3A8A' },
     { name: 'Deep Slate', hex: '#0F172A' },
     { name: 'Sand Beige', hex: '#FEF3C7' },
     { name: 'Terracotta', hex: '#99443D' },
-    { name: 'Pure White', hex: '#FFFFFF' }
+    { name: 'Pure White', hex: '#FFFFFF' },
+    { name: 'Emerald Green', hex: '#065F46' }
   ];
 
   fontOptions = [
-    { name: 'Signature', class: 'font-serif italic' },
-    { name: 'Serif Elegant', class: 'font-serif font-bold uppercase' },
-    { name: 'Sans Minimal', class: 'font-sans font-bold' },
-    { name: 'Vintage Typewriter', class: 'font-mono' }
+    { name: 'Signature', class: 'font-serif italic', fontFamily: 'Georgia, serif' },
+    { name: 'Serif Elegant', class: 'font-serif font-bold uppercase', fontFamily: 'Times New Roman, serif' },
+    { name: 'Sans Minimal', class: 'font-sans font-bold', fontFamily: 'Arial, sans-serif' },
+    { name: 'Vintage Typewriter', class: 'font-mono', fontFamily: 'Courier New, monospace' },
+    { name: 'Romantic Script', class: 'font-serif italic font-semibold', fontFamily: 'Brush Script MT, cursive, Georgia' },
+    { name: 'Royal Calligraphy', class: 'font-serif uppercase tracking-widest', fontFamily: 'Palatino Linotype, serif' }
   ];
 
   engraveColors = [
-    { name: 'Vàng Kim (Gold)', hex: '#F59E0B' },
-    { name: 'Bạc Ánh Kim (Silver)', hex: '#E2E8F0' },
-    { name: 'Đen Huyền Bí', hex: '#0F172A' },
-    { name: 'Đỏ Ruby', hex: '#DC2626' }
+    { name: 'Vàng Kim (Gold)', hex: '#F59E0B', surcharge: 10000 },
+    { name: 'Bạc Ánh Kim (Silver)', hex: '#E2E8F0', surcharge: 0 },
+    { name: 'Đen Huyền Bí', hex: '#0F172A', surcharge: 0 },
+    { name: 'Đỏ Ruby', hex: '#DC2626', surcharge: 0 },
+    { name: 'Vàng Hồng (Rose Gold)', hex: '#FB7185', surcharge: 10000 }
   ];
 
-  stickerLibrary = [
-    { name: 'Trái tim', icon: '❤️' },
-    { name: 'Tim đôi', icon: '💖' },
-    { name: 'Tinh tú', icon: '✨' },
-    { name: 'Crown', icon: '👑' },
-    { name: 'Nơ quà', icon: '🎀' },
-    { name: 'Bánh kem', icon: '🎂' },
-    { name: 'Hộp quà', icon: '🎁' },
-    { name: 'Nâng ly', icon: '🥂' },
-    { name: 'Cỏ 4 lá', icon: '🍀' },
-    { name: 'Hoa đào', icon: '🌸' },
-    { name: 'Kim cương', icon: '💎' },
-    { name: 'Ngọn lửa', icon: '🔥' }
+  patternLibrary: CustomPattern[] = [
+    { id: 'none', name: 'Trơn Tối Giản', surcharge: 0, icon: 'crop_square', cssPattern: 'none' },
+    { id: 'royal', name: 'Cung Đình Hoàng Gia', surcharge: 15000, icon: 'shield', cssPattern: 'radial-gradient(circle, #f59e0b 10%, transparent 20%), radial-gradient(circle, #f59e0b 10%, transparent 20%)' },
+    { id: 'artdeco', name: 'Art Deco Hiện Đại', surcharge: 15000, icon: 'widgets', cssPattern: 'repeating-linear-gradient(45deg, #7c3aed 0, #7c3aed 1px, transparent 0, transparent 50%)' },
+    { id: 'ginkgo', name: 'Lá Bạch Quả Ginkgo', surcharge: 15000, icon: 'eco', cssPattern: 'radial-gradient(circle at 50% 50%, #10b981 1px, transparent 1px)' },
+    { id: 'floral', name: 'Vintage Floral', surcharge: 15000, icon: 'local_florist', cssPattern: 'repeating-radial-gradient(circle, #ec4899 0, #ec4899 1px, transparent 2px, transparent 100%)' },
+    { id: 'stars', name: 'Thiên Hà Celestial', surcharge: 15000, icon: 'auto_awesome', cssPattern: 'radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)), radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0))' }
   ];
 
-  totalProductPrice = computed(() => {
-    const tpl = this.activeTemplate();
-    const base = tpl?.salePrice && tpl.salePrice > 0 ? tpl.salePrice : (tpl?.price || 250000);
-    return base;
+  // ================= KONVA.JS STATE & SIGNALS =================
+  textSize = signal<number>(14);
+  textAlign = signal<'left' | 'center' | 'right'>('center');
+  isTextBold = signal<boolean>(false);
+  isTextItalic = signal<boolean>(true);
+  selectedNodeName = signal<string | null>(null);
+  canvasZoom = signal<number>(1);
+
+  // Print Area & Safe Area Guides (BP-02 & Curved Edge error prevention)
+  showGuides = signal<boolean>(true);
+  isOverflowWarning = signal<boolean>(false);
+  overflowWarningMessage = signal<string>('');
+
+  currentPrintArea = computed<AreaBox>(() => {
+    const raw = this.activeTemplate()?.customConfig?.printArea;
+    const x = Math.max(0, Math.min(90, raw?.x ?? 20));
+    const y = Math.max(0, Math.min(90, raw?.y ?? 20));
+    const width = Math.max(10, Math.min(100 - x, raw?.width ?? 60));
+    const height = Math.max(10, Math.min(100 - y, raw?.height ?? 60));
+    return { x, y, width, height };
   });
 
-  depositPrice = computed(() => Math.round(this.totalProductPrice() * 0.5));
+  currentSafeArea = computed<AreaBox>(() => {
+    const raw = this.activeTemplate()?.customConfig?.safeArea;
+    const x = Math.max(0, Math.min(90, raw?.x ?? 26));
+    const y = Math.max(0, Math.min(90, raw?.y ?? 25));
+    const width = Math.max(10, Math.min(100 - x, raw?.width ?? 48));
+    const height = Math.max(10, Math.min(100 - y, raw?.height ?? 50));
+    return { x, y, width, height };
+  });
+
+  // Kích thước và tọa độ hiển thị chuẩn của phôi trên canvas (bảo toàn tỷ lệ gốc aspect ratio)
+  private currentMockupBounds = { x: 20, y: 20, width: 420, height: 420 };
+
+  getGuideCoordinates(): { paPx: AreaBox; saPx: AreaBox } {
+    const b = this.currentMockupBounds;
+    const pa = this.currentPrintArea();
+    const sa = this.currentSafeArea();
+
+    const paPx = {
+      x: Math.round(b.x + (pa.x / 100) * b.width),
+      y: Math.round(b.y + (pa.y / 100) * b.height),
+      width: Math.round((pa.width / 100) * b.width),
+      height: Math.round((pa.height / 100) * b.height)
+    };
+
+    const saPx = {
+      x: Math.round(b.x + (sa.x / 100) * b.width),
+      y: Math.round(b.y + (sa.y / 100) * b.height),
+      width: Math.round((sa.width / 100) * b.width),
+      height: Math.round((sa.height / 100) * b.height)
+    };
+
+    return { paPx, saPx };
+  }
+
+  private stage: Konva.Stage | null = null;
+  private bgLayer: Konva.Layer | null = null;
+  private drawLayer: Konva.Layer | null = null;
+  private guidesLayer: Konva.Layer | null = null;
+  private uiLayer: Konva.Layer | null = null;
+
+  private printAreaRect: Konva.Rect | null = null;
+  private printAreaLabel: Konva.Text | null = null;
+  private safeAreaRect: Konva.Rect | null = null;
+  private safeAreaLabel: Konva.Text | null = null;
+
+  private bgRectNode: Konva.Rect | null = null;
+  private productImgNode: Konva.Image | null = null;
+  private textNode: Konva.Text | null = null;
+  private photoNode: Konva.Image | null = null;
+  private stickerNodes: Konva.Text[] = [];
+  private transformer: Konva.Transformer | null = null;
+
+  maxTextLength = computed(() => {
+    return this.activeTemplate()?.customConfig?.maxTextLength || 35;
+  });
+
+  availableColorOptions = computed(() => {
+    const supported = this.activeTemplate()?.customConfig?.supportedColors;
+    if (supported && supported.length > 0) {
+      return this.colorOptions.filter(c => supported.includes(c.name));
+    }
+    return this.colorOptions;
+  });
+
+  baseProductPrice = computed(() => {
+    const tpl = this.activeTemplate();
+    return tpl?.salePrice && tpl.salePrice > 0 ? tpl.salePrice : (tpl?.price || 250000);
+  });
+
+  surchargeList = computed<SurchargeBreakdown[]>(() => {
+    const list: SurchargeBreakdown[] = [];
+    const tpl = this.activeTemplate();
+
+    const backFee = tpl?.customConfig?.backEngraveFee || 20000;
+    if (this.backMessage().trim().length > 0) {
+      list.push({ label: 'Khắc laser mặt sau', amount: backFee });
+    }
+
+    const pat = this.patternLibrary.find(p => p.id === this.selectedPattern());
+    if (pat && pat.surcharge > 0) {
+      list.push({ label: `Họa tiết ${pat.name}`, amount: pat.surcharge });
+    }
+
+    const photoFee = tpl?.customConfig?.photoPrintFee || 30000;
+    if (this.uploadedImage()) {
+      list.push({ label: 'In ảnh cá nhân chuẩn HD', amount: photoFee });
+    }
+
+    const ec = this.engraveColors.find(e => e.name === this.selectedEngraveColor());
+    if (ec && ec.surcharge > 0) {
+      list.push({ label: `Phủ ánh kim ${ec.name}`, amount: ec.surcharge });
+    }
+
+    return list;
+  });
+
+  totalSurcharges = computed(() => {
+    return this.surchargeList().reduce((sum, item) => sum + item.amount, 0);
+  });
+
+  finalProductPrice = computed(() => {
+    return this.baseProductPrice() + this.totalSurcharges();
+  });
+
+  depositPrice = computed(() => Math.round(this.finalProductPrice() * 0.5));
+
+  constructor() {
+    effect(() => {
+      const tpl = this.activeTemplate();
+      const front = this.frontMessage();
+      const back = this.backMessage();
+      const col = this.selectedColor();
+      const font = this.selectedFont();
+      const engCol = this.selectedEngraveColor();
+      const pat = this.selectedPattern();
+      const img = this.uploadedImage();
+      const scale = this.imageScale();
+      const stks = this.activeStickers();
+
+      if (tpl && !this.isEditingCartItem()) {
+        const draft = {
+          productId: tpl._id,
+          frontMessage: front,
+          backMessage: back,
+          selectedColor: col,
+          selectedFont: font,
+          selectedEngraveColor: engCol,
+          selectedPattern: pat,
+          uploadedImage: img,
+          imageScale: scale,
+          stickers: stks
+        };
+        this.studioService.saveDraftToStorage(draft);
+        const now = new Date();
+        this.lastAutoSavedTime.set(`${now.getHours()}:${now.getMinutes() < 10 ? '0' : ''}${now.getMinutes()}`);
+      }
+    });
+  }
 
   ngOnInit(): void {
+    this.loadStudioAssets();
+
     this.studioService.getTemplates().subscribe({
       next: tpls => {
         this.templates.set(tpls);
         if (tpls.length > 0) {
           this.route.queryParams.subscribe(params => {
             const pid = params['productId'];
+            const cartIndex = params['cartItemIndex'];
+
+            if (cartIndex !== undefined && cartIndex !== null) {
+              const idx = parseInt(cartIndex, 10);
+              this.isEditingCartItem.set(true);
+              this.editingCartItemIndex.set(idx);
+
+              const cartItem = this.cartService.items()[idx];
+              if (cartItem) {
+                const matched = tpls.find(t => t._id === (typeof cartItem.productId === 'object' ? cartItem.productId._id : cartItem.productId));
+                if (matched) this.activeTemplate.set(matched);
+
+                if (cartItem.customDetails) {
+                  const cd = cartItem.customDetails;
+                  if (cd.frontMessage !== undefined) this.frontMessage.set(cd.frontMessage);
+                  if (cd.backMessage !== undefined) this.backMessage.set(cd.backMessage);
+                  if (cd.selectedColor) this.selectedColor.set(cd.selectedColor);
+                  if (cd.fontFamily) this.selectedFont.set(cd.fontFamily);
+                  if (cd.engraveColor) this.selectedEngraveColor.set(cd.engraveColor);
+                  if (cd.pattern) this.selectedPattern.set(cd.pattern);
+                  if (cd.uploadedImage) this.uploadedImage.set(cd.uploadedImage);
+                  if (cd.imageScale) this.imageScale.set(cd.imageScale);
+                  if (cd.stickers) this.activeStickers.set(cd.stickers);
+                }
+                this.updateKonvaCanvas();
+                return;
+              }
+            }
+
+            let chosenTpl = tpls[0];
             if (pid) {
               const matched = tpls.find(t => t._id === pid);
-              this.activeTemplate.set(matched || tpls[0]);
-            } else {
-              this.activeTemplate.set(tpls[0]);
+              if (matched) chosenTpl = matched;
             }
+
+            this.activeTemplate.set(chosenTpl);
+
+            const savedDraft = this.studioService.getDraftFromStorage();
+            if (savedDraft && (!pid || savedDraft.productId === pid)) {
+              if (savedDraft.frontMessage === 'Happy Anniversary Minh Anh ❤️') {
+                this.studioService.clearDraftFromStorage();
+              } else {
+                if (savedDraft.frontMessage !== undefined) this.frontMessage.set(savedDraft.frontMessage);
+                if (savedDraft.backMessage !== undefined) this.backMessage.set(savedDraft.backMessage);
+                if (savedDraft.selectedColor) this.selectedColor.set(savedDraft.selectedColor);
+                if (savedDraft.selectedFont) this.selectedFont.set(savedDraft.selectedFont);
+                if (savedDraft.selectedEngraveColor) this.selectedEngraveColor.set(savedDraft.selectedEngraveColor);
+                if (savedDraft.selectedPattern) this.selectedPattern.set(savedDraft.selectedPattern);
+                if (savedDraft.uploadedImage) this.uploadedImage.set(savedDraft.uploadedImage);
+                if (savedDraft.imageScale) this.imageScale.set(savedDraft.imageScale);
+                if (savedDraft.stickers) this.activeStickers.set(savedDraft.stickers);
+                this.hasRestoredDraft.set(true);
+              }
+            }
+
+            this.updateKonvaCanvas();
           });
         }
       }
     });
   }
 
-  selectTemplate(tpl: Product): void {
-    this.activeTemplate.set(tpl);
+  ngAfterViewInit(): void {
+    this.initKonvaStage();
   }
 
-  getFontClass(): string {
-    const f = this.fontOptions.find(o => o.name === this.selectedFont());
-    return f ? f.class : 'font-serif italic';
+  ngOnDestroy(): void {
+    if (this.stage) {
+      this.stage.destroy();
+    }
+  }
+
+  // ================= KONVA.JS INITIALIZATION =================
+  private initKonvaStage(): void {
+    if (!this.konvaContainerRef) return;
+    const container = this.konvaContainerRef.nativeElement;
+
+    const width = 460;
+    const height = 460;
+
+    this.stage = new Konva.Stage({
+      container: container,
+      width: width,
+      height: height
+    });
+
+    this.bgLayer = new Konva.Layer();
+    this.drawLayer = new Konva.Layer();
+    this.guidesLayer = new Konva.Layer({ listening: false });
+    this.uiLayer = new Konva.Layer();
+
+    this.stage.add(this.bgLayer);
+    this.stage.add(this.drawLayer);
+    this.stage.add(this.guidesLayer);
+    this.stage.add(this.uiLayer);
+
+    // Transformer for interactive dragging, scaling, rotating
+    this.transformer = new Konva.Transformer({
+      borderStroke: '#7C3AED',
+      borderStrokeWidth: 1.5,
+      anchorStroke: '#7C3AED',
+      anchorFill: '#FFFFFF',
+      anchorSize: 10,
+      anchorCornerRadius: 3,
+      padding: 4,
+      rotateEnabled: true,
+      rotationSnaps: [0, 45, 90, 135, 180, 225, 270, 315],
+      enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+    });
+    this.uiLayer.add(this.transformer);
+
+    // Update overflow check when transforming
+    this.transformer.on('transform transformend', () => {
+      this.checkOverflowWarning();
+    });
+
+    // Deselect when clicking on stage empty area or background
+    this.stage.on('click tap', (e) => {
+      if (e.target === this.stage || e.target === this.productImgNode || e.target === this.bgRectNode) {
+        this.transformer?.nodes([]);
+        this.selectedNodeName.set(null);
+        this.uiLayer?.batchDraw();
+      }
+    });
+
+    // Initial render of product blank and text
+    this.updateKonvaCanvas();
+  }
+
+  private updateKonvaCanvas(): void {
+    if (!this.stage || !this.bgLayer || !this.drawLayer) return;
+
+    // 0. Render Canvas Background Base on bgLayer
+    if (!this.bgRectNode) {
+      this.bgRectNode = new Konva.Rect({
+        x: 0,
+        y: 0,
+        width: 460,
+        height: 460,
+        fill: this.getColorCanvasBackground(),
+        cornerRadius: 24,
+        listening: false
+      });
+      this.bgLayer.add(this.bgRectNode);
+    } else {
+      this.bgRectNode.fill(this.getColorCanvasBackground());
+    }
+
+    // 1. Render Product Blank Image on bgLayer
+    const blankUrl = this.getCurrentBlankImage();
+    const imageObj = new Image();
+    imageObj.crossOrigin = 'Anonymous';
+    imageObj.onload = () => {
+      if (!this.bgLayer) return;
+
+      const stageW = 460;
+      const stageH = 460;
+      const padding = 15;
+      const maxW = stageW - padding * 2;
+      const maxH = stageH - padding * 2;
+
+      const natW = imageObj.naturalWidth || 420;
+      const natH = imageObj.naturalHeight || 420;
+
+      // Giữ nguyên kích thước và tỉ lệ chuẩn của phôi (aspect-ratio contain, không làm méo phôi)
+      const scale = Math.min(maxW / natW, maxH / natH);
+      const dispW = Math.round(natW * scale);
+      const dispH = Math.round(natH * scale);
+      const dispX = Math.round((stageW - dispW) / 2);
+      const dispY = Math.round((stageH - dispH) / 2);
+
+      this.currentMockupBounds = { x: dispX, y: dispY, width: dispW, height: dispH };
+
+      if (!this.productImgNode) {
+        this.productImgNode = new Konva.Image({
+          x: dispX,
+          y: dispY,
+          image: imageObj,
+          width: dispW,
+          height: dispH,
+          listening: true
+        });
+        this.bgLayer.add(this.productImgNode);
+      } else {
+        this.productImgNode.setAttrs({
+          x: dispX,
+          y: dispY,
+          image: imageObj,
+          width: dispW,
+          height: dispH
+        });
+      }
+      this.bgLayer.batchDraw();
+
+      // Đồng bộ vẽ khung hướng dẫn theo kích thước chuẩn của phôi
+      this.renderGuidesOnKonva();
+      this.checkOverflowWarning();
+    };
+    imageObj.src = blankUrl;
+
+    // 2. Render Laser Engraved Text on drawLayer
+    const engraveColorCode = this.getEngraveColorCode();
+    const fontObj = this.fontOptions.find(f => f.name === this.selectedFont());
+    const fontFamily = fontObj ? fontObj.fontFamily : 'Georgia, serif';
+    const message = (this.isFrontFace() ? this.frontMessage() : this.backMessage()).trim();
+    const fontStyleStr = ((this.isTextBold() ? 'bold ' : '') + (this.isTextItalic() ? 'italic' : 'normal')).trim();
+
+    if (this.textNode) {
+      if (message) {
+        this.textNode.text(message);
+        this.textNode.fontFamily(fontFamily);
+        this.textNode.fontSize(this.textSize());
+        this.textNode.align(this.textAlign());
+        this.textNode.fontStyle(fontStyleStr);
+        this.textNode.fill(engraveColorCode);
+        this.textNode.shadowColor(engraveColorCode);
+        this.textNode.show();
+      } else {
+        this.textNode.text('');
+        this.textNode.hide();
+        if (this.transformer?.nodes().includes(this.textNode)) {
+          this.transformer.nodes([]);
+        }
+      }
+    } else if (message) {
+      const { saPx } = this.getGuideCoordinates();
+      const textWidth = Math.min(220, saPx.width * 0.85);
+      const textX = Math.round(saPx.x + (saPx.width - textWidth) / 2);
+      const textY = Math.round(saPx.y + saPx.height * 0.5 - 12);
+
+      this.textNode = new Konva.Text({
+        x: textX,
+        y: textY,
+        text: message,
+        fontSize: this.textSize(),
+        fontFamily: fontFamily,
+        fontStyle: fontStyleStr,
+        fill: engraveColorCode,
+        width: textWidth,
+        align: this.textAlign(),
+        shadowColor: engraveColorCode,
+        shadowBlur: 3,
+        shadowOpacity: 0.4,
+        draggable: true
+      });
+      this.makeDraggableAndSelectable(this.textNode, 'Chữ Khắc');
+      this.drawLayer.add(this.textNode);
+    }
+
+    // 3. Render Photo Node if uploaded
+    if (this.uploadedImage()) {
+      const photoImg = new Image();
+      photoImg.onload = () => {
+        if (!this.drawLayer) return;
+
+        if (!this.photoNode) {
+          this.photoNode = new Konva.Image({
+            x: 180,
+            y: 90,
+            image: photoImg,
+            width: 100,
+            height: 90,
+            stroke: 'rgba(245, 158, 11, 0.7)',
+            strokeWidth: 1.5,
+            cornerRadius: 12,
+            shadowColor: 'black',
+            shadowBlur: 8,
+            shadowOpacity: 0.4,
+            draggable: true
+          });
+          this.makeDraggableAndSelectable(this.photoNode, 'Ảnh Cá Nhân');
+          this.drawLayer.add(this.photoNode);
+        } else {
+          this.photoNode.image(photoImg);
+          this.photoNode.show();
+        }
+        this.drawLayer.batchDraw();
+        this.checkOverflowWarning();
+      };
+      photoImg.src = this.uploadedImage();
+    } else if (this.photoNode) {
+      this.photoNode.hide();
+    }
+
+    // 4. Render Stickers
+    this.renderStickersOnKonva();
+
+    // 5. Render Print Area & Safe Area Guides
+    this.renderGuidesOnKonva();
+    this.checkOverflowWarning();
+
+    this.drawLayer.batchDraw();
+    this.uiLayer?.batchDraw();
+  }
+
+  private renderGuidesOnKonva(): void {
+    if (!this.guidesLayer) return;
+
+    if (!this.showGuides()) {
+      this.guidesLayer.hide();
+      this.guidesLayer.batchDraw();
+      return;
+    }
+    this.guidesLayer.show();
+
+    const { paPx, saPx } = this.getGuideCoordinates();
+
+    // 1. Print Area Outline & Label
+    if (!this.printAreaRect) {
+      this.printAreaRect = new Konva.Rect({
+        x: paPx.x,
+        y: paPx.y,
+        width: paPx.width,
+        height: paPx.height,
+        stroke: 'rgba(124, 58, 237, 0.45)',
+        strokeWidth: 1.5,
+        dash: [6, 4],
+        cornerRadius: 8,
+        listening: false
+      });
+      this.guidesLayer.add(this.printAreaRect);
+    } else {
+      this.printAreaRect.setAttrs({
+        x: paPx.x,
+        y: paPx.y,
+        width: paPx.width,
+        height: paPx.height
+      });
+    }
+
+    if (!this.printAreaLabel) {
+      this.printAreaLabel = new Konva.Text({
+        x: paPx.x + 6,
+        y: paPx.y + 4,
+        text: 'VÙNG IN (PRINT AREA)',
+        fontSize: 8,
+        fontFamily: 'sans-serif',
+        fontStyle: 'bold',
+        fill: '#7C3AED',
+        opacity: 0.7,
+        listening: false
+      });
+      this.guidesLayer.add(this.printAreaLabel);
+    } else {
+      this.printAreaLabel.setAttrs({
+        x: paPx.x + 6,
+        y: paPx.y + 4
+      });
+    }
+
+    // 2. Safe Area Outline & Label (Curved Edge boundaries)
+    const safeStroke = this.isOverflowWarning() ? '#EF4444' : 'rgba(16, 185, 129, 0.75)';
+    const safeWidth = this.isOverflowWarning() ? 2 : 1.5;
+
+    if (!this.safeAreaRect) {
+      this.safeAreaRect = new Konva.Rect({
+        x: saPx.x,
+        y: saPx.y,
+        width: saPx.width,
+        height: saPx.height,
+        stroke: safeStroke,
+        strokeWidth: safeWidth,
+        dash: [4, 4],
+        cornerRadius: 6,
+        listening: false
+      });
+      this.guidesLayer.add(this.safeAreaRect);
+    } else {
+      this.safeAreaRect.setAttrs({
+        x: saPx.x,
+        y: saPx.y,
+        width: saPx.width,
+        height: saPx.height,
+        stroke: safeStroke,
+        strokeWidth: safeWidth
+      });
+    }
+
+    const safeLabelY = Math.max(saPx.y + 12, saPx.y + saPx.height - 14);
+    if (!this.safeAreaLabel) {
+      this.safeAreaLabel = new Konva.Text({
+        x: saPx.x + 6,
+        y: safeLabelY,
+        text: 'VÙNG AN TOÀN (TRÁNH MÉP CONG)',
+        fontSize: 7.5,
+        fontFamily: 'sans-serif',
+        fontStyle: 'bold',
+        fill: this.isOverflowWarning() ? '#EF4444' : '#10B981',
+        opacity: 0.85,
+        listening: false
+      });
+      this.guidesLayer.add(this.safeAreaLabel);
+    } else {
+      this.safeAreaLabel.setAttrs({
+        x: saPx.x + 6,
+        y: safeLabelY,
+        fill: this.isOverflowWarning() ? '#EF4444' : '#10B981'
+      });
+    }
+
+    this.guidesLayer.batchDraw();
+  }
+
+  checkOverflowWarning(): void {
+    if (!this.drawLayer) return;
+
+    const { saPx } = this.getGuideCoordinates();
+
+    const tolerance = 4;
+    let hasOverflow = false;
+    let overflowingName = '';
+
+    const nodesToCheck: Array<{ node: Konva.Node | null; name: string }> = [
+      { node: this.textNode, name: 'Chữ Khắc' },
+      { node: this.photoNode, name: 'Ảnh Cá Nhân' }
+    ];
+    this.stickerNodes.forEach((stk, idx) => {
+      nodesToCheck.push({ node: stk, name: `Sticker #${idx + 1}` });
+    });
+
+    for (const item of nodesToCheck) {
+      if (!item.node || !item.node.isVisible()) continue;
+      if (item.node === this.textNode && !this.textNode.text().trim()) continue;
+
+      const box = item.node.getClientRect({ skipTransform: false });
+      const isLeft = box.x < (saPx.x - tolerance);
+      const isRight = (box.x + box.width) > (saPx.x + saPx.width + tolerance);
+      const isTop = box.y < (saPx.y - tolerance);
+      const isBottom = (box.y + box.height) > (saPx.y + saPx.height + tolerance);
+
+      if (isLeft || isRight || isTop || isBottom) {
+        hasOverflow = true;
+        overflowingName = item.name;
+        break;
+      }
+    }
+
+    if (hasOverflow) {
+      this.isOverflowWarning.set(true);
+      this.overflowWarningMessage.set(`⚠️ ${overflowingName} đang tràn ra ngoài Vùng An Toàn! Mép cong dễ gây méo chữ hoặc lỗi in khi khắc laser.`);
+      if (this.safeAreaRect) {
+        this.safeAreaRect.stroke('#EF4444');
+        this.safeAreaRect.strokeWidth(2);
+      }
+      if (this.safeAreaLabel) {
+        this.safeAreaLabel.fill('#EF4444');
+      }
+    } else {
+      this.isOverflowWarning.set(false);
+      this.overflowWarningMessage.set('');
+      if (this.safeAreaRect) {
+        this.safeAreaRect.stroke('rgba(16, 185, 129, 0.75)');
+        this.safeAreaRect.strokeWidth(1.5);
+      }
+      if (this.safeAreaLabel) {
+        this.safeAreaLabel.fill('#10B981');
+      }
+    }
+
+    this.guidesLayer?.batchDraw();
+  }
+
+  fitIntoSafeArea(): void {
+    const selected = this.transformer?.nodes()[0] || this.textNode;
+    if (!selected || !this.stage) return;
+
+    const { saPx } = this.getGuideCoordinates();
+
+    // If node is wider/taller than safe area, scale it down
+    const box = selected.getClientRect({ skipTransform: false });
+    if (box.width > saPx.width * 0.95 || box.height > saPx.height * 0.95) {
+      const scaleX = selected.scaleX();
+      const scaleY = selected.scaleY();
+      const ratio = Math.min((saPx.width * 0.85) / box.width, (saPx.height * 0.85) / box.height);
+      selected.scaleX(scaleX * ratio);
+      selected.scaleY(scaleY * ratio);
+    }
+
+    // Center node in safeArea
+    const newBox = selected.getClientRect({ skipTransform: false });
+    const shiftX = (saPx.x + saPx.width / 2) - (newBox.x + newBox.width / 2);
+    const shiftY = (saPx.y + saPx.height / 2) - (newBox.y + newBox.height / 2);
+
+    selected.x(selected.x() + shiftX);
+    selected.y(selected.y() + shiftY);
+
+    this.drawLayer?.batchDraw();
+    this.uiLayer?.batchDraw();
+    this.checkOverflowWarning();
+  }
+
+  toggleGuides(): void {
+    this.showGuides.set(!this.showGuides());
+    this.renderGuidesOnKonva();
+  }
+
+  private renderStickersOnKonva(): void {
+    if (!this.drawLayer) return;
+
+    // Clear old sticker nodes
+    this.stickerNodes.forEach(n => n.destroy());
+    this.stickerNodes = [];
+
+    const stickers = this.activeStickers();
+    stickers.forEach((stk, index) => {
+      const stickerText = new Konva.Text({
+        x: 170 + index * 40,
+        y: 170,
+        text: stk.icon,
+        fontSize: 26,
+        draggable: true
+      });
+      this.makeDraggableAndSelectable(stickerText, `Sticker ${stk.name}`);
+      this.drawLayer?.add(stickerText);
+      this.stickerNodes.push(stickerText);
+    });
+  }
+
+  private makeDraggableAndSelectable(node: Konva.Node, name: string): void {
+    const selectNode = () => {
+      this.selectedNodeName.set(name);
+      if (this.transformer) {
+        if (name === 'Ảnh Cá Nhân' || name.startsWith('Sticker')) {
+          this.transformer.keepRatio(true);
+        } else {
+          this.transformer.keepRatio(false);
+        }
+        this.transformer.nodes([node]);
+        this.uiLayer?.batchDraw();
+      }
+      if (name.includes('Chữ') || name.includes('Khung')) {
+        this.activeToolTab.set('TEXT');
+      } else if (name === 'Ảnh Cá Nhân') {
+        this.activeToolTab.set('IMAGE');
+      } else if (name.startsWith('Sticker')) {
+        this.activeToolTab.set('STICKER');
+      }
+    };
+
+    node.on('click tap', selectNode);
+    node.on('dragstart', selectNode);
+    node.on('dragmove', () => this.checkOverflowWarning());
+    node.on('dragend', () => this.checkOverflowWarning());
+  }
+
+  // Canvas Action Toolbars
+  centerSelectedNode(): void {
+    const selected = this.transformer?.nodes()[0];
+    if (selected && this.stage) {
+      selected.x((this.stage.width() - (selected.width() * selected.scaleX())) / 2);
+      this.drawLayer?.batchDraw();
+      this.uiLayer?.batchDraw();
+      this.checkOverflowWarning();
+    } else if (this.textNode && this.stage) {
+      this.textNode.x((this.stage.width() - this.textNode.width()) / 2);
+      this.drawLayer?.batchDraw();
+      this.uiLayer?.batchDraw();
+      this.checkOverflowWarning();
+    }
+  }
+
+  deleteSelectedNode(): void {
+    const selected = this.transformer?.nodes()[0];
+    if (!selected) return;
+
+    if (selected === this.photoNode) {
+      this.removeImage();
+    } else if (this.stickerNodes.includes(selected as Konva.Text)) {
+      const idx = this.stickerNodes.indexOf(selected as Konva.Text);
+      if (idx > -1) {
+        const current = [...this.activeStickers()];
+        current.splice(idx, 1);
+        this.activeStickers.set(current);
+        this.renderStickersOnKonva();
+      }
+    } else if (selected === this.textNode) {
+      if (this.isFrontFace()) {
+        this.frontMessage.set('');
+      } else {
+        this.backMessage.set('');
+      }
+      this.updateKonvaCanvas();
+    }
+    this.transformer?.nodes([]);
+    this.selectedNodeName.set(null);
+    this.uiLayer?.batchDraw();
+    this.checkOverflowWarning();
+  }
+
+  bringForward(): void {
+    const selected = this.transformer?.nodes()[0];
+    if (selected) {
+      selected.moveUp();
+      this.drawLayer?.batchDraw();
+      this.uiLayer?.batchDraw();
+    }
+  }
+
+  sendBackward(): void {
+    const selected = this.transformer?.nodes()[0];
+    if (selected) {
+      selected.moveDown();
+      this.drawLayer?.batchDraw();
+      this.uiLayer?.batchDraw();
+    }
+  }
+
+  setTextSize(size: number): void {
+    const clamped = Math.max(10, Math.min(32, size));
+    this.textSize.set(clamped);
+    if (this.textNode) {
+      this.textNode.fontSize(clamped);
+      this.drawLayer?.batchDraw();
+      this.uiLayer?.batchDraw();
+      this.checkOverflowWarning();
+    }
+  }
+
+  setTextAlign(align: 'left' | 'center' | 'right'): void {
+    this.textAlign.set(align);
+    if (this.textNode) {
+      this.textNode.align(align);
+      this.drawLayer?.batchDraw();
+      this.uiLayer?.batchDraw();
+      this.checkOverflowWarning();
+    }
+  }
+
+  toggleBold(): void {
+    this.isTextBold.set(!this.isTextBold());
+    if (this.textNode) {
+      const style = ((this.isTextBold() ? 'bold ' : '') + (this.isTextItalic() ? 'italic' : 'normal')).trim();
+      this.textNode.fontStyle(style);
+      this.drawLayer?.batchDraw();
+      this.uiLayer?.batchDraw();
+      this.checkOverflowWarning();
+    }
+  }
+
+  toggleItalic(): void {
+    this.isTextItalic.set(!this.isTextItalic());
+    if (this.textNode) {
+      const style = ((this.isTextBold() ? 'bold ' : '') + (this.isTextItalic() ? 'italic' : 'normal')).trim();
+      this.textNode.fontStyle(style);
+      this.drawLayer?.batchDraw();
+      this.uiLayer?.batchDraw();
+      this.checkOverflowWarning();
+    }
+  }
+
+  setZoom(zoom: number): void {
+    this.canvasZoom.set(zoom);
+    if (this.stage) {
+      this.stage.scale({ x: zoom, y: zoom });
+      this.stage.batchDraw();
+    }
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement;
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+      return;
+    }
+    const selected = this.transformer?.nodes()[0];
+    if (!selected) return;
+
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      event.preventDefault();
+      this.deleteSelectedNode();
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      selected.y(selected.y() - (event.shiftKey ? 10 : 2));
+      this.drawLayer?.batchDraw();
+      this.uiLayer?.batchDraw();
+      this.checkOverflowWarning();
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      selected.y(selected.y() + (event.shiftKey ? 10 : 2));
+      this.drawLayer?.batchDraw();
+      this.uiLayer?.batchDraw();
+      this.checkOverflowWarning();
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      selected.x(selected.x() - (event.shiftKey ? 10 : 2));
+      this.drawLayer?.batchDraw();
+      this.uiLayer?.batchDraw();
+      this.checkOverflowWarning();
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      selected.x(selected.x() + (event.shiftKey ? 10 : 2));
+      this.drawLayer?.batchDraw();
+      this.uiLayer?.batchDraw();
+      this.checkOverflowWarning();
+    }
+  }
+
+  downloadSnapshot(): void {
+    if (!this.stage) return;
+    this.transformer?.nodes([]);
+    this.uiLayer?.batchDraw();
+
+    const wasGuidesShown = this.showGuides();
+    if (this.guidesLayer) {
+      this.guidesLayer.hide();
+      this.guidesLayer.batchDraw();
+    }
+
+    const dataUrl = this.stage.toDataURL({ pixelRatio: 2 });
+
+    if (wasGuidesShown && this.guidesLayer) {
+      this.guidesLayer.show();
+      this.guidesLayer.batchDraw();
+    }
+
+    const link = document.createElement('a');
+    link.download = `giftory_custom_${this.activeTemplate()?.slug || 'bespoke'}_${Date.now()}.png`;
+    link.href = dataUrl;
+    link.click();
+  }
+
+  // Synchronizers for Text & Options
+  onFrontMessageChange(val: string): void {
+    this.frontMessage.set(val);
+    this.updateKonvaCanvas();
+  }
+
+  onBackMessageChange(val: string): void {
+    this.backMessage.set(val);
+    this.updateKonvaCanvas();
+  }
+
+  setFont(fontName: string): void {
+    this.selectedFont.set(fontName);
+    this.updateKonvaCanvas();
+  }
+
+  setEngraveColor(colorName: string): void {
+    this.selectedEngraveColor.set(colorName);
+    this.updateKonvaCanvas();
+  }
+
+  setColor(colorName: string): void {
+    this.selectedColor.set(colorName);
+  }
+
+  setPattern(patternId: string): void {
+    this.selectedPattern.set(patternId);
+  }
+
+  switchFace(isFront: boolean): void {
+    this.isFrontFace.set(isFront);
+    this.updateKonvaCanvas();
+  }
+
+  loadStudioAssets(): void {
+    this.studioService.getAssets('STICKER').subscribe({
+      next: (assets: any) => {
+        if (Array.isArray(assets) && assets.length > 0) {
+          this.dynamicStickers.set(assets);
+        } else {
+          this.dynamicStickers.set([
+            { _id: '1', name: 'Trái tim', icon: '❤️', type: 'STICKER' },
+            { _id: '2', name: 'Tim đôi', icon: '💖', type: 'STICKER' },
+            { _id: '3', name: 'Tinh tú', icon: '✨', type: 'STICKER' },
+            { _id: '4', name: 'Crown', icon: '👑', type: 'STICKER' },
+            { _id: '5', name: 'Nơ quà', icon: '🎀', type: 'STICKER' },
+            { _id: '6', name: 'Bánh kem', icon: '🎂', type: 'STICKER' },
+            { _id: '7', name: 'Hộp quà', icon: '🎁', type: 'STICKER' },
+            { _id: '8', name: 'Nâng ly', icon: '🥂', type: 'STICKER' },
+            { _id: '9', name: 'Cỏ 4 lá', icon: '🍀', type: 'STICKER' },
+            { _id: '10', name: 'Hoa đào', icon: '🌸', type: 'STICKER' },
+            { _id: '11', name: 'Kim cương', icon: '💎', type: 'STICKER' },
+            { _id: '12', name: 'Ngọn lửa', icon: '🔥', type: 'STICKER' }
+          ]);
+        }
+      },
+      error: () => {
+        this.dynamicStickers.set([
+          { _id: '1', name: 'Trái tim', icon: '❤️', type: 'STICKER' },
+          { _id: '2', name: 'Tim đôi', icon: '💖', type: 'STICKER' },
+          { _id: '3', name: 'Tinh tú', icon: '✨', type: 'STICKER' }
+        ]);
+      }
+    });
+  }
+
+  getCurrentBlankImage(): string {
+    const tpl = this.activeTemplate();
+    if (!tpl) return 'https://placehold.co/400';
+
+    if (this.isFrontFace()) {
+      return tpl.customConfig?.frontBlankImage || tpl.images[0] || 'https://placehold.co/400';
+    } else {
+      return tpl.customConfig?.backBlankImage || tpl.images[1] || tpl.images[0] || 'https://placehold.co/400';
+    }
+  }
+
+  selectTemplate(tpl: Product): void {
+    this.activeTemplate.set(tpl);
+    this.updateKonvaCanvas();
+  }
+
+  resetToDefaults(): void {
+    this.studioService.clearDraftFromStorage();
+    this.frontMessage.set('');
+    this.backMessage.set('');
+    this.selectedColor.set('Navy Blue');
+    this.selectedFont.set('Signature');
+    this.selectedEngraveColor.set('Vàng Kim (Gold)');
+    this.selectedPattern.set('none');
+    this.uploadedImage.set('');
+    this.imageScale.set(1);
+    this.activeStickers.set([]);
+    this.hasRestoredDraft.set(false);
+    this.updateKonvaCanvas();
   }
 
   getEngraveColorCode(): string {
@@ -423,11 +1990,28 @@ export class CustomStudioComponent implements OnInit {
     return ec ? ec.hex : '#F59E0B';
   }
 
+  getActivePatternCss(): string {
+    const p = this.patternLibrary.find(item => item.id === this.selectedPattern());
+    return p ? p.cssPattern : 'none';
+  }
+
+  getColorCanvasBackground(): string {
+    switch (this.selectedColor()) {
+      case 'Navy Blue': return '#162b50';
+      case 'Deep Slate': return '#1a2233';
+      case 'Sand Beige': return '#e6dac8';
+      case 'Terracotta': return '#8c433b';
+      case 'Pure White': return '#f3f4f6';
+      case 'Emerald Green': return '#133e31';
+      default: return '#F5ECE9';
+    }
+  }
+
   isStickerActive(name: string): boolean {
     return this.activeStickers().some(s => s.name === name);
   }
 
-  toggleSticker(stk: { name: string; icon: string }): void {
+  toggleSticker(stk: any): void {
     const current = [...this.activeStickers()];
     const idx = current.findIndex(s => s.name === stk.name);
     if (idx > -1) {
@@ -436,50 +2020,252 @@ export class CustomStudioComponent implements OnInit {
       if (current.length >= 3) {
         current.shift();
       }
-      current.push({ id: String(Date.now()), ...stk });
+      current.push({ id: String(Date.now()), icon: stk.icon, name: stk.name });
     }
     this.activeStickers.set(current);
+    this.renderStickersOnKonva();
   }
 
-  saveDesignOnly(): void {
-    const tpl = this.activeTemplate();
-    if (!tpl) return;
+  onImageFileSelected(event: any): void {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    this.studioService.saveDesign({
-      productId: tpl._id,
-      title: `Thiết kế ${tpl.name}`,
+    this.formErrors.image = '';
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      this.formErrors.image = 'Định dạng không hợp lệ. Chỉ hỗ trợ .JPG hoặc .PNG.';
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      this.formErrors.image = 'Dung lượng tệp vượt quá 5MB. Vui lòng nén nhỏ hơn 5MB.';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      this.uploadedImage.set(e.target.result);
+      this.imageScale.set(1);
+      this.updateKonvaCanvas();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeImage(): void {
+    this.uploadedImage.set('');
+    this.imageScale.set(1);
+    this.formErrors.image = '';
+    this.updateKonvaCanvas();
+  }
+
+  validateInputs(): boolean {
+    let isValid = true;
+    const maxLen = this.maxTextLength();
+
+    if (!this.frontMessage().trim() && !this.uploadedImage()) {
+      this.formErrors.frontMessage = 'Vui lòng nhập tên người nhận/lời chúc mặt trước hoặc tải ảnh kỷ niệm.';
+      isValid = false;
+    } else if (this.frontMessage().length > maxLen) {
+      this.formErrors.frontMessage = `Độ dài tối đa không quá ${maxLen} ký tự.`;
+      isValid = false;
+    } else {
+      this.formErrors.frontMessage = '';
+    }
+
+    if (this.backMessage().length > maxLen) {
+      this.formErrors.backMessage = `Độ dài mặt sau tối đa không quá ${maxLen} ký tự.`;
+      isValid = false;
+    } else {
+      this.formErrors.backMessage = '';
+    }
+
+    return isValid && !this.formErrors.image;
+  }
+
+  isFormInvalid(): boolean {
+    return !this.frontMessage().trim() && !this.uploadedImage();
+  }
+
+  private getConfirmedCustomDetails() {
+    const tpl = this.activeTemplate();
+    const surchargesObj: Record<string, number> = {};
+    this.surchargeList().forEach(s => {
+      surchargesObj[s.label] = s.amount;
+    });
+
+    // Generate real Konva high-res render for preview
+    let renderedPreview = this.getCurrentBlankImage();
+    if (this.stage) {
+      this.transformer?.nodes([]);
+      this.uiLayer?.batchDraw();
+      const wasGuidesShown = this.showGuides();
+      if (this.guidesLayer) {
+        this.guidesLayer.hide();
+        this.guidesLayer.batchDraw();
+      }
+      try {
+        renderedPreview = this.stage.toDataURL({ pixelRatio: 1.5 });
+      } catch (e) {
+        console.warn('Canvas toDataURL fallback', e);
+      }
+      if (wasGuidesShown && this.guidesLayer) {
+        this.guidesLayer.show();
+        this.guidesLayer.batchDraw();
+      }
+    }
+
+    return {
       frontMessage: this.frontMessage(),
       backMessage: this.backMessage(),
+      customText: this.frontMessage(),
       fontFamily: this.selectedFont(),
       engraveColor: this.selectedEngraveColor(),
       selectedColor: this.selectedColor(),
+      pattern: this.selectedPattern(),
+      uploadedImage: this.uploadedImage(),
+      imageScale: this.imageScale(),
       stickers: this.activeStickers(),
-      previewImage: tpl.images[0]
-    }).subscribe({
+      previewImage: renderedPreview,
+      customFee: this.totalSurcharges(),
+      surcharges: surchargesObj
+    };
+  }
+
+  onPrimaryActionClick(): void {
+    if (!this.validateInputs()) {
+      this.activeToolTab.set('TEXT');
+      return;
+    }
+
+    const tpl = this.activeTemplate();
+    if (!tpl) return;
+
+    const customDetails = this.getConfirmedCustomDetails();
+
+    if (this.isEditingCartItem() && this.editingCartItemIndex() !== null) {
+      this.cartService.updateCustomDetails(
+        this.editingCartItemIndex()!,
+        customDetails,
+        this.selectedColor()
+      ).subscribe({
+        next: () => {
+          this.studioService.clearDraftFromStorage();
+          this.router.navigate(['/cart']);
+        }
+      });
+      return;
+    }
+
+    if (this.authService.isAuthenticated()) {
+      this.cartService.addItem(tpl._id, 1, this.selectedColor(), customDetails).subscribe({
+        next: () => {
+          this.studioService.clearDraftFromStorage();
+          this.router.navigate(['/cart']);
+        }
+      });
+    } else {
+      this.showGuestChoiceModal.set(true);
+    }
+  }
+
+  handleGuestLoginAndSync(): void {
+    this.showGuestChoiceModal.set(false);
+    this.showSaveLoginModal.set(true);
+  }
+
+  handleContinueAsGuest(): void {
+    this.showGuestChoiceModal.set(false);
+    const tpl = this.activeTemplate();
+    if (!tpl) return;
+
+    const customDetails = this.getConfirmedCustomDetails();
+    this.cartService.addItem(tpl._id, 1, this.selectedColor(), customDetails).subscribe({
       next: () => {
-        alert('Đã lưu bản thiết kế vào mục "Bản thiết kế của bạn" thành công!');
-        this.router.navigate(['/wishlist']);
+        this.router.navigate(['/cart']);
       }
     });
   }
 
-  addToCartAndCheckout(): void {
+  onSaveDesignClick(): void {
+    if (!this.validateInputs()) {
+      this.activeToolTab.set('TEXT');
+      return;
+    }
+
+    if (this.authService.isAuthenticated()) {
+      this.saveDesignToCloud();
+    } else {
+      this.showSaveLoginModal.set(true);
+    }
+  }
+
+  performQuickLoginAndSync(type: 'google' | 'otp'): void {
     const tpl = this.activeTemplate();
     if (!tpl) return;
 
-    const customDetails = {
-      frontMessage: this.frontMessage(),
-      backMessage: this.backMessage(),
-      fontFamily: this.selectedFont(),
-      engraveColor: this.selectedEngraveColor(),
-      selectedColor: this.selectedColor(),
-      stickers: this.activeStickers(),
-      previewImage: tpl.images[0]
-    };
+    const demoEmail = type === 'google' ? 'google.guest@giftory.vn' : '0912345678@giftory.vn';
+    const demoPassword = 'Password123!';
 
-    this.cartService.addItem(tpl._id, 1, this.selectedColor(), customDetails).subscribe({
+    this.authService.login({ email: demoEmail, password: demoPassword }).subscribe({
       next: () => {
-        this.router.navigate(['/cart']);
+        this.showSaveLoginModal.set(false);
+        this.syncDraftToServer();
+      },
+      error: () => {
+        this.authService.register({
+          email: demoEmail,
+          password: demoPassword,
+          name: type === 'google' ? 'Google Guest Member' : 'Khách Hàng OTP',
+          phone: '0912345678'
+        }).subscribe({
+          next: () => {
+            this.showSaveLoginModal.set(false);
+            this.syncDraftToServer();
+          },
+          error: () => {
+            this.showSaveLoginModal.set(false);
+            this.saveDesignToCloud();
+          }
+        });
+      }
+    });
+  }
+
+  private syncDraftToServer(): void {
+    const tpl = this.activeTemplate();
+    if (!tpl) return;
+
+    const customDetails = this.getConfirmedCustomDetails();
+    this.studioService.syncDesignDraft({
+      productId: tpl._id,
+      title: `Thiết kế ${tpl.name}`,
+      ...customDetails
+    }).subscribe({
+      next: res => {
+        alert(res.message || 'Đã đồng bộ bản thiết kế vào tài khoản và cộng 50 điểm thưởng thành công!');
+        this.authService.refreshProfile();
+        this.router.navigate(['/wishlist']);
+      },
+      error: () => {
+        this.saveDesignToCloud();
+      }
+    });
+  }
+
+  private saveDesignToCloud(): void {
+    const tpl = this.activeTemplate();
+    if (!tpl) return;
+
+    const customDetails = this.getConfirmedCustomDetails();
+    this.studioService.saveDesign({
+      productId: tpl._id,
+      title: `Thiết kế ${tpl.name}`,
+      ...customDetails
+    }).subscribe({
+      next: () => {
+        alert('Đã lưu bản thiết kế vào bộ sưu tập của bạn thành công!');
+        this.router.navigate(['/wishlist']);
       }
     });
   }

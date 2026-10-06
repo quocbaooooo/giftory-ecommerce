@@ -134,6 +134,33 @@ export class CartService {
     return this.getCart(userId, sessionId);
   }
 
+  async updateItemCustomDetails(itemIndex: number, customDetails: any, variantName?: string, userId?: string, sessionId?: string) {
+    const cart = await this.findOrCreateCart(userId, sessionId);
+    if (!cart.items[itemIndex]) {
+      throw new NotFoundException('Sản phẩm không có trong giỏ hàng');
+    }
+
+    const item = cart.items[itemIndex];
+    const product = await this.productModel.findById(item.productId);
+    if (!product) {
+      throw new NotFoundException('Sản phẩm không tồn tại');
+    }
+
+    const unitPrice = product.salePrice && product.salePrice > 0 ? product.salePrice : product.price;
+    const customFee = (customDetails && customDetails.customFee !== undefined) ? customDetails.customFee : (product.customBaseFee || 0);
+    const finalPrice = unitPrice + customFee;
+    const depositAmount = Math.round(finalPrice * 0.5);
+
+    item.customDetails = customDetails;
+    if (variantName) item.variantName = variantName;
+    item.price = finalPrice;
+    item.depositRequired = depositAmount * item.quantity;
+    item.isCustom = true;
+
+    await cart.save();
+    return this.getCart(userId, sessionId);
+  }
+
   async clearCart(userId?: string, sessionId?: string) {
     const cart = await this.findOrCreateCart(userId, sessionId);
     cart.items = [];
@@ -147,12 +174,21 @@ export class CartService {
     let cart: CartDocument | null = null;
     if (userId) {
       cart = await this.cartModel.findOne({ userId: new Types.ObjectId(userId) });
-      if (!cart && sessionId) {
-        // Link guest cart to user if exists
-        cart = await this.cartModel.findOne({ sessionId });
-        if (cart) {
-          cart.userId = new Types.ObjectId(userId);
-          await cart.save();
+      if (sessionId) {
+        // Link or merge guest cart to user
+        const guestCart = await this.cartModel.findOne({ sessionId, userId: { $exists: false } });
+        if (guestCart && guestCart.items.length > 0) {
+          if (!cart) {
+            guestCart.userId = new Types.ObjectId(userId);
+            await guestCart.save();
+            return guestCart;
+          } else {
+            for (const gItem of guestCart.items) {
+              cart.items.push(gItem);
+            }
+            await guestCart.deleteOne();
+            await cart.save();
+          }
         }
       }
     } else if (sessionId) {

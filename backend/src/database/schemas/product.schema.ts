@@ -34,6 +34,35 @@ export class ProductSpec {
 
 export const ProductSpecSchema = SchemaFactory.createForClass(ProductSpec);
 
+@Schema()
+export class CustomBlankConfig {
+  @Prop({ default: '' })
+  frontBlankImage: string;
+
+  @Prop({ default: '' })
+  backBlankImage: string;
+
+  @Prop({ type: [String], default: ['Navy Blue', 'Deep Slate', 'Sand Beige', 'Terracotta', 'Pure White', 'Emerald Green'] })
+  supportedColors: string[];
+
+  @Prop({ default: 35 })
+  maxTextLength: number;
+
+  @Prop({ default: 20000 })
+  backEngraveFee: number;
+
+  @Prop({ default: 30000 })
+  photoPrintFee: number;
+
+  @Prop({ type: Object, default: { x: 20, y: 20, width: 60, height: 60 } })
+  printArea: { x: number; y: number; width: number; height: number };
+
+  @Prop({ type: Object, default: { x: 25, y: 25, width: 50, height: 50 } })
+  safeArea: { x: number; y: number; width: number; height: number };
+}
+
+export const CustomBlankConfigSchema = SchemaFactory.createForClass(CustomBlankConfig);
+
 @Schema({ timestamps: true })
 export class Product {
   @Prop({ required: true, trim: true })
@@ -95,6 +124,9 @@ export class Product {
 
   @Prop({ default: 0 })
   customBaseFee: number; // e.g., 30000 VND for laser engraving / UV printing
+
+  @Prop({ type: CustomBlankConfigSchema, default: null })
+  customConfig?: CustomBlankConfig;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
