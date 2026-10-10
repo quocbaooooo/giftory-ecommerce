@@ -128,13 +128,19 @@
     </div>
 
     <!-- AI Concierge Floating Assistant & Zalo (Hidden in Custom Studio) -->
-    <div *ngIf="!isCustomStudioRoute()" class="fixed bottom-6 right-6 z-50 flex flex-col items-center gap-3">
-      <!-- AI Concierge Sparkle Button -->
-      <app-ai-concierge></app-ai-concierge>
-      <!-- Quick Zalo Button -->
-      <a href="https://zalo.me" target="_blank" class="w-12 h-12 rounded-full bg-[#0068FF] text-white flex items-center justify-center font-bold text-xs shadow-lg hover:scale-105 transition-transform cursor-pointer" title="Chat Zalo hỗ trợ tức thì">
+    <div *ngIf="!isCustomStudioRoute()" class="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+      <!-- Quick Zalo Button (Circular) -->
+      <a 
+        href="https://zalo.me" 
+        target="_blank" 
+        class="w-12 h-12 rounded-full bg-[#0068FF] hover:bg-[#0056D6] text-white flex items-center justify-center font-bold text-xs shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 border-2 border-white cursor-pointer" 
+        title="Chat Zalo hỗ trợ tức thì"
+      >
         Zalo
       </a>
+
+      <!-- AI Concierge Sparkle Button -->
+      <app-ai-concierge></app-ai-concierge>
     </div>
   </div>
 </ng-container>

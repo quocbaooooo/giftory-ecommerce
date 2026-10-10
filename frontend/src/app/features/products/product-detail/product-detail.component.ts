@@ -94,9 +94,16 @@ import { Product, ProductVariant } from '../../../core/models';
               </div>
 
               <!-- Product Name -->
-              <h1 class="text-2xl sm:text-3xl font-bold text-[#1E1B4B] leading-tight mb-3">
+              <h1 class="text-2xl sm:text-3xl font-bold text-[#1E1B4B] leading-tight mb-2">
                 {{ prod.name }}
               </h1>
+
+              <!-- Product Short Description Excerpt -->
+              @if (prod.description) {
+                <p class="text-slate-600 text-xs sm:text-sm leading-relaxed mb-4 font-normal">
+                  {{ prod.description }}
+                </p>
+              }
 
               <!-- Price Breakdown -->
               <div class="p-4 rounded-2xl bg-[#F5EEFD] border border-[#DDD6FE] mb-6 flex items-baseline justify-between gap-4">
@@ -151,16 +158,32 @@ import { Product, ProductVariant } from '../../../core/models';
               <!-- Variants Selection -->
               @if (prod.variants && prod.variants.length > 0) {
                 <div class="mb-6">
-                  <div class="text-xs font-bold text-slate-700 mb-2">Phân loại / Tùy chọn phối màu:</div>
+                  <div class="text-xs font-bold text-slate-700 mb-2 flex items-center justify-between">
+                    <span>Phân loại / Tùy chọn phối màu:</span>
+                    <span class="text-[11px] text-[#7C3AED] font-semibold">{{ selectedVariant() }}</span>
+                  </div>
                   <div class="flex items-center gap-2 flex-wrap">
-                    @for (v of prod.variants; track v.name) {
-                      <button 
-                        (click)="selectedVariant.set(v.name)"
-                        class="px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer"
-                        [ngClass]="selectedVariant() === v.name ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED] shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:border-purple-200'"
-                      >
-                        {{ v.name }}
-                      </button>
+                    @for (v of prod.variants; track v.sku || v.name) {
+                      @if (v.status !== 'HIDDEN') {
+                        @let isOos = (v.stock || 0) <= 0 || v.status === 'OUT_OF_STOCK';
+                        <button 
+                          (click)="onSelectVariant(v)"
+                          [disabled]="isOos"
+                          class="px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all flex items-center gap-2"
+                          [ngClass]="{
+                            'opacity-40 cursor-not-allowed bg-slate-100 border-slate-200 text-slate-400': isOos,
+                            'cursor-pointer': !isOos,
+                            'border-[#7C3AED] bg-purple-50 text-[#7C3AED] shadow-xs': selectedVariant() === v.name && !isOos,
+                            'border-slate-200 bg-white text-slate-700 hover:border-purple-200': selectedVariant() !== v.name && !isOos
+                          }"
+                        >
+                          <span class="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0 shadow-2xs" [style.backgroundColor]="v.colorHex || '#1E1B4B'"></span>
+                          <span>{{ v.name }}</span>
+                          @if (isOos) {
+                            <span class="text-[9px] font-bold text-red-500 bg-red-50 px-1 rounded">Hết hàng</span>
+                          }
+                        </button>
+                      }
                     }
                   </div>
                 </div>
@@ -235,6 +258,55 @@ import { Product, ProductVariant } from '../../../core/models';
           </div>
         </div>
 
+        <!-- Product Detailed Description & Craftsmanship Showcase Card -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#DDD6FE] mb-12">
+          <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+            <div class="w-10 h-10 rounded-2xl bg-purple-100 text-[#7C3AED] flex items-center justify-center font-bold shrink-0">
+              <span class="material-symbols-outlined text-[22px]">description</span>
+            </div>
+            <div>
+              <h3 class="text-lg sm:text-xl font-bold text-[#1E1B4B]">Mô Tả Sản Phẩm & Quy Chuẩn Chế Tác</h3>
+              <p class="text-slate-500 text-xs mt-0.5">Thông tin chi tiết về tính năng, chất liệu và dịch vụ đóng gói độc bản</p>
+            </div>
+          </div>
+
+          <!-- Main Description Content -->
+          <div class="space-y-4">
+            <div class="p-5 rounded-2xl bg-purple-50/50 border border-purple-100/80 text-slate-700 text-sm sm:text-base leading-relaxed space-y-3 font-normal">
+              <p class="whitespace-pre-line leading-loose text-slate-800">
+                {{ prod.description || 'Sản phẩm quà tặng bespoke cao cấp được tác chế tỉ mỉ bởi Giftory. Đạt tiêu chuẩn thẩm mỹ đỉnh cao, đóng gói lụa cao cấp và bảo hành đổi trả 100% yên tâm.' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Feature Assurance Cards Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-100">
+            <div class="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+              <span class="material-symbols-outlined text-[#7C3AED] text-xl shrink-0 mt-0.5">verified</span>
+              <div>
+                <h5 class="font-bold text-xs text-[#1E1B4B]">Chất Liệu Cao Cấp</h5>
+                <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">Đã qua kiểm định độ bền, an toàn tuyệt đối cho người sử dụng.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+              <span class="material-symbols-outlined text-[#7C3AED] text-xl shrink-0 mt-0.5">brush</span>
+              <div>
+                <h5 class="font-bold text-xs text-[#1E1B4B]">Chế Tác Thủ Công</h5>
+                <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">Khắc laser Fiber / thêu vi tính nghệ thuật theo yêu cầu riêng.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+              <span class="material-symbols-outlined text-[#7C3AED] text-xl shrink-0 mt-0.5">card_giftcard</span>
+              <div>
+                <h5 class="font-bold text-xs text-[#1E1B4B]">Đóng Gói Nơ Lụa</h5>
+                <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">Hộp quà cứng lót nhung/satin sang trọng tặng kèm thiệp chúc mừng viết tay.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Related Products Section -->
         @if (prod.relatedProducts && prod.relatedProducts.length > 0) {
           <div class="mt-12">
@@ -281,12 +353,26 @@ export class ProductDetailComponent implements OnInit {
             this.product.set(p);
             this.activeImage.set(p.images && p.images.length ? p.images[0] : '');
             if (p.variants && p.variants.length > 0) {
-              this.selectedVariant.set(p.variants[0].name);
+              const active = p.variants.find(v => v.status !== 'HIDDEN' && (v.stock || 0) > 0) || p.variants[0];
+              if (active) {
+                this.selectedVariant.set(active.name);
+                if (active.image) {
+                  this.activeImage.set(active.image);
+                }
+              }
             }
           }
         });
       }
     });
+  }
+
+  onSelectVariant(v: any): void {
+    if ((v.stock || 0) <= 0 || v.status === 'OUT_OF_STOCK') return;
+    this.selectedVariant.set(v.name);
+    if (v.image) {
+      this.activeImage.set(v.image);
+    }
   }
 
   changeQuantity(delta: number): void {

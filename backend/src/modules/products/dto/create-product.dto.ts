@@ -86,10 +86,12 @@ export class CreateProductDto {
   @IsArray()
   variants?: Array<{
     name: string;
+    colorHex?: string;
     price: number;
     stock: number;
     sku?: string;
     image?: string;
+    status?: string;
   }>;
 
   @ApiProperty({ required: false, default: [] })

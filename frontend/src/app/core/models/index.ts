@@ -31,10 +31,12 @@ export interface Category {
 
 export interface ProductVariant {
   name: string;
+  colorHex?: string;
   price: number;
   stock: number;
   sku?: string;
   image?: string;
+  status?: 'ACTIVE' | 'HIDDEN' | 'OUT_OF_STOCK';
 }
 
 export interface ProductSpec {

@@ -1,11 +1,11 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AdminService } from '../../../core/services/admin.service';
 import { ProductService } from '../../../core/services/product.service';
 import { CustomStudioService } from '../../../core/services/custom-studio.service';
 import { ApiService } from '../../../core/services/api.service';
-import { Product, Category, StudioAsset } from '../../../core/models';
+import { Product, Category, StudioAsset, ProductVariant } from '../../../core/models';
 
 @Component({
   selector: 'app-admin-products',
@@ -102,7 +102,12 @@ import { Product, Category, StudioAsset } from '../../../core/models';
                       <img [src]="p.images[0] || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=100'" [alt]="p.name" class="w-12 h-12 rounded-xl object-cover border border-giftory-border shrink-0" />
                       <div>
                         <span class="font-bold text-giftory-ink block line-clamp-1 max-w-[260px]">{{ p.name }}</span>
-                        <span class="text-[10px] text-giftory-ink/50 font-mono">SKU: {{ p.sku || 'N/A' }}</span>
+                        <div class="flex items-center gap-2 mt-0.5">
+                          <span class="text-[10px] text-giftory-ink/50 font-mono">SKU: {{ p.sku || 'N/A' }}</span>
+                          <span class="text-[10px] text-[#7C3AED] font-semibold bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                            {{ p.variants && p.variants.length > 0 ? p.variants.length + ' màu' : '1 màu' }} • Kho: {{ p.stock || 0 }}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -199,61 +204,276 @@ import { Product, Category, StudioAsset } from '../../../core/models';
               </button>
             </div>
 
+            <!-- Modal 3-Tab Navigation Bar -->
+            <div class="flex items-center gap-2 border-b border-giftory-border/60 pb-3">
+              <button
+                type="button"
+                (click)="modalTab.set('GENERAL')"
+                class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+                [ngClass]="modalTab() === 'GENERAL' ? 'bg-[#7C3AED] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+              >
+                <span class="material-symbols-outlined text-[16px]">info</span>
+                <span>1. Thông Tin Chung (SPU)</span>
+              </button>
+              <button
+                type="button"
+                (click)="modalTab.set('VARIANTS')"
+                class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer relative"
+                [ngClass]="modalTab() === 'VARIANTS' ? 'bg-[#7C3AED] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+              >
+                <span class="material-symbols-outlined text-[16px]">palette</span>
+                <span>2. Biến Thể & Tồn Kho (SKU)</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold" [ngClass]="modalTab() === 'VARIANTS' ? 'bg-white text-[#7C3AED]' : 'bg-purple-100 text-[#7C3AED]'">
+                  {{ variants().length }}
+                </span>
+                @if (hasVariantMissingImage()) {
+                  <span class="w-2 h-2 rounded-full bg-red-500 absolute -top-0.5 -right-0.5 animate-ping"></span>
+                }
+              </button>
+              <button
+                type="button"
+                (click)="modalTab.set('STUDIO')"
+                class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+                [ngClass]="modalTab() === 'STUDIO' ? 'bg-[#7C3AED] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+              >
+                <span class="material-symbols-outlined text-[16px]">auto_fix_high</span>
+                <span>3. Studio / Phôi Bespoke</span>
+                @if (productForm.get('isCustomizable')?.value) {
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                }
+              </button>
+            </div>
+
             <form [formGroup]="productForm" (ngSubmit)="saveProduct()" class="space-y-4">
-              <!-- Basic Info -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-1.5">
-                  <label class="text-xs font-bold text-giftory-ink">Tên món quà *</label>
-                  <input type="text" formControlName="name" placeholder="VD: Bình Giữ Nhiệt Nordic Bọc Da..." class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]" />
-                </div>
-                <div class="space-y-1.5">
-                  <label class="text-xs font-bold text-giftory-ink">Danh mục quà tặng *</label>
-                  <select formControlName="category" class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]">
-                    <option value="">-- Chọn danh mục quà --</option>
-                    <option *ngFor="let cat of categories()" [value]="cat._id">{{ cat.name }}</option>
-                  </select>
-                </div>
-              </div>
+              <!-- ================= TAB 1: GENERAL INFO (SPU) ================= -->
+              @if (modalTab() === 'GENERAL') {
+                <div class="space-y-4 animate-fade-in">
+                  <!-- Basic Info -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-bold text-giftory-ink">Tên món quà *</label>
+                      <input type="text" formControlName="name" placeholder="VD: Bình Giữ Nhiệt Nordic Bọc Da..." class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]" />
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-bold text-giftory-ink">Danh mục quà tặng *</label>
+                      <select formControlName="category" class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]">
+                        <option value="">-- Chọn danh mục quà --</option>
+                        <option *ngFor="let cat of categories()" [value]="cat._id">{{ cat.name }}</option>
+                      </select>
+                    </div>
+                  </div>
 
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-1.5">
-                  <label class="text-xs font-bold text-giftory-ink">Giá gốc (đ) *</label>
-                  <input type="number" formControlName="price" placeholder="250000" class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]" />
-                </div>
-                <div class="space-y-1.5">
-                  <label class="text-xs font-bold text-giftory-ink">Giá khuyến mãi (đ)</label>
-                  <input type="number" formControlName="salePrice" placeholder="220000" class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]" />
-                </div>
-              </div>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-bold text-giftory-ink">Giá gốc (đ) *</label>
+                      <input type="number" formControlName="price" placeholder="250000" class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]" />
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-bold text-giftory-ink">Giá khuyến mãi (đ)</label>
+                      <input type="number" formControlName="salePrice" placeholder="220000" class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]" />
+                    </div>
+                  </div>
 
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-1.5">
-                  <label class="text-xs font-bold text-giftory-ink">Số lượng tồn kho *</label>
-                  <input type="number" formControlName="stock" class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]" />
-                </div>
-                <div class="space-y-1.5">
-                  <label class="text-xs font-bold text-giftory-ink">Mã SKU</label>
-                  <input type="text" formControlName="sku" placeholder="GF-BESPOKE-01" class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]" />
-                </div>
-              </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-bold text-giftory-ink">Mã SKU Gốc (SPU)</label>
+                      <input type="text" formControlName="sku" placeholder="GF-BESPOKE-01" class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]" />
+                    </div>
+                    <div class="space-y-1.5">
+                      <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-giftory-ink">Tổng tồn kho (Toàn bộ biến thể)</label>
+                        <span class="text-[10px] text-purple-700 font-medium">Chỉ xem • Tự động tính</span>
+                      </div>
+                      <div class="px-4 py-2 bg-slate-100 rounded-xl border border-giftory-border text-sm font-bold text-slate-800 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <span class="material-symbols-outlined text-[#7C3AED] text-base">inventory_2</span>
+                          <span>{{ totalVariantStock() }} sản phẩm</span>
+                        </div>
+                        <span class="text-[11px] font-normal text-slate-500">Tự cộng từ {{ variants().length }} màu</span>
+                      </div>
+                    </div>
+                  </div>
 
-              <!-- Main Image -->
-              <div class="space-y-1.5">
-                <div class="flex items-center justify-between">
-                  <label class="text-xs font-bold text-giftory-ink">Ảnh đại diện sản phẩm</label>
-                  <label class="cursor-pointer text-[11px] font-bold text-[#7C3AED] hover:underline flex items-center gap-1 bg-[#7C3AED]/10 px-2 py-0.5 rounded-lg transition-all">
-                    <span class="material-symbols-outlined text-[14px]">cloud_upload</span>
-                    <span>{{ isUploading() ? 'Đang tải...' : 'Tải ảnh đại diện' }}</span>
-                    <input type="file" accept="image/*" (change)="onFileSelected($event, 'imageUrl')" class="hidden" [disabled]="isUploading()" />
-                  </label>
+                  <!-- Main Image -->
+                  <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                      <label class="text-xs font-bold text-giftory-ink">Ảnh đại diện sản phẩm</label>
+                      <label class="cursor-pointer text-[11px] font-bold text-[#7C3AED] hover:underline flex items-center gap-1 bg-[#7C3AED]/10 px-2 py-0.5 rounded-lg transition-all">
+                        <span class="material-symbols-outlined text-[14px]">cloud_upload</span>
+                        <span>{{ isUploading() ? 'Đang tải...' : 'Tải ảnh đại diện' }}</span>
+                        <input type="file" accept="image/*" (change)="onFileSelected($event, 'imageUrl')" class="hidden" [disabled]="isUploading()" />
+                      </label>
+                    </div>
+                    <div class="flex gap-2 items-center">
+                      <input type="text" formControlName="imageUrl" placeholder="https://... URL ảnh chính" class="flex-1 px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]" />
+                      @if (productForm.get('imageUrl')?.value) {
+                        <img [src]="productForm.get('imageUrl')?.value" alt="Preview" class="w-10 h-10 rounded-xl object-cover border border-giftory-border shadow-sm shrink-0" />
+                      }
+                    </div>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-giftory-ink">Mô tả sản phẩm</label>
+                    <textarea rows="3" formControlName="description" placeholder="Mô tả chất liệu, quy cách quà tặng..." class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]"></textarea>
+                  </div>
                 </div>
-                <div class="flex gap-2 items-center">
-                  <input type="text" formControlName="imageUrl" placeholder="https://... URL ảnh chính" class="flex-1 px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]" />
-                  @if (productForm.get('imageUrl')?.value) {
-                    <img [src]="productForm.get('imageUrl')?.value" alt="Preview" class="w-10 h-10 rounded-xl object-cover border border-giftory-border shadow-sm shrink-0" />
+              }
+
+              <!-- ================= TAB 2: VARIANTS & STOCK (SKU) ================= -->
+              @if (modalTab() === 'VARIANTS') {
+                <div class="space-y-4 animate-fade-in">
+                  @if (hasVariantMissingImage()) {
+                    <div class="p-3 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-2.5 text-xs text-red-700">
+                      <span class="material-symbols-outlined text-red-500 text-lg">error</span>
+                      <span class="font-medium">Có biến thể màu đang thiếu ảnh mockup! Trong Custom Studio bắt buộc cần ảnh mockup riêng để khách đổi màu trực quan.</span>
+                    </div>
                   }
+
+                  <!-- Variants Action Header -->
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#F3EBF9]/40 p-4 rounded-2xl border border-giftory-border/60">
+                    <div>
+                      <h4 class="font-bold text-xs text-[#1E1B4B] uppercase tracking-wide flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">view_list</span>
+                        Bảng Quản Lý Biến Thể Màu & Tồn Kho (SKU)
+                      </h4>
+                      <p class="text-[11px] text-slate-500 mt-0.5">
+                        Mỗi dòng là một màu với SKU, giá, tồn kho và ảnh mockup riêng. Studio sẽ tự động lấy danh sách màu từ đây.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      (click)="openAddVariantDrawer()"
+                      class="px-4 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                    >
+                      <span class="material-symbols-outlined text-base">add</span>
+                      Thêm Màu Mới
+                    </button>
+                  </div>
+
+                  <!-- Bulk Actions Toolbar (when selected) -->
+                  @if (selectedVariantIndexes().length > 0) {
+                    <div class="p-3 bg-purple-100/70 border border-purple-200 rounded-xl flex items-center justify-between flex-wrap gap-2 text-xs">
+                      <div class="flex items-center gap-2">
+                        <span class="font-bold text-[#7C3AED]">Đã chọn {{ selectedVariantIndexes().length }} màu:</span>
+                      </div>
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <button type="button" (click)="bulkUpdatePrice()" class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-purple-200 rounded-lg font-bold text-slate-700 cursor-pointer">
+                          Đổi Giá
+                        </button>
+                        <button type="button" (click)="bulkUpdateStock()" class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-purple-200 rounded-lg font-bold text-slate-700 cursor-pointer">
+                          Đổi Tồn Kho
+                        </button>
+                        <button type="button" (click)="bulkUpdateStatus('ACTIVE')" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-lg font-bold cursor-pointer">
+                          Hiện (Bán)
+                        </button>
+                        <button type="button" (click)="bulkUpdateStatus('HIDDEN')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg font-bold cursor-pointer">
+                          Ẩn
+                        </button>
+                        <button type="button" (click)="bulkDeleteVariants()" class="px-2.5 py-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 rounded-lg font-bold cursor-pointer">
+                          Xóa
+                        </button>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Variants Table -->
+                  <div class="overflow-x-auto rounded-2xl border border-giftory-border shadow-2xs">
+                    <table class="w-full text-left text-xs border-collapse">
+                      <thead class="bg-slate-100 text-slate-600 font-bold border-b border-giftory-border">
+                        <tr>
+                          <th class="p-3 w-10 text-center">
+                            <input type="checkbox" [checked]="isAllVariantsSelected()" (change)="toggleAllVariants($any($event.target).checked)" class="w-4 h-4 rounded accent-[#7C3AED] cursor-pointer" />
+                          </th>
+                          <th class="p-3">Màu (Swatch + Tên)</th>
+                          <th class="p-3">Mã SKU</th>
+                          <th class="p-3">Giá Bán</th>
+                          <th class="p-3">Tồn Kho</th>
+                          <th class="p-3">Ảnh Mockup</th>
+                          <th class="p-3">Trạng Thái</th>
+                          <th class="p-3 text-right">Thao Tác</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-giftory-border/40 bg-white font-medium text-slate-700">
+                        @for (v of variants(); track v.sku; let idx = $index) {
+                          <tr class="hover:bg-purple-50/30 transition-colors" [ngClass]="{'bg-purple-50/50': isVariantSelected(idx)}">
+                            <td class="p-3 text-center">
+                              <input type="checkbox" [checked]="isVariantSelected(idx)" (change)="toggleVariantSelect(idx)" class="w-4 h-4 rounded accent-[#7C3AED] cursor-pointer" />
+                            </td>
+                            <td class="p-3">
+                              <div class="flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-full border border-slate-300 shadow-2xs shrink-0" [style.backgroundColor]="v.colorHex || '#1E1B4B'"></span>
+                                <div>
+                                  <span class="font-bold text-slate-800 block">{{ v.name }}</span>
+                                  <span class="text-[10px] text-slate-400 font-mono">{{ v.colorHex || '#1E1B4B' }}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td class="p-3">
+                              <span class="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">{{ v.sku }}</span>
+                            </td>
+                            <td class="p-3">
+                              <div class="font-bold text-slate-800">
+                                {{ (v.price || productForm.get('price')?.value || 0) | number }}đ
+                              </div>
+                            </td>
+                            <td class="p-3">
+                              @if ((v.stock || 0) > 0) {
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                  {{ v.stock }} sp
+                                </span>
+                              } @else {
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800">
+                                  Hết hàng (0)
+                                </span>
+                              }
+                            </td>
+                            <td class="p-3">
+                              @if (v.image) {
+                                <img [src]="v.image" [alt]="v.name" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shadow-2xs" />
+                              } @else {
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 flex items-center gap-1 w-fit">
+                                  <span class="material-symbols-outlined text-[13px]">warning</span>
+                                  Thiếu ảnh
+                                </span>
+                              }
+                            </td>
+                            <td class="p-3">
+                              @if (v.status === 'ACTIVE' && (v.stock || 0) > 0) {
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Đang bán</span>
+                              } @else if (v.status === 'HIDDEN') {
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">Đang ẩn</span>
+                              } @else {
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800">Hết hàng</span>
+                              }
+                            </td>
+                            <td class="p-3 text-right">
+                              <div class="flex items-center justify-end gap-1">
+                                <button type="button" (click)="openEditVariantDrawer(idx)" class="p-1 rounded-lg hover:bg-purple-100 text-[#7C3AED] cursor-pointer" title="Sửa màu này">
+                                  <span class="material-symbols-outlined text-[18px]">edit</span>
+                                </button>
+                                <button type="button" (click)="deleteVariant(idx)" class="p-1 rounded-lg hover:bg-red-100 text-red-600 cursor-pointer" title="Xóa màu này">
+                                  <span class="material-symbols-outlined text-[18px]">delete</span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        } @empty {
+                          <tr>
+                            <td colspan="8" class="p-6 text-center text-slate-400">
+                              <span class="material-symbols-outlined text-3xl mb-1 text-slate-300 block">palette</span>
+                              Chưa có biến thể màu nào. Vui lòng bấm <b>"Thêm Màu Mới"</b> để thêm các phân loại màu cho sản phẩm.
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              }
+
+              <!-- ================= TAB 3: STUDIO / BESPOKE BLANK ================= -->
+              @if (modalTab() === 'STUDIO') {
+                <div class="space-y-4 animate-fade-in">
 
               <!-- Bespoke Toggle Switch -->
               <div class="p-4 bg-purple-50/70 rounded-2xl border border-purple-200 flex items-center justify-between">
@@ -529,11 +749,8 @@ import { Product, Category, StudioAsset } from '../../../core/models';
                   </div>
                 </div>
               }
-
-              <div class="space-y-1.5">
-                <label class="text-xs font-bold text-giftory-ink">Mô tả sản phẩm</label>
-                <textarea rows="2" formControlName="description" placeholder="Mô tả chất liệu, quy cách quà tặng..." class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]"></textarea>
-              </div>
+                </div>
+              }
 
               <!-- Buttons -->
               <div class="flex justify-end gap-3 pt-4 border-t border-giftory-border/40">
@@ -550,6 +767,114 @@ import { Product, Category, StudioAsset } from '../../../core/models';
                 </button>
               </div>
             </form>
+
+            <!-- ================= SUB-DRAWER: ADD / EDIT COLOR VARIANT ================= -->
+            @if (isVariantDrawerOpen()) {
+              <div class="fixed inset-0 z-60 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+                <div class="bg-white rounded-3xl p-6 max-w-lg w-full border border-purple-200 shadow-2xl space-y-4 animate-fade-in max-h-[90vh] overflow-y-auto">
+                  <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h4 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-2">
+                      <span class="material-symbols-outlined text-[#7C3AED]">palette</span>
+                      {{ editingVariantIndex() !== null ? 'Chỉnh Sửa Biến Thể Màu' : 'Thêm Biến Thể Màu Mới' }}
+                    </h4>
+                    <button type="button" (click)="isVariantDrawerOpen.set(false)" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+                      <span class="material-symbols-outlined">close</span>
+                    </button>
+                  </div>
+
+                  <form [formGroup]="variantForm" (ngSubmit)="saveVariantFromDrawer()" class="space-y-4">
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-bold text-giftory-ink">Tên màu *</label>
+                      <input
+                        type="text"
+                        formControlName="name"
+                        (input)="onVariantColorNameInput($any($event.target).value)"
+                        placeholder="VD: Navy Blue, Deep Slate, Pure White..."
+                        class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#7C3AED]"
+                      />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-giftory-ink">Mã màu Swatch (Hex) *</label>
+                        <div class="flex items-center gap-2">
+                          <input type="color" formControlName="colorHex" class="w-9 h-9 p-0.5 rounded-lg border border-slate-300 cursor-pointer shrink-0" />
+                          <input type="text" formControlName="colorHex" placeholder="#1E1B4B" class="flex-1 px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 font-mono text-xs font-bold text-slate-800" />
+                        </div>
+                      </div>
+
+                      <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                          <label class="text-xs font-bold text-giftory-ink">Mã SKU riêng *</label>
+                          <button type="button" (click)="onVariantColorNameInput(variantForm.get('name')?.value)" class="text-[10px] text-[#7C3AED] font-bold hover:underline cursor-pointer">
+                            Gợi ý lại
+                          </button>
+                        </div>
+                        <input type="text" formControlName="sku" placeholder="GF-BESPOKE-01-NVY" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 font-mono text-xs font-bold text-purple-700 uppercase" />
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                          <label class="text-xs font-bold text-giftory-ink">Giá biến thể (đ) *</label>
+                          <button type="button" (click)="variantForm.patchValue({ price: productForm.get('price')?.value })" class="text-[10px] text-slate-500 hover:underline cursor-pointer">
+                            Lấy giá gốc
+                          </button>
+                        </div>
+                        <input type="number" formControlName="price" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#7C3AED]" />
+                      </div>
+
+                      <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-giftory-ink">Số lượng tồn kho riêng *</label>
+                        <input type="number" formControlName="stock" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#7C3AED]" />
+                        <span class="text-[10px] text-slate-400 block">Nếu tồn kho = 0 sẽ tự chuyển "Hết hàng"</span>
+                      </div>
+                    </div>
+
+                    <!-- Variant Mockup Image (Mandatory for Studio) -->
+                    <div class="space-y-1.5">
+                      <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-giftory-ink flex items-center gap-1">
+                          <span>Ảnh Mockup Riêng Của Màu Này *</span>
+                          <span class="text-[10px] text-red-500 font-bold">(Bắt buộc cho studio)</span>
+                        </label>
+                        <label class="cursor-pointer text-[11px] font-bold text-[#7C3AED] hover:underline flex items-center gap-1 bg-purple-50 px-2 py-0.5 rounded-lg">
+                          <span class="material-symbols-outlined text-[13px]">upload</span>
+                          <span>{{ isVariantUploading() ? 'Đang tải...' : 'Tải ảnh mockup' }}</span>
+                          <input type="file" accept="image/*" (change)="onVariantFileSelected($event)" class="hidden" [disabled]="isVariantUploading()" />
+                        </label>
+                      </div>
+                      <div class="flex gap-2 items-center">
+                        <input type="text" formControlName="image" placeholder="URL ảnh mockup riêng cho màu này..." class="flex-1 px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#7C3AED]" />
+                        @if (variantForm.get('image')?.value) {
+                          <img [src]="variantForm.get('image')?.value" alt="Variant Preview" class="w-10 h-10 rounded-xl object-cover border border-slate-300 shadow-2xs shrink-0" />
+                        }
+                      </div>
+                      <p class="text-[10px] text-slate-500 italic">Đúng nguyên tắc: Khi khách đổi màu vỏ phôi trong studio, phôi canvas sẽ đổi sang ảnh mockup này.</p>
+                    </div>
+
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-bold text-giftory-ink">Trạng thái biến thể</label>
+                      <select formControlName="status" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#7C3AED]">
+                        <option value="ACTIVE">Đang bán (Hiển thị đầy đủ)</option>
+                        <option value="HIDDEN">Ẩn (Không hiện trên cửa hàng & studio)</option>
+                        <option value="OUT_OF_STOCK">Hết hàng (Hiển thị nhãn hết hàng, vô hiệu hóa)</option>
+                      </select>
+                    </div>
+
+                    <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                      <button type="button" (click)="isVariantDrawerOpen.set(false)" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer">
+                        Đóng
+                      </button>
+                      <button type="submit" [disabled]="variantForm.invalid" class="px-5 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] disabled:bg-gray-300 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer">
+                        {{ editingVariantIndex() !== null ? 'Cập Nhật Màu' : 'Lưu Màu Mới' }}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            }
           </div>
         </div>
       }
@@ -648,6 +973,25 @@ export class AdminProductsComponent implements OnInit {
   isUploading = signal<boolean>(false);
   editingProduct = signal<Product | null>(null);
 
+  // Modal 3-tab navigation
+  modalTab = signal<'GENERAL' | 'VARIANTS' | 'STUDIO'>('GENERAL');
+
+  // Variants state (SKU)
+  variants = signal<ProductVariant[]>([]);
+  selectedVariantIndexes = signal<number[]>([]);
+  isVariantDrawerOpen = signal<boolean>(false);
+  editingVariantIndex = signal<number | null>(null);
+  isVariantUploading = signal<boolean>(false);
+  variantForm!: FormGroup;
+
+  totalVariantStock = computed(() => {
+    return this.variants().reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+  });
+
+  hasVariantMissingImage = computed(() => {
+    return this.variants().some(v => !v.image || v.image.trim() === '');
+  });
+
   // Asset creation form state
   newAssetIcon = '🧸';
   newAssetName = '';
@@ -660,6 +1004,211 @@ export class AdminProductsComponent implements OnInit {
     this.loadCategories();
     this.loadStudioAssets();
     this.initForm();
+    this.initVariantForm();
+  }
+
+  initVariantForm() {
+    this.variantForm = this.fb.group({
+      name: ['', Validators.required],
+      colorHex: ['#1E1B4B', Validators.required],
+      sku: ['', Validators.required],
+      price: [0, [Validators.required, Validators.min(0)]],
+      stock: [10, [Validators.required, Validators.min(0)]],
+      image: ['', Validators.required],
+      status: ['ACTIVE']
+    });
+  }
+
+  suggestSkuForColor(colorName: string): string {
+    const baseSku = (this.productForm?.get('sku')?.value || 'GF-BESPOKE-01').trim().toUpperCase();
+    const cleanColor = colorName.trim().toUpperCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^A-Z0-9]/g, '');
+    const code = cleanColor.slice(0, 3) || 'CLR';
+    return `${baseSku}-${code}`;
+  }
+
+  onVariantColorNameInput(name: string) {
+    if (this.editingVariantIndex() === null) {
+      const suggested = this.suggestSkuForColor(name);
+      this.variantForm.patchValue({ sku: suggested });
+    }
+  }
+
+  openAddVariantDrawer() {
+    this.editingVariantIndex.set(null);
+    const basePrice = Number(this.productForm?.get('price')?.value) || 250000;
+    const baseSku = (this.productForm?.get('sku')?.value || 'GF-BESPOKE-01').trim();
+    const count = this.variants().length + 1;
+    this.variantForm.reset({
+      name: `Màu mới #${count}`,
+      colorHex: '#1E3A8A',
+      sku: `${baseSku}-C${count}`,
+      price: basePrice,
+      stock: 50,
+      image: this.productForm?.get('imageUrl')?.value || '',
+      status: 'ACTIVE'
+    });
+    this.isVariantDrawerOpen.set(true);
+  }
+
+  openEditVariantDrawer(index: number) {
+    const v = this.variants()[index];
+    if (!v) return;
+    this.editingVariantIndex.set(index);
+    this.variantForm.patchValue({
+      name: v.name,
+      colorHex: v.colorHex || '#1E1B4B',
+      sku: v.sku || '',
+      price: v.price ?? (this.productForm?.get('price')?.value || 0),
+      stock: v.stock ?? 0,
+      image: v.image || '',
+      status: v.status || (v.stock && v.stock > 0 ? 'ACTIVE' : 'OUT_OF_STOCK')
+    });
+    this.isVariantDrawerOpen.set(true);
+  }
+
+  saveVariantFromDrawer() {
+    if (this.variantForm.invalid) {
+      alert('Vui lòng điền đủ tên màu, mã SKU, giá, số lượng tồn kho và ảnh mockup!');
+      return;
+    }
+    const val = this.variantForm.value;
+    const stockNum = Number(val.stock) || 0;
+    const status = stockNum <= 0 ? 'OUT_OF_STOCK' : (val.status || 'ACTIVE');
+
+    const newVar: ProductVariant = {
+      name: val.name.trim(),
+      colorHex: val.colorHex || '#1E1B4B',
+      sku: val.sku.trim().toUpperCase(),
+      price: Number(val.price) || 0,
+      stock: stockNum,
+      image: val.image ? val.image.trim() : '',
+      status: status as any
+    };
+
+    const current = [...this.variants()];
+    const idx = this.editingVariantIndex();
+    if (idx !== null && idx >= 0 && idx < current.length) {
+      current[idx] = newVar;
+    } else {
+      const targetSku = (newVar.sku || '').toUpperCase();
+      if (current.some(item => (item.sku || '').toUpperCase() === targetSku)) {
+        alert('Mã SKU biến thể đã tồn tại! Vui lòng nhập SKU khác để đảm bảo tính duy nhất toàn hệ thống.');
+        return;
+      }
+      current.push(newVar);
+    }
+
+    this.variants.set(current);
+    this.isVariantDrawerOpen.set(false);
+  }
+
+  deleteVariant(index: number) {
+    const v = this.variants()[index];
+    if (!v) return;
+    if (confirm(`Bạn có chắc muốn xóa biến thể "${v.name}" (${v.sku})?\n\nLưu ý: Không xóa biến thể đang dính đơn hàng chưa hoàn thành (hãy chọn ẩn).`)) {
+      const current = this.variants().filter((_, i) => i !== index);
+      this.variants.set(current);
+      this.selectedVariantIndexes.set(this.selectedVariantIndexes().filter(i => i !== index));
+    }
+  }
+
+  toggleVariantSelect(index: number) {
+    const current = [...this.selectedVariantIndexes()];
+    const found = current.indexOf(index);
+    if (found > -1) {
+      current.splice(found, 1);
+    } else {
+      current.push(index);
+    }
+    this.selectedVariantIndexes.set(current);
+  }
+
+  toggleAllVariants(checked: boolean) {
+    if (checked) {
+      this.selectedVariantIndexes.set(this.variants().map((_, i) => i));
+    } else {
+      this.selectedVariantIndexes.set([]);
+    }
+  }
+
+  isVariantSelected(index: number): boolean {
+    return this.selectedVariantIndexes().includes(index);
+  }
+
+  isAllVariantsSelected(): boolean {
+    return this.variants().length > 0 && this.selectedVariantIndexes().length === this.variants().length;
+  }
+
+  bulkUpdatePrice() {
+    const str = prompt('Nhập giá bán mới (đ) cho tất cả biến thể đã chọn:');
+    if (!str || isNaN(Number(str))) return;
+    const newPrice = Math.max(0, Number(str));
+    const current = [...this.variants()];
+    this.selectedVariantIndexes().forEach(idx => {
+      if (current[idx]) {
+        current[idx] = { ...current[idx], price: newPrice };
+      }
+    });
+    this.variants.set(current);
+  }
+
+  bulkUpdateStock() {
+    const str = prompt('Nhập số lượng tồn kho mới cho tất cả biến thể đã chọn:');
+    if (!str || isNaN(Number(str))) return;
+    const newStock = Math.max(0, Number(str));
+    const current = [...this.variants()];
+    this.selectedVariantIndexes().forEach(idx => {
+      if (current[idx]) {
+        current[idx] = {
+          ...current[idx],
+          stock: newStock,
+          status: newStock === 0 ? 'OUT_OF_STOCK' : current[idx].status === 'OUT_OF_STOCK' ? 'ACTIVE' : current[idx].status
+        };
+      }
+    });
+    this.variants.set(current);
+  }
+
+  bulkUpdateStatus(status: 'ACTIVE' | 'HIDDEN' | 'OUT_OF_STOCK') {
+    const current = [...this.variants()];
+    this.selectedVariantIndexes().forEach(idx => {
+      if (current[idx]) {
+        current[idx] = { ...current[idx], status };
+      }
+    });
+    this.variants.set(current);
+  }
+
+  bulkDeleteVariants() {
+    if (confirm(`Bạn có chắc muốn xóa ${this.selectedVariantIndexes().length} biến thể đã chọn?`)) {
+      const selected = new Set(this.selectedVariantIndexes());
+      const current = this.variants().filter((_, i) => !selected.has(i));
+      this.variants.set(current);
+      this.selectedVariantIndexes.set([]);
+    }
+  }
+
+  onVariantFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      this.isVariantUploading.set(true);
+      this.adminService.uploadImage(file).subscribe({
+        next: (res: any) => {
+          this.isVariantUploading.set(false);
+          const uploadedUrl = res?.url || res?.data?.url || (typeof res === 'string' ? res : '');
+          if (uploadedUrl) {
+            this.variantForm.patchValue({ image: uploadedUrl });
+          }
+        },
+        error: (err) => {
+          this.isVariantUploading.set(false);
+          alert('Không thể tải ảnh biến thể: ' + (err?.error?.message || err.message));
+        }
+      });
+    }
   }
 
   loadStudioAssets() {
@@ -697,6 +1246,9 @@ export class AdminProductsComponent implements OnInit {
 
   openCreateModal() {
     this.editingProduct.set(null);
+    this.modalTab.set('GENERAL');
+    this.variants.set([]);
+    this.selectedVariantIndexes.set([]);
     this.initForm();
     if (this.categories().length > 0) {
       this.productForm.patchValue({ category: this.categories()[0]._id });
@@ -706,6 +1258,31 @@ export class AdminProductsComponent implements OnInit {
 
   openEditModal(p: Product) {
     this.editingProduct.set(p);
+    this.modalTab.set('GENERAL');
+    this.selectedVariantIndexes.set([]);
+
+    if (p.variants && p.variants.length > 0) {
+      this.variants.set(p.variants.map(v => ({
+        name: v.name,
+        colorHex: v.colorHex || '#1E1B4B',
+        sku: v.sku || '',
+        price: v.price ?? p.price,
+        stock: v.stock ?? 0,
+        image: v.image || '',
+        status: (v.status as any) || (v.stock && v.stock > 0 ? 'ACTIVE' : 'OUT_OF_STOCK')
+      })));
+    } else {
+      this.variants.set([{
+        name: 'Mặc định',
+        colorHex: '#1E1B4B',
+        sku: p.sku || 'GF-01',
+        price: p.price,
+        stock: p.stock,
+        image: p.images && p.images[0] ? p.images[0] : '',
+        status: p.stock > 0 ? 'ACTIVE' : 'OUT_OF_STOCK'
+      }]);
+    }
+
     const catId = typeof p.category === 'object' && p.category ? (p.category as any)._id : p.category;
     this.productForm.patchValue({
       name: p.name,
@@ -984,6 +1561,15 @@ export class AdminProductsComponent implements OnInit {
 
   saveProduct() {
     if (this.productForm.invalid) return;
+
+    if (this.hasVariantMissingImage()) {
+      const proceed = confirm('Cảnh báo: Có biến thể màu chưa có ảnh mockup riêng! Custom Studio bắt buộc cần ảnh mockup để hiển thị chuẩn xác khi khách đổi màu. Bạn có muốn tiếp tục lưu không?');
+      if (!proceed) {
+        this.modalTab.set('VARIANTS');
+        return;
+      }
+    }
+
     this.isSaving.set(true);
 
     const val = this.productForm.value;
@@ -992,15 +1578,22 @@ export class AdminProductsComponent implements OnInit {
       images.push(val.backBlankImage);
     }
 
+    // Auto-compute total stock from variants if defined
+    const computedStock = this.variants().length > 0 ? this.totalVariantStock() : Number(val.stock);
+    const supportedColors = this.variants().length > 0 
+      ? this.variants().map(v => v.name) 
+      : ['Navy Blue', 'Deep Slate', 'Sand Beige', 'Terracotta', 'Pure White', 'Emerald Green'];
+
     const payload: any = {
       name: val.name,
       category: val.category || (this.categories()[0]?._id),
       price: Number(val.price),
       salePrice: val.salePrice ? Number(val.salePrice) : undefined,
-      stock: Number(val.stock),
+      stock: computedStock,
       sku: val.sku || ('SKU-' + Date.now().toString().slice(-6)),
       images,
       description: val.description || val.name,
+      variants: this.variants(),
       isCustomizable: val.isCustomizable,
       customBaseFee: Number(val.customBaseFee) || 30000,
       customConfig: val.isCustomizable ? {
@@ -1021,7 +1614,7 @@ export class AdminProductsComponent implements OnInit {
           width: Math.max(10, Math.min(100 - Math.max(0, Math.min(90, Number(val.safeAreaX) || 26)), Number(val.safeAreaWidth) || 48)),
           height: Math.max(10, Math.min(100 - Math.max(0, Math.min(90, Number(val.safeAreaY) || 25)), Number(val.safeAreaHeight) || 50))
         },
-        supportedColors: ['Navy Blue', 'Deep Slate', 'Sand Beige', 'Terracotta', 'Pure White', 'Emerald Green']
+        supportedColors
       } : null,
       status: 'ACTIVE'
     };

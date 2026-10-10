@@ -295,21 +295,32 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
                   <div class="grid grid-cols-2 gap-2.5">
                     @for (c of availableColorOptions(); track c.name) {
                       <div 
-                        (click)="setColor(c.name)"
-                        class="p-3 rounded-2xl border-2 flex items-center gap-3 cursor-pointer transition-all hover:border-[#7C3AED]/70"
-                        [ngClass]="selectedColor() === c.name ? 'border-[#7C3AED] bg-purple-50/60 shadow-xs' : 'border-slate-200 bg-white'"
+                        (click)="!c.isOutOfStock && setColor(c.name)"
+                        class="p-3 rounded-2xl border-2 flex items-center gap-3 transition-all"
+                        [ngClass]="{
+                          'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200': c.isOutOfStock,
+                          'cursor-pointer hover:border-[#7C3AED]/70': !c.isOutOfStock,
+                          'border-[#7C3AED] bg-purple-50/60 shadow-xs': selectedColor() === c.name && !c.isOutOfStock,
+                          'border-slate-200 bg-white': selectedColor() !== c.name && !c.isOutOfStock
+                        }"
                       >
                         <div 
                           class="w-8 h-8 rounded-full border shadow-inner flex items-center justify-center shrink-0"
                           [style.backgroundColor]="c.hex"
                         >
-                          @if (selectedColor() === c.name) {
+                          @if (selectedColor() === c.name && !c.isOutOfStock) {
                             <span class="material-symbols-outlined text-xs font-bold" [style.color]="c.hex === '#FFFFFF' ? '#000' : '#FFF'">check</span>
                           }
                         </div>
-                        <div>
-                          <span class="text-xs font-bold text-slate-800 block leading-tight">{{ c.name }}</span>
-                          <span class="text-[10px] text-slate-400">Sơn tĩnh điện vi sinh</span>
+                        <div class="min-w-0 flex-1">
+                          <span class="text-xs font-bold text-slate-800 block leading-tight truncate">{{ c.name }}</span>
+                          @if (c.isOutOfStock) {
+                            <span class="text-[9px] font-bold text-red-600 bg-red-100 px-1.5 py-0.2 rounded-md inline-block mt-0.5">Hết hàng</span>
+                          } @else if (c.sku) {
+                            <span class="text-[9px] font-mono text-purple-600 block truncate font-medium">{{ c.sku }}</span>
+                          } @else {
+                            <span class="text-[10px] text-slate-400">Sơn tĩnh điện</span>
+                          }
                         </div>
                       </div>
                     }
@@ -1151,15 +1162,35 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   });
 
   availableColorOptions = computed(() => {
-    const supported = this.activeTemplate()?.customConfig?.supportedColors;
-    if (supported && supported.length > 0) {
-      return this.colorOptions.filter(c => supported.includes(c.name));
+    const tpl = this.activeTemplate();
+    if (tpl?.variants && tpl.variants.length > 0) {
+      return tpl.variants
+        .filter(v => v.status !== 'HIDDEN')
+        .map(v => ({
+          name: v.name,
+          hex: v.colorHex || '#1E1B4B',
+          sku: v.sku || '',
+          price: v.price,
+          stock: v.stock ?? 0,
+          image: v.image,
+          isOutOfStock: (v.stock ?? 0) <= 0 || v.status === 'OUT_OF_STOCK'
+        }));
     }
-    return this.colorOptions;
+    const supported = tpl?.customConfig?.supportedColors;
+    if (supported && supported.length > 0) {
+      return this.colorOptions
+        .filter(c => supported.includes(c.name))
+        .map(c => ({ ...c, sku: '', isOutOfStock: false }));
+    }
+    return this.colorOptions.map(c => ({ ...c, sku: '', isOutOfStock: false }));
   });
 
   baseProductPrice = computed(() => {
     const tpl = this.activeTemplate();
+    const matchedVariant = tpl?.variants?.find(v => v.name === this.selectedColor());
+    if (matchedVariant?.price && matchedVariant.price > 0) {
+      return matchedVariant.price;
+    }
     return tpl?.salePrice && tpl.salePrice > 0 ? tpl.salePrice : (tpl?.price || 250000);
   });
 
@@ -2015,7 +2046,13 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   setColor(colorName: string): void {
+    const opt = this.availableColorOptions().find(c => c.name === colorName);
+    if (opt?.isOutOfStock) {
+      alert(`Màu "${colorName}" hiện đã hết hàng trong kho. Vui lòng chọn màu khác!`);
+      return;
+    }
     this.selectedColor.set(colorName);
+    this.updateKonvaCanvas();
   }
 
   setPattern(patternId: string): void {
@@ -2064,6 +2101,11 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!tpl) return 'https://placehold.co/400';
 
     if (this.isFrontFace()) {
+      // Find variant corresponding to selectedColor
+      const matchedVariant = tpl.variants?.find(v => v.name === this.selectedColor());
+      if (matchedVariant?.image) {
+        return matchedVariant.image;
+      }
       return tpl.customConfig?.frontBlankImage || tpl.images[0] || 'https://placehold.co/400';
     } else {
       return tpl.customConfig?.backBlankImage || tpl.images[1] || tpl.images[0] || 'https://placehold.co/400';
@@ -2072,6 +2114,12 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   selectTemplate(tpl: Product): void {
     this.activeTemplate.set(tpl);
+    if (tpl.variants && tpl.variants.length > 0) {
+      const activeVar = tpl.variants.find(v => v.status !== 'HIDDEN' && (v.stock ?? 0) > 0) || tpl.variants[0];
+      if (activeVar) {
+        this.selectedColor.set(activeVar.name);
+      }
+    }
     this.updateKonvaCanvas();
   }
 

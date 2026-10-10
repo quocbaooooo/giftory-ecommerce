@@ -250,6 +250,21 @@ export class ProductsService {
       ? createDto.images
       : ['https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600'];
 
+    if (createDto.variants && createDto.variants.length > 0) {
+      const totalStock = createDto.variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+      createDto.stock = totalStock;
+      createDto.variants = createDto.variants.map(v => ({
+        ...v,
+        stock: Number(v.stock) || 0,
+        price: Number(v.price) || createDto.price,
+        status: Number(v.stock) <= 0 ? (v.status === 'HIDDEN' ? 'HIDDEN' : 'OUT_OF_STOCK') : (v.status || 'ACTIVE')
+      }));
+
+      if (createDto.isCustomizable && createDto.customConfig) {
+        createDto.customConfig.supportedColors = createDto.variants.map(v => v.name);
+      }
+    }
+
     return this.productModel.create({
       ...createDto,
       slug,
@@ -260,6 +275,21 @@ export class ProductsService {
   }
 
   async update(id: string, updateDto: any) {
+    if (updateDto.variants && updateDto.variants.length > 0) {
+      const totalStock = updateDto.variants.reduce((sum: number, v: any) => sum + (Number(v.stock) || 0), 0);
+      updateDto.stock = totalStock;
+      updateDto.variants = updateDto.variants.map((v: any) => ({
+        ...v,
+        stock: Number(v.stock) || 0,
+        price: Number(v.price) || updateDto.price,
+        status: Number(v.stock) <= 0 ? (v.status === 'HIDDEN' ? 'HIDDEN' : 'OUT_OF_STOCK') : (v.status || 'ACTIVE')
+      }));
+
+      if (updateDto.isCustomizable && updateDto.customConfig) {
+        updateDto.customConfig.supportedColors = updateDto.variants.map((v: any) => v.name);
+      }
+    }
+
     const updated = await this.productModel
       .findByIdAndUpdate(id, updateDto, { new: true })
       .exec();

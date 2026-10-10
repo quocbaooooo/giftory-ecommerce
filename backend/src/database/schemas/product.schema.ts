@@ -8,6 +8,9 @@ export class ProductVariant {
   @Prop({ required: true })
   name: string;
 
+  @Prop({ default: '#7C3AED' })
+  colorHex: string;
+
   @Prop({ required: true })
   price: number;
 
@@ -19,6 +22,9 @@ export class ProductVariant {
 
   @Prop({ default: '' })
   image: string;
+
+  @Prop({ default: 'ACTIVE', enum: ['ACTIVE', 'HIDDEN', 'OUT_OF_STOCK'] })
+  status: string;
 }
 
 export const ProductVariantSchema = SchemaFactory.createForClass(ProductVariant);
