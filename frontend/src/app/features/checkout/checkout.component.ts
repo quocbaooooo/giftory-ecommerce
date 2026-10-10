@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -270,7 +270,15 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="lg:col-span-5 flex flex-col gap-6">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#DDD6FE] flex flex-col gap-5 sticky top-6">
               <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-lg text-[#1E1B4B]">Tóm Tắt Đơn Hàng ({{ displayItems().length }} món)</h3>
+                <div>
+                  <h3 class="font-bold text-lg text-[#1E1B4B]">Tóm Tắt Đơn Hàng ({{ displayItems().length }} món)</h3>
+                  @if (isBuyNowMode()) {
+                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-[#7C3AED] mt-0.5">
+                      <span class="material-symbols-outlined text-[14px]">bolt</span>
+                      Mua ngay độc lập • Không gộp giỏ hàng
+                    </span>
+                  }
+                </div>
                 @if (pendingOrder()) {
                   <span class="px-2.5 py-0.5 rounded-full bg-purple-100 text-[#7C3AED] text-xs font-mono font-bold">
                     #{{ pendingOrder().orderCode }}
@@ -474,6 +482,7 @@ export class CheckoutComponent implements OnInit {
   authService = inject(AuthService);
   private orderService = inject(OrderService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   customerName: string = '';
   customerPhone: string = '';
@@ -490,15 +499,27 @@ export class CheckoutComponent implements OnInit {
   paymentError = signal<string | null>(null);
   isProcessingPayment = signal<boolean>(false);
 
-  // Check if cart has items OR if an order is being paid
-  hasItemsOrPendingOrder = computed(() => {
-    return this.cartService.itemsCount() > 0 || !!this.pendingOrder();
+  isBuyNowQuery = signal<boolean>(false);
+
+  // Check if current flow is independent "Buy Now" (not merging with existing cart)
+  isBuyNowMode = computed(() => {
+    return (this.isBuyNowQuery() || this.route.snapshot.queryParamMap.get('buyNow') === '1') && !!this.cartService.buyNowItem();
   });
 
-  // Check if cart or pending order contains any customized item
+  // Check if cart has items OR if a Buy Now item is present OR if an order is being paid
+  hasItemsOrPendingOrder = computed(() => {
+    if (this.pendingOrder()) return true;
+    if (this.isBuyNowMode()) return !!this.cartService.buyNowItem();
+    return this.cartService.itemsCount() > 0;
+  });
+
+  // Check if items contain any customized item (Buy Now for ready-made is always non-custom)
   hasCustomItems = computed(() => {
     if (this.pendingOrder()) {
       return this.pendingOrder().items.some((item: any) => item.isCustom);
+    }
+    if (this.isBuyNowMode()) {
+      return false;
     }
     return this.cartService.items().some(item => item.isCustom || item.productId?.isCustomizable);
   });
@@ -511,27 +532,38 @@ export class CheckoutComponent implements OnInit {
     if (this.selectedShippingMethod() === 'EXPRESS') {
       return 50000;
     }
-    return this.cartService.pricing().itemsTotal >= 250000 ? 0 : 30000;
+    const total = this.isBuyNowMode()
+      ? ((this.cartService.buyNowItem()?.price || 0) * (this.cartService.buyNowItem()?.quantity || 1))
+      : this.cartService.pricing().itemsTotal;
+    return total >= 250000 ? 0 : 30000;
   });
 
-  // Dynamic Display Items (Switches seamlessly to pendingOrder items so products never vanish)
+  // Dynamic Display Items (Switches seamlessly to pendingOrder or BuyNow item)
   displayItems = computed(() => {
     if (this.pendingOrder()) {
       return this.pendingOrder().items;
     }
+    if (this.isBuyNowMode()) {
+      const bn = this.cartService.buyNowItem();
+      return bn ? [bn] : [];
+    }
     return this.cartService.items();
   });
 
-  // Dynamic Display Pricing (Switches seamlessly to pendingOrder pricing)
+  // Dynamic Display Pricing (Switches seamlessly to pendingOrder or BuyNow pricing)
   displayPricing = computed(() => {
     if (this.pendingOrder()) {
       return this.pendingOrder().pricing;
     }
     const total = this.calculatedTotalAmount();
     const deposit = this.calculatedDepositAmount();
+    const itemsTotal = this.isBuyNowMode()
+      ? ((this.cartService.buyNowItem()?.price || 0) * (this.cartService.buyNowItem()?.quantity || 1))
+      : this.cartService.pricing().itemsTotal;
+    const voucherDiscount = this.isBuyNowMode() ? 0 : this.cartService.pricing().voucherDiscount;
     return {
-      itemsTotal: this.cartService.pricing().itemsTotal,
-      voucherDiscount: this.cartService.pricing().voucherDiscount,
+      itemsTotal,
+      voucherDiscount,
       shippingFee: this.calculatedShippingFee(),
       totalAmount: total,
       depositAmount: deposit,
@@ -544,8 +576,10 @@ export class CheckoutComponent implements OnInit {
     if (this.pendingOrder()) {
       return this.pendingOrder().pricing.totalAmount;
     }
-    const itemsTotal = this.cartService.pricing().itemsTotal;
-    const voucherDiscount = this.cartService.pricing().voucherDiscount;
+    const itemsTotal = this.isBuyNowMode()
+      ? ((this.cartService.buyNowItem()?.price || 0) * (this.cartService.buyNowItem()?.quantity || 1))
+      : this.cartService.pricing().itemsTotal;
+    const voucherDiscount = this.isBuyNowMode() ? 0 : this.cartService.pricing().voucherDiscount;
     const shipping = this.calculatedShippingFee();
     return Math.max(0, itemsTotal - voucherDiscount + shipping);
   });
@@ -570,6 +604,10 @@ export class CheckoutComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      this.isBuyNowQuery.set(params['buyNow'] === '1');
+    });
+
     const user = this.authService.currentUser();
     if (user) {
       this.customerName = user.name || '';
@@ -582,9 +620,16 @@ export class CheckoutComponent implements OnInit {
   }
 
   submitOrder(): void {
-    if (this.cartService.itemsCount() === 0) {
-      alert('Giỏ hàng không hợp lệ hoặc đang trống!');
-      return;
+    if (this.isBuyNowMode()) {
+      if (!this.cartService.buyNowItem()) {
+        alert('Thông tin đơn hàng Mua Ngay không hợp lệ hoặc đã hết hạn.');
+        return;
+      }
+    } else {
+      if (this.cartService.itemsCount() === 0) {
+        alert('Giỏ hàng không hợp lệ hoặc đang trống!');
+        return;
+      }
     }
 
     if (!this.customerName.trim() || !this.customerPhone.trim() || !this.customerAddress.trim()) {
@@ -595,7 +640,7 @@ export class CheckoutComponent implements OnInit {
     this.isSubmitting.set(true);
     this.paymentError.set(null);
 
-    const orderPayload = {
+    const orderPayload: any = {
       customerInfo: {
         name: this.customerName.trim(),
         phone: this.customerPhone.trim(),
@@ -609,10 +654,24 @@ export class CheckoutComponent implements OnInit {
       sessionId: this.cartService.getSessionId()
     };
 
+    if (this.isBuyNowMode()) {
+      const bn = this.cartService.buyNowItem();
+      orderPayload.buyNowItem = {
+        productId: typeof bn.productId === 'object' ? bn.productId._id : bn.productId,
+        variantName: bn.variantName,
+        quantity: bn.quantity,
+        customDetails: bn.customDetails
+      };
+    }
+
     this.orderService.createOrder(orderPayload).subscribe({
       next: (order: any) => {
         this.isSubmitting.set(false);
-        this.cartService.loadCart(); // Refresh cart to empty state
+        if (this.isBuyNowMode()) {
+          this.cartService.clearBuyNowItem(); // Clear buy-now item, keep regular cart safe!
+        } else {
+          this.cartService.loadCart(); // Refresh cart to empty state
+        }
 
         // Standard product + COD => No QR payment modal needed, go directly to completion page (AF3)
         if (!this.hasCustomItems() && this.selectedPaymentMethod() === 'COD') {

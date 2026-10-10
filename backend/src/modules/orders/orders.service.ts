@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { Order, OrderDocument } from '../../database/schemas/order.schema';
 import { Cart, CartDocument } from '../../database/schemas/cart.schema';
 import { User, UserDocument } from '../../database/schemas/user.schema';
+import { Product, ProductDocument } from '../../database/schemas/product.schema';
 import { LoyaltyTransaction, LoyaltyTransactionDocument } from '../../database/schemas/loyalty-transaction.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
 import {
@@ -21,54 +22,102 @@ export class OrdersService {
     @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
     @InjectModel(Cart.name) private readonly cartModel: Model<CartDocument>,
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    @InjectModel(Product.name) private readonly productModel: Model<ProductDocument>,
     @InjectModel(LoyaltyTransaction.name) private readonly loyaltyModel: Model<LoyaltyTransactionDocument>,
   ) {}
 
   async createOrder(dto: CreateOrderDto, userId?: string) {
-    const query: any = {};
-    if (userId) {
-      query.userId = new Types.ObjectId(userId);
-    } else if (dto.sessionId) {
-      query.sessionId = dto.sessionId;
-    } else {
-      throw new BadRequestException('Không tìm thấy thông tin giỏ hàng');
-    }
-
-    const cart = await this.cartModel.findOne(query).populate('items.productId');
-    if (!cart || !cart.items || cart.items.length === 0) {
-      throw new BadRequestException('Giỏ hàng không hợp lệ hoặc đang trống, không thể tạo đơn hàng');
-    }
-
+    let orderItems: any[] = [];
     let itemsTotal = 0;
     let customDeposit = 0;
     let hasCustomProduct = false;
+    let voucherDiscount = 0;
+    let cart: any = null;
 
-    const orderItems = cart.items.map(item => {
-      const product: any = item.productId;
-      const unitPrice = item.price;
-      const subtotal = unitPrice * item.quantity;
-      itemsTotal += subtotal;
+    if (dto.buyNowItem) {
+      // Flow Mua Ngay (Buy Now): Thanh toán trực tiếp món hàng, KHÔNG gộp và KHÔNG xóa giỏ hàng cũ
+      const product = await this.productModel.findById(dto.buyNowItem.productId);
+      if (!product) {
+        throw new NotFoundException('Sản phẩm Mua Ngay không tồn tại hoặc đã ngừng kinh doanh');
+      }
 
-      const isCustom = item.isCustom || (product && product.isCustomizable);
+      const qty = Math.max(1, Number(dto.buyNowItem.quantity || 1));
+      let unitPrice = product.price;
+
+      if (dto.buyNowItem.variantName && product.variants?.length) {
+        const matchedVariant = product.variants.find(v => v.name === dto.buyNowItem.variantName);
+        if (matchedVariant && matchedVariant.price) {
+          unitPrice = matchedVariant.price;
+        }
+      }
+
+      const subtotal = unitPrice * qty;
+      itemsTotal = subtotal;
+
+      const isCustom = product.isCustomizable || !!dto.buyNowItem.customDetails;
       if (isCustom) hasCustomProduct = true;
 
       const depositRequired = isCustom ? Math.round(subtotal * 0.5) : 0;
-      customDeposit += depositRequired;
+      customDeposit = depositRequired;
 
-      return {
+      orderItems = [{
         productId: product._id,
         productName: product.name,
         productImage: (product.images && product.images[0]) || '',
-        variantName: item.variantName || 'Tiêu chuẩn',
-        quantity: item.quantity,
+        variantName: dto.buyNowItem.variantName || 'Tiêu chuẩn',
+        quantity: qty,
         unitPrice,
         isCustom,
         itemType: isCustom ? 'CUSTOM' : 'READY_MADE',
         status: OrderItemStatus.PENDING,
-        customDetails: item.customDetails || null,
+        customDetails: dto.buyNowItem.customDetails || null,
         depositRequired
-      };
-    });
+      }];
+    } else {
+      // Flow Giỏ Hàng thông thường
+      const query: any = {};
+      if (userId) {
+        query.userId = new Types.ObjectId(userId);
+      } else if (dto.sessionId) {
+        query.sessionId = dto.sessionId;
+      } else {
+        throw new BadRequestException('Không tìm thấy thông tin giỏ hàng');
+      }
+
+      cart = await this.cartModel.findOne(query).populate('items.productId');
+      if (!cart || !cart.items || cart.items.length === 0) {
+        throw new BadRequestException('Giỏ hàng không hợp lệ hoặc đang trống, không thể tạo đơn hàng');
+      }
+
+      voucherDiscount = cart.voucherDiscount || 0;
+
+      orderItems = cart.items.map(item => {
+        const product: any = item.productId;
+        const unitPrice = item.price;
+        const subtotal = unitPrice * item.quantity;
+        itemsTotal += subtotal;
+
+        const isCustom = item.isCustom || (product && product.isCustomizable);
+        if (isCustom) hasCustomProduct = true;
+
+        const depositRequired = isCustom ? Math.round(subtotal * 0.5) : 0;
+        customDeposit += depositRequired;
+
+        return {
+          productId: product._id,
+          productName: product.name,
+          productImage: (product.images && product.images[0]) || '',
+          variantName: item.variantName || 'Tiêu chuẩn',
+          quantity: item.quantity,
+          unitPrice,
+          isCustom,
+          itemType: isCustom ? 'CUSTOM' : 'READY_MADE',
+          status: OrderItemStatus.PENDING,
+          customDetails: item.customDetails || null,
+          depositRequired
+        };
+      });
+    }
 
     // BP-03 Rule: Free shipping for orders >= 250,000 VND (Standard)
     const shippingMethod = dto.shippingMethod || 'STANDARD';
@@ -80,7 +129,6 @@ export class OrdersService {
     }
 
     const giftWrapFee = 0;
-    const voucherDiscount = cart.voucherDiscount || 0;
     const totalAmount = Math.max(0, itemsTotal - voucherDiscount + shippingFee + giftWrapFee);
 
     // Calculate deposit requirement based on BP-03
@@ -205,11 +253,13 @@ export class OrdersService {
       }
     }
 
-    // Clear cart items
-    cart.items = [];
-    cart.voucherCode = '';
-    cart.voucherDiscount = 0;
-    await cart.save();
+    // Clear cart items ONLY for regular cart orders (preserve cart for Buy Now)
+    if (!dto.buyNowItem && cart) {
+      cart.items = [];
+      cart.voucherCode = '';
+      cart.voucherDiscount = 0;
+      await cart.save();
+    }
 
     return order;
   }

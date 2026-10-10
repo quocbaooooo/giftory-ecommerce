@@ -228,19 +228,29 @@ import { Product, ProductVariant } from '../../../core/models';
             <!-- Action Buttons -->
             <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-3">
               @if (prod.isCustomizable) {
+                <!-- Hàng bespoke giữ nguyên nút "Chế tác" -->
                 <a 
                   [routerLink]="['/custom-studio']"
                   [queryParams]="{ productId: prod._id }"
-                  class="w-full sm:flex-1 py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95"
+                  class="w-full sm:flex-1 py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95 cursor-pointer"
                 >
                   <span class="material-symbols-outlined text-[20px]">view_in_ar</span>
                   <span>Tự Thiết Kế 2D/3D Trong Studio</span>
                 </a>
+              } @else {
+                <!-- Hàng có sẵn: Nút MUA NGAY (Buy Now) dẫn thẳng Checkout không qua giỏ -->
+                <button 
+                  (click)="buyNow()"
+                  class="w-full sm:flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95 cursor-pointer"
+                >
+                  <span class="material-symbols-outlined text-[20px]">bolt</span>
+                  <span>Mua Ngay</span>
+                </button>
               }
 
               <button 
                 (click)="addToCart()"
-                class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#7C3AED] font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
+                class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#7C3AED] font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
               >
                 <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span>
                 <span>Thêm vào giỏ</span>
@@ -248,7 +258,7 @@ import { Product, ProductVariant } from '../../../core/models';
 
               <button 
                 (click)="toggleWishlist()"
-                class="w-12 h-12 rounded-xl border border-[#DDD6FE] text-slate-400 hover:text-[#F43F5E] flex items-center justify-center transition-all shrink-0"
+                class="w-12 h-12 rounded-xl border border-[#DDD6FE] text-slate-400 hover:text-[#F43F5E] flex items-center justify-center transition-all shrink-0 cursor-pointer"
                 [class.text-[#F43F5E]]="isWishlisted()"
                 title="Lưu vào Wishlist"
               >
@@ -403,5 +413,35 @@ export class ProductDetailComponent implements OnInit {
         this.router.navigate(['/cart']);
       }
     });
+  }
+
+  buyNow(): void {
+    const p = this.product();
+    if (!p) return;
+
+    let unitPrice = p.price;
+    const vName = this.selectedVariant();
+    if (vName && p.variants && p.variants.length > 0) {
+      const v = p.variants.find(item => item.name === vName);
+      if (v && v.price) {
+        unitPrice = v.price;
+      }
+    }
+
+    const buyNowItem = {
+      productId: p,
+      name: p.name,
+      image: this.activeImage() || (p.images && p.images[0]) || '',
+      price: unitPrice,
+      unitPrice: unitPrice,
+      quantity: this.quantity(),
+      variantName: vName || 'Tiêu chuẩn',
+      isCustom: false,
+      customDetails: null
+    };
+
+    // Lưu vào Buy Now session, không gộp và không ảnh hưởng giỏ hàng hiện tại
+    this.cartService.setBuyNowItem(buyNowItem);
+    this.router.navigate(['/checkout'], { queryParams: { buyNow: '1' } });
   }
 }

@@ -29,6 +29,26 @@ export class CustomerInfoDto {
   note?: string;
 }
 
+export class BuyNowItemDto {
+  @ApiProperty({ example: '6ac9c5b3ad4350efff67bfc9' })
+  @IsString()
+  @IsNotEmpty()
+  productId: string;
+
+  @ApiProperty({ example: 'Tiêu chuẩn', required: false })
+  @IsOptional()
+  @IsString()
+  variantName?: string;
+
+  @ApiProperty({ example: 1, default: 1, required: false })
+  @IsOptional()
+  quantity?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  customDetails?: any;
+}
+
 export class CreateOrderDto {
   @ApiProperty({ type: CustomerInfoDto })
   @IsObject()
@@ -52,5 +72,9 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   sessionId?: string;
+
+  @ApiProperty({ required: false, type: BuyNowItemDto })
+  @IsOptional()
+  buyNowItem?: BuyNowItemDto;
 }
 

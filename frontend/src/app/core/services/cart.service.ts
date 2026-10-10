@@ -8,8 +8,10 @@ import { Cart, CartItem } from '../models';
 })
 export class CartService {
   private readonly SESSION_KEY = 'giftory_cart_session_id';
+  private readonly BUY_NOW_KEY = 'giftory_buy_now_item';
 
   cart = signal<Cart | null>(null);
+  buyNowItem = signal<any | null>(this.getStoredBuyNowItem());
   
   items = computed(() => this.cart()?.items || []);
   itemsCount = computed(() => this.items().reduce((sum, i) => sum + i.quantity, 0));
@@ -25,6 +27,25 @@ export class CartService {
     totalCustomItems: 0
   });
   paymentMode = computed(() => this.cart()?.paymentMode || 'DEPOSIT_50');
+
+  setBuyNowItem(item: any): void {
+    this.buyNowItem.set(item);
+    sessionStorage.setItem(this.BUY_NOW_KEY, JSON.stringify(item));
+  }
+
+  clearBuyNowItem(): void {
+    this.buyNowItem.set(null);
+    sessionStorage.removeItem(this.BUY_NOW_KEY);
+  }
+
+  private getStoredBuyNowItem(): any | null {
+    try {
+      const data = sessionStorage.getItem(this.BUY_NOW_KEY);
+      return data ? JSON.parse(data) : null;
+    } catch {
+      return null;
+    }
+  }
 
   constructor(private api: ApiService) {
     this.ensureSessionId();
