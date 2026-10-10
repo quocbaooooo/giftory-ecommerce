@@ -110,18 +110,18 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
         </div>
       </header>
 
-      <!-- RESTORED DRAFT BANNER (Compact & Dismissible) -->
+      <!-- RESTORED DRAFT TOAST (Floating, Auto-dismissing, Non-intrusive) -->
       @if (hasRestoredDraft() && !isEditingCartItem()) {
-        <div class="px-3 py-1 rounded-xl bg-purple-50 border border-purple-200 text-[#7C3AED] text-xs flex items-center justify-between shadow-2xs shrink-0">
-          <div class="flex items-center gap-1.5 text-[11px]">
-            <span class="material-symbols-outlined text-[15px]">history</span>
-            <span>Đã tự động khôi phục thiết kế dở dang của bạn từ LocalStorage!</span>
+        <div class="fixed bottom-6 right-6 z-50 bg-slate-900/90 text-white backdrop-blur-md px-3.5 py-2.5 rounded-2xl shadow-xl border border-slate-700 text-xs flex items-center gap-3 animate-fade-in max-w-xs">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-purple-400 text-base shrink-0">history</span>
+            <span class="text-[11px] text-slate-200">Đã nạp lại bản thiết kế trước đó</span>
           </div>
-          <div class="flex items-center gap-2.5">
-            <button (click)="resetToDefaults()" class="text-[10px] underline font-bold hover:text-purple-900 cursor-pointer">
-              Làm mới từ đầu
+          <div class="flex items-center gap-2 ml-auto shrink-0">
+            <button (click)="resetToDefaults()" class="text-[11px] font-bold text-purple-300 hover:text-white underline cursor-pointer">
+              Làm mới
             </button>
-            <button (click)="hasRestoredDraft.set(false)" class="text-slate-400 hover:text-slate-700 text-xs cursor-pointer" title="Đóng thông báo">
+            <button (click)="hasRestoredDraft.set(false)" class="text-slate-400 hover:text-white text-xs cursor-pointer ml-1" title="Đóng">
               ✕
             </button>
           </div>
@@ -719,6 +719,22 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
                 </button>
               </div>
 
+              <!-- SLIM WARNING PILL IN TOOLBAR (DOES NOT OVERLAP CANVAS) -->
+              @if (isOverflowWarning()) {
+                <div class="flex items-center gap-1.5 bg-amber-50 border border-amber-300 text-amber-900 px-2.5 py-0.5 rounded-full text-[11px] shadow-2xs animate-fade-in shrink-0">
+                  <span class="material-symbols-outlined text-amber-600 text-[14px] shrink-0">warning</span>
+                  <span class="font-bold text-amber-800 text-[10.5px] truncate max-w-[180px] sm:max-w-none">{{ overflowWarningTarget() || 'Phần tử' }} chạm mép cong</span>
+                  <button 
+                    (click)="fitIntoSafeArea()" 
+                    class="ml-0.5 px-2 py-0.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[9px] rounded-md cursor-pointer transition flex items-center gap-0.5 shrink-0"
+                    title="Căn phần tử vừa vặn trong Vùng An Toàn"
+                  >
+                    <span class="material-symbols-outlined text-[11px]">fit_screen</span>
+                    <span>Căn an toàn</span>
+                  </button>
+                </div>
+              }
+
               <!-- Quick action icon buttons -->
               <div class="flex items-center gap-1 flex-wrap">
                 @if (selectedNodeName()) {
@@ -812,22 +828,6 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
                 </button>
               </div>
             </div>
-
-            <!-- CURVED EDGE OVERFLOW WARNING BANNER -->
-            @if (isOverflowWarning()) {
-              <div class="w-full max-w-md py-1 px-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center justify-between gap-2 shadow-2xs animate-fade-in mb-0.5 shrink-0">
-                <div class="flex items-center gap-1.5 min-w-0">
-                  <span class="material-symbols-outlined text-amber-600 text-[15px] shrink-0">warning</span>
-                  <span class="font-medium text-[10px] truncate leading-tight">{{ overflowWarningMessage() }}</span>
-                </div>
-                <button 
-                  (click)="fitIntoSafeArea()" 
-                  class="shrink-0 px-2 py-0.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[9px] rounded-md cursor-pointer transition"
-                >
-                  Căn an toàn
-                </button>
-              </div>
-            }
 
             <!-- KONVA.JS CANVAS STAGE CONTAINER (Flex-1 Responsive wrapper) -->
             <div #stageWrapper class="relative w-full flex-1 min-h-0 flex items-center justify-center overflow-hidden my-0.5">
@@ -1094,6 +1094,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   // Print Area & Safe Area Guides (BP-02 & Curved Edge error prevention)
   showGuides = signal<boolean>(true);
   isOverflowWarning = signal<boolean>(false);
+  overflowWarningTarget = signal<string>('');
   overflowWarningMessage = signal<string>('');
 
   currentPrintArea = computed<AreaBox>(() => {
@@ -1325,6 +1326,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
                 if (savedDraft.imageScale) this.imageScale.set(savedDraft.imageScale);
                 if (savedDraft.stickers) this.activeStickers.set(savedDraft.stickers);
                 this.hasRestoredDraft.set(true);
+                setTimeout(() => this.hasRestoredDraft.set(false), 4500);
               }
             }
 
@@ -1743,7 +1745,8 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (hasOverflow) {
       this.isOverflowWarning.set(true);
-      this.overflowWarningMessage.set(`⚠️ ${overflowingName} đang tràn ra ngoài Vùng An Toàn! Mép cong dễ gây méo chữ hoặc lỗi in khi khắc laser.`);
+      this.overflowWarningTarget.set(overflowingName);
+      this.overflowWarningMessage.set(`${overflowingName} chạm mép cong ngoài Vùng An Toàn`);
       if (this.safeAreaRect) {
         this.safeAreaRect.stroke('#EF4444');
         this.safeAreaRect.strokeWidth(2);
@@ -1753,6 +1756,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     } else {
       this.isOverflowWarning.set(false);
+      this.overflowWarningTarget.set('');
       this.overflowWarningMessage.set('');
       if (this.safeAreaRect) {
         this.safeAreaRect.stroke('rgba(16, 185, 129, 0.75)');
