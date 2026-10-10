@@ -183,6 +183,33 @@ export interface OrderTimeline {
   completed: boolean;
 }
 
+export interface OrderItemDetail {
+  _id?: string;
+  productId: string;
+  name?: string;
+  productName?: string;
+  image?: string;
+  productImage?: string;
+  variantName?: string;
+  quantity: number;
+  price: number;
+  unitPrice?: number;
+  isCustom: boolean;
+  itemType?: 'READY_MADE' | 'CUSTOM';
+  status?: 'PENDING' | 'PREPARED' | 'IN_PRODUCTION' | 'QC_PENDING' | 'QC_PASSED' | 'QC_FAILED';
+  customDetails?: any;
+  depositRequired: number;
+  qcNote?: string;
+  qcHistory?: Array<{
+    result: string;
+    note?: string;
+    timestamp: string | Date;
+    inspector?: string;
+  }>;
+  preparedAt?: string | Date;
+  preparedBy?: string;
+}
+
 export interface Order {
   _id: string;
   orderCode: string;
@@ -193,7 +220,7 @@ export interface Order {
     address: string;
     note?: string;
   };
-  shippingAddress: {
+  shippingAddress?: {
     fullName: string;
     phone: string;
     city: string;
@@ -202,20 +229,7 @@ export interface Order {
     detailAddress: string;
   };
   shippingNote?: string;
-  items: Array<{
-    productId: string;
-    name?: string;
-    productName?: string;
-    image?: string;
-    productImage?: string;
-    variantName?: string;
-    quantity: number;
-    price: number;
-    unitPrice?: number;
-    isCustom: boolean;
-    customDetails?: any;
-    depositRequired: number;
-  }>;
+  items: OrderItemDetail[];
   pricing?: {
     itemsTotal: number;
     voucherDiscount: number;
@@ -231,11 +245,42 @@ export interface Order {
   paymentMode: 'DEPOSIT_50' | 'FULL_PAYMENT';
   paymentMethod: 'VIETQR' | 'VNPAY' | 'MOMO' | 'COD';
   paymentStatus: 'UNPAID' | 'PARTIALLY_PAID_DEPOSIT_50' | 'PAID_FULL' | 'REFUNDED';
-  orderStatus: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPING' | 'DELIVERED' | 'CANCELLED';
-  fulfillmentStatus: 'AWAITING_DEPOSIT' | 'AT_WORKSHOP' | 'QUALITY_INSPECTION' | 'PACKAGED' | 'SHIPPED' | 'DELIVERED';
+  orderStatus: 'AWAITING_CONFIRMATION' | 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'IN_TRANSIT' | 'SHIPPING' | 'DELIVERED' | 'RETURNED_BP06' | 'CANCELLED';
+  fulfillmentStatus: 'AWAITING_DEPOSIT' | 'AWAITING_CONFIRMATION' | 'CONFIRMED' | 'AT_WORKSHOP' | 'QUALITY_INSPECTION' | 'PACKAGED' | 'SHIPPED' | 'DELIVERED' | 'RETURNING' | 'RETURNED_RECEIVED' | 'TRANSFERRED_BP06';
   timeline?: OrderTimeline[];
   trackingCode?: string;
   shippingCarrier?: string;
+  confirmationWait?: {
+    minWaitHours: number;
+    maxWaitHours: number;
+    eligibleAt: string | Date;
+    deadlineAt: string | Date;
+    confirmedAt?: string | Date;
+    confirmedBy?: string;
+  };
+  isPackaged?: boolean;
+  packagedAt?: string | Date;
+  packagedBy?: string;
+  deliveryInfo?: {
+    carrier: string;
+    trackingCode: string;
+    dispatchedAt?: string | Date;
+    deliveryAttempts?: Array<{
+      attemptNumber: number;
+      timestamp: string | Date;
+      success: boolean;
+      failureReason?: string;
+      allowRetry?: boolean;
+      note?: string;
+    }>;
+    deliveryResult?: string;
+    failureReason?: string;
+    allowRetry?: boolean;
+    returnedAt?: string | Date;
+    receivedReturnAt?: string | Date;
+    transferredToBp06At?: string | Date;
+    bp06Note?: string;
+  };
   createdAt: string;
 }
 

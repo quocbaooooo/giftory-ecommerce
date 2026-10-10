@@ -11,7 +11,8 @@ import {
   PaymentStatus,
   FulfillmentStatus,
   PaymentMode,
-  PaymentMethod
+  PaymentMethod,
+  OrderItemStatus
 } from '../../common/enums/role.enum';
 
 @Injectable()
@@ -62,6 +63,8 @@ export class OrdersService {
         quantity: item.quantity,
         unitPrice,
         isCustom,
+        itemType: isCustom ? 'CUSTOM' : 'READY_MADE',
+        status: OrderItemStatus.PENDING,
         customDetails: item.customDetails || null,
         depositRequired
       };
@@ -159,11 +162,28 @@ export class OrdersService {
       paymentMode: depositAmount < totalAmount ? PaymentMode.DEPOSIT_50 : PaymentMode.FULL_PAYMENT,
       paymentMethod: dto.paymentMethod,
       paymentStatus: initialPaymentStatus,
-      orderStatus: isStandardCod ? OrderStatus.PENDING : OrderStatus.CONFIRMED,
-      fulfillmentStatus: isStandardCod ? FulfillmentStatus.PACKAGED : (hasCustomProduct ? FulfillmentStatus.AWAITING_DEPOSIT : FulfillmentStatus.AT_WORKSHOP),
+      orderStatus: OrderStatus.AWAITING_CONFIRMATION,
+      fulfillmentStatus: FulfillmentStatus.AWAITING_CONFIRMATION,
       timeline: initialTimeline,
       trackingCode: `GHTK-VN-${Math.floor(1000000 + Math.random() * 9000000)}`,
-      shippingCarrier: shippingMethod === 'EXPRESS' ? 'Giao Hàng Hỏa Tốc (2h - 48h)' : 'Giao Hàng Tiêu Chuẩn'
+      shippingCarrier: shippingMethod === 'EXPRESS' ? 'Giao Hàng Hỏa Tốc (2h - 48h)' : 'Giao Hàng Tiêu Chuẩn',
+      confirmationWait: {
+        minWaitHours: 12,
+        maxWaitHours: 48,
+        eligibleAt: new Date(Date.now() + 12 * 3600000),
+        deadlineAt: new Date(Date.now() + 48 * 3600000),
+        confirmedAt: null,
+        confirmedBy: ''
+      },
+      isPackaged: false,
+      deliveryInfo: {
+        carrier: shippingMethod === 'EXPRESS' ? 'Giao Hàng Hỏa Tốc (2h - 48h)' : 'Giao Hàng Tiêu Chuẩn',
+        trackingCode: `GHTK-VN-${Math.floor(1000000 + Math.random() * 9000000)}`,
+        deliveryAttempts: [],
+        deliveryResult: 'PENDING',
+        failureReason: '',
+        allowRetry: true
+      }
     });
 
     // Reward Loyalty Points if registered user (1 point per 10k VND)
@@ -327,6 +347,439 @@ export class OrdersService {
         completed: true
       });
     }
+
+    await order.save();
+    return order;
+  }
+
+  // ==========================================
+  // BP-04: THỰC THI ĐƠN HÀNG VÀ GIAO HÀNG
+  // ==========================================
+
+  async findOrderById(id: string) {
+    let order: any = null;
+    if (Types.ObjectId.isValid(id)) {
+      order = await this.orderModel.findById(id).exec();
+    }
+    if (!order) {
+      order = await this.orderModel.findOne({ orderCode: id.toUpperCase() }).exec();
+    }
+    if (!order) {
+      throw new NotFoundException(`Không tìm thấy đơn hàng: ${id}`);
+    }
+    return order;
+  }
+
+  // US-04.01 – Xác nhận đơn hàng (BR-01, BR-02, BR-03, BR-04)
+  async confirmOrder(id: string, user: any, bypassWaitTime: boolean = false) {
+    const order = await this.findOrderById(id);
+
+    if (
+      order.orderStatus !== OrderStatus.AWAITING_CONFIRMATION &&
+      order.orderStatus !== OrderStatus.PENDING
+    ) {
+      throw new BadRequestException(
+        `Đơn hàng hiện ở trạng thái "${order.orderStatus}", không thể thực hiện xác nhận (chỉ áp dụng cho đơn "Chờ xác nhận đơn hàng" theo BR-04)`
+      );
+    }
+
+    // BR-02: Thời gian đơn hàng chờ xác nhận ít nhất sau 12 giờ và tối đa sau 48 giờ
+    const now = Date.now();
+    const eligibleTime = order.confirmationWait?.eligibleAt
+      ? new Date(order.confirmationWait.eligibleAt).getTime()
+      : new Date(order.createdAt).getTime() + 12 * 3600000;
+
+    if (!bypassWaitTime && now < eligibleTime) {
+      const remainingHours = ((eligibleTime - now) / 3600000).toFixed(1);
+      throw new BadRequestException(
+        `Đơn hàng đang trong thời gian chờ xác nhận (còn khoảng ${remainingHours}h nữa mới đạt tối thiểu 12h theo BR-02). Bạn có thể bật tùy chọn "Bỏ qua thời gian chờ (Bypass 12h)" để xác nhận ngay phục vụ kiểm thử và xử lý nhanh.`
+      );
+    }
+
+    // BR-04: Cập nhật trạng thái thành "Đơn hàng đã được xác nhận" và trích xuất Order Items
+    order.orderStatus = OrderStatus.CONFIRMED;
+    order.fulfillmentStatus = FulfillmentStatus.CONFIRMED;
+    if (!order.confirmationWait) {
+      order.confirmationWait = {
+        minWaitHours: 12,
+        maxWaitHours: 48,
+        eligibleAt: new Date(new Date(order.createdAt).getTime() + 12 * 3600000),
+        deadlineAt: new Date(new Date(order.createdAt).getTime() + 48 * 3600000),
+        confirmedAt: new Date(),
+        confirmedBy: user?.name || 'Admin Quản lý đơn hàng'
+      };
+    } else {
+      order.confirmationWait.confirmedAt = new Date();
+      order.confirmationWait.confirmedBy = user?.name || 'Admin Quản lý đơn hàng';
+    }
+
+    // BR-05: Trích xuất thông tin Order Items và phân loại sản phẩm
+    if (order.items && order.items.length > 0) {
+      order.items = order.items.map((item: any) => {
+        const itemObj = item.toObject ? item.toObject() : item;
+        return {
+          ...itemObj,
+          itemType: itemObj.isCustom ? 'CUSTOM' : 'READY_MADE',
+          status: itemObj.status || OrderItemStatus.PENDING
+        };
+      });
+    }
+
+    order.timeline.push({
+      title: 'Đơn hàng đã được xác nhận (US-04.01, BR-04)',
+      description: `Admin ${order.confirmationWait.confirmedBy} đã xác nhận đơn hàng. Hệ thống đã trích xuất Order Items để phân luồng xử lý: Ready-made Gift cho Admin lấy hàng, Custom Gift chuyển sang Xưởng sản xuất.`,
+      timestamp: new Date(),
+      completed: true
+    });
+
+    await order.save();
+    return order;
+  }
+
+  // US-04.02 – Lấy Ready-made Gift (BR-05, BR-06)
+  async pickReadyMadeItem(orderId: string, itemId: string, user: any) {
+    const order = await this.findOrderById(orderId);
+
+    if (order.orderStatus !== OrderStatus.CONFIRMED && order.orderStatus !== OrderStatus.PROCESSING) {
+      throw new BadRequestException('Đơn hàng phải ở trạng thái "Đơn hàng đã được xác nhận" trước khi chuẩn bị sản phẩm (BR-04)!');
+    }
+
+    const itemIndex = order.items.findIndex((i: any) => (i._id && i._id.toString() === itemId) || (i.productId && i.productId.toString() === itemId));
+    if (itemIndex === -1) {
+      throw new NotFoundException('Không tìm thấy sản phẩm trong đơn hàng');
+    }
+
+    const item = order.items[itemIndex];
+    if (item.isCustom || item.itemType === 'CUSTOM') {
+      throw new BadRequestException('Sản phẩm này là Custom Gift, cần được sản xuất và kiểm định tại Xưởng (US-04.03)!');
+    }
+
+    item.status = OrderItemStatus.PREPARED;
+    item.preparedAt = new Date();
+    item.preparedBy = user?.name || 'Admin Quản lý đơn hàng';
+
+    order.timeline.push({
+      title: `Đã lấy Ready-made Gift: ${item.productName} (US-04.02, BR-06)`,
+      description: `Admin ${item.preparedBy} đã lấy sản phẩm có sẵn theo thông tin đơn hàng, sẵn sàng cho công đoạn đóng gói.`,
+      timestamp: new Date(),
+      completed: true
+    });
+
+    await order.save();
+    return order;
+  }
+
+  // US-04.03 – Bắt đầu sản xuất Custom Gift (BR-05, BR-07)
+  async startCustomItemProduction(orderId: string, itemId: string, user: any) {
+    const order = await this.findOrderById(orderId);
+
+    if (order.orderStatus !== OrderStatus.CONFIRMED && order.orderStatus !== OrderStatus.PROCESSING) {
+      throw new BadRequestException('Đơn hàng phải ở trạng thái "Đơn hàng đã được xác nhận" trước khi sản xuất (BR-04)!');
+    }
+
+    const itemIndex = order.items.findIndex((i: any) => (i._id && i._id.toString() === itemId) || (i.productId && i.productId.toString() === itemId));
+    if (itemIndex === -1) {
+      throw new NotFoundException('Không tìm thấy sản phẩm trong đơn hàng');
+    }
+
+    const item = order.items[itemIndex];
+    if (!item.isCustom && item.itemType !== 'CUSTOM') {
+      throw new BadRequestException('Sản phẩm này là Ready-made Gift, không qua bước sản xuất của Xưởng (BR-06)!');
+    }
+
+    item.status = OrderItemStatus.IN_PRODUCTION;
+    order.fulfillmentStatus = FulfillmentStatus.AT_WORKSHOP;
+
+    order.timeline.push({
+      title: `Bắt đầu sản xuất Custom Gift: ${item.productName} (US-04.03, BR-07)`,
+      description: `Nhân viên sản xuất (${user?.name || 'Nghệ nhân xưởng'}) đã truy xuất cấu hình sản phẩm và tiến hành sản xuất/gia công theo yêu cầu đơn hàng.`,
+      timestamp: new Date(),
+      completed: true
+    });
+
+    await order.save();
+    return order;
+  }
+
+  // US-04.03 & EF1 – Kiểm tra chất lượng và làm lại Custom Gift (BR-08)
+  async inspectCustomItemQuality(
+    orderId: string,
+    itemId: string,
+    body: { passed: boolean; note?: string; inspector?: string },
+    user: any
+  ) {
+    const order = await this.findOrderById(orderId);
+
+    const itemIndex = order.items.findIndex((i: any) => (i._id && i._id.toString() === itemId) || (i.productId && i.productId.toString() === itemId));
+    if (itemIndex === -1) {
+      throw new NotFoundException('Không tìm thấy sản phẩm trong đơn hàng');
+    }
+
+    const item = order.items[itemIndex];
+    if (!item.isCustom && item.itemType !== 'CUSTOM') {
+      throw new BadRequestException('Chỉ kiểm tra chất lượng đối với Custom Gift (BR-06, BR-08)!');
+    }
+
+    const inspector = body.inspector || user?.name || 'KCS Xưởng Giftory';
+    item.qcHistory = item.qcHistory || [];
+
+    if (body.passed) {
+      item.status = OrderItemStatus.QC_PASSED;
+      item.qcNote = body.note || 'Đạt tiêu chuẩn chất lượng xuất xưởng';
+      item.qcHistory.push({
+        result: 'PASSED',
+        note: item.qcNote,
+        timestamp: new Date(),
+        inspector
+      });
+
+      order.timeline.push({
+        title: `Kiểm tra chất lượng ĐẠT: ${item.productName} (US-04.03, BR-08)`,
+        description: `Custom Gift đã được kiểm tra chất lượng và ĐẠT yêu cầu bởi ${inspector}. Sản phẩm sẵn sàng chuyển sang đóng gói.`,
+        timestamp: new Date(),
+        completed: true
+      });
+    } else {
+      // EF1: Custom Gift không đạt kiểm tra chất lượng -> Làm lại
+      item.status = OrderItemStatus.QC_FAILED;
+      item.qcNote = body.note || 'Chưa đạt tiêu chuẩn hoàn thiện, chuyển gia công lại';
+      item.qcHistory.push({
+        result: 'FAILED',
+        note: item.qcNote,
+        timestamp: new Date(),
+        inspector
+      });
+
+      order.timeline.push({
+        title: `Kiểm tra chất lượng KHÔNG ĐẠT: ${item.productName} (EF1, BR-08)`,
+        description: `Lý do: "${item.qcNote}". Nhân viên sản xuất thực hiện sản xuất/gia công lại và kiểm tra lại cho đến khi đáp ứng yêu cầu.`,
+        timestamp: new Date(),
+        completed: true
+      });
+    }
+
+    await order.save();
+    return order;
+  }
+
+  // US-04.04 – Đóng gói đơn hàng (BR-09)
+  async packageOrder(orderId: string, user: any) {
+    const order = await this.findOrderById(orderId);
+
+    if (order.orderStatus !== OrderStatus.CONFIRMED && order.orderStatus !== OrderStatus.PROCESSING) {
+      throw new BadRequestException('Chỉ thực hiện đóng gói khi đơn hàng đã được xác nhận (BR-04)!');
+    }
+
+    // BR-09: Admin chỉ đóng gói khi TẤT CẢ sản phẩm đã chuẩn bị đầy đủ và đạt yêu cầu
+    const unreadyItems: string[] = [];
+    for (const item of order.items) {
+      if (item.isCustom || item.itemType === 'CUSTOM') {
+        if (item.status !== OrderItemStatus.QC_PASSED) {
+          unreadyItems.push(`Custom Gift: "${item.productName}" (Trạng thái: ${item.status || 'Chờ sản xuất'} - Chưa đạt QC)`);
+        }
+      } else {
+        if (item.status !== OrderItemStatus.PREPARED) {
+          unreadyItems.push(`Ready-made Gift: "${item.productName}" (Chưa lấy sản phẩm)`);
+        }
+      }
+    }
+
+    if (unreadyItems.length > 0) {
+      throw new BadRequestException(
+        `Không thể đóng gói theo quy tắc BR-09! Tất cả sản phẩm trong đơn hàng phải được chuẩn bị đầy đủ và đạt yêu cầu. Các sản phẩm chưa hoàn tất: \n- ${unreadyItems.join('\n- ')}`
+      );
+    }
+
+    order.isPackaged = true;
+    order.packagedAt = new Date();
+    order.packagedBy = user?.name || 'Admin Quản lý đơn hàng';
+    order.fulfillmentStatus = FulfillmentStatus.PACKAGED;
+
+    order.timeline.push({
+      title: 'Đã hoàn tất đóng gói đơn hàng (US-04.04, BR-09)',
+      description: `Admin ${order.packagedBy} đã kiểm tra toàn bộ sản phẩm đạt yêu cầu và đóng hộp quà cẩn thận kèm thiệp. Sẵn sàng bàn giao cho Shipper.`,
+      timestamp: new Date(),
+      completed: true
+    });
+
+    await order.save();
+    return order;
+  }
+
+  // US-04.04 – Bàn giao cho Shipper (BR-10)
+  async dispatchToShipper(
+    orderId: string,
+    body: { carrier?: string; trackingCode?: string; note?: string },
+    user: any
+  ) {
+    const order = await this.findOrderById(orderId);
+
+    // BR-10: Đơn chưa đóng gói thì không được bàn giao
+    if (!order.isPackaged) {
+      throw new BadRequestException('Đơn hàng chưa được đóng gói hoàn tất! Theo quy tắc BR-10, đơn hàng chỉ được bàn giao cho Shipper sau khi đã đóng gói xong.');
+    }
+
+    const carrier = body.carrier || order.shippingCarrier || 'Giao Hàng Tiết Kiệm (GHTK)';
+    const trackingCode = body.trackingCode || order.trackingCode || `GHTK-VN-${Math.floor(1000000 + Math.random() * 9000000)}`;
+
+    order.orderStatus = OrderStatus.IN_TRANSIT;
+    order.fulfillmentStatus = FulfillmentStatus.SHIPPED;
+    order.shippingCarrier = carrier;
+    order.trackingCode = trackingCode;
+
+    order.deliveryInfo = {
+      ...(order.deliveryInfo || {}),
+      carrier,
+      trackingCode,
+      dispatchedAt: new Date(),
+      deliveryAttempts: order.deliveryInfo?.deliveryAttempts || [],
+      deliveryResult: 'PENDING',
+      failureReason: '',
+      allowRetry: true
+    };
+
+    order.timeline.push({
+      title: 'Bàn giao cho Shipper - Trạng thái "In transit" (US-04.04, BR-10)',
+      description: `Admin đã bàn giao kiện hàng cho Shipper (${carrier}). Mã vận đơn: ${trackingCode}. Thông tin giao hàng đã được chuyển sang Delivery Service.`,
+      timestamp: new Date(),
+      completed: true
+    });
+
+    await order.save();
+    return order;
+  }
+
+  // US-04.05 & US-04.06 – Delivery Service giao hàng & xác định kết quả (BR-11, BR-12, BR-13, BR-14, BR-15)
+  async reportDeliveryResult(
+    orderId: string,
+    body: {
+      success: boolean;
+      failureReason?: string;
+      allowRetry?: boolean;
+      note?: string;
+    },
+    user: any
+  ) {
+    const order = await this.findOrderById(orderId);
+
+    if (order.orderStatus !== OrderStatus.IN_TRANSIT && order.orderStatus !== OrderStatus.SHIPPING) {
+      throw new BadRequestException('Chỉ cập nhật kết quả giao hàng cho đơn hàng đang ở trạng thái "In transit" (BR-11)!');
+    }
+
+    if (!order.deliveryInfo) {
+      order.deliveryInfo = {
+        carrier: order.shippingCarrier || 'GHTK',
+        trackingCode: order.trackingCode || '',
+        dispatchedAt: new Date(),
+        deliveryAttempts: [],
+        deliveryResult: 'PENDING',
+        failureReason: '',
+        allowRetry: true
+      };
+    }
+
+    if (body.success) {
+      // US-04.05, BR-12: Giao hàng thành công
+      order.orderStatus = OrderStatus.DELIVERED;
+      order.fulfillmentStatus = FulfillmentStatus.DELIVERED;
+      order.deliveryInfo.deliveryResult = 'SUCCESS';
+
+      order.timeline.push({
+        title: 'Đã giao hàng thành công (US-04.05, BR-12)',
+        description: 'Delivery Service xác nhận đã giao kiện hàng thành công đến tay người nhận. Đơn hàng hoàn tất quá trình giao hàng và kết thúc quy trình BP-04.',
+        timestamp: new Date(),
+        completed: true
+      });
+    } else {
+      // US-04.06, BR-13: Giao hàng không thành công -> Bắt buộc ghi nhận lý do
+      if (!body.failureReason || !body.failureReason.trim()) {
+        throw new BadRequestException('Bắt buộc phải ghi nhận lý do giao hàng không thành công theo quy định BR-13!');
+      }
+
+      const attemptNum = (order.deliveryInfo.deliveryAttempts?.length || 0) + 1;
+      order.deliveryInfo.deliveryAttempts.push({
+        attemptNumber: attemptNum,
+        timestamp: new Date(),
+        success: false,
+        failureReason: body.failureReason.trim(),
+        allowRetry: !!body.allowRetry,
+        note: body.note || ''
+      });
+
+      if (body.allowRetry) {
+        // BR-14: Được phép giao lại -> Trạng thái vẫn là "In transit"
+        order.orderStatus = OrderStatus.IN_TRANSIT;
+        order.timeline.push({
+          title: `Giao hàng không thành công lần ${attemptNum} - Hẹn giao lại (US-04.06, BR-14)`,
+          description: `Lý do: "${body.failureReason.trim()}". Đơn hàng được phép giao lại, Delivery Service tiến hành giao lại cho khách hàng.`,
+          timestamp: new Date(),
+          completed: true
+        });
+      } else {
+        // BR-15: Không được phép giao lại -> Trả hàng về Giftory
+        order.fulfillmentStatus = FulfillmentStatus.RETURNING;
+        order.deliveryInfo.deliveryResult = 'FAILED';
+        order.deliveryInfo.failureReason = body.failureReason.trim();
+        order.deliveryInfo.allowRetry = false;
+        order.deliveryInfo.returnedAt = new Date();
+
+        order.timeline.push({
+          title: 'Giao hàng không thành công - Đang trả hàng về Giftory (US-04.06, BR-15, EF2)',
+          description: `Lý do: "${body.failureReason.trim()}". Đơn hàng không được phép giao lại. Delivery Service thực hiện trả hàng về Giftory cho Admin tiếp nhận.`,
+          timestamp: new Date(),
+          completed: true
+        });
+      }
+    }
+
+    await order.save();
+    return order;
+  }
+
+  // US-04.07 – Tiếp nhận hàng trả về từ Delivery Service (BR-15)
+  async receiveReturnedOrder(orderId: string, user: any) {
+    const order = await this.findOrderById(orderId);
+
+    if (order.fulfillmentStatus !== FulfillmentStatus.RETURNING && !order.deliveryInfo?.returnedAt) {
+      throw new BadRequestException('Chỉ tiếp nhận hàng trả về đối với đơn hàng Delivery Service đã xác nhận trả hàng (US-04.07)!');
+    }
+
+    order.fulfillmentStatus = FulfillmentStatus.RETURNED_RECEIVED;
+    order.deliveryInfo.receivedReturnAt = new Date();
+
+    order.timeline.push({
+      title: 'Admin tiếp nhận hàng trả về tại kho Giftory (US-04.07, BR-15)',
+      description: `Admin ${user?.name || 'Quản lý đơn hàng'} đã tiếp nhận hàng hoàn trả từ Shipper/Delivery Service tại kho Giftory. Sẵn sàng chuyển tiếp xử lý sang BP-06.`,
+      timestamp: new Date(),
+      completed: true
+    });
+
+    await order.save();
+    return order;
+  }
+
+  // US-04.07 – Chuyển thông tin đơn hàng sang BP-06 (BR-16)
+  async transferToBp06(orderId: string, body: { bp06Note?: string }, user: any) {
+    const order = await this.findOrderById(orderId);
+
+    if (
+      order.fulfillmentStatus !== FulfillmentStatus.RETURNED_RECEIVED &&
+      order.fulfillmentStatus !== FulfillmentStatus.RETURNING
+    ) {
+      throw new BadRequestException('Hàng phải được tiếp nhận tại kho trước khi chuyển sang BP-06 (US-04.07)!');
+    }
+
+    order.orderStatus = OrderStatus.RETURNED_BP06;
+    order.fulfillmentStatus = FulfillmentStatus.TRANSFERRED_BP06;
+    order.deliveryInfo.transferredToBp06At = new Date();
+    order.deliveryInfo.bp06Note = body?.bp06Note || 'Chuyển thông tin xử lý đơn hàng hoàn trả và hoàn tiền/nhập kho';
+
+    order.timeline.push({
+      title: 'Chuyển thông tin đơn hàng sang BP-06 (US-04.07, BR-16)',
+      description: `Admin đã chuyển thông tin đơn hàng sang BP-06 để tiếp tục xử lý theo quy trình tương ứng (Ghi chú: "${order.deliveryInfo.bp06Note}"). Quy trình BP-04 kết thúc.`,
+      timestamp: new Date(),
+      completed: true
+    });
 
     await order.save();
     return order;

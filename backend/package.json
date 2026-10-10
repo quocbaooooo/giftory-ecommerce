@@ -12,7 +12,8 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "seed": "ts-node -r tsconfig-paths/register src/database/seed.ts"
+    "seed": "ts-node -r tsconfig-paths/register src/database/seed.ts",
+    "migrate:bp04": "ts-node -r tsconfig-paths/register src/database/migrate-bp04.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.11",

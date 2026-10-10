@@ -33,11 +33,52 @@ export class AdminService {
   }
 
   getAllOrders(params?: any): Observable<any> {
-    return this.api.get('orders', params);
+    return this.api.get('orders/admin/all', params);
   }
 
   getAdminOrders(params?: any): Observable<any> {
     return this.getAllOrders(params);
+  }
+
+  getOrderById(id: string): Observable<any> {
+    return this.api.get(`orders/admin/${id}`);
+  }
+
+  // BP-04 Actions
+  confirmOrder(orderId: string, bypassWaitTime: boolean = false): Observable<any> {
+    return this.api.post(`orders/admin/${orderId}/confirm`, { bypassWaitTime });
+  }
+
+  pickReadyMadeItem(orderId: string, itemId: string): Observable<any> {
+    return this.api.post(`orders/admin/${orderId}/items/${itemId}/pick`, {});
+  }
+
+  startCustomItemProduction(orderId: string, itemId: string): Observable<any> {
+    return this.api.post(`orders/admin/${orderId}/items/${itemId}/produce`, {});
+  }
+
+  inspectCustomItemQuality(orderId: string, itemId: string, payload: { passed: boolean; note?: string; inspector?: string }): Observable<any> {
+    return this.api.post(`orders/admin/${orderId}/items/${itemId}/qc`, payload);
+  }
+
+  packageOrder(orderId: string): Observable<any> {
+    return this.api.post(`orders/admin/${orderId}/package`, {});
+  }
+
+  dispatchToShipper(orderId: string, payload: { carrier?: string; trackingCode?: string; note?: string }): Observable<any> {
+    return this.api.post(`orders/admin/${orderId}/dispatch`, payload);
+  }
+
+  reportDeliveryResult(orderId: string, payload: { success: boolean; failureReason?: string; allowRetry?: boolean; note?: string }): Observable<any> {
+    return this.api.post(`orders/admin/${orderId}/delivery-result`, payload);
+  }
+
+  receiveReturnedOrder(orderId: string): Observable<any> {
+    return this.api.post(`orders/admin/${orderId}/receive-return`, {});
+  }
+
+  transferToBp06(orderId: string, payload: { bp06Note?: string }): Observable<any> {
+    return this.api.post(`orders/admin/${orderId}/transfer-bp06`, payload);
   }
 
   updateOrderStatus(orderId: string, orderStatusOrPayload: any, fulfillmentStatus?: string): Observable<any> {
@@ -45,7 +86,7 @@ export class AdminService {
       ? { orderStatus: orderStatusOrPayload, fulfillmentStatus }
       : orderStatusOrPayload;
 
-    return this.api.patch(`orders/${orderId}/status`, payload);
+    return this.api.patch(`orders/admin/${orderId}/status`, payload);
   }
 
   createProduct(productData: any): Observable<any> {

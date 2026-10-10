@@ -5,7 +5,8 @@ import {
   PaymentStatus,
   FulfillmentStatus,
   PaymentMode,
-  PaymentMethod
+  PaymentMethod,
+  OrderItemStatus
 } from '../../common/enums/role.enum';
 
 export type OrderDocument = Order & Document;
@@ -33,11 +34,34 @@ export class OrderItem {
   @Prop({ default: false })
   isCustom: boolean;
 
+  @Prop({ default: 'READY_MADE' })
+  itemType: string; // 'READY_MADE' | 'CUSTOM'
+
+  @Prop({ type: String, enum: OrderItemStatus, default: OrderItemStatus.PENDING })
+  status: OrderItemStatus;
+
   @Prop({ type: Object, default: null })
   customDetails?: any;
 
   @Prop({ default: 0 })
   depositRequired: number;
+
+  @Prop({ default: '' })
+  qcNote?: string;
+
+  @Prop({ type: Array, default: [] })
+  qcHistory?: Array<{
+    result: string;
+    note?: string;
+    timestamp: Date;
+    inspector?: string;
+  }>;
+
+  @Prop()
+  preparedAt?: Date;
+
+  @Prop({ default: '' })
+  preparedBy?: string;
 }
 
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
@@ -133,6 +157,87 @@ export class Order {
 
   @Prop({ default: 'Giao Hàng Nhanh Hỏa Tốc (2h - 48h)' })
   shippingCarrier: string;
+
+  // BP-04 Fields
+  @Prop({
+    type: {
+      minWaitHours: { type: Number, default: 12 },
+      maxWaitHours: { type: Number, default: 48 },
+      eligibleAt: { type: Date },
+      deadlineAt: { type: Date },
+      confirmedAt: { type: Date },
+      confirmedBy: { type: String, default: '' }
+    },
+    default: () => ({
+      minWaitHours: 12,
+      maxWaitHours: 48,
+      eligibleAt: new Date(Date.now() + 12 * 3600000),
+      deadlineAt: new Date(Date.now() + 48 * 3600000),
+      confirmedAt: null,
+      confirmedBy: ''
+    })
+  })
+  confirmationWait: {
+    minWaitHours: number;
+    maxWaitHours: number;
+    eligibleAt: Date;
+    deadlineAt: Date;
+    confirmedAt?: Date;
+    confirmedBy?: string;
+  };
+
+  @Prop({ default: false })
+  isPackaged: boolean;
+
+  @Prop()
+  packagedAt?: Date;
+
+  @Prop({ default: '' })
+  packagedBy?: string;
+
+  @Prop({
+    type: {
+      carrier: { type: String, default: 'Giao Hàng Tiết Kiệm (GHTK)' },
+      trackingCode: { type: String, default: '' },
+      dispatchedAt: { type: Date },
+      deliveryAttempts: { type: Array, default: [] },
+      deliveryResult: { type: String, default: 'PENDING' },
+      failureReason: { type: String, default: '' },
+      allowRetry: { type: Boolean, default: true },
+      returnedAt: { type: Date },
+      receivedReturnAt: { type: Date },
+      transferredToBp06At: { type: Date },
+      bp06Note: { type: String, default: '' }
+    },
+    default: () => ({
+      carrier: 'Giao Hàng Tiết Kiệm (GHTK)',
+      trackingCode: '',
+      deliveryAttempts: [],
+      deliveryResult: 'PENDING',
+      failureReason: '',
+      allowRetry: true
+    })
+  })
+  deliveryInfo: {
+    carrier: string;
+    trackingCode: string;
+    dispatchedAt?: Date;
+    deliveryAttempts: Array<{
+      attemptNumber: number;
+      timestamp: Date;
+      success: boolean;
+      failureReason?: string;
+      allowRetry?: boolean;
+      note?: string;
+    }>;
+    deliveryResult?: string;
+    failureReason?: string;
+    allowRetry?: boolean;
+    returnedAt?: Date;
+    receivedReturnAt?: Date;
+    transferredToBp06At?: Date;
+    bp06Note?: string;
+  };
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

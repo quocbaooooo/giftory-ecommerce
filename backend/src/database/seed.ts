@@ -9,7 +9,7 @@ import { Product, ProductDocument } from './schemas/product.schema';
 import { Voucher, VoucherDocument } from './schemas/voucher.schema';
 import { Order, OrderDocument } from './schemas/order.schema';
 import { LoyaltyTransaction, LoyaltyTransactionDocument } from './schemas/loyalty-transaction.schema';
-import { UserRole, OrderStatus, PaymentStatus, FulfillmentStatus, PaymentMode, PaymentMethod } from '../common/enums/role.enum';
+import { UserRole, OrderStatus, PaymentStatus, FulfillmentStatus, PaymentMode, PaymentMethod, OrderItemStatus } from '../common/enums/role.enum';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
@@ -438,16 +438,16 @@ async function bootstrap() {
   const prodCandle = createdProducts[2]; // Nến Citta
 
   const ordersSeed = [
-    // Order 1: Đang chế tác tại xưởng (đã cọc 50%)
+    // 1. Đơn chờ xác nhận (Mới tạo 2 giờ trước, chưa đủ 12 giờ - BR-01, BR-02)
     {
-      orderCode: 'GF-894212',
+      orderCode: 'GF-104001',
       userId: sampleCustomer._id,
       customerInfo: {
         name: sampleCustomer.name,
         phone: sampleCustomer.phone,
         email: sampleCustomer.email,
-        address: 'Tòa Landmark 81, 720A Điện Biên Phủ, Phường 22, Bình Thạnh, TP.HCM',
-        note: 'Bình khắc tên Minh Anh ❤️ viền vàng, hộp quà kèm thiệp'
+        address: 'Số 15 Lê Duẩn, Phường Bến Nghé, Quận 1, TP.HCM',
+        note: 'Giao giờ hành chính, gọi trước 15 phút'
       },
       items: [
         {
@@ -458,14 +458,147 @@ async function bootstrap() {
           quantity: 1,
           unitPrice: 250000,
           isCustom: true,
+          itemType: 'CUSTOM',
+          status: OrderItemStatus.PENDING,
           customDetails: {
-            frontMessage: 'Happy Anniversary Minh Anh ❤️',
-            backMessage: '14.02.2024 • Bespoke',
+            frontMessage: 'Happy Birthday My Love ❤️',
+            backMessage: 'Giftory Special 2026',
             fontFamily: 'Signature',
             engraveColor: 'Gold',
             selectedColor: 'Navy Blue'
           },
           depositRequired: 125000
+        }
+      ],
+      pricing: {
+        itemsTotal: 250000,
+        voucherDiscount: 0,
+        shippingFee: 0,
+        giftWrapFee: 0,
+        totalAmount: 250000,
+        depositAmount: 125000,
+        remainingCodAmount: 125000
+      },
+      paymentMode: PaymentMode.DEPOSIT_50,
+      paymentMethod: PaymentMethod.VIETQR,
+      paymentStatus: PaymentStatus.PARTIALLY_PAID_DEPOSIT_50,
+      orderStatus: OrderStatus.AWAITING_CONFIRMATION,
+      fulfillmentStatus: FulfillmentStatus.AWAITING_CONFIRMATION,
+      confirmationWait: {
+        minWaitHours: 12,
+        maxWaitHours: 48,
+        eligibleAt: new Date(Date.now() + 10 * 3600000), // Còn 10h nữa mới đủ 12h
+        deadlineAt: new Date(Date.now() + 46 * 3600000),
+        confirmedAt: null,
+        confirmedBy: ''
+      },
+      isPackaged: false,
+      deliveryInfo: {
+        carrier: 'Giao Hàng Tiết Kiệm (GHTK)',
+        trackingCode: 'GHTK-VN-8821941',
+        deliveryAttempts: [],
+        deliveryResult: 'PENDING',
+        failureReason: '',
+        allowRetry: true
+      },
+      shippingCarrier: 'Giao Hàng Tiết Kiệm Express',
+      timeline: [
+        { title: 'Tiếp nhận đơn hàng từ BP-03 (BR-01)', description: 'Đơn hàng được ghi nhận ở trạng thái "Chờ xác nhận đơn hàng".', timestamp: new Date(Date.now() - 2 * 3600000), completed: true },
+        { title: 'Đang trong thời gian chờ xác nhận (BR-02)', description: 'Thời gian chờ ít nhất sau 12 giờ và tối đa 48 giờ. Bộ đếm đang kích hoạt.', timestamp: new Date(Date.now() - 2 * 3600000), completed: false }
+      ]
+    },
+
+    // 2. Đơn chờ xác nhận (Tạo 16 giờ trước, ĐÃ ĐỦ ĐIỀU KIỆN XÁC NHẬN >= 12h - BR-02, BR-03)
+    {
+      orderCode: 'GF-104002',
+      userId: createdCustomers[1]._id,
+      customerInfo: {
+        name: createdCustomers[1].name,
+        phone: createdCustomers[1].phone,
+        email: createdCustomers[1].email,
+        address: 'Tòa nhà Landmark 81, 720A Điện Biên Phủ, Bình Thạnh, TP.HCM',
+        note: 'Đơn quà tặng kỷ niệm ngày cưới'
+      },
+      items: [
+        {
+          productId: prodCandle._id,
+          productName: prodCandle.name,
+          productImage: prodCandle.images[0],
+          variantName: 'Gỗ Thông & Lavender',
+          quantity: 2,
+          unitPrice: 215000,
+          isCustom: false,
+          itemType: 'READY_MADE',
+          status: OrderItemStatus.PENDING,
+          depositRequired: 0
+        }
+      ],
+      pricing: {
+        itemsTotal: 430000,
+        voucherDiscount: 30000,
+        shippingFee: 0,
+        giftWrapFee: 0,
+        totalAmount: 400000,
+        depositAmount: 400000,
+        remainingCodAmount: 0
+      },
+      paymentMode: PaymentMode.FULL_PAYMENT,
+      paymentMethod: PaymentMethod.VIETQR,
+      paymentStatus: PaymentStatus.PAID_FULL,
+      orderStatus: OrderStatus.AWAITING_CONFIRMATION,
+      fulfillmentStatus: FulfillmentStatus.AWAITING_CONFIRMATION,
+      confirmationWait: {
+        minWaitHours: 12,
+        maxWaitHours: 48,
+        eligibleAt: new Date(Date.now() - 4 * 3600000), // Đã đủ 12h từ 4h trước!
+        deadlineAt: new Date(Date.now() + 32 * 3600000),
+        confirmedAt: null,
+        confirmedBy: ''
+      },
+      isPackaged: false,
+      deliveryInfo: {
+        carrier: 'Giao Hàng Nhanh Hỏa Tốc',
+        trackingCode: 'GHN-VN-4402195',
+        deliveryAttempts: [],
+        deliveryResult: 'PENDING',
+        failureReason: '',
+        allowRetry: true
+      },
+      shippingCarrier: 'Giao Hàng Nhanh Hỏa Tốc (2h - 48h)',
+      timeline: [
+        { title: 'Tiếp nhận đơn hàng từ BP-03 (BR-01)', description: 'Đơn hàng được ghi nhận ở trạng thái "Chờ xác nhận đơn hàng".', timestamp: new Date(Date.now() - 16 * 3600000), completed: true },
+        { title: 'Đã hoàn thành thời gian chờ tối thiểu 12h (BR-02)', description: 'Đơn hàng đủ điều kiện để Admin Quản lý đơn hàng xác nhận.', timestamp: new Date(Date.now() - 4 * 3600000), completed: true }
+      ]
+    },
+
+    // 3. Đơn đã được xác nhận, trích xuất Order Items gồm cả Ready-made & Custom (US-04.01, BR-04, BR-05)
+    {
+      orderCode: 'GF-104003',
+      userId: createdCustomers[2]._id,
+      customerInfo: {
+        name: createdCustomers[2].name,
+        phone: createdCustomers[2].phone,
+        email: createdCustomers[2].email,
+        address: 'Số 88 Trần Phú, Quận Hải Châu, Đà Nẵng',
+        note: 'Cốc sứ khắc chữ vàng, nến thơm gói nơ satin đỏ'
+      },
+      items: [
+        {
+          productId: prodCup._id,
+          productName: prodCup.name,
+          productImage: prodCup.images[0],
+          variantName: 'Xanh Matcha',
+          quantity: 1,
+          unitPrice: 350000,
+          isCustom: true,
+          itemType: 'CUSTOM',
+          status: OrderItemStatus.PENDING, // Chờ xưởng nhận cấu hình
+          customDetails: {
+            frontMessage: 'Khắc Tên: Thùy Trang - 2026',
+            fontFamily: 'Serif',
+            engraveColor: 'Gold'
+          },
+          depositRequired: 175000
         },
         {
           productId: prodCandle._id,
@@ -475,41 +608,187 @@ async function bootstrap() {
           quantity: 1,
           unitPrice: 215000,
           isCustom: false,
+          itemType: 'READY_MADE',
+          status: OrderItemStatus.PENDING, // Chờ Admin lấy hàng
           depositRequired: 0
         }
       ],
       pricing: {
-        itemsTotal: 465000,
-        voucherDiscount: 30000,
+        itemsTotal: 565000,
+        voucherDiscount: 50000,
         shippingFee: 0,
         giftWrapFee: 0,
-        totalAmount: 435000,
+        totalAmount: 515000,
+        depositAmount: 175000,
+        remainingCodAmount: 340000
+      },
+      paymentMode: PaymentMode.DEPOSIT_50,
+      paymentMethod: PaymentMethod.MOMO,
+      paymentStatus: PaymentStatus.PARTIALLY_PAID_DEPOSIT_50,
+      orderStatus: OrderStatus.CONFIRMED,
+      fulfillmentStatus: FulfillmentStatus.CONFIRMED,
+      confirmationWait: {
+        minWaitHours: 12,
+        maxWaitHours: 48,
+        eligibleAt: new Date(Date.now() - 14 * 3600000),
+        deadlineAt: new Date(Date.now() + 20 * 3600000),
+        confirmedAt: new Date(Date.now() - 3 * 3600000),
+        confirmedBy: 'Admin Hoàng Nam'
+      },
+      isPackaged: false,
+      deliveryInfo: {
+        carrier: 'Giao Hàng Tiết Kiệm (GHTK)',
+        trackingCode: 'GHTK-VN-5509214',
+        deliveryAttempts: [],
+        deliveryResult: 'PENDING',
+        failureReason: '',
+        allowRetry: true
+      },
+      shippingCarrier: 'Giao Hàng Tiết Kiệm Express',
+      timeline: [
+        { title: 'Tiếp nhận đơn hàng từ BP-03 (BR-01)', description: 'Ghi nhận đơn "Chờ xác nhận đơn hàng".', timestamp: new Date(Date.now() - 20 * 3600000), completed: true },
+        { title: 'Đơn hàng đã được xác nhận (US-04.01, BR-04)', description: 'Admin Hoàng Nam xác nhận đơn. Trích xuất thông tin Order Items: 1 Ready-made Gift và 1 Custom Gift.', timestamp: new Date(Date.now() - 3 * 3600000), completed: true }
+      ]
+    },
+
+    // 4. Đơn có sản phẩm Custom đang gia công & kiểm định QC (US-04.03, BR-07, BR-08)
+    {
+      orderCode: 'GF-104004',
+      userId: createdCustomers[3]._id,
+      customerInfo: {
+        name: createdCustomers[3].name,
+        phone: createdCustomers[3].phone,
+        email: createdCustomers[3].email,
+        address: 'Số 45 Lê Lợi, Bến Nghé, Quận 1, TP.HCM',
+        note: 'Khắc laser vi điểm độ nét cao'
+      },
+      items: [
+        {
+          productId: prodCustom._id,
+          productName: prodCustom.name,
+          productImage: prodCustom.images[0],
+          variantName: 'Xanh Đại Dương',
+          quantity: 1,
+          unitPrice: 250000,
+          isCustom: true,
+          itemType: 'CUSTOM',
+          status: OrderItemStatus.IN_PRODUCTION,
+          customDetails: {
+            frontMessage: 'Giftory Signature - Phuong Thao',
+            fontFamily: 'Modern Sans',
+            engraveColor: 'Silver'
+          },
+          depositRequired: 125000
+        }
+      ],
+      pricing: {
+        itemsTotal: 250000,
+        voucherDiscount: 0,
+        shippingFee: 0,
+        giftWrapFee: 0,
+        totalAmount: 250000,
         depositAmount: 125000,
-        remainingCodAmount: 310000
+        remainingCodAmount: 125000
       },
       paymentMode: PaymentMode.DEPOSIT_50,
       paymentMethod: PaymentMethod.VIETQR,
       paymentStatus: PaymentStatus.PARTIALLY_PAID_DEPOSIT_50,
-      orderStatus: OrderStatus.PROCESSING,
+      orderStatus: OrderStatus.CONFIRMED,
       fulfillmentStatus: FulfillmentStatus.AT_WORKSHOP,
-      trackingCode: 'GHTK-VN-8821940',
-      shippingCarrier: 'Giao Hàng Nhanh Hỏa Tốc (2h - 48h)',
+      confirmationWait: {
+        minWaitHours: 12,
+        maxWaitHours: 48,
+        eligibleAt: new Date(Date.now() - 24 * 3600000),
+        deadlineAt: new Date(Date.now() + 10 * 3600000),
+        confirmedAt: new Date(Date.now() - 12 * 3600000),
+        confirmedBy: 'Admin Hoàng Nam'
+      },
+      isPackaged: false,
+      deliveryInfo: {
+        carrier: 'Giao Hàng Tiết Kiệm (GHTK)',
+        trackingCode: 'GHTK-VN-6601923',
+        deliveryAttempts: [],
+        deliveryResult: 'PENDING',
+        failureReason: '',
+        allowRetry: true
+      },
+      shippingCarrier: 'Giao Hàng Tiết Kiệm Express',
       timeline: [
-        { title: 'Đơn hàng khởi tạo thành công', description: 'Ghi nhận đơn GF-894212 trên hệ thống', timestamp: new Date(Date.now() - 24 * 3600000), completed: true },
-        { title: 'Thanh toán cọc 50% thành công', description: 'Đã nhận 125.000đ qua VietQR xưởng chế tác', timestamp: new Date(Date.now() - 20 * 3600000), completed: true },
-        { title: 'Gia công & Khắc Laser Fiber tại Xưởng', description: 'Nghệ nhân đang định vị phôi và khắc chữ ký', timestamp: new Date(Date.now() - 2 * 3600000), completed: true },
-        { title: 'Kiểm định KCS & Đóng gói quà', description: 'Kiểm tra độ bám dính và buộc nơ satin', timestamp: new Date(Date.now() + 4 * 3600000), completed: false },
-        { title: 'Giao hàng hỏa tốc', description: 'Bàn giao shipper hẹn giờ chu đáo', timestamp: new Date(Date.now() + 12 * 3600000), completed: false }
+        { title: 'Tiếp nhận đơn hàng từ BP-03 (BR-01)', description: 'Ghi nhận đơn.', timestamp: new Date(Date.now() - 36 * 3600000), completed: true },
+        { title: 'Đơn hàng đã được xác nhận (US-04.01, BR-04)', description: 'Đã trích xuất cấu hình Custom Gift.', timestamp: new Date(Date.now() - 12 * 3600000), completed: true },
+        { title: 'Bắt đầu sản xuất Custom Gift (US-04.03, BR-07)', description: 'Nhân viên sản xuất tiếp nhận cấu hình và gia công khắc laser vi điểm.', timestamp: new Date(Date.now() - 4 * 3600000), completed: true }
       ]
     },
-    // Order 2: Đang giao hàng
+
+    // 5. Đơn đã chuẩn bị đầy đủ và đã đóng gói (US-04.04, BR-09, chờ bàn giao Shipper)
     {
-      orderCode: 'GF-651920',
-      userId: createdCustomers[1]._id,
+      orderCode: 'GF-104005',
+      userId: createdCustomers[4]._id,
       customerInfo: {
-        name: createdCustomers[1].name,
-        phone: createdCustomers[1].phone,
-        email: createdCustomers[1].email,
+        name: createdCustomers[4].name,
+        phone: createdCustomers[4].phone,
+        email: createdCustomers[4].email,
+        address: 'Căn hộ Riverpark, Phú Mỹ Hưng, Quận 7, TP.HCM',
+        note: 'Đóng hộp nơ nhung cao cấp'
+      },
+      items: [
+        {
+          productId: prodCandle._id,
+          productName: prodCandle.name,
+          productImage: prodCandle.images[0],
+          variantName: 'Gỗ Thông & Lavender',
+          quantity: 1,
+          unitPrice: 215000,
+          isCustom: false,
+          itemType: 'READY_MADE',
+          status: OrderItemStatus.PREPARED,
+          preparedAt: new Date(Date.now() - 5 * 3600000),
+          preparedBy: 'Admin Hoàng Nam',
+          depositRequired: 0
+        }
+      ],
+      pricing: {
+        itemsTotal: 215000,
+        voucherDiscount: 0,
+        shippingFee: 30000,
+        giftWrapFee: 0,
+        totalAmount: 245000,
+        depositAmount: 245000,
+        remainingCodAmount: 0
+      },
+      paymentMode: PaymentMode.FULL_PAYMENT,
+      paymentMethod: PaymentMethod.VIETQR,
+      paymentStatus: PaymentStatus.PAID_FULL,
+      orderStatus: OrderStatus.CONFIRMED,
+      fulfillmentStatus: FulfillmentStatus.PACKAGED,
+      isPackaged: true,
+      packagedAt: new Date(Date.now() - 2 * 3600000),
+      packagedBy: 'Admin Hoàng Nam',
+      deliveryInfo: {
+        carrier: 'Giao Hàng Tiết Kiệm (GHTK)',
+        trackingCode: 'GHTK-VN-7703921',
+        deliveryAttempts: [],
+        deliveryResult: 'PENDING',
+        failureReason: '',
+        allowRetry: true
+      },
+      shippingCarrier: 'Giao Hàng Tiết Kiệm Express',
+      timeline: [
+        { title: 'Tiếp nhận đơn hàng từ BP-03 (BR-01)', description: 'Ghi nhận đơn.', timestamp: new Date(Date.now() - 30 * 3600000), completed: true },
+        { title: 'Đơn hàng đã được xác nhận (US-04.01)', description: 'Xác nhận đơn thành công.', timestamp: new Date(Date.now() - 10 * 3600000), completed: true },
+        { title: 'Đã lấy Ready-made Gift (US-04.02)', description: 'Admin đã lấy sản phẩm có sẵn.', timestamp: new Date(Date.now() - 5 * 3600000), completed: true },
+        { title: 'Đã hoàn tất đóng gói đơn hàng (US-04.04, BR-09)', description: 'Admin Hoàng Nam đã đóng gói hộp quà, sẵn sàng bàn giao cho Shipper.', timestamp: new Date(Date.now() - 2 * 3600000), completed: true }
+      ]
+    },
+
+    // 6. Đơn đã bàn giao cho Shipper - Đang giao hàng (In transit) (US-04.04, US-04.05, BR-10, BR-11)
+    {
+      orderCode: 'GF-104006',
+      userId: createdCustomers[5]._id,
+      customerInfo: {
+        name: createdCustomers[5].name,
+        phone: createdCustomers[5].phone,
+        email: createdCustomers[5].email,
         address: 'Số 12 Bà Triệu, Phường Tràng Tiền, Quận Hoàn Kiếm, Hà Nội',
         note: 'Giao sáng trước 11h'
       },
@@ -522,11 +801,8 @@ async function bootstrap() {
           quantity: 1,
           unitPrice: 350000,
           isCustom: true,
-          customDetails: {
-            frontMessage: 'Chúc Mừng Sinh Nhật Mẹ Yêu',
-            fontFamily: 'Serif',
-            engraveColor: 'Gold'
-          },
+          itemType: 'CUSTOM',
+          status: OrderItemStatus.QC_PASSED,
           depositRequired: 175000
         }
       ],
@@ -542,21 +818,99 @@ async function bootstrap() {
       paymentMode: PaymentMode.DEPOSIT_50,
       paymentMethod: PaymentMethod.MOMO,
       paymentStatus: PaymentStatus.PARTIALLY_PAID_DEPOSIT_50,
-      orderStatus: OrderStatus.SHIPPING,
+      orderStatus: OrderStatus.IN_TRANSIT,
       fulfillmentStatus: FulfillmentStatus.SHIPPED,
+      isPackaged: true,
+      packagedAt: new Date(Date.now() - 14 * 3600000),
+      packagedBy: 'Admin Hoàng Nam',
       trackingCode: 'GHTK-VN-9941203',
       shippingCarrier: 'Giao Hàng Tiết Kiệm Express',
+      deliveryInfo: {
+        carrier: 'Giao Hàng Tiết Kiệm Express',
+        trackingCode: 'GHTK-VN-9941203',
+        dispatchedAt: new Date(Date.now() - 10 * 3600000),
+        deliveryAttempts: [],
+        deliveryResult: 'PENDING',
+        failureReason: '',
+        allowRetry: true
+      },
       timeline: [
-        { title: 'Đơn hàng khởi tạo thành công', description: 'Tiếp nhận đơn hàng', timestamp: new Date(Date.now() - 48 * 3600000), completed: true },
-        { title: 'Đã nhận cọc 50%', description: 'Thanh toán cọc 175.000đ qua MoMo', timestamp: new Date(Date.now() - 44 * 3600000), completed: true },
-        { title: 'Hoàn tất chế tác xưởng', description: 'Đã nung men và khắc laser thìa vàng', timestamp: new Date(Date.now() - 20 * 3600000), completed: true },
-        { title: 'Đóng gói quà tặng lụa', description: 'Đã niêm phong tem seal chống rách vỡ', timestamp: new Date(Date.now() - 10 * 3600000), completed: true },
-        { title: 'Đang vận chuyển liên tỉnh', description: 'Bưu tá đang giao đến địa chỉ nhận', timestamp: new Date(Date.now() - 1 * 3600000), completed: true }
+        { title: 'Tiếp nhận đơn hàng từ BP-03 (BR-01)', description: 'Ghi nhận đơn.', timestamp: new Date(Date.now() - 48 * 3600000), completed: true },
+        { title: 'Đơn hàng đã được xác nhận (US-04.01)', description: 'Xác nhận đơn thành công.', timestamp: new Date(Date.now() - 30 * 3600000), completed: true },
+        { title: 'Hoàn tất sản xuất và đạt kiểm định QC (US-04.03)', description: 'QC Passed.', timestamp: new Date(Date.now() - 20 * 3600000), completed: true },
+        { title: 'Đóng gói hoàn tất (US-04.04, BR-09)', description: 'Đã đóng hộp quà.', timestamp: new Date(Date.now() - 14 * 3600000), completed: true },
+        { title: 'Bàn giao cho Shipper - "In transit" (US-04.04, BR-10)', description: 'Bàn giao GHTK Express. Mã vận đơn: GHTK-VN-9941203. Đang chuyển tới người nhận.', timestamp: new Date(Date.now() - 10 * 3600000), completed: true }
       ]
     },
-    // Order 3: Đã giao thành công
+
+    // 7. Đơn giao không thành công - Đang trả hàng về Giftory (US-04.06, BR-15, EF2)
     {
-      orderCode: 'GF-310842',
+      orderCode: 'GF-104007',
+      userId: createdCustomers[0]._id,
+      customerInfo: {
+        name: 'Trần Văn Long',
+        phone: '0977889900',
+        email: 'vanlong@gmail.com',
+        address: 'Số 102 Nguyễn Đình Chiểu, Phường 6, Quận 3, TP.HCM',
+        note: 'Giao chiều sau 16h'
+      },
+      items: [
+        {
+          productId: prodCandle._id,
+          productName: prodCandle.name,
+          productImage: prodCandle.images[0],
+          variantName: 'Gỗ Thông & Lavender',
+          quantity: 1,
+          unitPrice: 215000,
+          isCustom: false,
+          itemType: 'READY_MADE',
+          status: OrderItemStatus.PREPARED,
+          depositRequired: 0
+        }
+      ],
+      pricing: {
+        itemsTotal: 215000,
+        voucherDiscount: 0,
+        shippingFee: 30000,
+        giftWrapFee: 0,
+        totalAmount: 245000,
+        depositAmount: 0,
+        remainingCodAmount: 245000
+      },
+      paymentMode: PaymentMode.FULL_PAYMENT,
+      paymentMethod: PaymentMethod.COD,
+      paymentStatus: PaymentStatus.UNPAID,
+      orderStatus: OrderStatus.IN_TRANSIT,
+      fulfillmentStatus: FulfillmentStatus.RETURNING,
+      isPackaged: true,
+      packagedAt: new Date(Date.now() - 40 * 3600000),
+      packagedBy: 'Admin Hoàng Nam',
+      trackingCode: 'GHTK-VN-8833910',
+      shippingCarrier: 'Giao Hàng Tiết Kiệm Express',
+      deliveryInfo: {
+        carrier: 'Giao Hàng Tiết Kiệm Express',
+        trackingCode: 'GHTK-VN-8833910',
+        dispatchedAt: new Date(Date.now() - 36 * 3600000),
+        deliveryAttempts: [
+          { attemptNumber: 1, timestamp: new Date(Date.now() - 24 * 3600000), success: false, failureReason: 'Khách không nghe máy (3 cuộc gọi)', allowRetry: true, note: 'Hẹn giao lại ngày mai' },
+          { attemptNumber: 2, timestamp: new Date(Date.now() - 6 * 3600000), success: false, failureReason: 'Khách từ chối nhận hàng do đổi ý', allowRetry: false, note: 'Khách xác nhận không nhận nữa' }
+        ],
+        deliveryResult: 'FAILED',
+        failureReason: 'Khách từ chối nhận hàng do đổi ý',
+        allowRetry: false,
+        returnedAt: new Date(Date.now() - 5 * 3600000)
+      },
+      timeline: [
+        { title: 'Tiếp nhận đơn hàng từ BP-03 (BR-01)', description: 'Ghi nhận đơn COD.', timestamp: new Date(Date.now() - 60 * 3600000), completed: true },
+        { title: 'Bàn giao cho Shipper - "In transit" (BR-10)', description: 'Bàn giao GHTK Express.', timestamp: new Date(Date.now() - 36 * 3600000), completed: true },
+        { title: 'Giao không thành công lần 1 (BR-14)', description: 'Khách không nghe máy. Cho phép giao lại.', timestamp: new Date(Date.now() - 24 * 3600000), completed: true },
+        { title: 'Giao hàng không thành công - Đang trả hàng về Giftory (US-04.06, BR-15, EF2)', description: 'Lý do: "Khách từ chối nhận hàng do đổi ý". Không được phép giao lại, Delivery Service chuyển hàng trả về kho Giftory.', timestamp: new Date(Date.now() - 5 * 3600000), completed: true }
+      ]
+    },
+
+    // 8. Đơn đã giao hàng thành công (US-04.05, BR-12)
+    {
+      orderCode: 'GF-104008',
       userId: createdCustomers[2]._id,
       customerInfo: {
         name: createdCustomers[2].name,
@@ -574,6 +928,8 @@ async function bootstrap() {
           quantity: 2,
           unitPrice: 215000,
           isCustom: false,
+          itemType: 'READY_MADE',
+          status: OrderItemStatus.PREPARED,
           depositRequired: 0
         }
       ],
@@ -591,13 +947,28 @@ async function bootstrap() {
       paymentStatus: PaymentStatus.PAID_FULL,
       orderStatus: OrderStatus.DELIVERED,
       fulfillmentStatus: FulfillmentStatus.DELIVERED,
+      isPackaged: true,
+      packagedAt: new Date(Date.now() - 72 * 3600000),
+      packagedBy: 'Admin Hoàng Nam',
       trackingCode: 'GHTK-VN-1102941',
       shippingCarrier: 'Giao Hàng Nhanh Hỏa Tốc',
+      deliveryInfo: {
+        carrier: 'Giao Hàng Nhanh Hỏa Tốc',
+        trackingCode: 'GHTK-VN-1102941',
+        dispatchedAt: new Date(Date.now() - 50 * 3600000),
+        deliveryAttempts: [
+          { attemptNumber: 1, timestamp: new Date(Date.now() - 24 * 3600000), success: true, failureReason: '', allowRetry: false, note: 'Khách ký nhận đầy đủ' }
+        ],
+        deliveryResult: 'SUCCESS',
+        failureReason: '',
+        allowRetry: false
+      },
       timeline: [
-        { title: 'Đơn hàng khởi tạo thành công', description: 'Ghi nhận đơn hàng', timestamp: new Date(Date.now() - 96 * 3600000), completed: true },
-        { title: 'Thanh toán 100% trọn gói', description: 'Nhận 400.000đ qua VietQR', timestamp: new Date(Date.now() - 95 * 3600000), completed: true },
-        { title: 'Đóng gói quà tặng lụa', description: 'Kiểm định chất lượng 100%', timestamp: new Date(Date.now() - 72 * 3600000), completed: true },
-        { title: 'Giao hàng thành công', description: 'Khách hàng đã ký nhận trọn vẹn', timestamp: new Date(Date.now() - 24 * 3600000), completed: true }
+        { title: 'Tiếp nhận đơn hàng từ BP-03 (BR-01)', description: 'Ghi nhận đơn hàng.', timestamp: new Date(Date.now() - 96 * 3600000), completed: true },
+        { title: 'Đơn hàng đã được xác nhận (US-04.01)', description: 'Xác nhận đơn thành công.', timestamp: new Date(Date.now() - 80 * 3600000), completed: true },
+        { title: 'Đóng gói quà tặng lụa (US-04.04, BR-09)', description: 'Đã hoàn tất đóng gói.', timestamp: new Date(Date.now() - 72 * 3600000), completed: true },
+        { title: 'Bàn giao cho Shipper (BR-10)', description: 'Đang vận chuyển.', timestamp: new Date(Date.now() - 50 * 3600000), completed: true },
+        { title: 'Đã giao hàng thành công (US-04.05, BR-12)', description: 'Delivery Service xác nhận giao hàng thành công. Hoàn tất quá trình giao hàng và kết thúc quy trình BP-04.', timestamp: new Date(Date.now() - 24 * 3600000), completed: true }
       ]
     }
   ];
