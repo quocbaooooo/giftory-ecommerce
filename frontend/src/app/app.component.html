@@ -11,15 +11,47 @@
 
     <!-- Main Content Canvas (Offset by pl-16 md:pl-20 to clear sidebar rail) -->
     <div class="pl-16 md:pl-20 flex flex-col" [ngClass]="isCustomStudioRoute() ? 'h-full lg:h-screen lg:overflow-hidden min-h-0' : 'min-h-screen'">
-      <!-- Optional Subtle Top Announcement Bar (Hidden in Custom Studio) -->
-      <div *ngIf="!isCustomStudioRoute()" class="bg-gradient-to-r from-[#7C3AED] via-[#9333EA] to-[#EC4899] text-white text-[11px] font-semibold py-1.5 px-6 text-center tracking-wide flex items-center justify-between shadow-xs">
-        <div class="flex items-center gap-2 mx-auto">
-          <span class="material-symbols-outlined text-sm">stars</span>
-          <span>Hệ sinh thái Quà Tặng Bespoke Giftory • Miễn phí vận chuyển cho đơn từ 499k & Tặng kèm thiệp chúc mừng viết tay độc bản</span>
+      <!-- Auto-Rotating Top Announcement Bar Ticker (Hidden in Custom Studio) -->
+      <div *ngIf="!isCustomStudioRoute()" class="bg-gradient-to-r from-[#7C3AED] via-[#9333EA] to-[#EC4899] text-white py-1.5 px-3 md:px-6 tracking-wide flex items-center justify-between shadow-xs border-b border-purple-800/20 relative overflow-hidden h-9 select-none">
+        <!-- Prev Button -->
+        <button (click)="prevAnnouncement()" class="text-white/70 hover:text-white transition-colors p-0.5 flex items-center justify-center cursor-pointer" title="Thông điệp trước">
+          <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+        </button>
+
+        <!-- Rotating Message Viewport -->
+        <div class="flex-1 flex items-center justify-center overflow-hidden relative h-full mx-2">
+          <ng-container *ngFor="let msg of announcements; let i = index">
+            <div 
+              *ngIf="currentAnnouncementIndex() === i"
+              class="flex items-center gap-2 animate-fade-in-up font-medium text-center"
+            >
+              <span class="px-2 py-0.5 rounded-full bg-white/20 text-white font-bold text-[10px] uppercase tracking-wider shrink-0 hidden sm:inline">
+                {{ msg.badge }}
+              </span>
+              <span class="material-symbols-outlined text-[16px] text-amber-300 shrink-0">{{ msg.icon }}</span>
+              <span class="truncate text-[11px] sm:text-[12px] font-semibold">{{ msg.text }}</span>
+              <a [routerLink]="msg.link" class="underline hover:text-amber-200 text-[11px] font-bold shrink-0 ml-1 transition-colors hidden md:inline-flex items-center gap-0.5">
+                <span>{{ msg.linkText }}</span>
+                <span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+              </a>
+            </div>
+          </ng-container>
         </div>
-        <a routerLink="/loyalty" class="underline hover:text-white/80 text-[10px] font-bold hidden lg:inline">
-          Nhận 100 điểm thưởng
-        </a>
+
+        <!-- Dots & Next Button -->
+        <div class="flex items-center gap-2">
+          <div class="hidden lg:flex items-center gap-1">
+            <span 
+              *ngFor="let msg of announcements; let i = index" 
+              (click)="currentAnnouncementIndex.set(i)"
+              class="h-1.5 rounded-full transition-all cursor-pointer"
+              [ngClass]="currentAnnouncementIndex() === i ? 'bg-amber-300 w-3' : 'bg-white/40 hover:bg-white/70 w-1.5'"
+            ></span>
+          </div>
+          <button (click)="nextAnnouncement()" class="text-white/70 hover:text-white transition-colors p-0.5 flex items-center justify-center cursor-pointer" title="Thông điệp tiếp theo">
+            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+        </div>
       </div>
 
       <!-- Main Router Outlet Page View -->
