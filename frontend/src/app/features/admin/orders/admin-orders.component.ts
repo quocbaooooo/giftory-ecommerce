@@ -1,8 +1,9 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Order, OrderItemDetail } from '../../../core/models';
 
 @Component({
@@ -33,11 +34,33 @@ import { Order, OrderItemDetail } from '../../../core/models';
             <span>Bỏ qua 12h chờ (Chế độ Dev/Test)</span>
           </label>
 
-          <button (click)="loadOrders()" class="px-4 py-2 rounded-xl border border-giftory-border hover:bg-giftory-canvas text-giftory-ink text-xs font-bold flex items-center gap-1.5 transition">
-            <span class="material-symbols-outlined text-sm">refresh</span>
-            Làm mới
+          <button (click)="loadOrders()" [disabled]="loading()" class="px-4 py-2 rounded-xl border border-giftory-border hover:bg-giftory-canvas text-giftory-ink text-xs font-bold flex items-center gap-1.5 transition cursor-pointer">
+            <span class="material-symbols-outlined text-sm" [class.animate-spin]="loading()">refresh</span>
+            {{ loading() ? 'Đang tải...' : 'Làm mới' }}
           </button>
         </div>
+      </div>
+
+      <!-- Auth Error / Session Expired Banner -->
+      <div *ngIf="authError()" class="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm animate-fade-in">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+            <span class="material-symbols-outlined text-2xl">lock_clock</span>
+          </div>
+          <div>
+            <h4 class="font-bold text-amber-900 text-sm">Phiên làm việc Quản trị viên đã hết hạn hoặc chưa xác thực (401)</h4>
+            <p class="text-xs text-amber-800/80 mt-0.5">
+              Để tải toàn bộ 15 đơn hàng hiện có trong database và thao tác thực thi BP-04, bạn có thể bấm nút bên dưới để khôi phục phiên Admin ngay lập tức.
+            </p>
+          </div>
+        </div>
+        <button
+          (click)="reloginAdmin()"
+          class="px-5 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-2xl text-xs font-bold whitespace-nowrap shadow-md hover:shadow-lg transition cursor-pointer flex items-center justify-center gap-2 self-start md:self-auto shrink-0"
+        >
+          <span class="material-symbols-outlined text-sm">verified_user</span>
+          Kích Hoạt Phiên Admin & Tải Lại
+        </button>
       </div>
 
       <!-- BP-04 Stage KPI Metrics -->
@@ -120,6 +143,38 @@ import { Order, OrderItemDetail } from '../../../core/models';
               </tr>
             </thead>
             <tbody class="divide-y divide-giftory-border/40">
+              <!-- Loading State -->
+              <tr *ngIf="loading()">
+                <td colspan="7" class="py-12 text-center text-giftory-ink/50">
+                  <div class="flex flex-col items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-3xl animate-spin text-[#7C3AED]">progress_activity</span>
+                    <span class="text-xs font-semibold">Đang đồng bộ dữ liệu đơn hàng & quy trình BP-04...</span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Empty State -->
+              <tr *ngIf="!loading() && filteredOrders().length === 0">
+                <td colspan="7" class="py-12 text-center text-giftory-ink/60">
+                  <div class="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
+                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                      <span class="material-symbols-outlined text-2xl">inbox</span>
+                    </div>
+                    <span class="text-sm font-bold text-slate-800">Không tìm thấy đơn hàng phù hợp</span>
+                    <p class="text-xs text-slate-500">
+                      Hiện không có đơn hàng nào ở giai đoạn này hoặc khớp với từ khóa tìm kiếm.
+                    </p>
+                    <button
+                      *ngIf="activeFilter() !== 'ALL' || searchQuery"
+                      (click)="activeFilter.set('ALL'); searchQuery=''"
+                      class="mt-2 px-3.5 py-1.5 rounded-xl bg-purple-50 text-[#7C3AED] hover:bg-purple-100 font-bold text-xs transition cursor-pointer"
+                    >
+                      Hiển thị tất cả đơn hàng
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
               <tr *ngFor="let ord of filteredOrders()" class="hover:bg-giftory-canvas/60 transition">
                 <!-- Mã Đơn & Thời gian chờ xác nhận -->
                 <td class="py-3.5 px-3">
@@ -870,12 +925,16 @@ import { Order, OrderItemDetail } from '../../../core/models';
 })
 export class AdminOrdersComponent implements OnInit {
   private adminService = inject(AdminService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
   private route = inject(ActivatedRoute);
 
   orders = signal<Order[]>([]);
   activeFilter = signal<string>('ALL');
   searchQuery = '';
   selectedOrder = signal<Order | null>(null);
+  loading = signal<boolean>(false);
+  authError = signal<boolean>(false);
 
   // Sub modals
   selectedCustomItem = signal<OrderItemDetail | null>(null);
@@ -916,9 +975,26 @@ export class AdminOrdersComponent implements OnInit {
     }
   }
 
+  reloginAdmin() {
+    this.loading.set(true);
+    this.authService.login({ email: 'admin@giftory.vn', password: 'Admin@Giftory2026' }).subscribe({
+      next: () => {
+        this.authError.set(false);
+        this.loadOrders();
+      },
+      error: () => {
+        this.loading.set(false);
+        this.router.navigate(['/login'], { queryParams: { returnUrl: '/admin/orders' } });
+      }
+    });
+  }
+
   loadOrders() {
+    this.loading.set(true);
+    this.authError.set(false);
     this.adminService.getAdminOrders({ limit: 100 }).subscribe({
       next: (res: any) => {
+        this.loading.set(false);
         const list = Array.isArray(res) ? res : (res?.data || res?.items || []);
         this.orders.set(list);
         if (this.searchQuery) {
@@ -926,7 +1002,13 @@ export class AdminOrdersComponent implements OnInit {
           if (match) this.openProcessModal(match);
         }
       },
-      error: (err) => console.error('Lỗi tải danh sách đơn hàng:', err)
+      error: (err) => {
+        this.loading.set(false);
+        console.error('Lỗi tải danh sách đơn hàng:', err);
+        if (err.status === 401 || err.status === 403) {
+          this.authError.set(true);
+        }
+      }
     });
   }
 

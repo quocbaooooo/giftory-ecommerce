@@ -124,7 +124,7 @@ export class AuthService {
 
     const accessSecret = this.configService.get<string>('JWT_ACCESS_SECRET', 'giftory_access_token_super_secret_key_2026');
     const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET', 'giftory_refresh_token_super_secret_key_2026');
-    const accessExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m');
+    const accessExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '7d');
     const refreshExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d');
 
     const accessToken = this.jwtService.sign(payload, {

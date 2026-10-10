@@ -8,9 +8,9 @@ import { AuthService } from '../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="min-h-screen bg-[#F4F0FA] flex text-giftory-ink">
-      <!-- Admin Sidebar Navigation (Stitch Screen 3079406608969517755) -->
-      <aside class="w-64 bg-white border-r border-giftory-border flex flex-col justify-between p-6 shrink-0 hidden md:flex shadow-xs">
+    <div class="h-screen bg-[#F4F0FA] flex text-giftory-ink overflow-hidden">
+      <!-- Admin Sidebar Navigation (Fixed Sticky Shell) -->
+      <aside class="w-64 h-screen bg-white border-r border-giftory-border flex flex-col justify-between p-6 shrink-0 hidden md:flex shadow-xs sticky top-0 overflow-y-auto z-40 select-none">
         <div class="space-y-8">
           <!-- Admin Brand -->
           <div class="flex items-center gap-3">
@@ -62,15 +62,15 @@ import { AuthService } from '../../core/services/auth.service';
           </nav>
         </div>
 
-        <!-- Admin Profile & Switch to Store -->
-        <div class="space-y-4 pt-6 border-t border-giftory-border/60">
+        <!-- Admin Profile & Switch to Store (Always pinned at bottom) -->
+        <div class="space-y-4 pt-6 border-t border-giftory-border/60 mt-auto">
           <div class="flex items-center gap-3 p-2 bg-giftory-canvas rounded-2xl">
             <div class="w-9 h-9 rounded-xl bg-giftory-primary text-white flex items-center justify-center font-bold text-sm">
               AD
             </div>
             <div class="overflow-hidden">
               <span class="text-xs font-bold text-giftory-ink block truncate">{{ authService.currentUser()?.fullName || 'Admin User' }}</span>
-              <span class="text-[10px] text-giftory-primary font-mono block">admin&#64;giftory.vn</span>
+              <span class="text-[10px] text-giftory-primary font-mono block truncate">{{ authService.currentUser()?.email || 'admin@giftory.vn' }}</span>
             </div>
           </div>
 
@@ -79,7 +79,7 @@ import { AuthService } from '../../core/services/auth.service';
               <span class="material-symbols-outlined text-sm">storefront</span>
               Về Trang Mua Quà
             </a>
-            <button (click)="logout()" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-giftory-sale hover:bg-giftory-sale/10 rounded-xl transition">
+            <button (click)="logout()" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-giftory-sale hover:bg-giftory-sale/10 rounded-xl transition cursor-pointer">
               <span class="material-symbols-outlined text-sm">logout</span>
               Đăng Xuất
             </button>
@@ -87,10 +87,10 @@ import { AuthService } from '../../core/services/auth.service';
         </div>
       </aside>
 
-      <!-- Main Content Area -->
-      <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <!-- Main Content Area with independent scrolling -->
+      <main class="flex-1 h-screen overflow-y-auto flex flex-col min-w-0">
         <!-- Top Mobile Header -->
-        <header class="h-16 bg-white border-b border-giftory-border flex items-center justify-between px-6 md:hidden">
+        <header class="h-16 bg-white border-b border-giftory-border flex items-center justify-between px-6 md:hidden sticky top-0 z-30">
           <span class="font-display font-bold text-giftory-primary">Giftory Admin</span>
           <div class="flex items-center gap-4 text-xs font-bold">
             <a routerLink="/admin/dashboard">KPI</a>
