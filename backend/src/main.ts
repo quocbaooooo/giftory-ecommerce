@@ -6,9 +6,15 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
+import { json, urlencoded } from 'express';
+
 async function bootstrap() {
   const logger = new Logger('GiftoryBackend');
   const app = await NestFactory.create(AppModule);
+
+  // Increase body parser payload limit to prevent 413 Payload Too Large for base64 designs
+  app.use(json({ limit: '20mb' }));
+  app.use(urlencoded({ limit: '20mb', extended: true }));
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 3000);

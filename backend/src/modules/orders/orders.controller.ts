@@ -48,6 +48,15 @@ export class OrdersController {
     return this.ordersService.getOrderByCode(orderCode);
   }
 
+  @Post(':orderCode/pay')
+  @ApiOperation({ summary: 'Xử lý phản hồi từ Payment Gateway (Simulated Payment Gateway)' })
+  async processPaymentSimulation(
+    @Param('orderCode') orderCode: string,
+    @Body() body: { success: boolean; paymentType?: 'DEPOSIT_50' | 'FULL_100' }
+  ) {
+    return this.ordersService.processPaymentSimulation(orderCode, body);
+  }
+
   @Patch(':id/cancel')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -58,6 +67,7 @@ export class OrdersController {
   ) {
     return this.ordersService.cancelOrder(id, userId);
   }
+
 
   // Admin endpoints
   @Get('admin/all')

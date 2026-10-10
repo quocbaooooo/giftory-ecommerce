@@ -53,7 +53,7 @@ import { Product, ProductVariant } from '../../../core/models';
               @if (prod.isCustomizable) {
                 <div class="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#10B981] text-white font-bold text-xs shadow-md flex items-center gap-1.5">
                   <span class="material-symbols-outlined text-[15px]">palette</span>
-                  <span>Cọc 50% Thiết Kế (BR-PAY05)</span>
+                  <span>Cọc 50% Thiết Kế</span>
                 </div>
               }
             </div>
@@ -122,18 +122,18 @@ import { Product, ProductVariant } from '../../../core/models';
                 </div>
               </div>
 
-              <!-- Bespoke Notice Banner (BR-PAY05 & BP-02) -->
+              <!-- Bespoke Notice Banner -->
               @if (prod.isCustomizable) {
                 <div class="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-purple-50 to-emerald-50 border border-emerald-200 text-slate-700 text-xs leading-relaxed flex flex-col gap-2.5">
                   <div class="flex items-start gap-3">
                     <span class="material-symbols-outlined text-emerald-600 text-xl shrink-0 mt-0.5">verified_user</span>
                     <div>
-                      <strong class="text-emerald-800 font-bold block mb-0.5">Chính Sách Chế Tác Quà Tặng Theo Yêu Cầu (BR-PAY05 & BP-02)</strong>
+                      <strong class="text-emerald-800 font-bold block mb-0.5">Chính Sách Chế Tác Quà Tặng Theo Yêu Cầu</strong>
                       Sản phẩm này hỗ trợ tùy chỉnh cá nhân hóa 2D/3D trực quan. Bạn chỉ cần cọc trước 50% khi đặt hàng, 50% còn lại thanh toán COD khi nhận hàng và kiểm tra trọn vẹn.
                     </div>
                   </div>
 
-                  <!-- Customizable Attributes List (AC1 & BR-CUS01) -->
+                  <!-- Customizable Attributes List -->
                   <div class="pt-2 border-t border-emerald-200/60 flex items-center gap-1.5 flex-wrap text-[11px] font-medium text-slate-600">
                     <span class="font-bold text-[#7C3AED] flex items-center gap-1">
                       <span class="material-symbols-outlined text-[14px]">tune</span>
@@ -211,7 +211,7 @@ import { Product, ProductVariant } from '../../../core/models';
                   class="w-full sm:flex-1 py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95"
                 >
                   <span class="material-symbols-outlined text-[20px]">view_in_ar</span>
-                  <span>Custom 2D/3D Trong Studio (BP-02)</span>
+                  <span>Tự Thiết Kế 2D/3D Trong Studio</span>
                 </a>
               }
 

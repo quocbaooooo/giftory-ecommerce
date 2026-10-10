@@ -50,9 +50,11 @@ export class CartController {
   async updateQuantity(
     @Param('index') index: number,
     @Body('quantity') quantity: number,
-    @Query('sessionId') sessionId?: string,
+    @Body('sessionId') bodySessionId?: string,
+    @Query('sessionId') querySessionId?: string,
     @CurrentUser('sub') userId?: string
   ) {
+    const sessionId = bodySessionId || querySessionId;
     return this.cartService.updateItemQuantity(Number(index), quantity, userId, sessionId);
   }
 
@@ -64,9 +66,11 @@ export class CartController {
     @Param('index') index: number,
     @Body('customDetails') customDetails: any,
     @Body('variantName') variantName?: string,
-    @Query('sessionId') sessionId?: string,
+    @Body('sessionId') bodySessionId?: string,
+    @Query('sessionId') querySessionId?: string,
     @CurrentUser('sub') userId?: string
   ) {
+    const sessionId = bodySessionId || querySessionId;
     return this.cartService.updateItemCustomDetails(Number(index), customDetails, variantName, userId, sessionId);
   }
 
@@ -76,9 +80,11 @@ export class CartController {
   @ApiOperation({ summary: 'Xóa sản phẩm khỏi giỏ hàng' })
   async removeItem(
     @Param('index') index: number,
-    @Query('sessionId') sessionId?: string,
+    @Body('sessionId') bodySessionId?: string,
+    @Query('sessionId') querySessionId?: string,
     @CurrentUser('sub') userId?: string
   ) {
+    const sessionId = bodySessionId || querySessionId;
     return this.cartService.removeItem(Number(index), userId, sessionId);
   }
 
@@ -88,9 +94,11 @@ export class CartController {
   @ApiOperation({ summary: 'Áp dụng mã ưu đãi/voucher cho giỏ hàng' })
   async applyVoucher(
     @Body('code') code: string,
-    @Query('sessionId') sessionId?: string,
+    @Body('sessionId') bodySessionId?: string,
+    @Query('sessionId') querySessionId?: string,
     @CurrentUser('sub') userId?: string
   ) {
+    const sessionId = bodySessionId || querySessionId;
     return this.cartService.applyVoucher(code, userId, sessionId);
   }
 
@@ -100,9 +108,11 @@ export class CartController {
   @ApiOperation({ summary: 'Chuyển đổi hình thức thanh toán (Cọc 50% hoặc 100% trọn gói)' })
   async setPaymentMode(
     @Body('mode') mode: PaymentMode,
-    @Query('sessionId') sessionId?: string,
+    @Body('sessionId') bodySessionId?: string,
+    @Query('sessionId') querySessionId?: string,
     @CurrentUser('sub') userId?: string
   ) {
+    const sessionId = bodySessionId || querySessionId;
     return this.cartService.setPaymentMode(mode, userId, sessionId);
   }
 
@@ -111,9 +121,11 @@ export class CartController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Xóa toàn bộ giỏ hàng' })
   async clearCart(
-    @Query('sessionId') sessionId?: string,
+    @Body('sessionId') bodySessionId?: string,
+    @Query('sessionId') querySessionId?: string,
     @CurrentUser('sub') userId?: string
   ) {
+    const sessionId = bodySessionId || querySessionId;
     return this.cartService.clearCart(userId, sessionId);
   }
 }

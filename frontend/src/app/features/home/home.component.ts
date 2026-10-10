@@ -122,11 +122,11 @@ import { Product, Category } from '../../core/models';
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 border-b border-slate-100 pb-4">
             <div>
               <div class="flex items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs">BP-02 & BP-03</span>
+                <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs">Thiết Kế Độc Bản</span>
                 <h2 class="text-xl sm:text-2xl font-bold text-[#1E1B4B]">Quà Tặng Cá Nhân Hóa • Chế Tác Riêng (Bespoke 1:1)</h2>
               </div>
               <p class="text-slate-500 text-xs sm:text-sm mt-1">
-                Tự tay khắc tên, thông điệp, chọn màu ánh kim và xem trước mô phỏng 3D thời gian thực. Áp dụng chính sách cọc 50% (<span class="font-semibold text-[#7C3AED]">BR-PAY05</span>).
+                Tự tay khắc tên, thông điệp, chọn màu ánh kim và xem trước mô phỏng 3D thời gian thực. Áp dụng chính sách cọc 50% linh hoạt.
               </p>
             </div>
             <a routerLink="/custom-studio" class="px-5 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-semibold text-xs flex items-center gap-1.5 self-start sm:self-auto shadow-md shadow-purple-300 transition-all">

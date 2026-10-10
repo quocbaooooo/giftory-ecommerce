@@ -401,8 +401,7 @@ interface VoucherItem {
                 Yên Tâm Săn Deal: Chính Sách Đặt Cọc 50% Giữ Giá Khuyến Mãi
               </h3>
               <p class="text-xs text-[#6B7280] mt-0.5">
-                Áp dụng theo quy chuẩn Bespoke Gifting <strong class="text-[#7C3AED] font-semibold">BR-PAY05</strong> &amp;
-                <strong class="text-[#7C3AED] font-semibold">BP-03</strong>
+                Áp dụng theo quy chuẩn Bespoke Gifting chính hãng Giftory Studio
               </p>
             </div>
           </div>

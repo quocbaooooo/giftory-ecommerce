@@ -35,11 +35,12 @@ export class OrdersService {
 
     const cart = await this.cartModel.findOne(query).populate('items.productId');
     if (!cart || !cart.items || cart.items.length === 0) {
-      throw new BadRequestException('Giỏ hàng đang trống, không thể tạo đơn hàng');
+      throw new BadRequestException('Giỏ hàng không hợp lệ hoặc đang trống, không thể tạo đơn hàng');
     }
 
     let itemsTotal = 0;
     let customDeposit = 0;
+    let hasCustomProduct = false;
 
     const orderItems = cart.items.map(item => {
       const product: any = item.productId;
@@ -48,6 +49,8 @@ export class OrdersService {
       itemsTotal += subtotal;
 
       const isCustom = item.isCustom || (product && product.isCustomizable);
+      if (isCustom) hasCustomProduct = true;
+
       const depositRequired = isCustom ? Math.round(subtotal * 0.5) : 0;
       customDeposit += depositRequired;
 
@@ -64,20 +67,43 @@ export class OrdersService {
       };
     });
 
-    const shippingFee = itemsTotal > 500000 ? 0 : 30000;
+    // BP-03 Rule: Free shipping for orders >= 250,000 VND (Standard)
+    const shippingMethod = dto.shippingMethod || 'STANDARD';
+    let shippingFee = 0;
+    if (shippingMethod === 'EXPRESS') {
+      shippingFee = 50000;
+    } else {
+      shippingFee = itemsTotal >= 250000 ? 0 : 30000;
+    }
+
     const giftWrapFee = 0;
     const voucherDiscount = cart.voucherDiscount || 0;
     const totalAmount = Math.max(0, itemsTotal - voucherDiscount + shippingFee + giftWrapFee);
 
+    // Calculate deposit requirement based on BP-03
     let depositAmount = 0;
-    if (dto.paymentMode === PaymentMode.FULL_PAYMENT) {
-      depositAmount = totalAmount;
+    if (hasCustomProduct) {
+      if (dto.paymentMethod === PaymentMethod.COD) {
+        // Custom product + COD => 50% deposit required via QR (BR-03, AF2)
+        depositAmount = Math.round(totalAmount * 0.5);
+      } else {
+        // Custom product + QR/Online => 100% payment (BR-03, AF2)
+        depositAmount = totalAmount;
+      }
     } else {
-      depositAmount = customDeposit;
+      if (dto.paymentMethod === PaymentMethod.COD) {
+        // Standard product + COD => No online deposit required (BR-04, AF3)
+        depositAmount = 0;
+      } else {
+        // Standard product + QR/Online => 100% payment (BR-04, AF4)
+        depositAmount = totalAmount;
+      }
     }
 
     const remainingCodAmount = Math.max(0, totalAmount - depositAmount);
     const orderCode = `GF-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const isStandardCod = !hasCustomProduct && dto.paymentMethod === PaymentMethod.COD;
 
     const initialTimeline = [
       {
@@ -87,32 +113,34 @@ export class OrdersService {
         completed: true
       },
       {
-        title: 'Chờ duyệt & Xác nhận cọc 50%',
-        description: depositAmount > 0 
-          ? `Cần thanh toán cọc ${depositAmount.toLocaleString('vi-VN')}đ để xưởng bắt đầu cắt phôi và khắc laser.`
-          : 'Đơn hàng không yêu cầu cọc. Đang chuẩn bị chuyển sang bộ phận đóng gói.',
+        title: isStandardCod ? 'Ghi nhận đơn hàng COD Pending' : (hasCustomProduct ? 'Đặt cọc 50% & Chờ duyệt xưởng' : 'Thanh toán trực tuyến QR 100%'),
+        description: isStandardCod
+          ? 'Đơn hàng sản phẩm có sẵn sử dụng COD (COD Pending). Chuẩn bị chuyển đóng gói.'
+          : (depositAmount > 0 
+              ? `Cần thanh toán ${depositAmount.toLocaleString('vi-VN')}đ qua mã QR để chuyển thông tin xưởng chế tác.`
+              : 'Đơn hàng sẵn sàng đóng gói.'),
         timestamp: new Date(),
-        completed: dto.paymentMethod === PaymentMethod.COD && depositAmount === 0
+        completed: isStandardCod
       },
       {
-        title: 'Gia công & Chế tác tại Xưởng Giftory',
-        description: 'Đội ngũ nghệ nhân tiến hành xử lý nhiệt, khắc laser vi điểm hoặc in UV chuyên dụng.',
+        title: hasCustomProduct ? 'Gia công & Chế tác tại Xưởng Giftory' : 'Đóng gói sản phẩm quà tặng',
+        description: hasCustomProduct 
+          ? 'Đội ngũ nghệ nhân tiến hành xử lý nhiệt, khắc laser vi điểm hoặc in UV chuyên dụng.'
+          : 'Xịt tinh dầu hoa khô, niêm phong tem seal và đóng hộp quà.',
         timestamp: new Date(Date.now() + 6 * 60 * 60 * 1000),
         completed: false
       },
       {
-        title: 'Kiểm định KCS & Đóng gói quà tặng lụa',
-        description: 'Kiểm tra độ giữ nhiệt/màu mực, xịt tinh dầu hoa khô và buộc nơ ruy băng satin.',
-        timestamp: new Date(Date.now() + 18 * 60 * 60 * 1000),
-        completed: false
-      },
-      {
-        title: 'Bàn giao Shipper hỏa tốc',
-        description: 'Đơn hàng rời xưởng, đang vận chuyển đến tay bạn hoặc người nhận quà.',
+        title: 'Bàn giao Shipper vận chuyển',
+        description: `Đơn hàng giao qua ${shippingMethod === 'EXPRESS' ? 'Hỏa Tốc 2h - 48h' : 'Giao Hàng Tiêu Chuẩn'}.`,
         timestamp: new Date(Date.now() + 24 * 60 * 60 * 1000),
         completed: false
       }
     ];
+
+    const initialPaymentStatus = isStandardCod 
+      ? PaymentStatus.UNPAID // COD Pending
+      : PaymentStatus.UNPAID;
 
     const order = await this.orderModel.create({
       orderCode,
@@ -128,14 +156,14 @@ export class OrdersService {
         depositAmount,
         remainingCodAmount
       },
-      paymentMode: dto.paymentMode,
+      paymentMode: depositAmount < totalAmount ? PaymentMode.DEPOSIT_50 : PaymentMode.FULL_PAYMENT,
       paymentMethod: dto.paymentMethod,
-      paymentStatus: depositAmount === 0 ? PaymentStatus.UNPAID : PaymentStatus.PARTIALLY_PAID_DEPOSIT_50,
-      orderStatus: OrderStatus.CONFIRMED,
-      fulfillmentStatus: depositAmount > 0 ? FulfillmentStatus.AT_WORKSHOP : FulfillmentStatus.AWAITING_DEPOSIT,
+      paymentStatus: initialPaymentStatus,
+      orderStatus: isStandardCod ? OrderStatus.PENDING : OrderStatus.CONFIRMED,
+      fulfillmentStatus: isStandardCod ? FulfillmentStatus.PACKAGED : (hasCustomProduct ? FulfillmentStatus.AWAITING_DEPOSIT : FulfillmentStatus.AT_WORKSHOP),
       timeline: initialTimeline,
       trackingCode: `GHTK-VN-${Math.floor(1000000 + Math.random() * 9000000)}`,
-      shippingCarrier: 'Giao Hàng Nhanh Hỏa Tốc (2h - 48h)'
+      shippingCarrier: shippingMethod === 'EXPRESS' ? 'Giao Hàng Hỏa Tốc (2h - 48h)' : 'Giao Hàng Tiêu Chuẩn'
     });
 
     // Reward Loyalty Points if registered user (1 point per 10k VND)
@@ -163,6 +191,45 @@ export class OrdersService {
     cart.voucherDiscount = 0;
     await cart.save();
 
+    return order;
+  }
+
+  async processPaymentSimulation(orderCode: string, body: { success: boolean; paymentType?: 'DEPOSIT_50' | 'FULL_100' }) {
+    const order = await this.orderModel.findOne({ orderCode: orderCode.toUpperCase() });
+    if (!order) {
+      throw new NotFoundException(`Không tìm thấy đơn hàng mã ${orderCode}`);
+    }
+
+    if (!body.success) {
+      order.timeline.push({
+        title: 'Thanh toán qua Payment Gateway thất bại',
+        description: 'Giao dịch thanh toán trực tuyến không thành công. Vui lòng thực hiện lại.',
+        timestamp: new Date(),
+        completed: false
+      });
+      await order.save();
+      throw new BadRequestException('Giao dịch thanh toán trực tuyến không thành công. Vui lòng thực hiện lại giao dịch (EF1).');
+    }
+
+    // Payment Success
+    const isFull = body.paymentType === 'FULL_100' || order.pricing.depositAmount === order.pricing.totalAmount;
+    order.paymentStatus = isFull ? PaymentStatus.PAID_FULL : PaymentStatus.PARTIALLY_PAID_DEPOSIT_50;
+    order.fulfillmentStatus = FulfillmentStatus.AT_WORKSHOP;
+
+    if (order.timeline && order.timeline.length > 1) {
+      order.timeline[1].completed = true;
+      order.timeline[1].title = isFull ? 'Đã thanh toán 100%' : 'Đã cọc 50% thành công';
+      order.timeline[1].description = `Đã nhận ${order.pricing.depositAmount.toLocaleString('vi-VN')}đ qua Payment Gateway VietQR/MoMo/VNPAY.`;
+    }
+
+    order.timeline.push({
+      title: 'Payment Gateway xác nhận giao dịch',
+      description: `Giao dịch ${order.paymentStatus === PaymentStatus.PAID_FULL ? 'Thanh toán 100%' : 'Đặt cọc 50%'} hoàn tất thành công.`,
+      timestamp: new Date(),
+      completed: true
+    });
+
+    await order.save();
     return order;
   }
 
@@ -265,3 +332,4 @@ export class OrdersService {
     return order;
   }
 }
+

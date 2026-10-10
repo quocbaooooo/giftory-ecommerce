@@ -30,7 +30,7 @@ import { AuthService } from '../../core/services/auth.service';
               </span>
             </div>
             <p class="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-3xl leading-relaxed">
-              Kiểm tra kỹ thông tin sản phẩm và chính sách cọc 50% cho quà tặng thiết kế theo yêu cầu (<span class="font-bold text-[#7C3AED]">BP-03 & BR-PAY05</span>).
+              Kiểm tra kỹ thông tin sản phẩm và chính sách cọc 50% cho quà tặng thiết kế theo yêu cầu.
             </p>
           </div>
           <div class="flex items-center gap-2 text-xs text-slate-500 bg-white px-4 py-2 rounded-full border border-[#DDD6FE] shadow-sm">
@@ -124,7 +124,7 @@ import { AuthService } from '../../core/services/auth.service';
                       @if (item.isCustom) {
                         <span class="px-2.5 py-0.5 rounded-full bg-[#10B981] text-white font-bold text-[10px] flex items-center gap-1 shadow-sm">
                           <span class="material-symbols-outlined text-[12px]">palette</span>
-                          Sản phẩm Custom • Cọc 50% (BR-PAY05)
+                          Sản phẩm Custom • Cọc 50%
                         </span>
                       } @else {
                         <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold text-[10px] flex items-center gap-1">
@@ -265,49 +265,6 @@ import { AuthService } from '../../core/services/auth.service';
                 <span class="text-xs text-slate-500">{{ cartService.itemsCount() }} sản phẩm</span>
               </div>
 
-              <!-- Payment Mode Selector (BR-PAY05) -->
-              <div>
-                <label class="text-xs font-bold text-[#1E1B4B] block mb-2">Hình thức thanh toán theo chính sách:</label>
-                <div class="flex flex-col gap-2.5">
-                  
-                  <!-- Option 1: Deposit 50% -->
-                  <label 
-                    (click)="setPaymentMode('DEPOSIT_50')"
-                    class="relative flex items-start gap-3 p-3.5 rounded-2xl border-2 cursor-pointer transition-all"
-                    [ngClass]="cartService.paymentMode() === 'DEPOSIT_50' ? 'border-[#7C3AED] bg-purple-50/70 shadow-sm' : 'border-slate-200 bg-white hover:border-purple-200'"
-                  >
-                    <input type="radio" name="paymentMode" [checked]="cartService.paymentMode() === 'DEPOSIT_50'" class="mt-1 accent-[#7C3AED]">
-                    <div class="flex-1">
-                      <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-[#1E1B4B]">Cọc 50% Thiết Kế (BR-PAY05)</span>
-                        <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Khuyên dùng</span>
-                      </div>
-                      <p class="text-[11px] text-slate-500 mt-1 leading-snug">
-                        Chỉ cọc trước cho sản phẩm custom. Phần còn lại + hàng chuẩn thanh toán COD khi nhận hàng.
-                      </p>
-                    </div>
-                  </label>
-
-                  <!-- Option 2: Full Payment -->
-                  <label 
-                    (click)="setPaymentMode('FULL_PAYMENT')"
-                    class="relative flex items-start gap-3 p-3.5 rounded-2xl border-2 cursor-pointer transition-all"
-                    [ngClass]="cartService.paymentMode() === 'FULL_PAYMENT' ? 'border-[#7C3AED] bg-purple-50/70 shadow-sm' : 'border-slate-200 bg-white hover:border-purple-200'"
-                  >
-                    <input type="radio" name="paymentMode" [checked]="cartService.paymentMode() === 'FULL_PAYMENT'" class="mt-1 accent-[#7C3AED]">
-                    <div class="flex-1">
-                      <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-[#1E1B4B]">Thanh toán 100% Trọn Gói</span>
-                        <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-semibold">Tiện lợi</span>
-                      </div>
-                      <p class="text-[11px] text-slate-500 mt-1 leading-snug">
-                        Thanh toán toàn bộ ngay để nhận thêm voucher giảm 30.000đ.
-                      </p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
               <!-- Voucher Input -->
               <div class="flex items-center gap-2">
                 <input 
@@ -352,26 +309,26 @@ import { AuthService } from '../../core/services/auth.service';
                 </div>
               </div>
 
-              <!-- 50% Deposit Breakdown Callout Card (From Stitch screen) -->
-              <div class="p-4 rounded-2xl bg-[#F5EEFD] border border-[#DDD6FE] flex flex-col gap-2">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold text-[#7C3AED] uppercase tracking-wide">
-                    {{ cartService.paymentMode() === 'DEPOSIT_50' ? 'CỌC THANH TOÁN NGAY (50%)' : 'THANH TOÁN TRỌN GÓI (100%)' }}
-                  </span>
-                  <span class="text-xl font-extrabold text-[#7C3AED]">
-                    {{ cartService.pricing().depositAmount | number:'1.0-0' }}đ
-                  </span>
-                </div>
-                @if (cartService.paymentMode() === 'DEPOSIT_50') {
+              @if (cartService.pricing().totalCustomItems > 0) {
+                <!-- 50% Deposit Summary Card for Custom Items -->
+                <div class="p-4 rounded-2xl bg-[#F5EEFD] border border-[#DDD6FE] flex flex-col gap-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-[#7C3AED] uppercase tracking-wide">
+                      Tiền cọc 50% thiết kế:
+                    </span>
+                    <span class="text-xl font-extrabold text-[#7C3AED]">
+                      {{ cartService.pricing().depositAmount | number:'1.0-0' }}đ
+                    </span>
+                  </div>
                   <p class="text-[11px] text-slate-500">
-                    Cọc cho các sản phẩm Custom theo quy định xưởng
+                    Cọc trước 50% cho {{ cartService.pricing().totalCustomItems }} sản phẩm custom theo quy định xưởng
                   </p>
                   <div class="flex items-center justify-between pt-2 border-t border-purple-200/50 text-xs font-semibold text-slate-700">
                     <span>Còn lại thanh toán COD:</span>
                     <strong class="text-[#1E1B4B] font-bold text-sm">{{ cartService.pricing().remainingCodAmount | number:'1.0-0' }}đ</strong>
                   </div>
-                }
-              </div>
+                </div>
+              }
 
               <!-- Checkout Submit Button -->
               <button 
@@ -379,7 +336,7 @@ import { AuthService } from '../../core/services/auth.service';
                 class="w-full py-3.5 px-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95 cursor-pointer"
               >
                 <span class="material-symbols-outlined text-[18px]">verified</span>
-                <span>Tiến Hành Đặt Hàng & Thanh Toán Cọc {{ cartService.pricing().depositAmount | number:'1.0-0' }}đ</span>
+                <span>Tiến Hành Đặt Hàng</span>
               </button>
 
               <div class="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">

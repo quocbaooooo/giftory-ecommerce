@@ -45,7 +45,7 @@ import { RouterModule } from '@angular/router';
             <span class="material-symbols-outlined text-3xl">verified</span>
           </div>
           <div>
-            <h3 class="text-lg font-bold text-giftory-ink">Chính Sách Đặt Cọc 50% Cho Quà Bespoke (BR-PAY05)</h3>
+            <h3 class="text-lg font-bold text-giftory-ink">Chính Sách Đặt Cọc 50% Cho Quà Bespoke</h3>
             <p class="text-xs text-giftory-ink/60">Đảm bảo quyền lợi khách hàng và nguồn nguyên liệu chế tác thủ công chất lượng cao</p>
           </div>
         </div>
@@ -126,7 +126,7 @@ export class ShoppingGuideComponent {
       title: 'Đặt Cọc 50%',
       desc: 'Xác nhận đơn và thanh toán 50% giá trị để xưởng may/khắc bắt đầu chế tác thủ công.',
       icon: 'receipt_long',
-      highlight: 'Chính sách BR-PAY05'
+      highlight: 'Đặt cọc linh hoạt 50%'
     },
     {
       step: '04',

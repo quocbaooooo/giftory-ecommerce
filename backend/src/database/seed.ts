@@ -93,7 +93,7 @@ async function bootstrap() {
     { name: 'Bình Giữ Nhiệt & Cốc Sứ', slug: 'binh-giu-nhiet-coc-su', emoji: '☕', icon: 'local_cafe', description: 'Bình giữ nhiệt Inox 304 và ly sứ cao cấp khắc tên nghệ thuật' },
     { name: 'Sổ Tay & Bút Ký Kim Loại', slug: 'so-tay-but-ky', emoji: '✒️', icon: 'edit_note', description: 'Sổ tay bìa da hoàng gia và bút ký cao cấp khắc laser' },
     { name: 'Nến Thơm & Decor Không Gian', slug: 'nen-thom-decor', emoji: '🕯️', icon: 'spa', description: 'Nến thơm tinh dầu hoa khô thuần chay Citta và đồ decor sang trọng' },
-    { name: 'Móc Khóa Thỏ Gỗ Đôi', slug: 'moc-khoa-tho-go', emoji: '🐰', icon: 'key', description: 'Móc khóa gỗ sồi tự nhiên khắc hình ảnh & ngày kỷ niệm' },
+    { name: 'Móc Khóa & Quà Gỗ', slug: 'moc-khoa-tho-go', emoji: '🐰', icon: 'key', description: 'Móc khóa gỗ sồi tự nhiên khắc hình ảnh & ngày kỷ niệm' },
     { name: 'Áo Thun & Ốp Gốm Monogram', slug: 'ao-thun-op-custom', emoji: '👕', icon: 'apparel', description: 'Áo cotton thêu vi tính và ốp lưng gốm in chữ cái mạ vàng' },
     { name: 'Set Quà Sang Trọng & Tạp Dề', slug: 'set-qua-sang-trong', emoji: '🎁', icon: 'featured_seasonal_and_gifts', description: 'Hộp quà cao cấp lụa satin kèm phụ kiện tinh tế' },
   ];

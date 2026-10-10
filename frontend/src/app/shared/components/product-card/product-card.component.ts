@@ -1,6 +1,6 @@
 import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Product } from '../../../core/models';
 import { CartService } from '../../../core/services/cart.service';
 import { WishlistService } from '../../../core/services/wishlist.service';
@@ -23,15 +23,19 @@ import { AuthService } from '../../../core/services/auth.service';
           class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         >
 
-        <!-- Top Badges -->
-        <div class="absolute top-2 left-2 flex flex-col gap-1 items-start z-10">
-          @if (product.isCustomizable) {
+        <!-- Top-Left Badge (Max 1 merged badge to avoid visual cluttering) -->
+        <div class="absolute top-2 left-2 z-10">
+          @if (product.isCustomizable && product.isFlashSale && product.flashSaleDiscountPercent) {
             <span class="px-2.5 py-1 rounded-full bg-[#10B981] text-white font-semibold text-[11px] shadow-sm flex items-center gap-1">
               <span class="material-symbols-outlined text-[13px]">palette</span>
-              Cọc 50% (BR-PAY05)
+              Cọc 50% • -{{ product.flashSaleDiscountPercent }}%
             </span>
-          }
-          @if (product.isFlashSale && product.flashSaleDiscountPercent) {
+          } @else if (product.isCustomizable) {
+            <span class="px-2.5 py-1 rounded-full bg-[#10B981] text-white font-semibold text-[11px] shadow-sm flex items-center gap-1">
+              <span class="material-symbols-outlined text-[13px]">palette</span>
+              Cọc 50%
+            </span>
+          } @else if (product.isFlashSale && product.flashSaleDiscountPercent) {
             <span class="px-2.5 py-1 rounded-full bg-[#F43F5E] text-white font-bold text-[11px] shadow-sm flex items-center gap-1">
               <span class="material-symbols-outlined text-[13px]">bolt</span>
               -{{ product.flashSaleDiscountPercent }}%
@@ -49,14 +53,18 @@ import { AuthService } from '../../../core/services/auth.service';
           <span class="material-symbols-outlined text-[18px]" [class.fill-1]="isWishlisted()">favorite</span>
         </button>
 
-        <!-- 3D/AR Preview Badge if Bespoke -->
+        <!-- 3D/AR Interactive Studio Link Pill Button -->
         @if (product.isCustomizable) {
-          <div class="absolute bottom-2 left-2 right-2 py-1 px-2 rounded-lg bg-white/95 backdrop-blur-sm text-center shadow-sm pointer-events-none">
-            <span class="text-[11px] text-[#7C3AED] font-semibold flex items-center justify-center gap-1">
-              <span class="material-symbols-outlined text-[13px]">view_in_ar</span>
-              Mô phỏng 3D Khắc Laser
-            </span>
-          </div>
+          <a 
+            [routerLink]="['/custom-studio']"
+            [queryParams]="{ productId: product._id }"
+            (click)="$event.stopPropagation()"
+            class="absolute bottom-2 left-2 right-2 py-1.5 px-2 rounded-xl bg-white/95 hover:bg-white text-[#7C3AED] hover:text-[#6D28D9] font-bold text-[11px] text-center shadow-md border border-purple-100 flex items-center justify-center gap-1 transition-all active:scale-95 z-10 cursor-pointer"
+            title="Mở Custom Studio mô phỏng 3D"
+          >
+            <span class="material-symbols-outlined text-[14px]">view_in_ar</span>
+            <span>Mô phỏng 3D Khắc Laser →</span>
+          </a>
         }
       </div>
 
@@ -65,7 +73,7 @@ import { AuthService } from '../../../core/services/auth.service';
         <div>
           <!-- Category & Rating Row: Fixed height 20px -->
           <div class="flex items-center justify-between text-xs text-slate-500 mb-1.5 h-5 shrink-0">
-            <span class="truncate font-medium text-slate-500 max-w-[62%]">{{ getCategoryName() }}</span>
+            <span class="truncate font-semibold text-slate-400 max-w-[62%]">{{ getCategoryName() }}</span>
             <div class="flex items-center gap-1 text-amber-500 font-semibold shrink-0 text-xs">
               <span class="material-symbols-outlined text-[14px]">star</span>
               <span>{{ product.rating || 4.9 }}</span>
@@ -145,13 +153,30 @@ export class ProductCardComponent {
   cartService = inject(CartService);
   wishlistService = inject(WishlistService);
   authService = inject(AuthService);
+  private router = inject(Router);
 
   getCategoryName(): string {
-    if (!this.product.category) return 'Quà Tặng Giftory';
+    if (!this.product.category) return 'Giftory Studio';
+    let catName = '';
     if (typeof this.product.category === 'object' && this.product.category.name) {
-      return this.product.category.name;
+      catName = this.product.category.name;
+    } else if (typeof this.product.category === 'string') {
+      catName = this.product.category;
     }
-    return 'Quà Tặng Giftory';
+
+    if (!catName || catName === 'Quà Tặng Giftory') return 'Giftory Studio';
+
+    // Avoid title redundancy (e.g. category "Móc Khóa Thỏ Gỗ Đôi" vs product title "Móc Khóa Thỏ Gỗ Đôi Cá Nhân Hóa...")
+    if (this.product.name && (this.product.name.toLowerCase().startsWith(catName.toLowerCase()) || catName.length > 25)) {
+      if (catName.includes('Móc Khóa')) return 'Móc Khóa & Quà Gỗ';
+      if (catName.includes('Bình Giữ')) return 'Bình Giữ Nhiệt & Cốc Sứ';
+      if (catName.includes('Nến Thơm')) return 'Nến Thơm & Decor';
+      if (catName.includes('Sổ Tay')) return 'Sổ Tay & Bút Ký';
+      if (catName.includes('Áo Thun')) return 'Thời Trang Custom';
+      return 'Giftory Bespoke';
+    }
+
+    return catName;
   }
 
   isWishlisted(): boolean {
@@ -173,7 +198,7 @@ export class ProductCardComponent {
     event.stopPropagation();
     this.cartService.addItem(this.product._id, 1).subscribe({
       next: () => {
-        // Feedback toast or indicator
+        this.router.navigate(['/cart']);
       }
     });
   }

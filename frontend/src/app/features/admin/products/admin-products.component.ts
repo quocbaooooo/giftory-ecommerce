@@ -18,7 +18,7 @@ import { Product, Category, StudioAsset } from '../../../core/models';
         <div>
           <span class="text-xs font-bold tracking-widest text-[#7C3AED] uppercase">Quản Trị Kho Quà & Custom Studio</span>
           <h1 class="text-2xl md:text-3xl font-display font-black text-giftory-ink mt-1">Danh Mục & Phôi Chế Tác Quà Tặng</h1>
-          <p class="text-xs text-giftory-ink/60 mt-1">Cấu hình phôi quà 2 mặt, quản lý thư viện icon/sticker và chính sách cọc 50% (BP-02)</p>
+          <p class="text-xs text-giftory-ink/60 mt-1">Cấu hình phôi quà 2 mặt, quản lý thư viện icon/sticker và chính sách cọc 50%</p>
         </div>
 
         <div class="flex items-center gap-3 self-start sm:self-auto">
@@ -258,7 +258,7 @@ import { Product, Category, StudioAsset } from '../../../core/models';
               <!-- Bespoke Toggle Switch -->
               <div class="p-4 bg-purple-50/70 rounded-2xl border border-purple-200 flex items-center justify-between">
                 <div>
-                  <span class="text-xs font-bold text-[#7C3AED] block">Hỗ Trợ Tùy Biến Bespoke (Custom Studio BP-02)</span>
+                  <span class="text-xs font-bold text-[#7C3AED] block">Hỗ Trợ Tùy Biến Bespoke (Custom Studio)</span>
                   <span class="text-[11px] text-slate-500">Kích hoạt để sản phẩm xuất hiện trong Studio Chế Tác và áp dụng chính sách cọc 50%</span>
                 </div>
                 <input type="checkbox" formControlName="isCustomizable" class="w-5 h-5 accent-[#7C3AED] rounded cursor-pointer" />

@@ -1,101 +1,258 @@
 import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
+
+function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
+  const password = control.get('password');
+  const confirmPassword = control.get('confirmPassword');
+  if (password && confirmPassword && password.value !== confirmPassword.value) {
+    return { passwordMismatch: true };
+  }
+  return null;
+}
 
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule],
   template: `
-    <div class="min-h-[80vh] flex items-center justify-center px-4 py-12 animate-fade-in">
-      <div class="max-w-md w-full bg-white rounded-3xl p-8 border border-giftory-border shadow-xl space-y-6">
-        <!-- Logo & Header (Stitch Screen 15677325011445543384) -->
-        <div class="text-center space-y-2">
-          <a routerLink="/" class="inline-flex items-center gap-3 justify-center">
-            <img src="/logo.png" alt="Giftory Logo" class="w-10 h-10 object-contain drop-shadow-sm" />
-            <span class="font-display font-black text-2xl text-giftory-ink tracking-tight">Giftory</span>
-          </a>
-          <h2 class="text-xl font-bold text-giftory-ink">Đăng Ký Hội Viên Mới</h2>
-          <p class="text-xs text-giftory-ink/60">Gia nhập cộng đồng Giftory để nhận ngay 100 điểm thưởng đầu tiên</p>
+    <div class="min-h-[85vh] flex items-center justify-center py-10 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-purple-50/50 via-white to-purple-100/40 relative overflow-hidden">
+      <!-- Ambient Decorative Blur Blobs -->
+      <div class="absolute -top-24 -left-24 w-96 h-96 bg-purple-300/30 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-indigo-300/30 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Main Register Card Container -->
+      <div class="max-w-4xl w-full bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-purple-100 overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10">
+        
+        <!-- Left Hero Branding Section -->
+        <div class="lg:col-span-5 bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-950 p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-64 h-64 bg-purple-500/20 rounded-full blur-2xl pointer-events-none"></div>
+          
+          <!-- Brand Logo -->
+          <div class="relative z-10 space-y-6">
+            <a routerLink="/" class="inline-flex items-center gap-3 group">
+              <div class="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+                <img src="/logo.png" alt="Giftory Logo" class="w-7 h-7 object-contain drop-shadow" />
+              </div>
+              <div>
+                <span class="font-display font-black text-2xl text-white tracking-tight block leading-none">Giftory</span>
+                <span class="text-[10px] text-purple-200 font-semibold tracking-wider uppercase">Studio & Gift Store</span>
+              </div>
+            </a>
+
+            <div class="pt-4 space-y-3">
+              <h2 class="text-2xl font-bold tracking-tight text-white leading-tight">
+                Gia Nhập Cộng Đồng Giftory Club 🎁
+              </h2>
+              <p class="text-xs text-purple-200/90 leading-relaxed">
+                Tạo tài khoản ngay hôm nay để nhận <strong>100 điểm thưởng chào mừng</strong> và ưu đãi cá nhân hóa đặc quyền!
+              </p>
+            </div>
+          </div>
+
+          <!-- Feature Bullets -->
+          <div class="relative z-10 my-8 space-y-3">
+            <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 shadow-xs">
+              <div class="w-8 h-8 rounded-xl bg-purple-500/30 flex items-center justify-center text-amber-300">
+                <span class="material-symbols-outlined text-lg">card_giftcard</span>
+              </div>
+              <div class="text-xs">
+                <p class="font-bold text-white">Quà Tặng Chào Mừng</p>
+                <p class="text-[11px] text-purple-200/80">Cộng ngay 100 xu tích điểm hội viên</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 shadow-xs">
+              <div class="w-8 h-8 rounded-xl bg-purple-500/30 flex items-center justify-center text-emerald-300">
+                <span class="material-symbols-outlined text-lg">history_edu</span>
+              </div>
+              <div class="text-xs">
+                <p class="font-bold text-white">Lưu Trữ Thiết Kế Mẫu</p>
+                <p class="text-[11px] text-purple-200/80">Lưu sản phẩm tự thiết kế trong Studio</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 shadow-xs">
+              <div class="w-8 h-8 rounded-xl bg-purple-500/30 flex items-center justify-center text-purple-200">
+                <span class="material-symbols-outlined text-lg">shield_person</span>
+              </div>
+              <div class="text-xs">
+                <p class="font-bold text-white">Bảo Mật Thông Tin</p>
+                <p class="text-[11px] text-purple-200/80">Cam kết bảo vệ dữ liệu cá nhân 100%</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer Note -->
+          <div class="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] text-purple-200/70">
+            <span>© 2026 Giftory Studio</span>
+            <span class="inline-flex items-center gap-1 text-amber-400 font-semibold">
+              <span class="material-symbols-outlined text-sm">auto_awesome</span>
+              Ưu đãi thành viên
+            </span>
+          </div>
         </div>
 
-        <!-- Error Alert -->
-        <div *ngIf="errorMessage()" class="p-3 rounded-xl bg-giftory-sale/10 border border-giftory-sale/20 text-xs font-medium text-giftory-sale animate-fade-in">
-          {{ errorMessage() }}
+        <!-- Right Form Section -->
+        <div class="lg:col-span-7 p-8 sm:p-10 flex flex-col justify-between">
+          <div>
+            <!-- Top Segmented Switcher -->
+            <div class="flex items-center p-1 bg-gray-100 rounded-2xl mb-8 max-w-xs border border-gray-200/60">
+              <a
+                routerLink="/login"
+                class="flex-1 py-2 text-center text-xs font-medium text-gray-600 hover:text-purple-600 rounded-xl transition-all"
+              >
+                Đăng Nhập
+              </a>
+              <a
+                routerLink="/register"
+                class="flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all shadow-xs bg-purple-600 text-white"
+              >
+                Đăng Ký
+              </a>
+            </div>
+
+            <!-- Form Header -->
+            <div class="space-y-1.5 mb-6">
+              <h3 class="text-2xl font-bold text-gray-900 tracking-tight">Tạo tài khoản mới 🚀</h3>
+              <p class="text-xs text-gray-500">Đăng ký tài khoản để trải nghiệm toàn bộ tính năng độc quyền</p>
+            </div>
+
+            <!-- Error Alert -->
+            <div *ngIf="errorMessage()" class="mb-5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-start gap-2.5 shadow-xs animate-fade-in">
+              <span class="material-symbols-outlined text-rose-500 text-lg flex-shrink-0 mt-0.5">error</span>
+              <div class="flex-1">
+                <p class="font-semibold">{{ errorMessage() }}</p>
+              </div>
+            </div>
+
+            <!-- Register Form -->
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4">
+              <!-- Full Name & Phone Row -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Full Name -->
+                <div class="space-y-1.5">
+                  <label class="text-xs font-bold text-gray-700 uppercase tracking-wider block">Họ và tên *</label>
+                  <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 text-xl pointer-events-none">person</span>
+                    <input
+                      type="text"
+                      formControlName="fullName"
+                      placeholder="Nguyễn Văn A"
+                      class="w-full pl-11 pr-4 py-2.5 bg-gray-50/80 border border-gray-200 rounded-2xl text-sm font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-purple-600 focus:ring-4 focus:ring-purple-500/15 transition-all"
+                    />
+                  </div>
+                  <div *ngIf="registerForm.get('fullName')?.touched && registerForm.get('fullName')?.invalid" class="text-[11px] text-rose-500 font-medium flex items-center gap-1 pl-1">
+                    <span>Vui lòng nhập họ và tên</span>
+                  </div>
+                </div>
+
+                <!-- Phone -->
+                <div class="space-y-1.5">
+                  <label class="text-xs font-bold text-gray-700 uppercase tracking-wider block">Số điện thoại *</label>
+                  <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 text-xl pointer-events-none">call</span>
+                    <input
+                      type="tel"
+                      formControlName="phone"
+                      placeholder="0901234567"
+                      class="w-full pl-11 pr-4 py-2.5 bg-gray-50/80 border border-gray-200 rounded-2xl text-sm font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-purple-600 focus:ring-4 focus:ring-purple-500/15 transition-all"
+                    />
+                  </div>
+                  <div *ngIf="registerForm.get('phone')?.touched && registerForm.get('phone')?.invalid" class="text-[11px] text-rose-500 font-medium flex items-center gap-1 pl-1">
+                    <span>Vui lòng nhập số điện thoại</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Email Field -->
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-gray-700 uppercase tracking-wider block">Email Đăng Nhập *</label>
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 text-xl pointer-events-none">mail</span>
+                  <input
+                    type="email"
+                    formControlName="email"
+                    placeholder="name@example.com"
+                    class="w-full pl-11 pr-4 py-2.5 bg-gray-50/80 border border-gray-200 rounded-2xl text-sm font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-purple-600 focus:ring-4 focus:ring-purple-500/15 transition-all"
+                  />
+                </div>
+                <div *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid" class="text-[11px] text-rose-500 font-medium flex items-center gap-1 pl-1">
+                  <span>Vui lòng nhập email hợp lệ</span>
+                </div>
+              </div>
+
+              <!-- Password & Confirm Password Row -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Password -->
+                <div class="space-y-1.5">
+                  <label class="text-xs font-bold text-gray-700 uppercase tracking-wider block">Mật khẩu *</label>
+                  <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 text-xl pointer-events-none">lock</span>
+                    <input
+                      [type]="showPassword() ? 'text' : 'password'"
+                      formControlName="password"
+                      placeholder="Tối thiểu 6 ký tự"
+                      class="w-full pl-11 pr-10 py-2.5 bg-gray-50/80 border border-gray-200 rounded-2xl text-sm font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-purple-600 focus:ring-4 focus:ring-purple-500/15 transition-all"
+                    />
+                    <button
+                      type="button"
+                      (click)="showPassword.set(!showPassword())"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-600 p-1 rounded-lg transition"
+                    >
+                      <span class="material-symbols-outlined text-lg">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+                    </button>
+                  </div>
+                  <div *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.invalid" class="text-[11px] text-rose-500 font-medium flex items-center gap-1 pl-1">
+                    <span>Tối thiểu 6 ký tự</span>
+                  </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="space-y-1.5">
+                  <label class="text-xs font-bold text-gray-700 uppercase tracking-wider block">Xác nhận mật khẩu *</label>
+                  <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 text-xl pointer-events-none">lock_reset</span>
+                    <input
+                      [type]="showPassword() ? 'text' : 'password'"
+                      formControlName="confirmPassword"
+                      placeholder="Nhập lại mật khẩu"
+                      class="w-full pl-11 pr-4 py-2.5 bg-gray-50/80 border border-gray-200 rounded-2xl text-sm font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-purple-600 focus:ring-4 focus:ring-purple-500/15 transition-all"
+                    />
+                  </div>
+                  <div *ngIf="registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched" class="text-[11px] text-rose-500 font-medium flex items-center gap-1 pl-1">
+                    <span>Mật khẩu xác nhận không khớp</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <button
+                type="submit"
+                [disabled]="registerForm.invalid || isLoading()"
+                class="w-full py-3.5 px-6 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-sm rounded-2xl shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40 transform active:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-2.5 disabled:opacity-60 disabled:cursor-not-allowed mt-4"
+              >
+                <span *ngIf="isLoading()" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span>{{ isLoading() ? 'Đang khởi tạo tài khoản...' : 'Tạo Tài Khoản & Nhận Quà' }}</span>
+                <span *ngIf="!isLoading()" class="material-symbols-outlined text-lg">card_giftcard</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Bottom Footer Switch -->
+          <div class="pt-6 mt-6 border-t border-gray-100 text-center">
+            <p class="text-xs text-gray-600">
+              Đã có tài khoản hội viên?
+              <a routerLink="/login" class="text-purple-600 font-bold hover:text-purple-700 hover:underline ml-1 inline-flex items-center gap-0.5">
+                Đăng nhập ngay
+                <span class="material-symbols-outlined text-xs">chevron_right</span>
+              </a>
+            </p>
+          </div>
         </div>
 
-        <!-- Register Form -->
-        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4">
-          <div class="space-y-1.5">
-            <label class="text-xs font-bold text-giftory-ink">Họ và tên *</label>
-            <div class="relative">
-              <span class="material-symbols-outlined absolute left-3 top-2.5 text-giftory-ink/40 text-lg">person</span>
-              <input
-                type="text"
-                formControlName="fullName"
-                placeholder="Nguyễn Văn A"
-                class="w-full pl-9 pr-4 py-2.5 bg-giftory-canvas rounded-xl border border-giftory-border focus:outline-none focus:border-giftory-primary text-sm font-medium"
-              />
-            </div>
-          </div>
-
-          <div class="space-y-1.5">
-            <label class="text-xs font-bold text-giftory-ink">Số điện thoại *</label>
-            <div class="relative">
-              <span class="material-symbols-outlined absolute left-3 top-2.5 text-giftory-ink/40 text-lg">call</span>
-              <input
-                type="text"
-                formControlName="phone"
-                placeholder="0901234567"
-                class="w-full pl-9 pr-4 py-2.5 bg-giftory-canvas rounded-xl border border-giftory-border focus:outline-none focus:border-giftory-primary text-sm font-medium"
-              />
-            </div>
-          </div>
-
-          <div class="space-y-1.5">
-            <label class="text-xs font-bold text-giftory-ink">Email đăng nhập *</label>
-            <div class="relative">
-              <span class="material-symbols-outlined absolute left-3 top-2.5 text-giftory-ink/40 text-lg">mail</span>
-              <input
-                type="email"
-                formControlName="email"
-                placeholder="name@example.com"
-                class="w-full pl-9 pr-4 py-2.5 bg-giftory-canvas rounded-xl border border-giftory-border focus:outline-none focus:border-giftory-primary text-sm font-medium"
-              />
-            </div>
-          </div>
-
-          <div class="space-y-1.5">
-            <label class="text-xs font-bold text-giftory-ink">Mật khẩu *</label>
-            <div class="relative">
-              <span class="material-symbols-outlined absolute left-3 top-2.5 text-giftory-ink/40 text-lg">lock</span>
-              <input
-                type="password"
-                formControlName="password"
-                placeholder="Tối thiểu 6 ký tự"
-                class="w-full pl-9 pr-4 py-2.5 bg-giftory-canvas rounded-xl border border-giftory-border focus:outline-none focus:border-giftory-primary text-sm font-medium"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            [disabled]="registerForm.invalid || isLoading()"
-            class="w-full py-3 bg-giftory-primary hover:bg-giftory-primary-dark disabled:bg-gray-300 text-white text-sm font-bold rounded-xl transition shadow-md flex items-center justify-center gap-2 mt-4"
-          >
-            <span *ngIf="isLoading()" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            Tạo Tài Khoản & Nhận Quà
-          </button>
-        </form>
-
-        <div class="text-center pt-2 border-t border-giftory-border/60">
-          <p class="text-xs text-giftory-ink/70">
-            Đã có tài khoản?
-            <a routerLink="/login" class="text-giftory-primary font-bold hover:underline ml-1">Đăng nhập ngay</a>
-          </p>
-        </div>
       </div>
     </div>
   `
@@ -106,31 +263,40 @@ export class RegisterComponent {
   private router = inject(Router);
 
   isLoading = signal<boolean>(false);
+  showPassword = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
 
   registerForm: FormGroup = this.fb.group({
     fullName: ['', [Validators.required]],
     phone: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]]
-  });
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    confirmPassword: ['', [Validators.required]]
+  }, { validators: passwordMatchValidator });
 
-  onSubmit() {
+  onSubmit(): void {
     if (this.registerForm.invalid) return;
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
     const { email, password, fullName, phone } = this.registerForm.value;
     this.authService.register(email, password, fullName, phone).subscribe({
-      next: () => {
+      next: (res) => {
         this.isLoading.set(false);
-        alert('Đăng ký tài khoản thành công! Bạn nhận được 100 điểm thưởng chào mừng.');
-        this.router.navigate(['/']);
+        const currentUser = this.authService.currentUser() || res.data?.user || res.user;
+        const isAdmin = currentUser?.role === 'ADMIN' || this.authService.isAdmin();
+
+        if (isAdmin) {
+          this.router.navigate(['/admin/dashboard']);
+        } else {
+          this.router.navigate(['/']);
+        }
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.errorMessage.set(err.error?.message || 'Đăng ký thất bại. Email có thể đã được sử dụng.');
+        this.errorMessage.set(err.error?.message || 'Đăng ký thất bại. Email hoặc số điện thoại có thể đã được sử dụng.');
       }
     });
   }
 }
+

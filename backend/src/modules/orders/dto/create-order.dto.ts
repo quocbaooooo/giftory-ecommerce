@@ -43,8 +43,14 @@ export class CreateOrderDto {
   @IsEnum(PaymentMethod)
   paymentMethod: PaymentMethod;
 
+  @ApiProperty({ example: 'STANDARD', required: false })
+  @IsOptional()
+  @IsString()
+  shippingMethod?: 'STANDARD' | 'EXPRESS';
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   sessionId?: string;
 }
+

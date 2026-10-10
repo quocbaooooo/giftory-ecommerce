@@ -21,7 +21,8 @@ export class OrderService {
     return this.api.get<Order[]>('orders');
   }
 
-  cancelOrder(id: string): Observable<Order> {
-    return this.api.patch<Order>(`orders/${id}/cancel`, {});
+  processPayment(orderCode: string, payload: { success: boolean; paymentType?: 'DEPOSIT_50' | 'FULL_100' }): Observable<Order> {
+    return this.api.post<Order>(`orders/${orderCode}/pay`, payload);
   }
 }
+

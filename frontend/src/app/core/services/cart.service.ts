@@ -72,7 +72,7 @@ export class CartService {
 
   updateQuantity(index: number, quantity: number) {
     const sessionId = this.getSessionId();
-    return this.api.patch<Cart>(`cart/items/${index}`, { quantity, sessionId }).pipe(
+    return this.api.patch<Cart>(`cart/items/${index}?sessionId=${sessionId}`, { quantity, sessionId }).pipe(
       tap(cart => this.cart.set(cart))
     );
   }

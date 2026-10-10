@@ -281,7 +281,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
                     <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">receipt_long</span>
                     Bảng Kê Chi Phí & Chính Sách Cọc
                   </h3>
-                  <p class="text-[10px] text-slate-500 mt-0.5">Minh bạch giá & cọc 50% (BR-PAY05)</p>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Minh bạch giá & chính sách cọc 50%</p>
                 </div>
               }
             </div>
@@ -613,7 +613,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
                       <span class="text-[#7C3AED] font-extrabold text-base">{{ finalProductPrice() | number:'1.0-0' }}đ</span>
                     </div>
                     <div class="flex items-center justify-between font-bold text-xs text-[#10B981]">
-                      <span>Cọc trước 50% (BR-PAY05):</span>
+                      <span>Cọc trước 50%:</span>
                       <span>{{ depositPrice() | number:'1.0-0' }}đ</span>
                     </div>
                     <div class="flex items-center justify-between text-[11px] text-slate-500">
@@ -936,7 +936,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
               <span class="material-symbols-outlined text-2xl">verified</span>
             </div>
 
-            <h3 class="text-xl font-bold text-[#1E1B4B] mb-2">Đưa Thiết Kế Vào Giỏ Hàng (AC13)</h3>
+            <h3 class="text-xl font-bold text-[#1E1B4B] mb-2">Đưa Thiết Kế Vào Giỏ Hàng</h3>
             <p class="text-xs text-slate-500 mb-6 leading-relaxed">
               Bản thiết kế độc bản đã được tạo thành công! Hãy lựa chọn cách thức tiếp tục theo mong muốn của bạn:
             </p>
@@ -2168,10 +2168,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     let isValid = true;
     const maxLen = this.maxTextLength();
 
-    if (!this.frontMessage().trim() && !this.uploadedImage()) {
-      this.formErrors.frontMessage = 'Vui lòng nhập tên người nhận/lời chúc mặt trước hoặc tải ảnh kỷ niệm.';
-      isValid = false;
-    } else if (this.frontMessage().length > maxLen) {
+    if (this.frontMessage().length > maxLen) {
       this.formErrors.frontMessage = `Độ dài tối đa không quá ${maxLen} ký tự.`;
       isValid = false;
     } else {
@@ -2189,7 +2186,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   isFormInvalid(): boolean {
-    return !this.frontMessage().trim() && !this.uploadedImage();
+    return false;
   }
 
   private getConfirmedCustomDetails() {
@@ -2210,7 +2207,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.guidesLayer.batchDraw();
       }
       try {
-        renderedPreview = this.stage.toDataURL({ pixelRatio: 1.5 });
+        renderedPreview = this.stage.toDataURL({ pixelRatio: 0.6, mimeType: 'image/jpeg', quality: 0.7 });
       } catch (e) {
         console.warn('Canvas toDataURL fallback', e);
       }
@@ -2220,10 +2217,12 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
+    const msg = this.frontMessage().trim() || (tpl ? tpl.name : 'Giftory Custom');
+
     return {
-      frontMessage: this.frontMessage(),
+      frontMessage: msg,
       backMessage: this.backMessage(),
-      customText: this.frontMessage(),
+      customText: msg,
       fontFamily: this.selectedFont(),
       engraveColor: this.selectedEngraveColor(),
       selectedColor: this.selectedColor(),
@@ -2257,21 +2256,24 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
         next: () => {
           this.studioService.clearDraftFromStorage();
           this.router.navigate(['/cart']);
+        },
+        error: (err) => {
+          alert(err.error?.message || 'Có lỗi xảy ra khi cập nhật sản phẩm.');
         }
       });
       return;
     }
 
-    if (this.authService.isAuthenticated()) {
-      this.cartService.addItem(tpl._id, 1, this.selectedColor(), customDetails).subscribe({
-        next: () => {
-          this.studioService.clearDraftFromStorage();
-          this.router.navigate(['/cart']);
-        }
-      });
-    } else {
-      this.showGuestChoiceModal.set(true);
-    }
+    // Directly add item to cart for both logged in and guest users
+    this.cartService.addItem(tpl._id, 1, this.selectedColor(), customDetails).subscribe({
+      next: () => {
+        this.studioService.clearDraftFromStorage();
+        this.router.navigate(['/cart']);
+      },
+      error: (err) => {
+        alert(err.error?.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.');
+      }
+    });
   }
 
   handleGuestLoginAndSync(): void {
