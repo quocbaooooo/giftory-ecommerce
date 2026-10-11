@@ -22,7 +22,7 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
 
           <!-- Navigation Links -->
-          <nav class="space-y-1.5">
+          <nav class="space-y-1.5"><a routerLink="/admin/care" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold">CSKH & Kiểm duyệt</a>
             <a
               routerLink="/admin/dashboard"
               routerLinkActive="bg-giftory-primary/10 text-giftory-primary font-bold"
@@ -95,7 +95,7 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="flex items-center gap-4 text-xs font-bold">
             <a routerLink="/admin/dashboard">KPI</a>
             <a routerLink="/admin/products">Sản phẩm</a>
-            <a routerLink="/admin/orders">Đơn hàng</a>
+            <a routerLink="/admin/orders">Đơn hàng</a><a routerLink="/admin/care">CSKH</a>
             <a routerLink="/">Cửa hàng</a>
           </div>
         </header>

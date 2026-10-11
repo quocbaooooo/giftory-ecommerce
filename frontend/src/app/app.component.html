@@ -1,12 +1,14 @@
+<ng-container *ngIf="isAuthRoute()"><router-outlet></router-outlet></ng-container>
+
 <!-- ADMIN PORTAL (When inside /admin routes) -->
 <ng-container *ngIf="isAdminRoute()">
   <router-outlet></router-outlet>
 </ng-container>
 
 <!-- CUSTOMER STOREFRONT LAYOUT -->
-<ng-container *ngIf="!isAdminRoute()">
+<ng-container *ngIf="!isAdminRoute() && !isAuthRoute()">
   <div class="bg-[#F3EBF9] font-sans text-giftory-ink relative" [ngClass]="isCustomStudioRoute() ? 'h-screen overflow-hidden' : 'min-h-screen'">
-    <!-- 8-Icon Fixed Vertical Sidebar Rail on the Left Edge (Always Visible) -->
+    <!-- Primary navigation rail -->
     <app-sidebar-rail></app-sidebar-rail>
 
     <!-- Main Content Canvas (Offset by pl-16 md:pl-20 to clear sidebar rail) -->
@@ -85,7 +87,6 @@
                 <li><a routerLink="/products" class="hover:text-[#7C3AED] transition">Tất Cả Sản Phẩm</a></li>
                 <li><a routerLink="/custom-studio" class="hover:text-[#7C3AED] transition">Custom Studio Bespoke</a></li>
                 <li><a routerLink="/flash-sale" class="hover:text-[#7C3AED] transition">Flash Sale Khung Giờ Vàng</a></li>
-                <li><a routerLink="/shopping-guide" class="hover:text-[#7C3AED] transition">Cẩm Nang Mua Hàng</a></li>
                 <li><a routerLink="/loyalty" class="hover:text-[#7C3AED] transition">Giftory Rewards Club</a></li>
               </ul>
             </div>
@@ -94,6 +95,8 @@
             <div class="space-y-3">
               <h4 class="text-xs font-bold text-giftory-ink uppercase tracking-wider">Chính Sách & Hỗ Trợ</h4>
               <ul class="space-y-2 text-xs text-giftory-ink/70">
+                <li><a routerLink="/shopping-guide" class="hover:text-[#7C3AED] transition">Hướng dẫn mua hàng</a></li>
+                <li><a routerLink="/care" class="hover:text-[#7C3AED] transition">Trung tâm hỗ trợ & đổi trả</a></li>
                 <li><a routerLink="/shopping-guide" class="hover:text-[#7C3AED] transition">Chính sách cọc 50% Bespoke</a></li>
                 <li><a routerLink="/orders" class="hover:text-[#7C3AED] transition">Tra cứu tiến độ đơn hàng</a></li>
                 <li><a routerLink="/shopping-guide" class="hover:text-[#7C3AED] transition">Quy chuẩn đóng gói quà tặng</a></li>

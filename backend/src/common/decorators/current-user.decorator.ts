@@ -6,6 +6,7 @@ export const CurrentUser = createParamDecorator(
     if (!request.user) {
       return null;
     }
+    if (data === 'sub') return String(request.user.sub || request.user._id);
     return data ? request.user[data] : request.user;
   },
 );

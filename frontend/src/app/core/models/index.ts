@@ -74,6 +74,7 @@ export interface StudioAsset {
 }
 
 export interface Product {
+  loyaltyEligible?: boolean;
   _id: string;
   name: string;
   slug: string;

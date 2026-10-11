@@ -1,3 +1,4 @@
+import { AuthRateGuard } from './auth-rate.guard';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -13,7 +14,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     ConfigModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, AuthRateGuard],
   exports: [AuthService, JwtStrategy, PassportModule],
 })
 export class AuthModule {}

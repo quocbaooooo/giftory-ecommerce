@@ -30,3 +30,6 @@ yarn-error.log*
 *.swo
 .DS_Store
 Thumbs.db
+
+# Isolated integration-test databases (normally removed by the runner)
+backend/.giftory-care-tests-*/

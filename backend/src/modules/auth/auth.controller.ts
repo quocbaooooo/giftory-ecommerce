@@ -1,3 +1,6 @@
+import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
+import { AuthRateGuard } from './auth-rate.guard';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/register.dto';
 import {
   Controller,
   Post,
@@ -21,6 +24,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @UseGuards(AuthRateGuard)
   @ApiOperation({ summary: 'Đăng ký tài khoản hội viên Giftory' })
   @ApiResponse({ status: 201, description: 'Đăng ký thành công, trả về User & Tokens' })
   async register(@Body() registerDto: RegisterDto) {
@@ -28,12 +32,23 @@ export class AuthController {
   }
 
   @Post('login')
+  @UseGuards(AuthRateGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Đăng nhập hệ thống' })
   @ApiResponse({ status: 200, description: 'Đăng nhập thành công, trả về User & Tokens' })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
+
+  @Post('forgot-password')
+  @UseGuards(AuthRateGuard)
+  @HttpCode(HttpStatus.ACCEPTED)
+  forgotPassword(@Body() dto: ForgotPasswordDto) { return this.authService.forgotPassword(dto.email); }
+
+  @Post('reset-password')
+  @UseGuards(AuthRateGuard)
+  @HttpCode(HttpStatus.OK)
+  resetPassword(@Body() dto: ResetPasswordDto) { return this.authService.resetPassword(dto.token, dto.password); }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
@@ -43,12 +58,12 @@ export class AuthController {
   }
 
   @Post('logout')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Đăng xuất và hủy bỏ refresh tokens' })
-  async logout(@CurrentUser('sub') userId: string) {
-    return this.authService.logout(userId);
+  async logout(@CurrentUser('sub') userId: string, @Body() body: { refreshToken?: string }) {
+    return this.authService.logout(userId, body?.refreshToken);
   }
 
   @Get('me')

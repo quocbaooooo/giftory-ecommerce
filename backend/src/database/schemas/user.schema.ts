@@ -6,6 +6,18 @@ export type UserDocument = User & Document;
 
 @Schema({ timestamps: true })
 export class User {
+  @Prop({ default: 0 })
+  tokenVersion: number;
+
+  @Prop({ select: false })
+  passwordResetHash?: string;
+
+  @Prop({ select: false })
+  passwordResetExpiresAt?: Date;
+
+  @Prop({ select: false })
+  passwordResetRequestedAt?: Date;
+
   @Prop({ required: true, trim: true })
   name: string;
 
@@ -51,4 +63,3 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
-UserSchema.index({ email: 1 });

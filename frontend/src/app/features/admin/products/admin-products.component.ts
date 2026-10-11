@@ -245,6 +245,7 @@ import { Product, Category, StudioAsset, ProductVariant } from '../../../core/mo
             </div>
 
             <form [formGroup]="productForm" (ngSubmit)="saveProduct()" class="space-y-4">
+              <label class="flex gap-2 items-center my-3"><input type="checkbox" formControlName="loyaltyEligible"> Áp dụng tích điểm khi giao thành công</label>
               <!-- ================= TAB 1: GENERAL INFO (SPU) ================= -->
               @if (modalTab() === 'GENERAL') {
                 <div class="space-y-4 animate-fade-in">
@@ -1293,6 +1294,7 @@ export class AdminProductsComponent implements OnInit {
       sku: p.sku || '',
       imageUrl: p.images && p.images[0] ? p.images[0] : '',
       description: p.description || '',
+      loyaltyEligible: p.loyaltyEligible !== false,
       isCustomizable: p.isCustomizable,
       customBaseFee: p.customBaseFee || 30000,
       frontBlankImage: p.customConfig?.frontBlankImage || (p.images && p.images[0] ? p.images[0] : ''),
@@ -1541,6 +1543,7 @@ export class AdminProductsComponent implements OnInit {
       sku: [''],
       imageUrl: ['https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600'],
       description: [''],
+      loyaltyEligible: [true],
       isCustomizable: [false],
       customBaseFee: [30000],
       frontBlankImage: [''],
@@ -1594,6 +1597,7 @@ export class AdminProductsComponent implements OnInit {
       images,
       description: val.description || val.name,
       variants: this.variants(),
+      loyaltyEligible: val.loyaltyEligible,
       isCustomizable: val.isCustomizable,
       customBaseFee: Number(val.customBaseFee) || 30000,
       customConfig: val.isCustomizable ? {

@@ -71,6 +71,9 @@ export const CustomBlankConfigSchema = SchemaFactory.createForClass(CustomBlankC
 
 @Schema({ timestamps: true })
 export class Product {
+  @Prop({ default: true })
+  loyaltyEligible: boolean;
+
   @Prop({ required: true, trim: true })
   name: string;
 
@@ -136,7 +139,7 @@ export class Product {
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
-ProductSchema.index({ slug: 1 });
+
 ProductSchema.index({ category: 1 });
 ProductSchema.index({ isCustomizable: 1 });
 ProductSchema.index({ isFlashSale: 1 });

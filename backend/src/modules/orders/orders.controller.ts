@@ -206,9 +206,10 @@ export class OrdersController {
   // ==========================================
 
   @Get(':orderCode')
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({ summary: 'Tra cứu tiến trình và lộ trình vận chuyển theo Mã Đơn Hàng' })
-  async getOrderByCode(@Param('orderCode') orderCode: string) {
-    return this.ordersService.getOrderByCode(orderCode);
+  async getOrderByCode(@Param('orderCode') orderCode: string, @Query('phone') phone?: string, @CurrentUser('sub') userId?: string) {
+    return this.ordersService.getOrderByCode(orderCode, userId, phone);
   }
 
   @Post(':orderCode/pay')
@@ -223,7 +224,7 @@ export class OrdersController {
   @Patch(':id/cancel')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Hủy đơn hàng nếu chưa đưa vào xưởng chế tác' })
+  @ApiOperation({ summary: 'Yêu cầu hủy đơn chưa xác nhận; đợi xác nhận hoàn tiền nếu đã thanh toán' })
   async cancelOrder(
     @Param('id') id: string,
     @CurrentUser('sub') userId: string

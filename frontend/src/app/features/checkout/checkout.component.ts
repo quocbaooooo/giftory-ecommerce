@@ -675,7 +675,7 @@ export class CheckoutComponent implements OnInit {
 
         // Standard product + COD => No QR payment modal needed, go directly to completion page (AF3)
         if (!this.hasCustomItems() && this.selectedPaymentMethod() === 'COD') {
-          this.router.navigate(['/orders', order.orderCode]);
+          this.router.navigate(['/orders', order.orderCode], { state: { lookupPhone: order.customerInfo?.phone } });
         } else {
           // Requires Online Payment / QR Deposit => Display VietQR Payment Modal (AF2, AF4)
           this.pendingOrder.set(order);
@@ -701,7 +701,7 @@ export class CheckoutComponent implements OnInit {
       next: () => {
         this.isProcessingPayment.set(false);
         this.showPaymentModal.set(false);
-        this.router.navigate(['/orders', orderCode]);
+        this.router.navigate(['/orders', orderCode], { state: { lookupPhone: this.pendingOrder()?.customerInfo?.phone } });
       },
       error: (err) => {
         this.isProcessingPayment.set(false);
@@ -714,7 +714,7 @@ export class CheckoutComponent implements OnInit {
   cancelPaymentModal(): void {
     if (this.pendingOrder()) {
       this.showPaymentModal.set(false);
-      this.router.navigate(['/orders', this.pendingOrder().orderCode]);
+      this.router.navigate(['/orders', this.pendingOrder().orderCode], { state: { lookupPhone: this.pendingOrder()?.customerInfo?.phone } });
     }
   }
 

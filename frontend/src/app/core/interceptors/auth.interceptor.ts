@@ -1,23 +1,27 @@
-import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
-import { catchError, throwError } from 'rxjs';
-
+import { inject } from '@angular/core';
+import { HttpInterceptorFn } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { catchError, switchMap, throwError } from 'rxjs';
+import { AuthService } from '../services/auth.service';
+import { environment } from '../../../environments/environment';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = localStorage.getItem('giftory_access_token');
-  
-  const authReq = token
-    ? req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`
+  const auth = inject(AuthService); const router = inject(Router);
+  // Never send the Giftory token to external upload/image services.
+  if (!req.url.startsWith(`${environment.apiUrl}/`)) return next(req);
+  const token = auth.accessToken();
+  const authorized = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+  return next(authorized).pipe(catchError(error => {
+    if (error.status !== 401 || !token || req.url.includes('/auth/')) return throwError(() => error);
+    if (auth.accessToken() && auth.accessToken() !== token) return next(req.clone({ setHeaders: { Authorization: `Bearer ${auth.accessToken()}` } }));
+    return auth.refreshSession().pipe(
+      catchError(refreshError => {
+        if ((refreshError.status === 401 || refreshError.status === 403) && (!auth.accessToken() || auth.accessToken() === token)) {
+          auth.clearSession();
+          void router.navigate(['/login'], { queryParams: { returnUrl: router.url, reason: 'expired' } });
         }
-      })
-    : req;
-
-  return next(authReq).pipe(
-    catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 && !req.url.includes('/auth/login') && !req.url.includes('/auth/register')) {
-        console.warn('Phiên đăng nhập hết hạn hoặc chưa xác thực (401).');
-      }
-      return throwError(() => error);
-    })
-  );
+        return throwError(() => refreshError);
+      }),
+      switchMap(session => next(req.clone({ setHeaders: { Authorization: `Bearer ${session.accessToken}` } }))),
+    );
+  }));
 };

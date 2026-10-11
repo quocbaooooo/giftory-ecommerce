@@ -1,3 +1,4 @@
+import { CareModule } from './modules/care/care.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -33,6 +34,7 @@ import { AiChatbotModule } from './modules/ai-chatbot/ai-chatbot.module';
     ProductsModule,
     CustomStudioModule,
     CartModule,
+    CareModule,
     OrdersModule,
     LoyaltyModule,
     WishlistModule,

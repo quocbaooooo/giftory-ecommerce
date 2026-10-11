@@ -32,6 +32,7 @@ export class AppComponent {
   authService = inject(AuthService);
   cartService = inject(CartService);
 
+  isAuthRoute = signal(false);
   isAdminRoute = signal<boolean>(false);
   isCustomStudioRoute = signal<boolean>(false);
   mobileMenuOpen = signal<boolean>(false);
@@ -71,8 +72,10 @@ export class AppComponent {
   currentAnnouncementIndex = signal<number>(0);
 
   constructor() {
+    queueMicrotask(() => this.authService.refreshProfile());
     if (typeof window !== 'undefined') {
       const path = window.location.pathname;
+      this.isAuthRoute.set(/^\/(login|register|forgot-password|reset-password)(?:[/?#]|$)/.test(path));
       this.isAdminRoute.set(path.startsWith('/admin'));
       this.isCustomStudioRoute.set(path.startsWith('/custom-studio'));
 
@@ -85,6 +88,7 @@ export class AppComponent {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
+      this.isAuthRoute.set(/^\/(login|register|forgot-password|reset-password)(?:[/?#]|$)/.test(event.urlAfterRedirects));
       this.isAdminRoute.set(event.urlAfterRedirects.startsWith('/admin'));
       this.isCustomStudioRoute.set(event.urlAfterRedirects.startsWith('/custom-studio'));
       window.scrollTo(0, 0);

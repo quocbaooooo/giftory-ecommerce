@@ -903,33 +903,29 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
               <span class="material-symbols-outlined text-2xl">loyalty</span>
             </div>
 
-            <h3 class="text-lg font-bold text-[#1E1B4B] mb-1">Lưu Vĩnh Viễn & Nhận +50 Điểm Thưởng</h3>
+            <h3 class="text-lg font-bold text-[#1E1B4B] mb-1">Lưu thiết kế vào tài khoản</h3>
             <p class="text-xs text-slate-500 mb-5 leading-relaxed">
-              Bạn đang ở chế độ Khách vãng lai. Đăng nhập 1-Click để lưu bản thiết kế vào tài khoản vĩnh viễn và nhận ngay <strong class="text-[#7C3AED]">+50 điểm tích lũy Giftory</strong>!
+              Đăng nhập để lưu thiết kế của riêng bạn. Bản nháp được giữ trên thiết bị này để bạn tiếp tục sau khi đăng nhập.
             </p>
 
             <div class="space-y-3">
               <button 
-                (click)="performQuickLoginAndSync('google')"
+                (click)="goToAccount('login')"
                 class="w-full py-3 px-4 rounded-xl border border-slate-300 hover:bg-slate-50 font-bold text-xs text-slate-700 flex items-center justify-center gap-2 cursor-pointer transition-all"
               >
-                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" class="w-4 h-4">
-                <span>Đăng nhập 1-Click với Google</span>
+                <span class="material-symbols-outlined text-[18px]">login</span>
+                <span>Đăng nhập bằng email</span>
               </button>
 
               <button 
-                (click)="performQuickLoginAndSync('otp')"
+                (click)="goToAccount('register')"
                 class="w-full py-3 px-4 rounded-xl bg-purple-50 hover:bg-purple-100 text-[#7C3AED] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
               >
                 <span class="material-symbols-outlined text-[18px]">smartphone</span>
-                <span>Xác thực nhanh bằng Số điện thoại OTP</span>
+                <span>Tạo tài khoản mới</span>
               </button>
 
-              <div class="text-center pt-2">
-                <a routerLink="/login" class="text-xs text-slate-500 hover:text-[#7C3AED] font-medium underline">
-                  Đến trang Đăng nhập / Đăng ký chi tiết
-                </a>
-              </div>
+
             </div>
           </div>
         </div>
@@ -2359,36 +2355,9 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  performQuickLoginAndSync(type: 'google' | 'otp'): void {
-    const tpl = this.activeTemplate();
-    if (!tpl) return;
-
-    const demoEmail = type === 'google' ? 'google.guest@giftory.vn' : '0912345678@giftory.vn';
-    const demoPassword = 'Password123!';
-
-    this.authService.login({ email: demoEmail, password: demoPassword }).subscribe({
-      next: () => {
-        this.showSaveLoginModal.set(false);
-        this.syncDraftToServer();
-      },
-      error: () => {
-        this.authService.register({
-          email: demoEmail,
-          password: demoPassword,
-          name: type === 'google' ? 'Google Guest Member' : 'Khách Hàng OTP',
-          phone: '0912345678'
-        }).subscribe({
-          next: () => {
-            this.showSaveLoginModal.set(false);
-            this.syncDraftToServer();
-          },
-          error: () => {
-            this.showSaveLoginModal.set(false);
-            this.saveDesignToCloud();
-          }
-        });
-      }
-    });
+  goToAccount(page: 'login' | 'register'): void {
+    this.showSaveLoginModal.set(false);
+    this.router.navigate(['/' + page], { queryParams: { returnUrl: this.router.url } });
   }
 
   private syncDraftToServer(): void {

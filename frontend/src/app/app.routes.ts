@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard, adminGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
+  { path: 'care', canActivate: [authGuard], loadComponent: () => import('./features/care/care.component').then(m => m.CareComponent) },
   // Customer Storefront Routes
   {
     path: '',
@@ -66,12 +67,17 @@ export const routes: Routes = [
   },
   {
     path: 'login',
+    data: { authMode: 'login' },
     loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
   },
   {
     path: 'register',
+    data: { authMode: 'register' },
     loadComponent: () => import('./features/auth/register.component').then(m => m.RegisterComponent)
   },
+
+  { path: 'forgot-password', data: { authMode: 'forgot' }, loadComponent: () => import('./features/auth/auth-page.component').then(m => m.AuthPageComponent) },
+  { path: 'reset-password', data: { authMode: 'reset' }, loadComponent: () => import('./features/auth/auth-page.component').then(m => m.AuthPageComponent) },
 
   // Admin Portal Routes (Guarded by adminGuard)
   {
@@ -79,6 +85,7 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     loadComponent: () => import('./features/admin/admin-layout.component').then(m => m.AdminLayoutComponent),
     children: [
+      { path: 'care', data: { admin: true }, loadComponent: () => import('./features/care/care.component').then(m => m.CareComponent) },
       {
         path: '',
         pathMatch: 'full',

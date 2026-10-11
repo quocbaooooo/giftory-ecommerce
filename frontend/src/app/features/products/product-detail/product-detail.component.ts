@@ -1,3 +1,4 @@
+import { ProductReviewsComponent } from '../../care/product-reviews.component';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
@@ -11,7 +12,7 @@ import { Product, ProductVariant } from '../../../core/models';
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ProductCardComponent],
+  imports: [CommonModule, RouterModule, FormsModule, ProductCardComponent, ProductReviewsComponent],
   template: `
     @if (product(); as prod) {
       <div class="max-w-7xl mx-auto px-4 md:px-8 py-8">
@@ -317,6 +318,7 @@ import { Product, ProductVariant } from '../../../core/models';
           </div>
         </div>
 
+        <app-product-reviews [productId]="prod._id" />
         <!-- Related Products Section -->
         @if (prod.relatedProducts && prod.relatedProducts.length > 0) {
           <div class="mt-12">

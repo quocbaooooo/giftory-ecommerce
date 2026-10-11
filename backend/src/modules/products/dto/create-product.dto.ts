@@ -10,6 +10,11 @@ import {
 } from 'class-validator';
 
 export class CreateProductDto {
+  @ApiProperty({ required: false, default: true })
+  @IsOptional()
+  @IsBoolean()
+  loyaltyEligible?: boolean;
+
   @ApiProperty({ example: 'Bình Giữ Nhiệt Nordic Bọc Da & Khắc Laser Cá Nhân' })
   @IsString()
   @IsNotEmpty()

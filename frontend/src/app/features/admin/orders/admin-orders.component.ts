@@ -59,7 +59,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
           class="px-5 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-2xl text-xs font-bold whitespace-nowrap shadow-md hover:shadow-lg transition cursor-pointer flex items-center justify-center gap-2 self-start md:self-auto shrink-0"
         >
           <span class="material-symbols-outlined text-sm">verified_user</span>
-          Kích Hoạt Phiên Admin & Tải Lại
+          Đăng nhập lại
         </button>
       </div>
 
@@ -976,17 +976,8 @@ export class AdminOrdersComponent implements OnInit {
   }
 
   reloginAdmin() {
-    this.loading.set(true);
-    this.authService.login({ email: 'admin@giftory.vn', password: 'Admin@Giftory2026' }).subscribe({
-      next: () => {
-        this.authError.set(false);
-        this.loadOrders();
-      },
-      error: () => {
-        this.loading.set(false);
-        this.router.navigate(['/login'], { queryParams: { returnUrl: '/admin/orders' } });
-      }
-    });
+    this.authService.clearSession();
+    this.router.navigate(['/login'], { queryParams: { returnUrl: '/admin/orders' } });
   }
 
   loadOrders() {

@@ -13,6 +13,9 @@ export type OrderDocument = Order & Document;
 
 @Schema({ timestamps: true })
 export class OrderItem {
+  @Prop({ default: true })
+  loyaltyEligible: boolean;
+
   @Prop({ type: Types.ObjectId, ref: 'Product', required: true })
   productId: Types.ObjectId;
 
@@ -83,8 +86,20 @@ export class OrderTimelineEvent {
 
 export const OrderTimelineEventSchema = SchemaFactory.createForClass(OrderTimelineEvent);
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, optimisticConcurrency: true })
 export class Order {
+  @Prop({ type: Types.ObjectId })
+  bp06CaseId?: Types.ObjectId;
+
+  @Prop()
+  deliveredAt?: Date;
+
+  @Prop()
+  careProcessedAt?: Date;
+
+  @Prop({ default: false })
+  refundPending: boolean;
+
   @Prop({ required: true, unique: true, uppercase: true })
   orderCode: string;
 
@@ -241,7 +256,7 @@ export class Order {
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
-OrderSchema.index({ orderCode: 1 });
+
 OrderSchema.index({ userId: 1 });
 OrderSchema.index({ orderStatus: 1 });
 OrderSchema.index({ paymentStatus: 1 });

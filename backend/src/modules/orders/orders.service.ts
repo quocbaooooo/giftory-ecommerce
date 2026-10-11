@@ -1,4 +1,5 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { CareService } from '../care/care.service';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Order, OrderDocument } from '../../database/schemas/order.schema';
@@ -19,6 +20,7 @@ import {
 @Injectable()
 export class OrdersService {
   constructor(
+    private readonly care: CareService,
     @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
     @InjectModel(Cart.name) private readonly cartModel: Model<CartDocument>,
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
@@ -63,6 +65,7 @@ export class OrdersService {
       orderItems = [{
         productId: product._id,
         productName: product.name,
+        loyaltyEligible: product.loyaltyEligible !== false,
         productImage: (product.images && product.images[0]) || '',
         variantName: dto.buyNowItem.variantName || 'Tiêu chuẩn',
         quantity: qty,
@@ -106,6 +109,7 @@ export class OrdersService {
         return {
           productId: product._id,
           productName: product.name,
+        loyaltyEligible: product.loyaltyEligible !== false,
           productImage: (product.images && product.images[0]) || '',
           variantName: item.variantName || 'Tiêu chuẩn',
           quantity: item.quantity,
@@ -234,25 +238,6 @@ export class OrdersService {
       }
     });
 
-    // Reward Loyalty Points if registered user (1 point per 10k VND)
-    if (userId) {
-      const earnedPoints = Math.floor(totalAmount / 10000);
-      const user = await this.userModel.findById(userId);
-      if (user) {
-        user.loyaltyPoints += earnedPoints;
-        await user.save();
-
-        await this.loyaltyModel.create({
-          userId: user._id,
-          type: 'EARN',
-          points: earnedPoints,
-          balanceAfter: user.loyaltyPoints,
-          description: `Tích điểm từ đơn hàng ${orderCode}`,
-          referenceId: orderCode
-        });
-      }
-    }
-
     // Clear cart items ONLY for regular cart orders (preserve cart for Buy Now)
     if (!dto.buyNowItem && cart) {
       cart.items = [];
@@ -269,6 +254,9 @@ export class OrdersService {
     if (!order) {
       throw new NotFoundException(`Không tìm thấy đơn hàng mã ${orderCode}`);
     }
+
+    if (process.env.ENABLE_PAYMENT_SIMULATION !== 'true') throw new BadRequestException('Thanh toán mô phỏng chưa được bật');
+    if (order.refundPending || [OrderStatus.CANCELLED, OrderStatus.DELIVERED, OrderStatus.RETURNED_BP06].includes(order.orderStatus) || order.paymentStatus === PaymentStatus.REFUNDED) throw new BadRequestException('Đơn không thể tiếp nhận thanh toán');
 
     if (!body.success) {
       order.timeline.push({
@@ -313,31 +301,19 @@ export class OrdersService {
       .exec();
   }
 
-  async getOrderByCode(orderCode: string) {
-    const order = await this.orderModel.findOne({ orderCode: orderCode.toUpperCase() }).exec();
-    if (!order) {
-      throw new NotFoundException(`Không tìm thấy đơn hàng mã: ${orderCode}`);
+  async getOrderByCode(orderCode: string, userId?: string, phone?: string) {
+    const order = await this.orderModel.findOne({ orderCode: orderCode.trim().toUpperCase() }).exec();
+    const normalizePhone = (value: string) => value.replace(/[\s().-]/g, '').replace(/^\+?84/, '0');
+    const owned = order && userId && order.userId?.toString() === userId;
+    const verifiedPhone = order && typeof phone === 'string' && /^0\d{8,10}$/.test(normalizePhone(phone)) && normalizePhone(phone) === normalizePhone(order.customerInfo.phone);
+    if (!order || (!owned && !verifiedPhone)) {
+      throw new NotFoundException('Không tìm thấy đơn hàng phù hợp với thông tin tra cứu');
     }
     return order;
   }
 
   async cancelOrder(orderId: string, userId?: string) {
-    const order = await this.orderModel.findById(orderId);
-    if (!order) {
-      throw new NotFoundException('Không tìm thấy đơn hàng');
-    }
-
-    if (userId && order.userId && order.userId.toString() !== userId) {
-      throw new BadRequestException('Bạn không có quyền hủy đơn hàng này');
-    }
-
-    if (order.fulfillmentStatus === FulfillmentStatus.AT_WORKSHOP && order.pricing.depositAmount > 0) {
-      throw new BadRequestException('Đơn hàng có sản phẩm custom đã đưa vào xưởng chế tác, không thể tự hủy');
-    }
-
-    order.orderStatus = OrderStatus.CANCELLED;
-    await order.save();
-    return order;
+    return this.care.cancel(orderId, userId);
   }
 
   // Admin methods
@@ -384,6 +360,12 @@ export class OrdersService {
       throw new NotFoundException('Không tìm thấy đơn hàng');
     }
 
+    if ([OrderStatus.CANCELLED, OrderStatus.DELIVERED, OrderStatus.RETURNED_BP06].includes(order.orderStatus)) throw new BadRequestException('Đơn đã kết thúc; vui lòng xử lý qua hồ sơ hỗ trợ');
+    if (order.refundPending || body.orderStatus === OrderStatus.CANCELLED || body.orderStatus === OrderStatus.DELIVERED || body.fulfillmentStatus === FulfillmentStatus.DELIVERED || body.paymentStatus === PaymentStatus.REFUNDED) {
+      throw new BadRequestException('Vui lòng dùng quy trình hủy / giao hàng / hoàn tiền tương ứng');
+    }
+    if (body.orderStatus && [OrderStatus.PENDING, OrderStatus.AWAITING_CONFIRMATION].includes(body.orderStatus) && ![OrderStatus.PENDING, OrderStatus.AWAITING_CONFIRMATION].includes(order.orderStatus)) throw new BadRequestException('Không thể đưa đơn đã xác nhận về trạng thái chưa xác nhận');
+    if (body.orderStatus && !Object.values(OrderStatus).includes(body.orderStatus)) throw new BadRequestException('Trạng thái đơn không hợp lệ');
     if (body.orderStatus) order.orderStatus = body.orderStatus;
     if (body.fulfillmentStatus) order.fulfillmentStatus = body.fulfillmentStatus;
     if (body.paymentStatus) order.paymentStatus = body.paymentStatus;
@@ -432,6 +414,8 @@ export class OrdersService {
         `Đơn hàng hiện ở trạng thái "${order.orderStatus}", không thể thực hiện xác nhận (chỉ áp dụng cho đơn "Chờ xác nhận đơn hàng" theo BR-04)`
       );
     }
+
+    if (order.refundPending) throw new BadRequestException('Đơn đang chờ hoàn tiền, không thể xác nhận');
 
     // BR-02: Thời gian đơn hàng chờ xác nhận ít nhất sau 12 giờ và tối đa sau 48 giờ
     const now = Date.now();
@@ -665,6 +649,7 @@ export class OrdersService {
     const order = await this.findOrderById(orderId);
 
     // BR-10: Đơn chưa đóng gói thì không được bàn giao
+    if (order.refundPending || [OrderStatus.CANCELLED, OrderStatus.DELIVERED, OrderStatus.RETURNED_BP06].includes(order.orderStatus)) throw new BadRequestException('Đơn không thể bàn giao vận chuyển');
     if (!order.isPackaged) {
       throw new BadRequestException('Đơn hàng chưa được đóng gói hoàn tất! Theo quy tắc BR-10, đơn hàng chỉ được bàn giao cho Shipper sau khi đã đóng gói xong.');
     }
@@ -712,6 +697,7 @@ export class OrdersService {
   ) {
     const order = await this.findOrderById(orderId);
 
+    if (typeof body.success !== 'boolean') throw new BadRequestException('Kết quả giao hàng phải là true hoặc false');
     if (order.orderStatus !== OrderStatus.IN_TRANSIT && order.orderStatus !== OrderStatus.SHIPPING) {
       throw new BadRequestException('Chỉ cập nhật kết quả giao hàng cho đơn hàng đang ở trạng thái "In transit" (BR-11)!');
     }
@@ -730,6 +716,7 @@ export class OrdersService {
 
     if (body.success) {
       // US-04.05, BR-12: Giao hàng thành công
+      order.deliveredAt = new Date();
       order.orderStatus = OrderStatus.DELIVERED;
       order.fulfillmentStatus = FulfillmentStatus.DELIVERED;
       order.deliveryInfo.deliveryResult = 'SUCCESS';
@@ -783,6 +770,10 @@ export class OrdersService {
     }
 
     await order.save();
+    if (body.success) {
+      try { await this.care.delivered(order._id); }
+      catch (error) { new Logger(OrdersService.name).error('Hậu mãi đang chờ tác vụ tự động thử lại', error.stack); }
+    }
     return order;
   }
 
@@ -832,6 +823,7 @@ export class OrdersService {
     });
 
     await order.save();
+    await this.care.transfer(order);
     return order;
   }
 }

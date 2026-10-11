@@ -19,9 +19,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { sub: string; email: string; role: string }) {
+  async validate(payload: { sub: string; email: string; role: string; tokenVersion?: number; kind?: string }) {
     const user = await this.userModel.findById(payload.sub).select('-password');
-    if (!user || !user.isActive) {
+    if (!user || !user.isActive || (payload.tokenVersion || 0) !== (user.tokenVersion || 0) || (payload.kind && payload.kind !== 'access')) {
       throw new UnauthorizedException('Tài khoản không tồn tại hoặc đã bị khóa');
     }
     return user;

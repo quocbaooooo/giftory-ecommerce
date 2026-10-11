@@ -13,8 +13,8 @@ export class OrderService {
     return this.api.post<Order>('orders', orderData);
   }
 
-  getOrderByCode(orderCode: string): Observable<Order> {
-    return this.api.get<Order>(`orders/${orderCode}`);
+  getOrderByCode(orderCode: string, phone?: string): Observable<Order> {
+    return this.api.get<Order>(`orders/${encodeURIComponent(orderCode)}`, { phone });
   }
 
   getMyOrders(): Observable<Order[]> {
