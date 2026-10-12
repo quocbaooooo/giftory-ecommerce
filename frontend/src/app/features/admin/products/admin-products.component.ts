@@ -784,6 +784,10 @@ import { Product, Category, StudioAsset, ProductVariant } from '../../../core/mo
                   </div>
 
                   <form [formGroup]="variantForm" (ngSubmit)="saveVariantFromDrawer()" class="space-y-4">
+                    <label class="block text-xs">Tên màu (để gom các size cùng màu)<input formControlName="color" class="block border rounded-lg p-2 w-full" placeholder="Để trống để dùng tên biến thể"></label>
+                    <label class="block text-xs">Size (nếu có)<input formControlName="size" class="block border rounded-lg p-2 w-full" placeholder="S, M, L…"></label>
+                    <label class="block text-xs">Bộ ảnh mockup bổ sung (mỗi dòng một URL)<textarea formControlName="images" rows="3" class="block border rounded-lg p-2 w-full"></textarea></label>
+
                     <div class="space-y-1.5">
                       <label class="text-xs font-bold text-giftory-ink">Tên màu *</label>
                       <input
@@ -1011,6 +1015,9 @@ export class AdminProductsComponent implements OnInit {
   initVariantForm() {
     this.variantForm = this.fb.group({
       name: ['', Validators.required],
+      color: [''],
+      size: [''],
+      images: [''],
       colorHex: ['#1E1B4B', Validators.required],
       sku: ['', Validators.required],
       price: [0, [Validators.required, Validators.min(0)]],
@@ -1059,6 +1066,9 @@ export class AdminProductsComponent implements OnInit {
     this.editingVariantIndex.set(index);
     this.variantForm.patchValue({
       name: v.name,
+      color: v.color || v.name,
+      size: v.size || '',
+      images: (v.images || []).join("\n"),
       colorHex: v.colorHex || '#1E1B4B',
       sku: v.sku || '',
       price: v.price ?? (this.productForm?.get('price')?.value || 0),
@@ -1075,11 +1085,22 @@ export class AdminProductsComponent implements OnInit {
       return;
     }
     const val = this.variantForm.value;
+    const color = (val.color || val.name).trim();
+    const hex = (val.colorHex || '').trim().toLowerCase();
+    if (!/^#[0-9a-f]{6}$/.test(hex)) { alert('Vui lòng nhập mã màu hex hợp lệ gồm 6 ký tự.'); return; }
+    const others = this.variants().filter((_, i) => i !== this.editingVariantIndex());
+    if (others.some(v => (v.sku || '').toUpperCase() === val.sku.trim().toUpperCase())) { alert('Mã SKU biến thể đã tồn tại'); return; }
+    if (others.some(v => (v.color || v.name) !== color && v.colorHex?.toLowerCase() === hex)) { alert('Các màu khác nhau phải có mã màu khác nhau.'); return; }
+    if (others.some(v => (v.color || v.name) === color && v.colorHex?.toLowerCase() !== hex)) { alert('Cùng màu ở các size phải có cùng mã màu.'); return; }
+    if (others.some(v => (v.color || v.name) === color && (v.size || '') === (val.size || '').trim())) { alert('Tổ hợp màu và size đã tồn tại.'); return; }
     const stockNum = Number(val.stock) || 0;
     const status = stockNum <= 0 ? 'OUT_OF_STOCK' : (val.status || 'ACTIVE');
 
     const newVar: ProductVariant = {
       name: val.name.trim(),
+      color: (val.color || val.name).trim(),
+      size: (val.size || '').trim(),
+      images: (val.images || '').split(/\r?\n/).map((url: string) => url.trim()).filter(Boolean),
       colorHex: val.colorHex || '#1E1B4B',
       sku: val.sku.trim().toUpperCase(),
       price: Number(val.price) || 0,
@@ -1264,6 +1285,7 @@ export class AdminProductsComponent implements OnInit {
 
     if (p.variants && p.variants.length > 0) {
       this.variants.set(p.variants.map(v => ({
+        ...v,
         name: v.name,
         colorHex: v.colorHex || '#1E1B4B',
         sku: v.sku || '',

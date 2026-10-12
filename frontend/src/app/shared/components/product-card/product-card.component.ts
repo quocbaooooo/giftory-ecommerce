@@ -196,10 +196,6 @@ export class ProductCardComponent {
   quickAddToCart(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-    this.cartService.addItem(this.product._id, 1).subscribe({
-      next: () => {
-        this.router.navigate(['/cart']);
-      }
-    });
+    this.cartService.openQuick(this.product);
   }
 }

@@ -30,18 +30,29 @@ export class CartService {
       throw new NotFoundException('Sản phẩm không tồn tại');
     }
 
+    const variants = product.variants || [];
+    const matches = variants.filter(v => dto.variantSku ? v.sku === dto.variantSku : v.name === dto.variantName);
+    const variant = matches.length === 1 ? matches[0] : undefined;
+    if (variants.length && !variant) throw new BadRequestException('Vui lòng chọn đầy đủ màu sắc và kích thước');
+    if (variant && (variant.status === 'HIDDEN' || variant.status === 'OUT_OF_STOCK')) throw new BadRequestException('Biến thể đã hết hàng');
+    const stock = variant ? variant.stock : product.stock;
     const cart = await this.findOrCreateCart(userId, dto.sessionId);
+    const inCart = cart.items.filter(item => item.productId.toString() === dto.productId &&
+      (variant?.sku ? item.variantSku === variant.sku : item.variantName === (variant?.name || 'Tiêu chuẩn')))
+      .reduce((sum, item) => sum + item.quantity, 0);
+    if (!Number.isInteger(dto.quantity) || dto.quantity < 1 || dto.quantity + inCart > stock) throw new BadRequestException('Số lượng vượt quá tồn kho');
 
-    const unitPrice = product.salePrice && product.salePrice > 0 ? product.salePrice : product.price;
+
+    const unitPrice = variant?.price ?? (product.salePrice && product.salePrice > 0 ? product.salePrice : product.price);
     const isCustom = product.isCustomizable || !!dto.customDetails;
-    const customFee = (dto.customDetails && dto.customDetails.customFee) || (isCustom ? product.customBaseFee : 0);
+    const customFee = (dto.customDetails && dto.customDetails.customFee) || (isCustom ? (product.customBaseFee || 0) : 0);
     const finalPrice = unitPrice + customFee;
     const depositAmount = isCustom ? Math.round(finalPrice * 0.5) : 0;
 
     // Check if duplicate standard item exists
     const existingIndex = cart.items.findIndex(item => 
       item.productId.toString() === dto.productId &&
-      item.variantName === (dto.variantName || 'Tiêu chuẩn') &&
+      (variant?.sku ? item.variantSku === variant.sku : item.variantName === (variant?.name || 'Tiêu chuẩn')) &&
       !isCustom && !item.isCustom
     );
 
@@ -51,7 +62,9 @@ export class CartService {
     } else {
       cart.items.push({
         productId: new Types.ObjectId(dto.productId),
-        variantName: dto.variantName || 'Tiêu chuẩn',
+        variantName: variant?.name || 'Tiêu chuẩn',
+        variantSku: variant?.sku,
+        image: variant?.image || variant?.images?.[0] || product.images?.[0],
         quantity: dto.quantity,
         customDesignId: dto.customDesignId ? new Types.ObjectId(dto.customDesignId) : undefined,
         customDetails: dto.customDetails || null,
@@ -74,6 +87,14 @@ export class CartService {
     if (quantity <= 0) {
       cart.items.splice(itemIndex, 1);
     } else {
+      const item = cart.items[itemIndex];
+      const product = await this.productModel.findById(item.productId);
+      if (!product) throw new NotFoundException('Sản phẩm không tồn tại');
+      const variant = product.variants?.find(v => item.variantSku ? v.sku === item.variantSku : v.name === item.variantName);
+      if (product.variants?.length && (!variant || variant.status === 'HIDDEN' || variant.status === 'OUT_OF_STOCK')) throw new BadRequestException('Biến thể không còn bán');
+      const otherQuantity = cart.items.reduce((sum, other, index) => index !== itemIndex && other.productId.toString() === item.productId.toString() &&
+        (item.variantSku ? other.variantSku === item.variantSku : other.variantName === item.variantName) ? sum + other.quantity : sum, 0);
+      if (!Number.isInteger(quantity) || quantity + otherQuantity > (variant ? variant.stock : product.stock)) throw new BadRequestException('Số lượng vượt quá tồn kho');
       cart.items[itemIndex].quantity = quantity;
       const unitDeposit = cart.items[itemIndex].isCustom ? Math.round(cart.items[itemIndex].price * 0.5) : 0;
       cart.items[itemIndex].depositRequired = unitDeposit * quantity;

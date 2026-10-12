@@ -28,6 +28,9 @@ export class OrderItem {
   @Prop({ default: 'Tiêu chuẩn' })
   variantName: string;
 
+  @Prop()
+  variantSku?: string;
+
   @Prop({ required: true, min: 1 })
   quantity: number;
 

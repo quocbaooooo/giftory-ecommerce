@@ -90,6 +90,9 @@ export class CreateProductDto {
   @IsOptional()
   @IsArray()
   variants?: Array<{
+    color?: string;
+    size?: string;
+    images?: string[];
     name: string;
     colorHex?: string;
     price: number;

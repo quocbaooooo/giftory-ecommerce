@@ -40,6 +40,10 @@ export class BuyNowItemDto {
   @IsString()
   variantName?: string;
 
+  @IsOptional()
+  @IsString()
+  variantSku?: string;
+
   @ApiProperty({ example: 1, default: 1, required: false })
   @IsOptional()
   quantity?: number;

@@ -659,6 +659,7 @@ export class CheckoutComponent implements OnInit {
       orderPayload.buyNowItem = {
         productId: typeof bn.productId === 'object' ? bn.productId._id : bn.productId,
         variantName: bn.variantName,
+        variantSku: bn.variantSku,
         quantity: bn.quantity,
         customDetails: bn.customDetails
       };

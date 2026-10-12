@@ -12,6 +12,12 @@ export class CartItem {
   @Prop({ default: 'Tiêu chuẩn' })
   variantName: string;
 
+  @Prop()
+  variantSku?: string;
+
+  @Prop()
+  image?: string;
+
   @Prop({ required: true, min: 1, default: 1 })
   quantity: number;
 

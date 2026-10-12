@@ -1,24 +1,39 @@
-import { Component, EventEmitter, Output, OnInit, OnDestroy, ElementRef, HostListener } from '@angular/core';
+import { Component, Input, EventEmitter, Output, OnInit, OnDestroy, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { Subject, Subscription, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, filter } from 'rxjs/operators';
 import { ProductService } from '../../../core/services/product.service';
 
 @Component({
   selector: 'app-pill-search',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  host: { class: 'block w-full max-w-3xl mx-auto relative z-30' },
+  imports: [CommonModule, FormsModule],
+  styles: [`
+    .floating-search { padding: 0; }
+    .floating-search form {
+      border-radius: 999px; padding: 8px 10px 8px 26px;
+      background: rgba(255,255,255,.94); backdrop-filter: blur(20px);
+      border-color: rgba(226,232,240,.85);
+      box-shadow: 0 12px 48px rgba(30,27,75,.18), 0 2px 8px rgba(30,27,75,.06);
+    }
+    .floating-search .search-icon, .floating-search .submit-label { display: none; }
+    .floating-search .search-submit {
+      width: 40px; height: 40px; padding: 0; border-radius: 50%;
+      color: #64748b; background: #f1f0f4; box-shadow: none;
+    }
+    .floating-search .search-submit:hover { color: #7c3aed; background: #ede9fe; }
+    .floating-search .suggestions {
+      top: auto; bottom: calc(100% + 12px); left: 0; right: 0; margin-top: 0;
+      max-height: min(440px, 60dvh); overflow-y: auto;
+    }
+  `],
   template: `
-    <div class="relative z-30 w-full max-w-2xl mx-auto px-4">
-      <form (ngSubmit)="onSearch()" class="relative flex items-center bg-white rounded-full shadow-pill border border-[#DDD6FE] hover:border-purple-400 focus-within:border-[#7C3AED] focus-within:ring-2 focus-within:ring-purple-200 transition-all p-1.5 pl-3">
-        <!-- Giftory Brand Emblem -->
-        <div class="w-8 h-8 flex items-center justify-center mr-2 flex-shrink-0 bg-transparent border-none">
-          <img src="/logo.png" alt="Giftory" class="w-full h-full object-contain">
-        </div>
-
-        <span class="material-symbols-outlined text-slate-400 text-2xl mr-2 select-none">search</span>
+    <div class="relative w-full px-4 sm:px-6" [class.floating-search]="floating">
+      <form role="search" (ngSubmit)="onSearch()" class="relative flex items-center gap-2 sm:gap-3 bg-white rounded-2xl sm:rounded-full shadow-[0_8px_32px_rgba(124,58,237,0.10)] border border-purple-200/80 hover:border-purple-300 focus-within:border-[#7C3AED] focus-within:ring-4 focus-within:ring-purple-100 transition-all duration-200 p-1.5 pl-4 sm:pl-6">
+        <span class="search-icon material-symbols-outlined text-purple-400 text-2xl shrink-0 select-none" aria-hidden="true">search</span>
         
         <input 
           [(ngModel)]="searchTerm" 
@@ -26,32 +41,25 @@ import { ProductService } from '../../../core/services/product.service';
           (focus)="onInputFocus()"
           name="searchTerm"
           autocomplete="off"
-          class="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-slate-700 text-sm md:text-base placeholder:text-slate-400 font-medium py-1" 
-          placeholder="Bạn đang tìm kiếm món quà gì hôm nay?" 
+          class="flex-1 min-w-0 bg-transparent border-none focus:outline-none focus:ring-0 text-slate-700 text-sm sm:text-base placeholder:text-slate-400 font-normal py-2.5 px-0"
+          placeholder="Tìm kiếm quà tặng…"
+          aria-label="Tìm kiếm quà tặng"
           type="text"
         >
 
         <!-- Loading indicator -->
-        <div *ngIf="isLoading" class="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mr-2"></div>
+        <div *ngIf="isLoading" class="w-5 h-5 shrink-0 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mr-2"></div>
 
-        <div class="flex items-center gap-1 flex-shrink-0">
-          <button type="button" (click)="openVoiceSearch()" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-[#7C3AED] hover:bg-slate-100 transition cursor-pointer" title="Tìm kiếm bằng giọng nói">
-            <span class="material-symbols-outlined text-[20px]">mic</span>
-          </button>
-          <button type="button" routerLink="/custom-studio" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-[#7C3AED] hover:bg-slate-100 transition cursor-pointer" title="Tùy chỉnh quà Bespoke">
-            <span class="material-symbols-outlined text-[20px]">draw</span>
-          </button>
-        </div>
-
-        <button type="submit" class="flex-shrink-0 w-10 h-10 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white flex items-center justify-center transition-all ml-2 shadow-md shadow-purple-300 border-none cursor-pointer">
-          <span class="material-symbols-outlined text-xl">arrow_forward</span>
+        <button type="submit" aria-label="Tìm kiếm" title="Tìm kiếm" class="search-submit shrink-0 h-10 w-10 sm:h-11 sm:w-auto sm:px-6 rounded-xl sm:rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white flex items-center justify-center gap-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 shadow-sm border-none cursor-pointer">
+          <span class="submit-label hidden sm:inline text-sm font-semibold">Tìm quà</span>
+          <span class="material-symbols-outlined text-xl" aria-hidden="true">arrow_forward</span>
         </button>
       </form>
 
       <!-- LIVE AUTO-COMPLETE DROPDOWN (US-PD-01.1) -->
       <div 
         *ngIf="showDropdown && (suggestedProducts.length > 0 || suggestedKeywords.length > 0)"
-        class="absolute left-4 right-4 top-full mt-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-purple-100 overflow-hidden z-50 animate-fade-in"
+        class="suggestions absolute left-4 right-4 sm:left-6 sm:right-6 top-full mt-3 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-purple-100 overflow-hidden z-50 animate-fade-in"
       >
         <!-- Suggested Keywords Section -->
         <div *ngIf="suggestedKeywords.length > 0" class="p-3 border-b border-purple-50 bg-purple-50/40">
@@ -131,6 +139,7 @@ import { ProductService } from '../../../core/services/product.service';
   `
 })
 export class PillSearchComponent implements OnInit, OnDestroy {
+  @Input() floating = false;
   searchTerm: string = '';
   @Output() search = new EventEmitter<string>();
 
@@ -141,6 +150,7 @@ export class PillSearchComponent implements OnInit, OnDestroy {
 
   private searchSubject = new Subject<string>();
   private sub?: Subscription;
+  private routeSub?: Subscription;
 
   constructor(
     private router: Router,
@@ -149,6 +159,12 @@ export class PillSearchComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.syncSearchFromUrl();
+    this.routeSub = this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(() => {
+      this.syncSearchFromUrl();
+      this.showDropdown = false;
+      this.searchSubject.next('');
+    });
     // US-PD-01: Debounce 250ms & cancel previous request
     this.sub = this.searchSubject.pipe(
       debounceTime(250),
@@ -175,6 +191,7 @@ export class PillSearchComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+    this.routeSub?.unsubscribe();
   }
 
   onInputChange(val: string): void {
@@ -198,30 +215,22 @@ export class PillSearchComponent implements OnInit, OnDestroy {
     this.router.navigate(['/products', slug]);
   }
 
-  onSearch(): void {
-    if (this.searchTerm.trim()) {
-      this.showDropdown = false;
-      this.search.emit(this.searchTerm.trim());
-      this.router.navigate(['/products'], { queryParams: { search: this.searchTerm.trim() } });
-    }
+  private syncSearchFromUrl(): void {
+    const url = this.router.parseUrl(this.router.url);
+    this.searchTerm = url.queryParams['search'] || '';
   }
 
-  openVoiceSearch(): void {
-    // Check speech recognition support
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'vi-VN';
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        this.searchTerm = transcript;
-        this.onInputChange(transcript);
-      };
-      recognition.start();
-    } else {
-      this.searchTerm = 'Bình giữ nhiệt';
-      this.onInputChange(this.searchTerm);
-    }
+  onSearch(): void {
+    const keyword = this.searchTerm.trim();
+    const current = this.router.parseUrl(this.router.url);
+    const isListing = current.root.children['primary']?.segments.map(segment => segment.path).join('/') === 'products';
+    if (!keyword && !isListing) return;
+    this.showDropdown = false;
+    this.searchSubject.next('');
+    this.search.emit(keyword);
+    this.router.navigate(['/products'], {
+      queryParams: { ...(isListing ? current.queryParams : {}), search: keyword || null, page: null }
+    });
   }
 
   @HostListener('document:click', ['$event'])

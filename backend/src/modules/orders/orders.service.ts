@@ -44,14 +44,11 @@ export class OrdersService {
       }
 
       const qty = Math.max(1, Number(dto.buyNowItem.quantity || 1));
-      let unitPrice = product.price;
-
-      if (dto.buyNowItem.variantName && product.variants?.length) {
-        const matchedVariant = product.variants.find(v => v.name === dto.buyNowItem.variantName);
-        if (matchedVariant && matchedVariant.price) {
-          unitPrice = matchedVariant.price;
-        }
-      }
+      const matches = (product.variants || []).filter(v => dto.buyNowItem.variantSku ? v.sku === dto.buyNowItem.variantSku : v.name === dto.buyNowItem.variantName);
+      const variant = matches.length === 1 ? matches[0] : undefined;
+      if (product.variants?.length && (!variant || variant.status === 'HIDDEN' || variant.status === 'OUT_OF_STOCK')) throw new BadRequestException('Vui lòng chọn biến thể còn hàng');
+      if (!Number.isInteger(qty) || qty > (variant ? variant.stock : product.stock)) throw new BadRequestException('Số lượng vượt quá tồn kho');
+      const unitPrice = variant?.price ?? (product.salePrice || product.price);
 
       const subtotal = unitPrice * qty;
       itemsTotal = subtotal;
@@ -66,8 +63,9 @@ export class OrdersService {
         productId: product._id,
         productName: product.name,
         loyaltyEligible: product.loyaltyEligible !== false,
-        productImage: (product.images && product.images[0]) || '',
-        variantName: dto.buyNowItem.variantName || 'Tiêu chuẩn',
+        productImage: variant?.image || variant?.images?.[0] || product.images?.[0] || '',
+        variantName: variant?.name || 'Tiêu chuẩn',
+        variantSku: variant?.sku,
         quantity: qty,
         unitPrice,
         isCustom,
@@ -110,8 +108,9 @@ export class OrdersService {
           productId: product._id,
           productName: product.name,
         loyaltyEligible: product.loyaltyEligible !== false,
-          productImage: (product.images && product.images[0]) || '',
+          productImage: item.image || product.images?.[0] || '',
           variantName: item.variantName || 'Tiêu chuẩn',
+          variantSku: item.variantSku,
           quantity: item.quantity,
           unitPrice,
           isCustom,

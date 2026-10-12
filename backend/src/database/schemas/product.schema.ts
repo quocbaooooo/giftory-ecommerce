@@ -5,6 +5,15 @@ export type ProductDocument = Product & Document;
 
 @Schema()
 export class ProductVariant {
+  @Prop({ default: '' })
+  color: string;
+
+  @Prop({ default: '' })
+  size: string;
+
+  @Prop({ type: [String], default: [] })
+  images: string[];
+
   @Prop({ required: true })
   name: string;
 

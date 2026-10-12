@@ -30,6 +30,9 @@ export interface Category {
 }
 
 export interface ProductVariant {
+  color?: string;
+  size?: string;
+  images?: string[];
   name: string;
   colorHex?: string;
   price: number;

@@ -1,3 +1,5 @@
+import { PillSearchComponent } from './shared/components/pill-search/pill-search.component';
+import { ShoppingOverlaysComponent } from './shared/components/shopping-overlays.component';
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
@@ -20,6 +22,8 @@ export interface AnnouncementItem {
   standalone: true,
   imports: [
     CommonModule,
+    ShoppingOverlaysComponent,
+    PillSearchComponent,
     RouterModule,
     SidebarRailComponent,
     AiConciergeComponent
@@ -32,6 +36,7 @@ export class AppComponent {
   authService = inject(AuthService);
   cartService = inject(CartService);
 
+  isHomeRoute = signal(true);
   isAuthRoute = signal(false);
   isAdminRoute = signal<boolean>(false);
   isCustomStudioRoute = signal<boolean>(false);
@@ -75,6 +80,7 @@ export class AppComponent {
     queueMicrotask(() => this.authService.refreshProfile());
     if (typeof window !== 'undefined') {
       const path = window.location.pathname;
+      this.isHomeRoute.set(path === "/");
       this.isAuthRoute.set(/^\/(login|register|forgot-password|reset-password)(?:[/?#]|$)/.test(path));
       this.isAdminRoute.set(path.startsWith('/admin'));
       this.isCustomStudioRoute.set(path.startsWith('/custom-studio'));
@@ -91,6 +97,7 @@ export class AppComponent {
       this.isAuthRoute.set(/^\/(login|register|forgot-password|reset-password)(?:[/?#]|$)/.test(event.urlAfterRedirects));
       this.isAdminRoute.set(event.urlAfterRedirects.startsWith('/admin'));
       this.isCustomStudioRoute.set(event.urlAfterRedirects.startsWith('/custom-studio'));
+      this.isHomeRoute.set(event.urlAfterRedirects.split(/[?#]/)[0] === "/");
       window.scrollTo(0, 0);
     });
   }

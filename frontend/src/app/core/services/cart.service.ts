@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { tap } from 'rxjs';
 import { ApiService } from './api.service';
-import { Cart, CartItem } from '../models';
+import { Cart, CartItem, Product } from '../models';
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +10,13 @@ export class CartService {
   private readonly SESSION_KEY = 'giftory_cart_session_id';
   private readonly BUY_NOW_KEY = 'giftory_buy_now_item';
 
+  quickProduct = signal<Product | null>(null);
+  openQuick: (product: Product) => void = () => {};
+  miniCartOpen = signal(false);
+  toast = signal('');
+  private toastTimer?: ReturnType<typeof setTimeout>;
+  notify(message: string) { this.toast.set(message); clearTimeout(this.toastTimer); this.toastTimer = setTimeout(() => this.toast.set(''), 4000); }
+  added() { this.notify('Đã thêm vào giỏ'); }
   cart = signal<Cart | null>(null);
   buyNowItem = signal<any | null>(this.getStoredBuyNowItem());
   
@@ -73,6 +80,7 @@ export class CartService {
         productId: typeof param.productId === 'object' ? param.productId._id : param.productId,
         quantity: param.quantity || 1,
         variantName: param.variantName,
+        variantSku: param.variantSku,
         customDetails: param.customDetails,
         sessionId
       };

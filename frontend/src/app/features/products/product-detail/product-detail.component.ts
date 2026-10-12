@@ -1,3 +1,6 @@
+import { DialogFocusDirective } from '../../../shared/components/dialog-focus.directive';
+import { ProductOptions } from '../../../shared/components/product-options';
+import { VariantPickerComponent } from '../../../shared/components/variant-picker.component';
 import { ProductReviewsComponent } from '../../care/product-reviews.component';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -12,8 +15,17 @@ import { Product, ProductVariant } from '../../../core/models';
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ProductCardComponent, ProductReviewsComponent],
+  imports: [CommonModule, RouterModule, FormsModule, ProductCardComponent, ProductReviewsComponent, VariantPickerComponent, DialogFocusDirective],
+  host: { '(document:keydown.escape)': 'lightbox.set(false)' },
   template: `
+    @if (lightbox()) {
+      <div class="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center" appDialogFocus role="dialog" aria-modal="true" aria-label="Ảnh sản phẩm" (touchstart)="touchStart($event)" (touchend)="touchEnd($event)" (click)="lightbox.set(false)">
+        <button autofocus class="absolute top-5 right-5 text-white p-4" (click)="lightbox.set(false)" aria-label="Đóng">✕</button>
+        <button class="absolute left-3 text-white p-4" (click)="$event.stopPropagation(); options.moveImage(-1)" aria-label="Ảnh trước">❮</button>
+        <img [src]="activeImage()" [alt]="product()?.name" class="max-w-[85vw] max-h-[85vh] object-contain" (click)="$event.stopPropagation()">
+        <button class="absolute right-3 text-white p-4" (click)="$event.stopPropagation(); options.moveImage(1)" aria-label="Ảnh sau">❯</button>
+      </div>
+    }
     @if (product(); as prod) {
       <div class="max-w-7xl mx-auto px-4 md:px-8 py-8">
         <!-- Breadcrumb -->
@@ -44,9 +56,9 @@ import { Product, ProductVariant } from '../../../core/models';
           <!-- LEFT: GALLERY -->
           <div class="lg:col-span-6 flex flex-col gap-4">
             <!-- Main Image Display -->
-            <div class="relative w-full aspect-square rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
+            <div (touchstart)="touchStart($event)" (touchend)="touchEnd($event)" class="relative w-full aspect-square rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
               <img 
-                [src]="activeImage()" 
+                (click)="lightbox.set(true)" tabindex="0" (keydown.enter)="lightbox.set(true)" role="button" aria-label="Xem ảnh lớn" [src]="activeImage()"
                 [alt]="prod.name" 
                 class="w-full h-full object-cover transition-all duration-300"
               >
@@ -60,9 +72,9 @@ import { Product, ProductVariant } from '../../../core/models';
             </div>
 
             <!-- Thumbnail Grid -->
-            @if (prod.images && prod.images.length > 1) {
+            @if (options.gallery().length > 1) {
               <div class="flex items-center gap-3 overflow-x-auto pb-1">
-                @for (img of prod.images; track img) {
+                @for (img of options.gallery(); track img) {
                   <button 
                     (click)="activeImage.set(img)"
                     class="w-20 h-20 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer"
@@ -90,7 +102,7 @@ import { Product, ProductVariant } from '../../../core/models';
                   <span class="text-slate-400 font-normal">({{ prod.soldCount || 100 }}+ đã bán)</span>
                 </div>
                 <span class="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">
-                  Còn hàng sẵn sàng
+                  {{ options.selected() || !prod.variants?.length ? 'Tồn kho: ' + options.stock() : 'Chọn phân loại để xem tồn kho' }}
                 </span>
               </div>
 
@@ -111,9 +123,9 @@ import { Product, ProductVariant } from '../../../core/models';
                 <div>
                   <div class="flex items-baseline gap-2">
                     <span class="text-2xl sm:text-3xl font-extrabold text-[#7C3AED]">
-                      {{ (prod.salePrice && prod.salePrice > 0 ? prod.salePrice : prod.price) | number:'1.0-0' }}đ
+                      {{ options.price() | number:'1.0-0' }}đ
                     </span>
-                    @if (prod.salePrice && prod.salePrice > 0) {
+                    @if (!options.selected() && prod.salePrice && prod.salePrice > 0) {
                       <span class="text-sm text-slate-400 line-through">
                         {{ prod.price | number:'1.0-0' }}đ
                       </span>
@@ -121,12 +133,12 @@ import { Product, ProductVariant } from '../../../core/models';
                   </div>
                   @if (prod.isCustomizable) {
                     <p class="text-xs text-[#10B981] font-bold mt-1">
-                      ⚡ Cần cọc trước 50%: {{ ((prod.salePrice || prod.price) * 0.5) | number:'1.0-0' }}đ để xưởng sản xuất
+                      ⚡ Cần cọc trước 50%: {{ (options.price() * 0.5) | number:'1.0-0' }}đ để xưởng sản xuất
                     </p>
                   }
                 </div>
                 <div class="text-right text-[11px] text-slate-500">
-                  <span>Mã SKU: {{ prod.sku || 'GF-BESPOKE' }}</span>
+                  <span>Mã SKU: {{ options.selected()?.sku || (prod.variants?.length ? 'Chưa chọn biến thể' : prod.sku) }}</span>
                 </div>
               </div>
 
@@ -156,40 +168,7 @@ import { Product, ProductVariant } from '../../../core/models';
                 </div>
               }
 
-              <!-- Variants Selection -->
-              @if (prod.variants && prod.variants.length > 0) {
-                <div class="mb-6">
-                  <div class="text-xs font-bold text-slate-700 mb-2 flex items-center justify-between">
-                    <span>Phân loại / Tùy chọn phối màu:</span>
-                    <span class="text-[11px] text-[#7C3AED] font-semibold">{{ selectedVariant() }}</span>
-                  </div>
-                  <div class="flex items-center gap-2 flex-wrap">
-                    @for (v of prod.variants; track v.sku || v.name) {
-                      @if (v.status !== 'HIDDEN') {
-                        @let isOos = (v.stock || 0) <= 0 || v.status === 'OUT_OF_STOCK';
-                        <button 
-                          (click)="onSelectVariant(v)"
-                          [disabled]="isOos"
-                          class="px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all flex items-center gap-2"
-                          [ngClass]="{
-                            'opacity-40 cursor-not-allowed bg-slate-100 border-slate-200 text-slate-400': isOos,
-                            'cursor-pointer': !isOos,
-                            'border-[#7C3AED] bg-purple-50 text-[#7C3AED] shadow-xs': selectedVariant() === v.name && !isOos,
-                            'border-slate-200 bg-white text-slate-700 hover:border-purple-200': selectedVariant() !== v.name && !isOos
-                          }"
-                        >
-                          <span class="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0 shadow-2xs" [style.backgroundColor]="v.colorHex || '#1E1B4B'"></span>
-                          <span>{{ v.name }}</span>
-                          @if (isOos) {
-                            <span class="text-[9px] font-bold text-red-500 bg-red-50 px-1 rounded">Hết hàng</span>
-                          }
-                        </button>
-                      }
-                    }
-                  </div>
-                </div>
-              }
-
+              <app-variant-picker [options]="options" />
               <!-- Quantity Selector -->
               <div class="flex items-center gap-4 mb-6">
                 <span class="text-xs font-bold text-slate-700">Số lượng:</span>
@@ -250,7 +229,7 @@ import { Product, ProductVariant } from '../../../core/models';
               }
 
               <button 
-                (click)="addToCart()"
+                (click)="addToCart()" [disabled]="pending()"
                 class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#7C3AED] font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
               >
                 <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span>
@@ -341,10 +320,15 @@ export class ProductDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  product = signal<Product | null>(null);
-  activeImage = signal<string>('');
-  selectedVariant = signal<string>('Tiêu chuẩn');
-  quantity = signal<number>(1);
+  options = new ProductOptions();
+  product = this.options.product;
+  activeImage = this.options.activeImage;
+  quantity = this.options.quantity;
+  lightbox = signal(false);
+  pending = signal(false);
+  private touchX = 0;
+  touchStart(e: TouchEvent) { this.touchX = e.changedTouches[0].clientX; }
+  touchEnd(e: TouchEvent) { const dx = e.changedTouches[0].clientX - this.touchX; if (Math.abs(dx) > 40) this.options.moveImage(dx > 0 ? -1 : 1); }
   isFromAiRecommendation = signal<boolean>(false);
 
   ngOnInit(): void {
@@ -362,34 +346,17 @@ export class ProductDetailComponent implements OnInit {
       if (slug) {
         this.productService.getProductBySlug(slug).subscribe({
           next: p => {
-            this.product.set(p);
-            this.activeImage.set(p.images && p.images.length ? p.images[0] : '');
-            if (p.variants && p.variants.length > 0) {
-              const active = p.variants.find(v => v.status !== 'HIDDEN' && (v.stock || 0) > 0) || p.variants[0];
-              if (active) {
-                this.selectedVariant.set(active.name);
-                if (active.image) {
-                  this.activeImage.set(active.image);
-                }
-              }
-            }
+            this.options.load(p);
+            this.lightbox.set(false);
           }
         });
       }
     });
   }
 
-  onSelectVariant(v: any): void {
-    if ((v.stock || 0) <= 0 || v.status === 'OUT_OF_STOCK') return;
-    this.selectedVariant.set(v.name);
-    if (v.image) {
-      this.activeImage.set(v.image);
-    }
-  }
-
   changeQuantity(delta: number): void {
     const next = this.quantity() + delta;
-    if (next >= 1) {
+    if (next >= 1 && next <= (this.options.stock() || 1)) {
       this.quantity.set(next);
     }
   }
@@ -410,10 +377,13 @@ export class ProductDetailComponent implements OnInit {
     const p = this.product();
     if (!p) return;
 
-    this.cartService.addItem(p._id, this.quantity(), this.selectedVariant()).subscribe({
-      next: () => {
-        this.router.navigate(['/cart']);
-      }
+    const error = this.options.error();
+    if (error) { this.cartService.notify(error); return; }
+    if (this.pending()) return;
+    this.pending.set(true);
+    this.cartService.addItem({ productId: p._id, quantity: this.quantity(), variantName: this.options.selected()?.name, variantSku: this.options.selected()?.sku }).subscribe({
+      next: () => { this.pending.set(false); this.cartService.added(); },
+      error: err => { this.pending.set(false); this.cartService.notify(err.error?.message || 'Không thể thêm vào giỏ'); }
     });
   }
 
@@ -421,14 +391,10 @@ export class ProductDetailComponent implements OnInit {
     const p = this.product();
     if (!p) return;
 
-    let unitPrice = p.price;
-    const vName = this.selectedVariant();
-    if (vName && p.variants && p.variants.length > 0) {
-      const v = p.variants.find(item => item.name === vName);
-      if (v && v.price) {
-        unitPrice = v.price;
-      }
-    }
+    const error = this.options.error();
+    if (error) { this.cartService.notify(error); return; }
+    const unitPrice = this.options.price();
+    const vName = this.options.selected()?.name;
 
     const buyNowItem = {
       productId: p,
@@ -438,6 +404,7 @@ export class ProductDetailComponent implements OnInit {
       unitPrice: unitPrice,
       quantity: this.quantity(),
       variantName: vName || 'Tiêu chuẩn',
+      variantSku: this.options.selected()?.sku,
       isCustom: false,
       customDetails: null
     };
