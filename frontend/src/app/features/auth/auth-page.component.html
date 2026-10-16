@@ -1,52 +1,719 @@
-<div class="auth-page">
-  <header class="auth-header">
-    <a routerLink="/" class="brand" aria-label="Giftory — Trang chủ"><img src="/logo.png" alt="" width="36" height="36"><span>Giftory<span class="brand-dot">.</span></span></a>
-    <a routerLink="/products" class="back-shop"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span> Tiếp tục khám phá</a>
-  </header>
-  <main class="auth-layout">
-    <aside class="story-panel" aria-label="Giftory — Quà tặng dành riêng cho bạn">
-      <div class="story-top"><span class="eyebrow"><span></span> LITTLE GIFTS, LASTING MEMORIES</span><h2>Một món quà nhỏ.<br>Một niềm vui <em>rất riêng.</em></h2><p>Từ ý tưởng của bạn đến nụ cười của người nhận.<br>Cùng Giftory gửi đi những điều thật đặc biệt.</p></div>
-      <div class="gift-scene" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><span class="spark spark-one">✦</span><span class="spark spark-two">✧</span><span class="spark spark-three">✦</span><div class="gift-shadow"></div><div class="gift-box"><div class="bow bow-left"></div><div class="bow bow-right"></div><div class="gift-lid"></div><div class="gift-body"></div><div class="gift-ribbon"></div><div class="gift-tag">just for<br><em>you.</em></div></div><span class="floating-note note-top"><span class="material-symbols-outlined">favorite</span> Chọn bằng cả tấm lòng</span><span class="floating-note note-bottom"><span class="material-symbols-outlined">auto_awesome</span> Mang dấu ấn của bạn</span></div>
-      <div class="story-bottom"><div><span class="material-symbols-outlined" aria-hidden="true">draw</span><span>Tự tay cá nhân hóa</span></div><div><span class="material-symbols-outlined" aria-hidden="true">redeem</span><span>Tích điểm mỗi lần tặng</span></div></div>
-    </aside>
-    <section class="form-panel" aria-labelledby="auth-title">
-      <div class="form-content">
+<div class="h-screen w-full bg-[#FAF8FD] font-sans text-slate-800 antialiased selection:bg-purple-200 selection:text-purple-900 overflow-hidden">
+  <div class="h-full w-full flex flex-col lg:flex-row">
+    <!-- ==========================================
+         CỘT TRÁI (50% Width): Brand Storytelling & Cảm Xúc Quà Tặng
+         ========================================== -->
+    <div class="relative hidden lg:flex lg:w-1/2 h-full flex-col justify-between p-10 xl:p-14 text-white overflow-hidden bg-slate-950">
+      <!-- Nền ảnh hộp quà satin tím sang trọng kết hợp overlay mận nhung velvet -->
+      <div
+        class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-1000 scale-105"
+        style="background-image: url('/images/auth/auth-bg.jpg');"
+      ></div>
+      <!-- Lớp phủ đa tầng tông tím mận plum velvet & tối ấm sắc sảo -->
+      <div class="absolute inset-0 z-0 bg-gradient-to-br from-[#1e082c]/95 via-[#2b0c44]/90 to-[#0e031a]/95 backdrop-blur-[1.5px]"></div>
+      <div class="absolute -top-32 -left-32 w-96 h-96 bg-purple-600/25 rounded-full blur-3xl pointer-events-none z-0"></div>
+      <div class="absolute bottom-10 right-10 w-96 h-96 bg-pink-600/20 rounded-full blur-3xl pointer-events-none z-0"></div>
+
+      <!-- Nội dung Cột Trái -->
+      <div class="relative z-10 flex flex-col h-full justify-between">
+        <!-- Header góc trên Cột Trái -->
+        <div class="flex items-center justify-between gap-4">
+          <a
+            routerLink="/"
+            class="group inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/15 text-white/90 hover:text-white transition-all shadow-sm hover:shadow hover:-translate-x-0.5 active:translate-x-0"
+          >
+            <span class="material-symbols-outlined text-[18px] transition-transform group-hover:-translate-x-1">arrow_back</span>
+            <span class="text-xs font-semibold tracking-wide">Quay về Trang chủ</span>
+          </a>
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/20 border border-purple-300/30 backdrop-blur-md text-purple-200 text-xs font-semibold tracking-wider uppercase">
+            <span class="animate-badge-glow">✨</span>
+            <span>Giftory • Tiệm Quà Tặng Bespoke</span>
+          </div>
+        </div>
+
+        <!-- Tâm điểm Cột Trái: Tiêu đề nghệ thuật & 3 Thẻ Kính Mờ -->
+        <div class="my-auto py-6 max-w-xl">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm text-[11px] font-medium text-pink-200 mb-4 tracking-wider uppercase">
+            <span class="w-1.5 h-1.5 rounded-full bg-pink-400 animate-ping"></span>
+            Nâng niu từng tâm ý trao gửi
+          </div>
+          <h2 class="font-serif text-3xl xl:text-4xl 2xl:text-[42px] font-semibold leading-[1.25] text-white tracking-tight drop-shadow-sm mb-4">
+            Gửi Trao Cảm Xúc <br>
+            <span class="italic font-normal text-purple-200">Thắt Chặt Yêu Thương</span>
+          </h2>
+          <p class="text-sm xl:text-base text-purple-100/80 leading-relaxed font-light mb-8 max-w-lg">
+            “Mỗi món quà là một câu chuyện riêng biệt, được chế tác tỉ mỉ và gói trọn bằng niềm trân quý sâu sắc.”
+          </p>
+
+          <!-- 3 Thẻ Kính Mờ Glassmorphism Card -->
+          <div class="flex flex-col gap-3 xl:gap-3.5">
+            <!-- Thẻ 1 -->
+            <div class="group flex items-center gap-4 p-3.5 xl:p-4 rounded-2xl bg-white/[0.08] hover:bg-white/[0.13] border border-white/15 hover:border-purple-300/40 backdrop-blur-md transition-all duration-300 shadow-[0_8px_24px_rgba(0,0,0,0.15)] hover:-translate-y-0.5">
+              <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-pink-500/30 to-purple-500/30 border border-pink-300/30 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-105 transition-transform">
+                🎁
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-white tracking-wide">Quà Độc Bản</h3>
+                <p class="text-xs text-purple-100/75 mt-0.5 font-light leading-snug">Khắc tên riêng, in ảnh &amp; xem trước mockup 3D sắc nét.</p>
+              </div>
+              <span class="material-symbols-outlined text-purple-200/50 text-[18px] group-hover:translate-x-1 group-hover:text-purple-200 transition-all">chevron_right</span>
+            </div>
+
+            <!-- Thẻ 2 -->
+            <div class="group flex items-center gap-4 p-3.5 xl:p-4 rounded-2xl bg-white/[0.08] hover:bg-white/[0.13] border border-white/15 hover:border-purple-300/40 backdrop-blur-md transition-all duration-300 shadow-[0_8px_24px_rgba(0,0,0,0.15)] hover:-translate-y-0.5">
+              <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-amber-500/30 to-purple-500/30 border border-amber-300/30 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-105 transition-transform">
+                ⚡
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-white tracking-wide">Giao Hỏa Tốc 2H</h3>
+                <p class="text-xs text-purple-100/75 mt-0.5 font-light leading-snug">Đóng nơ lụa satin cao cấp, kèm thiệp viết tay chân thành.</p>
+              </div>
+              <span class="material-symbols-outlined text-purple-200/50 text-[18px] group-hover:translate-x-1 group-hover:text-purple-200 transition-all">chevron_right</span>
+            </div>
+
+            <!-- Thẻ 3 -->
+            <div class="group flex items-center gap-4 p-3.5 xl:p-4 rounded-2xl bg-white/[0.08] hover:bg-white/[0.13] border border-white/15 hover:border-purple-300/40 backdrop-blur-md transition-all duration-300 shadow-[0_8px_24px_rgba(0,0,0,0.15)] hover:-translate-y-0.5">
+              <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-cyan-500/30 to-purple-500/30 border border-cyan-300/30 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-105 transition-transform">
+                💎
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-white tracking-wide">Tích Điểm Hội Viên</h3>
+                <p class="text-xs text-purple-100/75 mt-0.5 font-light leading-snug">Nhận ngay Voucher 50k &amp; lưu bản thiết kế vĩnh viễn.</p>
+              </div>
+              <span class="material-symbols-outlined text-purple-200/50 text-[18px] group-hover:translate-x-1 group-hover:text-purple-200 transition-all">chevron_right</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Cột Trái: Social Proof Stacked Avatars & Rating -->
+        <div class="pt-4 border-t border-white/10 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3.5">
+            <!-- Stacked Avatars -->
+            <div class="flex -space-x-2.5 overflow-hidden">
+              <img
+                alt="Khách hàng Giftory"
+                class="inline-block h-8 w-8 rounded-full ring-2 ring-purple-900/80 object-cover"
+                src="/images/auth/avatar-1.jpg"
+              >
+              <img
+                alt="Khách hàng Giftory"
+                class="inline-block h-8 w-8 rounded-full ring-2 ring-purple-900/80 object-cover"
+                src="/images/auth/avatar-2.jpg"
+              >
+              <img
+                alt="Khách hàng Giftory"
+                class="inline-block h-8 w-8 rounded-full ring-2 ring-purple-900/80 object-cover"
+                src="/images/auth/avatar-3.jpg"
+              >
+              <img
+                alt="Khách hàng Giftory"
+                class="inline-block h-8 w-8 rounded-full ring-2 ring-purple-900/80 object-cover"
+                src="/images/auth/avatar-4.jpg"
+              >
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-1 text-amber-300 text-xs">
+                <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                <span class="font-bold text-white ml-1 text-[13px]">4.9/5</span>
+              </div>
+              <p class="text-[11px] text-purple-200/80 leading-tight">
+                Đồng hành cùng hơn <span class="font-semibold text-white">15.000+</span> khoảnh khắc trao tặng ý nghĩa tại Việt Nam
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         CỘT PHẢI (50% Width): Form Đăng Nhập & Đăng Ký Chuẩn UX
+         ========================================== -->
+    <div class="w-full lg:w-1/2 h-full flex flex-col justify-between overflow-y-auto px-6 sm:px-10 md:px-14 xl:px-18 py-6 lg:py-8 bg-[#FAF8FD] relative">
+      <div class="my-auto max-w-md w-full mx-auto flex flex-col items-center">
+        <!-- Mobile Back button (visible on mobile only) -->
+        <div class="w-full flex items-center justify-between mb-4 lg:hidden">
+          <a
+            routerLink="/"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-purple-200 text-slate-700 text-xs font-semibold shadow-sm active:scale-95 transition-transform"
+          >
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+            <span>Trang chủ</span>
+          </a>
+          <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">
+            <span>✨ Giftory</span>
+          </div>
+        </div>
+
+        <!-- Logo Giftory thương hiệu rực rỡ kèm slogan -->
+        <div class="flex flex-col items-center text-center mb-5">
+          <a routerLink="/" class="mb-1 flex items-center justify-center cursor-pointer transition-transform duration-300 hover:scale-105">
+            <img
+              alt="Giftory - Mỗi món quà, một câu chuyện riêng"
+              class="h-14 md:h-16 w-auto object-contain drop-shadow-sm"
+              src="/logo.png"
+            >
+          </a>
+          <p class="text-[12px] text-purple-900/70 font-medium">Mỗi món quà, một câu chuyện riêng.</p>
+          <h1 class="sr-only">Đăng Nhập &amp; Tạo Tài Khoản Giftory</h1>
+        </div>
+
+        <!-- Tab Switcher có pill slider (hiển thị khi ở chế độ login hoặc register) -->
         @if (mode === 'login' || isRegister) {
-          <nav class="auth-tabs" aria-label="Chọn đăng nhập hoặc đăng ký"><a routerLink="/login" [queryParams]="linkParams" [class.selected]="mode === 'login'" [attr.aria-current]="mode === 'login' ? 'page' : null">Đăng nhập</a><a routerLink="/register" [queryParams]="linkParams" [class.selected]="isRegister" [attr.aria-current]="isRegister ? 'page' : null">Đăng ký</a></nav>
-        } @else { <a routerLink="/login" [queryParams]="linkParams" class="text-link back-login">← Về đăng nhập</a> }
-        @if (!success()) {
-          <div class="form-heading"><span class="form-kicker">{{ isRegister ? 'GIFTORY CLUB' : mode === 'login' ? 'WELCOME BACK' : 'TÀI KHOẢN GIFTORY' }}</span><h1 id="auth-title">{{ title }}</h1><p>{{ subtitle }}</p></div>
-          @if (expired) { <p class="notice" role="status">Phiên đăng nhập đã hết hạn. Đăng nhập để tiếp tục từ trang trước.</p> }
-          @if (adminNotice) { <p class="notice">Trang bạn chọn dành cho quản trị viên. Vui lòng dùng tài khoản có quyền phù hợp.</p> }
-          @if (error()) { <div id="auth-error" class="form-alert" role="alert" tabindex="-1"><span class="material-symbols-outlined" aria-hidden="true">error</span><p>{{ error() }}</p></div> }
-          <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate [attr.aria-busy]="busy()">
-            <fieldset [disabled]="busy()">
-              @if (isRegister) {
-                <div class="field"><label for="auth-name">Họ và tên</label><input id="auth-name" formControlName="name" autocomplete="name" placeholder="Tên của bạn" maxlength="80" (blur)="normalize('name')" [attr.aria-invalid]="invalid('name')" aria-describedby="name-error">@if (invalid('name')) { <p id="name-error" class="field-error">Nhập họ tên từ 2 đến 80 ký tự.</p> }</div>
-              }
-              @if (mode !== 'reset') {
-                <div class="field"><label for="auth-email">Email</label><input id="auth-email" type="email" formControlName="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="ban@example.com" maxlength="254" (blur)="normalize('email')" [attr.aria-invalid]="invalid('email')" aria-describedby="email-error">@if (invalid('email')) { <p id="email-error" class="field-error">Nhập địa chỉ email hợp lệ.</p> }</div>
-              }
-              @if (isRegister) {
-                <div class="field"><label for="auth-phone">Số điện thoại <span class="optional">Không bắt buộc</span></label><input id="auth-phone" type="tel" formControlName="phone" autocomplete="tel" placeholder="09xx xxx xxx" (blur)="normalize('phone')" [attr.aria-invalid]="invalid('phone')" aria-describedby="phone-error">@if (invalid('phone')) { <p id="phone-error" class="field-error">Nhập số di động Việt Nam hợp lệ gồm 10 chữ số.</p> }</div>
-              }
-              @if (hasPassword) {
-                <div class="field"><div class="label-row"><label for="auth-password">{{ mode === 'reset' ? 'Mật khẩu mới' : 'Mật khẩu' }}</label>@if (mode === 'login') { <a routerLink="/forgot-password" [queryParams]="linkParams" class="text-link">Quên mật khẩu?</a> }</div><div class="password-input"><input id="auth-password" [type]="showPassword() ? 'text' : 'password'" formControlName="password" [autocomplete]="mode === 'login' ? 'current-password' : 'new-password'" placeholder="Nhập mật khẩu" [attr.aria-invalid]="invalid('password')" aria-describedby="password-hint password-error"><button type="button" (click)="showPassword.set(!showPassword())" [attr.aria-label]="showPassword() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'" [attr.aria-pressed]="showPassword()"><span class="material-symbols-outlined" aria-hidden="true">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span></button></div>@if (mode !== 'login') { <p id="password-hint" class="field-hint">Ít nhất 8 ký tự. Nên dùng một cụm từ riêng, khó đoán.</p> }@if (invalid('password')) { <p id="password-error" class="field-error">{{ mode === 'login' ? 'Vui lòng nhập mật khẩu của bạn.' : 'Dùng ít nhất 8 ký tự, tối đa 72 byte (ký tự có dấu chiếm nhiều byte hơn).' }}</p> }</div>
-              }
-              @if (isRegister || mode === 'reset') {
-                <div class="field"><label for="auth-confirm">Nhập lại mật khẩu</label><div class="password-input"><input id="auth-confirm" [type]="showConfirm() ? 'text' : 'password'" formControlName="confirmPassword" autocomplete="new-password" placeholder="Nhập lại mật khẩu vừa tạo" [attr.aria-invalid]="invalid('confirmPassword') || mismatch()" aria-describedby="confirm-error"><button type="button" (click)="showConfirm.set(!showConfirm())" [attr.aria-label]="showConfirm() ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận'" [attr.aria-pressed]="showConfirm()"><span class="material-symbols-outlined" aria-hidden="true">{{ showConfirm() ? 'visibility_off' : 'visibility' }}</span></button></div>@if (invalid('confirmPassword') || mismatch()) { <p id="confirm-error" class="field-error">Mật khẩu xác nhận phải trùng với mật khẩu đã nhập.</p> }</div>
-              }
-              <button class="submit-button" type="submit" [disabled]="busy()"><span>{{ busy() ? 'Đang xử lý…' : submitLabel }}</span><span class="material-symbols-outlined" aria-hidden="true">{{ busy() ? 'hourglass_top' : 'arrow_forward' }}</span></button>
-            </fieldset>
-          </form>
-          @if (isRegister) { <p class="form-footnote"><span class="material-symbols-outlined" aria-hidden="true">redeem</span> Nhận 100 điểm chào mừng khi tạo tài khoản.</p> }
-          @if (mode === 'reset') { <p class="switch-copy"><a routerLink="/forgot-password" class="text-link">Yêu cầu liên kết mới</a></p> }
-          @if (mode === 'login' || isRegister) { <p class="switch-copy">{{ isRegister ? 'Bạn đã có tài khoản?' : 'Lần đầu đến Giftory?' }} <a [routerLink]="isRegister ? '/login' : '/register'" [queryParams]="linkParams" class="text-link">{{ isRegister ? 'Đăng nhập' : 'Tạo tài khoản' }}</a></p> }
+          <div class="relative w-full bg-[#eeeaf7] p-1.5 rounded-2xl flex items-center mb-5 border border-purple-200/80 select-none overflow-hidden" id="tab-container">
+            <!-- Sliding indicator -->
+            <div
+              class="tab-pill-slider absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-6px)] bg-white rounded-xl shadow-[0_2px_8px_rgba(124,58,237,0.12)] border border-purple-100 z-0 transition-transform duration-300 ease-out"
+              [style.transform]="isRegister ? 'translateX(100%)' : 'translateX(0%)'"
+            ></div>
+
+            <button
+              type="button"
+              (click)="switchAuthTab('login')"
+              [class.font-bold]="mode === 'login'"
+              [class.text-purple-800]="mode === 'login'"
+              [class.font-medium]="mode !== 'login'"
+              [class.text-slate-600]="mode !== 'login'"
+              class="relative z-10 flex-1 py-2.5 rounded-xl text-xs sm:text-sm flex items-center justify-center transition-colors duration-200 cursor-pointer"
+            >
+              <span>Đăng Nhập</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="switchAuthTab('register')"
+              [class.font-bold]="isRegister"
+              [class.text-purple-800]="isRegister"
+              [class.font-medium]="!isRegister"
+              [class.text-slate-600]="!isRegister"
+              class="relative z-10 flex-1 py-2.5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors duration-200 cursor-pointer"
+            >
+              <span>Tạo Tài Khoản</span>
+              <span class="animate-badge-glow bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-200">+50 Điểm</span>
+            </button>
+          </div>
         } @else {
-          <div class="success-panel" role="status"><span class="material-symbols-outlined success-icon" aria-hidden="true">{{ mode === 'forgot' ? 'mark_email_read' : 'check_circle' }}</span><h1 id="auth-title">{{ mode === 'forgot' ? 'Kiểm tra hộp thư của bạn' : 'Mật khẩu đã được cập nhật' }}</h1><p>{{ success() }}</p><a routerLink="/login" [queryParams]="linkParams" class="submit-button">Về đăng nhập <span aria-hidden="true">→</span></a>@if (mode === 'forgot') { <button type="button" class="text-link resend-button" (click)="success.set('')">Sửa email hoặc gửi lại</button> }</div>
+          <!-- Nút quay lại đăng nhập cho Forgot/Reset Password -->
+          <div class="w-full flex items-center justify-between mb-4">
+            <button
+              type="button"
+              (click)="setMode('login')"
+              class="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-700 hover:text-purple-900 transition-colors py-1.5 px-3 rounded-lg hover:bg-purple-100/60"
+            >
+              <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+              <span>Quay lại Đăng nhập</span>
+            </button>
+            <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">{{ mode === 'forgot' ? 'Khôi phục' : 'Bảo mật' }}</span>
+          </div>
+
+          <div class="w-full text-center mb-5">
+            <h2 class="text-xl font-bold text-slate-800 tracking-tight">{{ title }}</h2>
+            <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">{{ subtitle }}</p>
+          </div>
+        }
+
+        <!-- Thông báo Trạng thái & Lỗi -->
+        @if (expired) {
+          <div class="w-full p-3 rounded-xl bg-purple-100/80 text-purple-900 text-xs font-medium flex items-center gap-2 mb-3 border border-purple-200">
+            <span class="material-symbols-outlined text-[18px] text-purple-700">info</span>
+            <span>Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.</span>
+          </div>
+        }
+
+        @if (adminNotice) {
+          <div class="w-full p-3 rounded-xl bg-amber-50 text-amber-900 text-xs font-medium flex items-center gap-2 mb-3 border border-amber-200">
+            <span class="material-symbols-outlined text-[18px] text-amber-700">shield_person</span>
+            <span>Khu vực này yêu cầu quyền quản trị viên. Vui lòng dùng tài khoản Admin.</span>
+          </div>
+        }
+
+        @if (error()) {
+          <div id="auth-error" class="w-full p-3 rounded-xl bg-red-50 text-red-800 text-xs font-medium flex items-start gap-2.5 mb-3 border border-red-200" role="alert" tabindex="-1">
+            <span class="material-symbols-outlined text-[18px] text-red-600 flex-shrink-0 mt-0.5">error</span>
+            <div class="flex-1 leading-snug">{{ error() }}</div>
+          </div>
+        }
+
+        @if (ssoNotice()) {
+          <div class="w-full p-3 rounded-xl bg-purple-50 text-purple-800 text-xs font-medium flex items-center gap-2 mb-3 border border-purple-200 animate-pulse">
+            <span class="material-symbols-outlined text-[18px] text-purple-600">sync</span>
+            <span>{{ ssoNotice() }}</span>
+          </div>
+        }
+
+        <!-- Giao diện khi thành công (Reset / Forgot Email Sent) -->
+        @if (success()) {
+          <div class="w-full bg-white rounded-2xl p-6 border border-purple-100 shadow-sm text-center flex flex-col items-center">
+            <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3">
+              <span class="material-symbols-outlined text-[32px]">{{ mode === 'forgot' ? 'mark_email_read' : 'check_circle' }}</span>
+            </div>
+            <h2 class="text-lg font-bold text-slate-800 mb-1">
+              {{ mode === 'forgot' ? 'Kiểm tra hộp thư của bạn' : 'Cập nhật thành công!' }}
+            </h2>
+            <p class="text-xs text-slate-600 mb-5 leading-relaxed">{{ success() }}</p>
+
+            <button
+              type="button"
+              (click)="setMode('login')"
+              class="w-full h-11 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all"
+            >
+              <span>Về màn hình Đăng nhập</span>
+              <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </button>
+
+            @if (mode === 'forgot') {
+              <button
+                type="button"
+                (click)="success.set('')"
+                class="mt-3 text-xs font-medium text-purple-600 hover:text-purple-800 underline transition-colors cursor-pointer"
+              >
+                Gửi lại hoặc đổi địa chỉ email
+              </button>
+            }
+          </div>
+        } @else {
+          <!-- Wrapper chứa Forms -->
+          <div class="w-full">
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate [attr.aria-busy]="busy()">
+              <fieldset [disabled]="busy()" class="flex flex-col gap-3.5 w-full">
+
+                <!-- ===================== FORM ĐĂNG KÝ (TẠO TÀI KHOẢN) ===================== -->
+                @if (isRegister) {
+                  <!-- Banner Ưu đãi chào mừng -->
+                  <div class="bg-gradient-to-r from-purple-50 via-pink-50 to-amber-50 rounded-xl p-3 flex items-start gap-2.5 border border-purple-200/90 shadow-sm">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex-shrink-0 flex items-center justify-center text-white shadow-sm mt-0.5">
+                      <span class="material-symbols-outlined text-[17px]">featured_seasonal_and_gifts</span>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                      <span class="text-[10px] uppercase tracking-wider text-purple-700 font-bold">Đặc quyền hội viên mới</span>
+                      <span class="text-xs text-slate-800 font-semibold leading-tight">
+                        Tặng ngay <span class="text-purple-700 font-bold">50 Điểm Thưởng Hội Viên</span> (Quy đổi Voucher 50.000đ cho đơn đầu tiên)
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Họ và Tên -->
+                  <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-slate-800" for="register-name">Họ và Tên</label>
+                    <div class="relative flex items-center">
+                      <span class="material-symbols-outlined absolute left-3 text-purple-500/70 text-[18px] pointer-events-none">person</span>
+                      <input
+                        id="register-name"
+                        formControlName="name"
+                        autocomplete="name"
+                        placeholder="Ví dụ: Nguyễn Linh Chi"
+                        maxlength="80"
+                        (blur)="normalize('name')"
+                        [attr.aria-invalid]="invalid('name')"
+                        class="giftory-input w-full h-10 pl-9 pr-3 bg-white text-slate-900 placeholder:text-slate-400 text-xs sm:text-sm rounded-xl"
+                        type="text"
+                        required
+                      >
+                    </div>
+                    @if (invalid('name')) {
+                      <p class="text-[11px] text-red-600 font-medium">Nhập họ tên từ 2 đến 80 ký tự.</p>
+                    }
+                  </div>
+
+                  <!-- Email -->
+                  <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-slate-800" for="register-email">Địa chỉ Email</label>
+                    <div class="relative flex items-center">
+                      <span class="material-symbols-outlined absolute left-3 text-purple-500/70 text-[18px] pointer-events-none">alternate_email</span>
+                      <input
+                        id="register-email"
+                        type="email"
+                        formControlName="email"
+                        autocomplete="email"
+                        inputmode="email"
+                        placeholder="linh.nguyen@giftory.vn"
+                        maxlength="254"
+                        (blur)="normalize('email')"
+                        [attr.aria-invalid]="invalid('email')"
+                        class="giftory-input w-full h-10 pl-9 pr-3 bg-white text-slate-900 placeholder:text-slate-400 text-xs sm:text-sm rounded-xl"
+                        required
+                      >
+                    </div>
+                    @if (invalid('email')) {
+                      <p class="text-[11px] text-red-600 font-medium">Nhập địa chỉ email hợp lệ.</p>
+                    }
+                  </div>
+
+                  <!-- Số điện thoại (Tuỳ chọn) -->
+                  <div class="flex flex-col gap-1">
+                    <div class="flex items-center justify-between">
+                      <label class="text-xs font-semibold text-slate-800" for="register-phone">Số điện thoại</label>
+                      <span class="text-[10px] text-slate-400 font-medium">Không bắt buộc</span>
+                    </div>
+                    <div class="relative flex items-center">
+                      <span class="material-symbols-outlined absolute left-3 text-purple-500/70 text-[18px] pointer-events-none">phone</span>
+                      <input
+                        id="register-phone"
+                        type="tel"
+                        formControlName="phone"
+                        autocomplete="tel"
+                        placeholder="0901 234 567"
+                        (blur)="normalize('phone')"
+                        [attr.aria-invalid]="invalid('phone')"
+                        class="giftory-input w-full h-10 pl-9 pr-3 bg-white text-slate-900 placeholder:text-slate-400 text-xs sm:text-sm rounded-xl"
+                      >
+                    </div>
+                    @if (invalid('phone')) {
+                      <p class="text-[11px] text-red-600 font-medium">Nhập số di động Việt Nam hợp lệ (10 chữ số).</p>
+                    }
+                  </div>
+
+                  <!-- Mật khẩu & Xác nhận mật khẩu (2 cột) -->
+                  <div class="grid grid-cols-2 gap-2">
+                    <div class="flex flex-col gap-1">
+                      <label class="text-xs font-semibold text-slate-800" for="register-password">Mật khẩu</label>
+                      <div class="relative flex items-center">
+                        <input
+                          id="register-password"
+                          [type]="showPassword() ? 'text' : 'password'"
+                          formControlName="password"
+                          autocomplete="new-password"
+                          placeholder="Tối thiểu 8 ký tự"
+                          [attr.aria-invalid]="invalid('password')"
+                          class="giftory-input w-full h-10 px-3 pr-8 bg-white text-slate-900 placeholder:text-slate-400 text-xs sm:text-sm rounded-xl"
+                          required
+                        >
+                        <button
+                          type="button"
+                          aria-label="Hiện mật khẩu"
+                          (click)="showPassword.set(!showPassword())"
+                          class="absolute right-1.5 text-slate-400 hover:text-purple-700 flex items-center justify-center w-6 h-6 rounded cursor-pointer"
+                        >
+                          <span class="material-symbols-outlined text-[16px]">
+                            {{ showPassword() ? 'visibility_off' : 'visibility' }}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                      <label class="text-xs font-semibold text-slate-800" for="register-confirm-password">Xác nhận mật khẩu</label>
+                      <div class="relative flex items-center">
+                        <input
+                          id="register-confirm-password"
+                          [type]="showConfirm() ? 'text' : 'password'"
+                          formControlName="confirmPassword"
+                          autocomplete="new-password"
+                          placeholder="Nhập lại mật khẩu"
+                          [attr.aria-invalid]="invalid('confirmPassword') || mismatch()"
+                          class="giftory-input w-full h-10 px-3 pr-8 bg-white text-slate-900 placeholder:text-slate-400 text-xs sm:text-sm rounded-xl"
+                          required
+                        >
+                        <button
+                          type="button"
+                          aria-label="Hiện mật khẩu xác nhận"
+                          (click)="showConfirm.set(!showConfirm())"
+                          class="absolute right-1.5 text-slate-400 hover:text-purple-700 flex items-center justify-center w-6 h-6 rounded cursor-pointer"
+                        >
+                          <span class="material-symbols-outlined text-[16px]">
+                            {{ showConfirm() ? 'visibility_off' : 'visibility' }}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  @if (invalid('password')) {
+                    <p class="text-[11px] text-red-600 font-medium">Dùng ít nhất 8 ký tự, không bắt đầu/kết thúc bằng khoảng trắng.</p>
+                  }
+                  @if (mismatch()) {
+                    <p class="text-[11px] text-red-600 font-medium">Mật khẩu xác nhận phải trùng với mật khẩu đã nhập.</p>
+                  }
+
+                  <!-- Cam kết & Điều khoản -->
+                  <div class="flex flex-col gap-1 pt-0.5">
+                    <label class="flex items-center gap-2 cursor-pointer select-none group">
+                      <input
+                        type="checkbox"
+                        checked
+                        class="w-3.5 h-3.5 rounded text-purple-600 focus:ring-purple-400 accent-purple-600 cursor-pointer border-slate-300"
+                      >
+                      <span class="text-[11px] text-purple-900 font-semibold">Tự động đồng bộ bản thiết kế 3D &amp; bảo lưu điểm chờ</span>
+                    </label>
+
+                    <label class="flex items-start gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        formControlName="agreeTerms"
+                        class="w-3.5 h-3.5 rounded text-purple-600 focus:ring-purple-400 mt-0.5 accent-purple-600 cursor-pointer border-slate-300"
+                        required
+                      >
+                      <span class="text-[11px] text-slate-500 leading-tight">
+                        Tôi đồng ý với
+                        <a routerLink="/shopping-guide" class="text-purple-600 underline font-medium hover:text-purple-800">Điều khoản sử dụng</a>
+                        và
+                        <a routerLink="/loyalty" class="text-purple-600 underline font-medium hover:text-purple-800">Chính sách hội viên</a>
+                        Giftory.
+                      </span>
+                    </label>
+                  </div>
+                }
+
+                <!-- ===================== FORM ĐĂNG NHẬP ===================== -->
+                @if (mode === 'login') {
+                  <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-slate-800" for="login-email">Email tài khoản</label>
+                    <div class="relative flex items-center">
+                      <span class="material-symbols-outlined absolute left-3.5 text-purple-500/70 text-[19px] pointer-events-none">alternate_email</span>
+                      <input
+                        id="login-email"
+                        type="email"
+                        formControlName="email"
+                        autocomplete="username"
+                        inputmode="email"
+                        placeholder="linh.nguyen@giftory.vn"
+                        maxlength="254"
+                        (blur)="normalize('email')"
+                        [attr.aria-invalid]="invalid('email')"
+                        class="giftory-input w-full h-11 pl-10 pr-4 bg-white text-slate-900 placeholder:text-slate-400 text-sm rounded-xl"
+                        required
+                      >
+                    </div>
+                    @if (invalid('email')) {
+                      <p class="text-[11px] text-red-600 font-medium">Nhập địa chỉ email hợp lệ.</p>
+                    }
+                  </div>
+
+                  <div class="flex flex-col gap-1.5">
+                    <div class="flex items-center justify-between">
+                      <label class="text-xs font-semibold text-slate-800" for="login-password">Mật khẩu</label>
+                      <button
+                        type="button"
+                        (click)="setMode('forgot')"
+                        class="text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors cursor-pointer"
+                      >
+                        Quên mật khẩu?
+                      </button>
+                    </div>
+                    <div class="relative flex items-center">
+                      <span class="material-symbols-outlined absolute left-3.5 text-purple-500/70 text-[19px] pointer-events-none">lock</span>
+                      <input
+                        id="login-password"
+                        [type]="showPassword() ? 'text' : 'password'"
+                        formControlName="password"
+                        autocomplete="current-password"
+                        placeholder="Nhập mật khẩu của bạn"
+                        [attr.aria-invalid]="invalid('password')"
+                        class="giftory-input w-full h-11 pl-10 pr-11 bg-white text-slate-900 placeholder:text-slate-400 text-sm rounded-xl"
+                        required
+                      >
+                      <button
+                        type="button"
+                        aria-label="Ẩn/Hiện mật khẩu"
+                        (click)="showPassword.set(!showPassword())"
+                        class="absolute right-2.5 text-slate-400 hover:text-purple-700 hover:bg-purple-50 transition-colors flex items-center justify-center w-8 h-8 rounded-full cursor-pointer"
+                      >
+                        <span class="material-symbols-outlined text-[19px]">
+                          {{ showPassword() ? 'visibility_off' : 'visibility' }}
+                        </span>
+                      </button>
+                    </div>
+                    @if (invalid('password')) {
+                      <p class="text-[11px] text-red-600 font-medium">Vui lòng nhập mật khẩu tài khoản.</p>
+                    }
+                  </div>
+
+                  <div class="flex items-center justify-between pt-0.5">
+                    <label class="flex items-center gap-2 cursor-pointer select-none group">
+                      <input
+                        type="checkbox"
+                        [checked]="rememberMe()"
+                        (change)="rememberMe.set(!rememberMe())"
+                        class="w-4 h-4 rounded text-purple-600 focus:ring-purple-400 cursor-pointer accent-purple-600 transition-colors border-slate-300"
+                      >
+                      <span class="text-xs text-slate-600 group-hover:text-slate-900 transition-colors">Ghi nhớ đăng nhập trên thiết bị này</span>
+                    </label>
+                  </div>
+                }
+
+                <!-- ===================== FORM QUÊN MẬT KHẨU ===================== -->
+                @if (mode === 'forgot') {
+                  <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-slate-800" for="forgot-email">Email tài khoản Giftory</label>
+                    <div class="relative flex items-center">
+                      <span class="material-symbols-outlined absolute left-3.5 text-purple-500/70 text-[19px] pointer-events-none">alternate_email</span>
+                      <input
+                        id="forgot-email"
+                        type="email"
+                        formControlName="email"
+                        autocomplete="email"
+                        inputmode="email"
+                        placeholder="linh.nguyen@giftory.vn"
+                        maxlength="254"
+                        (blur)="normalize('email')"
+                        [attr.aria-invalid]="invalid('email')"
+                        class="giftory-input w-full h-11 pl-10 pr-4 bg-white text-slate-900 placeholder:text-slate-400 text-sm rounded-xl"
+                        required
+                      >
+                    </div>
+                    @if (invalid('email')) {
+                      <p class="text-[11px] text-red-600 font-medium">Nhập email đã liên kết với tài khoản Giftory.</p>
+                    }
+                  </div>
+                }
+
+                <!-- ===================== FORM THIẾT LẬP LẠI MẬT KHẨU ===================== -->
+                @if (mode === 'reset') {
+                  <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-slate-800" for="reset-password">Mật khẩu mới</label>
+                    <div class="relative flex items-center">
+                      <span class="material-symbols-outlined absolute left-3.5 text-purple-500/70 text-[19px] pointer-events-none">lock</span>
+                      <input
+                        id="reset-password"
+                        [type]="showPassword() ? 'text' : 'password'"
+                        formControlName="password"
+                        autocomplete="new-password"
+                        placeholder="Tối thiểu 8 ký tự"
+                        [attr.aria-invalid]="invalid('password')"
+                        class="giftory-input w-full h-11 pl-10 pr-11 bg-white text-slate-900 placeholder:text-slate-400 text-sm rounded-xl"
+                        required
+                      >
+                      <button
+                        type="button"
+                        aria-label="Ẩn/Hiện mật khẩu"
+                        (click)="showPassword.set(!showPassword())"
+                        class="absolute right-2.5 text-slate-400 hover:text-purple-700 flex items-center justify-center w-8 h-8 rounded-full cursor-pointer"
+                      >
+                        <span class="material-symbols-outlined text-[19px]">
+                          {{ showPassword() ? 'visibility_off' : 'visibility' }}
+                        </span>
+                      </button>
+                    </div>
+                    @if (invalid('password')) {
+                      <p class="text-[11px] text-red-600 font-medium">Dùng ít nhất 8 ký tự, tối đa 72 byte.</p>
+                    }
+                  </div>
+
+                  <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-slate-800" for="reset-confirm">Xác nhận mật khẩu mới</label>
+                    <div class="relative flex items-center">
+                      <span class="material-symbols-outlined absolute left-3.5 text-purple-500/70 text-[19px] pointer-events-none">lock_reset</span>
+                      <input
+                        id="reset-confirm"
+                        [type]="showConfirm() ? 'text' : 'password'"
+                        formControlName="confirmPassword"
+                        autocomplete="new-password"
+                        placeholder="Nhập lại mật khẩu mới"
+                        [attr.aria-invalid]="invalid('confirmPassword') || mismatch()"
+                        class="giftory-input w-full h-11 pl-10 pr-11 bg-white text-slate-900 placeholder:text-slate-400 text-sm rounded-xl"
+                        required
+                      >
+                      <button
+                        type="button"
+                        aria-label="Ẩn/Hiện mật khẩu xác nhận"
+                        (click)="showConfirm.set(!showConfirm())"
+                        class="absolute right-2.5 text-slate-400 hover:text-purple-700 flex items-center justify-center w-8 h-8 rounded-full cursor-pointer"
+                      >
+                        <span class="material-symbols-outlined text-[19px]">
+                          {{ showConfirm() ? 'visibility_off' : 'visibility' }}
+                        </span>
+                      </button>
+                    </div>
+                    @if (invalid('confirmPassword') || mismatch()) {
+                      <p class="text-[11px] text-red-600 font-medium">Mật khẩu xác nhận phải trùng khớp.</p>
+                    }
+                  </div>
+                }
+
+                <!-- Nút Submit Chính -->
+                <button
+                  type="submit"
+                  [disabled]="busy()"
+                  class="animate-shimmer w-full h-11 sm:h-12 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(124,58,237,0.32)] hover:shadow-[0_8px_25px_rgba(124,58,237,0.42)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 mt-2 cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+                >
+                  @if (busy()) {
+                    <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                    <span>Đang xử lý dữ liệu...</span>
+                  } @else {
+                    <span>{{ submitLabel }}</span>
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                  }
+                </button>
+              </fieldset>
+            </form>
+          </div>
+
+          <!-- Social SSO Divider -->
+          <div class="relative flex items-center justify-center w-full my-4">
+            <div class="w-full h-[1px] bg-slate-200"></div>
+            <span class="absolute bg-[#FAF8FD] px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              Hoặc tiếp tục với
+            </span>
+          </div>
+
+          <!-- SSO Buttons: Google & Facebook -->
+          <div class="grid grid-cols-2 gap-3 w-full">
+            <button
+              type="button"
+              (click)="onSocialLogin('Google')"
+              class="w-full h-10 sm:h-11 bg-white hover:bg-slate-50 hover:border-purple-300 text-slate-800 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 border border-slate-200 shadow-sm hover:shadow transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+            >
+              <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+                <path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" fill="#4285F4"></path>
+                <path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z" fill="#34A853"></path>
+                <path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.16 0 9.98 0 12s.45 3.84 1.24 5.42l4.04-3.15z" fill="#FBBC05"></path>
+                <path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z" fill="#EA4335"></path>
+              </svg>
+              <span>Google</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="onSocialLogin('Facebook')"
+              class="w-full h-10 sm:h-11 bg-white hover:bg-slate-50 hover:border-purple-300 text-slate-800 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 border border-slate-200 shadow-sm hover:shadow transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+            >
+              <svg class="w-4 h-4 flex-shrink-0 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path>
+              </svg>
+              <span>Facebook</span>
+            </button>
+          </div>
+
+          <!-- Mua hàng nhanh không cần tài khoản (Guest-First Experience) -->
+          <div class="mt-4 text-center">
+            <button
+              type="button"
+              (click)="guestCheckout()"
+              class="text-xs sm:text-sm font-semibold text-purple-700 hover:text-purple-900 transition-colors inline-flex items-center gap-1 cursor-pointer group py-1 px-3 rounded-lg hover:bg-purple-50"
+            >
+              <span>Mua hàng nhanh không cần tài khoản (Guest Checkout)</span>
+              <span class="material-symbols-outlined text-[17px] transition-transform group-hover:translate-x-1">arrow_forward</span>
+            </button>
+          </div>
         }
       </div>
-    </section>
-  </main>
-  <footer class="auth-footer"><span>© 2026 Giftory. Trao quà, gửi thương.</span><a routerLink="/shopping-guide">Hướng dẫn mua hàng <span aria-hidden="true">↗</span></a></footer>
+
+      <!-- Chân trang Cột Phải: Cam kết & Bảo mật -->
+      <div class="w-full pt-4 border-t border-purple-100 flex flex-col items-center gap-2 mt-auto text-slate-500">
+        <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] font-medium text-slate-600">
+          <span class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px] text-purple-600">replay</span>
+            Đổi trả 7 ngày
+          </span>
+          <span class="text-purple-300">•</span>
+          <span class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px] text-purple-600">percent</span>
+            Cọc 50% linh hoạt
+          </span>
+          <span class="text-purple-300">•</span>
+          <span class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px] text-purple-600">support_agent</span>
+            Hỗ trợ 24/7
+          </span>
+        </div>
+        <div class="flex items-center gap-1.5 text-[11px] text-slate-400">
+          <span class="material-symbols-outlined text-[14px] text-emerald-600">verified_user</span>
+          <span>Mã hóa SSL 256-bit chuẩn an toàn Giftory • © 2026 Giftory</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
