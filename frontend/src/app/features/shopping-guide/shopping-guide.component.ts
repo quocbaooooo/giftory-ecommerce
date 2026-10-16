@@ -148,7 +148,7 @@ export class ShoppingGuideComponent {
     },
     {
       q: 'Giftory có hỗ trợ viết thiệp tay và gói quà giấu giá không?',
-      a: 'Có! 100% đơn hàng tại Giftory đều được giấu hóa đơn giá tiền bên trong hộp, đi kèm hộp cứng bọc ruy băng lụa và thiệp viết tay theo nội dung lời chúc bạn yêu cầu tại bước Thanh toán.'
+      a: 'Có! 100% đơn hàng tại Giftory đều được giấu hóa đơn giá tiền bên trong hộp, đi kèm hộp cứng bọc ruy băng lụa và thiệp in theo nội dung lời chúc khi bạn chọn thêm thiệp tại bước Thanh toán.'
     }
   ];
 

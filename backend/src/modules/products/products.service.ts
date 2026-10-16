@@ -78,17 +78,23 @@ export class ProductsService {
       filter.isFlashSale = query.isFlashSale === 'true' || query.isFlashSale === true as any;
     }
 
-    // Price range
+    // Match the storefront: use a positive sale price, otherwise the base price.
+    const sellingPrice = {
+      $cond: [{ $gt: [{ $ifNull: ['$salePrice', 0] }, 0] }, '$salePrice', '$price'],
+    };
+
+    // Apply the same price expression to filtering and counting results.
     if (query.minPrice !== undefined || query.maxPrice !== undefined) {
-      filter.price = {};
-      if (query.minPrice !== undefined) filter.price.$gte = Number(query.minPrice);
-      if (query.maxPrice !== undefined) filter.price.$lte = Number(query.maxPrice);
+      const priceConditions: any[] = [];
+      if (query.minPrice !== undefined) priceConditions.push({ $gte: [sellingPrice, Number(query.minPrice)] });
+      if (query.maxPrice !== undefined) priceConditions.push({ $lte: [sellingPrice, Number(query.maxPrice)] });
+      filter.$expr = { $and: priceConditions };
     }
 
     // Sort
     let sortOption: any = { createdAt: -1 };
-    if (query.sort === 'price_asc') sortOption = { price: 1 };
-    else if (query.sort === 'price_desc') sortOption = { price: -1 };
+    if (query.sort === 'price_asc') sortOption = { __sellingPrice: 1, _id: 1 };
+    else if (query.sort === 'price_desc') sortOption = { __sellingPrice: -1, _id: 1 };
     else if (query.sort === 'popular') sortOption = { soldCount: -1, rating: -1 };
     else if (query.sort === 'rating') sortOption = { rating: -1, reviewCount: -1 };
     else if (query.sort === 'newest') sortOption = { createdAt: -1 };
@@ -97,14 +103,26 @@ export class ProductsService {
     const limit = Math.max(1, Math.min(100, Number(query.limit || 12)));
     const skip = (page - 1) * limit;
 
-    const [items, total] = await Promise.all([
-      this.productModel
+    // Sort before pagination so prices remain ordered across page boundaries.
+    const itemsQuery = query.sort === 'price_asc' || query.sort === 'price_desc'
+      ? this.productModel.aggregate([
+          { $match: filter },
+          { $addFields: { __sellingPrice: sellingPrice } },
+          { $sort: sortOption },
+          { $skip: skip },
+          { $limit: limit },
+          { $project: { __sellingPrice: 0 } },
+        ]).exec().then(products => this.productModel.populate(products, { path: 'category', select: 'name slug emoji icon' }))
+      : this.productModel
         .find(filter)
         .populate('category', 'name slug emoji icon')
         .sort(sortOption)
         .skip(skip)
         .limit(limit)
-        .exec(),
+        .exec();
+
+    const [items, total] = await Promise.all([
+      itemsQuery,
       this.productModel.countDocuments(filter).exec(),
     ]);
 

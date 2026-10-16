@@ -11,6 +11,15 @@ import {
 
 export type OrderDocument = Order & Document;
 
+@Schema({ _id: false })
+export class GreetingCard {
+  @Prop({ required: true, enum: ['BIRTHDAY', 'LOVE', 'THANK_YOU'] }) templateId: string;
+  @Prop({ required: true }) templateName: string;
+  @Prop({ required: true, maxlength: 80 }) heading: string;
+  @Prop({ required: true, maxlength: 300 }) message: string;
+}
+export const GreetingCardSchema = SchemaFactory.createForClass(GreetingCard);
+
 @Schema({ timestamps: true })
 export class OrderItem {
   @Prop({ default: true })
@@ -91,6 +100,9 @@ export const OrderTimelineEventSchema = SchemaFactory.createForClass(OrderTimeli
 
 @Schema({ timestamps: true, optimisticConcurrency: true })
 export class Order {
+  @Prop({ default: '' }) voucherCode: string;
+  @Prop({ default: '' }) voucherType: string;
+
   @Prop({ type: Types.ObjectId })
   bp06CaseId?: Types.ObjectId;
 
@@ -115,6 +127,11 @@ export class Order {
       phone: { type: String, required: true },
       email: { type: String, default: '' },
       address: { type: String, required: true },
+      provinceCode: { type: String },
+      provinceName: { type: String },
+      wardCode: { type: String },
+      wardName: { type: String },
+      street: { type: String },
       note: { type: String, default: '' }
     },
     required: true
@@ -124,8 +141,16 @@ export class Order {
     phone: string;
     email: string;
     address: string;
+    provinceCode?: string;
+    provinceName?: string;
+    wardCode?: string;
+    wardName?: string;
+    street?: string;
     note: string;
   };
+
+  @Prop({ type: GreetingCardSchema, default: null })
+  greetingCard?: GreetingCard;
 
   @Prop({ type: [OrderItemSchema], required: true })
   items: OrderItem[];
@@ -134,6 +159,8 @@ export class Order {
     type: {
       itemsTotal: { type: Number, required: true },
       voucherDiscount: { type: Number, default: 0 },
+      baseShippingFee: { type: Number, default: 0 },
+      shippingDiscount: { type: Number, default: 0 },
       shippingFee: { type: Number, default: 0 },
       giftWrapFee: { type: Number, default: 0 },
       totalAmount: { type: Number, required: true },
@@ -145,6 +172,8 @@ export class Order {
   pricing: {
     itemsTotal: number;
     voucherDiscount: number;
+    baseShippingFee?: number;
+    shippingDiscount?: number;
     shippingFee: number;
     giftWrapFee: number;
     totalAmount: number;

@@ -1,4 +1,6 @@
+import { VouchersModule } from './modules/vouchers/vouchers.module';
 import { CareModule } from './modules/care/care.module';
+import { RecipientsModule } from './modules/recipients/recipients.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -29,7 +31,9 @@ import { AiChatbotModule } from './modules/ai-chatbot/ai-chatbot.module';
       inject: [ConfigService],
     }),
     DatabaseModule,
+    VouchersModule,
     AuthModule,
+    RecipientsModule,
     CategoriesModule,
     ProductsModule,
     CustomStudioModule,

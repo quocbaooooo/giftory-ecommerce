@@ -1,3 +1,4 @@
+import { CartVouchersComponent } from '../../shared/components/cart-vouchers.component';
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,7 +9,7 @@ import { AuthService } from '../../core/services/auth.service';
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, CartVouchersComponent],
   template: `
     <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       
@@ -22,11 +23,11 @@ import { AuthService } from '../../core/services/auth.service';
 
         <div class="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3">
               <h1 class="text-2xl sm:text-3xl font-bold text-[#1E1B4B]">Giỏ Hàng Của Bạn</h1>
               <span class="px-3 py-1 rounded-full bg-purple-100 text-[#7C3AED] text-xs font-bold flex items-center gap-1 shadow-sm">
                 <span class="material-symbols-outlined text-[15px]">redeem</span>
-                <span>{{ cartService.itemsCount() }} Sản Phẩm</span>
+                <span>{{ cartService.productCount() }} sản phẩm · Tổng số lượng: {{ cartService.itemsCount() }}</span>
               </span>
             </div>
             <p class="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-3xl leading-relaxed">
@@ -83,16 +84,20 @@ import { AuthService } from '../../core/services/auth.service';
             <div class="bg-white rounded-2xl p-4 shadow-sm border border-[#DDD6FE] flex items-center justify-between">
               <label class="flex items-center gap-2.5 cursor-pointer select-none text-xs font-bold text-[#1E1B4B]">
                 <input type="checkbox" checked class="w-4 h-4 rounded accent-[#7C3AED]">
-                <span>Chọn tất cả ({{ cartService.itemsCount() }} sản phẩm)</span>
+                <span>Chọn tất cả ({{ cartService.productCount() }} sản phẩm)</span>
               </label>
-              <button (click)="clearCart()" class="text-xs text-slate-500 hover:text-red-500 flex items-center gap-1 transition-colors">
+              <button (click)="clearCart()" [disabled]="cartService.quantitySyncPending()" class="text-xs text-slate-500 hover:text-red-500 flex items-center gap-1 transition-colors disabled:opacity-50">
                 <span class="material-symbols-outlined text-[16px]">delete_sweep</span>
                 <span>Xóa toàn bộ giỏ</span>
               </button>
             </div>
 
             <!-- Items Loop -->
-            @for (item of cartService.items(); track $index) {
+            <div role="status" aria-live="polite" class="min-h-4 text-xs">
+              @if (cartService.quantityError()) { <span class="text-rose-700">{{ cartService.quantityError() }}</span> }
+              @else if (cartService.quantitySyncPending()) { <span class="text-purple-700">Đang lưu số lượng…</span> }
+            </div>
+            @for (item of cartService.items(); track item._id || $index) {
               <article class="bg-white rounded-2xl p-5 sm:p-6 shadow-shop-card border border-[#DDD6FE] relative overflow-hidden group">
                 <!-- Color edge indicator -->
                 <div 
@@ -132,7 +137,7 @@ import { AuthService } from '../../core/services/auth.service';
                           Hàng chuẩn • Không yêu cầu cọc
                         </span>
                       }
-                      <button (click)="removeItem($index)" class="text-slate-400 hover:text-red-500 transition-colors" title="Xóa món này">
+                      <button (click)="removeItem($index)" [disabled]="cartService.quantitySyncPending()" class="text-slate-400 hover:text-red-500 transition-colors disabled:opacity-50" title="Xóa món này">
                         <span class="material-symbols-outlined text-[18px]">close</span>
                       </button>
                     </div>
@@ -216,11 +221,11 @@ import { AuthService } from '../../core/services/auth.service';
 
                         <!-- Stepper -->
                         <div class="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200">
-                          <button (click)="updateQuantity($index, item.quantity - 1)" class="w-6 h-6 rounded bg-white flex items-center justify-center text-slate-700 shadow-sm text-xs">
+                          <button type="button" (click)="updateQuantity($index, item.quantity - 1)" [disabled]="item.quantity <= 1" [attr.aria-label]="'Giảm số lượng ' + item.productId?.name" class="w-8 h-8 rounded bg-white flex items-center justify-center text-slate-700 shadow-sm text-xs disabled:opacity-40 disabled:cursor-not-allowed">
                             <span class="material-symbols-outlined text-[14px]">remove</span>
                           </button>
-                          <span class="w-7 text-center text-xs font-bold text-[#1E1B4B]">{{ item.quantity }}</span>
-                          <button (click)="updateQuantity($index, item.quantity + 1)" class="w-6 h-6 rounded bg-white flex items-center justify-center text-slate-700 shadow-sm text-xs">
+                          <span class="min-w-7 px-1 text-center text-xs font-bold tabular-nums text-[#1E1B4B]">{{ item.quantity }}</span>
+                          <button type="button" (click)="updateQuantity($index, item.quantity + 1)" [attr.aria-label]="'Tăng số lượng ' + item.productId?.name" class="w-8 h-8 rounded bg-white flex items-center justify-center text-slate-700 shadow-sm text-xs">
                             <span class="material-symbols-outlined text-[14px]">add</span>
                           </button>
                         </div>
@@ -260,25 +265,18 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="lg:col-span-5 flex flex-col gap-6">
             <div class="bg-white rounded-3xl p-6 shadow-shop-card border border-[#DDD6FE] flex flex-col gap-5">
               
-              <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                 <h3 class="font-bold text-base text-[#1E1B4B]">Tóm tắt đơn hàng</h3>
-                <span class="text-xs text-slate-500">{{ cartService.itemsCount() }} sản phẩm</span>
+                <span class="text-xs text-slate-500">{{ cartService.productCount() }} sản phẩm · {{ cartService.itemsCount() }} món</span>
               </div>
 
-              <!-- Voucher Input -->
-              <div class="flex items-center gap-2">
-                <input 
-                  [(ngModel)]="voucherInput"
-                  placeholder="Mã ưu đãi (TRIAN30K / FREESHIP)"
-                  class="flex-1 px-3 py-2 rounded-xl border border-[#DDD6FE] text-xs focus:outline-none focus:border-[#7C3AED] uppercase font-bold"
-                >
-                <button 
-                  (click)="applyVoucher()"
-                  class="px-4 py-2 rounded-xl bg-purple-100 hover:bg-[#7C3AED] hover:text-white text-[#7C3AED] font-bold text-xs transition-all shrink-0 cursor-pointer"
-                >
-                  Áp dụng
-                </button>
-              </div>
+              <label class="text-xs text-slate-600">Giao hàng dự kiến
+                <select aria-label="Giao hàng dự kiến" [ngModel]="cartService.cart()?.shippingMethod || 'STANDARD'" (ngModelChange)="changeShipping($event)" [disabled]="cartService.quantitySyncPending() || shippingBusy" class="w-full mt-2 border border-purple-200 rounded-xl p-2">
+                  <option value="STANDARD">Tiêu chuẩn · Miễn phí từ 250.000đ</option>
+                  <option value="EXPRESS">Hỏa tốc · 50.000đ</option>
+                </select>
+              </label>
+              <app-cart-vouchers />
 
               <!-- Price Breakdown Lines -->
               <div class="flex flex-col gap-2 pt-2 border-t border-slate-100 text-xs text-slate-600">
@@ -299,10 +297,13 @@ import { AuthService } from '../../core/services/auth.service';
                 <div class="flex items-center justify-between">
                   <span>Phí vận chuyển dự kiến:</span>
                   <span class="font-semibold text-slate-800">
-                    {{ cartService.pricing().shippingFee === 0 ? 'Miễn phí' : ((cartService.pricing().shippingFee | number:'1.0-0') + 'đ') }}
+                    {{ (cartService.pricing().baseShippingFee ?? cartService.pricing().shippingFee) === 0 ? 'Miễn phí' : (((cartService.pricing().baseShippingFee ?? cartService.pricing().shippingFee) | number:'1.0-0') + 'đ') }}
                   </span>
                 </div>
 
+                @if ((cartService.pricing().shippingDiscount || 0) > 0) {
+                  <div class="flex items-center justify-between text-purple-700"><span>Ưu đãi vận chuyển:</span><strong>-{{ cartService.pricing().shippingDiscount | number:'1.0-0' }}đ</strong></div>
+                }
                 <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-sm font-bold text-[#1E1B4B]">
                   <span>Tổng giá trị đơn hàng:</span>
                   <span class="text-base text-[#1E1B4B]">{{ cartService.pricing().totalAmount | number:'1.0-0' }}đ</span>
@@ -333,7 +334,8 @@ import { AuthService } from '../../core/services/auth.service';
               <!-- Checkout Submit Button -->
               <button 
                 (click)="proceedToCheckout()"
-                class="w-full py-3.5 px-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95 cursor-pointer"
+                [disabled]="cartService.quantitySyncPending() || shippingBusy || cartService.voucherSyncPending()"
+                class="w-full py-3.5 px-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-wait"
               >
                 <span class="material-symbols-outlined text-[18px]">verified</span>
                 <span>Tiến Hành Đặt Hàng</span>
@@ -356,28 +358,30 @@ export class CartComponent {
   authService = inject(AuthService);
   private router = inject(Router);
 
-  voucherInput: string = 'TRIAN30K';
+
+  shippingBusy = false;
+  changeShipping(method: 'STANDARD' | 'EXPRESS') {
+    this.shippingBusy = true;
+    this.cartService.setShippingMethod(method).subscribe({
+      next: () => this.shippingBusy = false,
+      error: () => { this.shippingBusy = false; this.cartService.notify('Không đổi được giao hàng. Vui lòng thử lại.'); }
+    });
+  }
 
   updateQuantity(index: number, qty: number): void {
     this.cartService.updateQuantity(index, qty).subscribe();
   }
 
   removeItem(index: number): void {
-    this.cartService.removeItem(index).subscribe();
+    if (this.cartService.quantitySyncPending()) return;
+    this.cartService.removeItem(index).subscribe({ error: () => this.cartService.notify('Không xóa được sản phẩm. Vui lòng thử lại.') });
   }
 
   clearCart(): void {
+    if (this.cartService.quantitySyncPending()) return;
     if (confirm('Bạn có chắc chắn muốn xóa toàn bộ giỏ hàng?')) {
-      this.cartService.clearCart().subscribe();
+      this.cartService.clearCart().subscribe({ error: () => this.cartService.notify('Không xóa được giỏ hàng. Vui lòng thử lại.') });
     }
-  }
-
-  applyVoucher(): void {
-    if (!this.voucherInput.trim()) return;
-    this.cartService.applyVoucher(this.voucherInput.trim()).subscribe({
-      next: () => alert('Áp dụng mã ưu đãi thành công!'),
-      error: (err) => alert(err.error?.message || 'Mã ưu đãi không hợp lệ')
-    });
   }
 
   setPaymentMode(mode: 'DEPOSIT_50' | 'FULL_PAYMENT'): void {
@@ -385,6 +389,7 @@ export class CartComponent {
   }
 
   proceedToCheckout(): void {
+    if (this.cartService.quantitySyncPending() || this.shippingBusy || this.cartService.voucherSyncPending()) return;
     this.router.navigate(['/checkout']);
   }
 }

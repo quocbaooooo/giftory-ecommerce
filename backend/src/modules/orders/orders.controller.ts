@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
+import { GREETING_CARD_TEMPLATES } from './greeting-card.rules';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -22,6 +23,10 @@ import { UserRole } from '../../common/enums/role.enum';
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
+
+  @Get('greeting-card-templates')
+  @ApiOperation({ summary: 'Danh sách mẫu thiệp chúc mừng' })
+  greetingCardTemplates() { return GREETING_CARD_TEMPLATES; }
 
   @Post()
   @UseGuards(OptionalJwtAuthGuard)
@@ -212,13 +217,15 @@ export class OrdersController {
     return this.ordersService.getOrderByCode(orderCode, userId, phone);
   }
 
-  @Post(':orderCode/pay')
-  @ApiOperation({ summary: 'Xử lý phản hồi từ Payment Gateway (Simulated Payment Gateway)' })
-  async processPaymentSimulation(
+  @Post(':orderCode/demo-payment')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Mô phỏng xác nhận thanh toán cho đồ án ở môi trường phát triển' })
+  async demoPayment(
     @Param('orderCode') orderCode: string,
-    @Body() body: { success: boolean; paymentType?: 'DEPOSIT_50' | 'FULL_100' }
+    @Body() body: { phone?: string },
+    @CurrentUser('sub') userId?: string
   ) {
-    return this.ordersService.processPaymentSimulation(orderCode, body);
+    return this.ordersService.processDemoPayment(orderCode, userId, body?.phone);
   }
 
   @Patch(':id/cancel')

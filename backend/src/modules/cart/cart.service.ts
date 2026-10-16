@@ -1,3 +1,5 @@
+import { VouchersService } from '../vouchers/vouchers.service';
+import { shippingPrice } from '../vouchers/voucher.rules';
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -13,6 +15,7 @@ export class CartService {
     @InjectModel(Cart.name) private readonly cartModel: Model<CartDocument>,
     @InjectModel(Product.name) private readonly productModel: Model<ProductDocument>,
     @InjectModel(Voucher.name) private readonly voucherModel: Model<VoucherDocument>,
+    private readonly vouchers: VouchersService,
   ) {}
 
   async getCart(userId?: string, sessionId?: string) {
@@ -21,7 +24,7 @@ export class CartService {
       path: 'items.productId',
       select: 'name slug price salePrice images isCustomizable customBaseFee'
     });
-    return this.calculateCartTotals(cart);
+    return this.calculateCartTotals(cart, userId);
   }
 
   async addItem(dto: AddToCartDto, userId?: string) {
@@ -114,37 +117,24 @@ export class CartService {
   }
 
   async applyVoucher(code: string, userId?: string, sessionId?: string) {
-    const voucher = await this.voucherModel.findOne({
-      code: code.toUpperCase(),
-      isActive: true,
-      expiresAt: { $gte: new Date() }
-    });
-
-    if (!voucher) {
-      throw new BadRequestException('Mã ưu đãi không hợp lệ hoặc đã hết hạn');
-    }
-
     const cart = await this.findOrCreateCart(userId, sessionId);
-    const totals = this.calculateCartTotals(cart);
-
-    if (voucher.minOrderValue > 0 && totals.pricing.itemsTotal < voucher.minOrderValue) {
-      throw new BadRequestException(`Đơn hàng phải tối thiểu ${voucher.minOrderValue.toLocaleString('vi-VN')}đ để áp dụng voucher này`);
+    const normalized = this.vouchers.normalize(code);
+    if (normalized) {
+      const total = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const quote = await this.vouchers.quote(normalized, total, shippingPrice(total, cart.shippingMethod), userId);
+      if (!quote.eligible) throw new BadRequestException(quote.reason);
     }
-
-    let discount = 0;
-    if (voucher.discountType === 'PERCENT') {
-      discount = Math.round((totals.pricing.itemsTotal * voucher.discountValue) / 100);
-      if (voucher.maxDiscount > 0 && discount > voucher.maxDiscount) {
-        discount = voucher.maxDiscount;
-      }
-    } else {
-      discount = voucher.discountValue;
-    }
-
-    cart.voucherCode = voucher.code;
-    cart.voucherDiscount = discount;
+    cart.voucherCode = normalized;
+    cart.voucherDiscount = 0;
     await cart.save();
+    return this.getCart(userId, sessionId);
+  }
 
+  async setShippingMethod(method: string, userId?: string, sessionId?: string) {
+    if (!['STANDARD', 'EXPRESS'].includes(method)) throw new BadRequestException('Phương thức giao hàng không hợp lệ');
+    const cart = await this.findOrCreateCart(userId, sessionId);
+    cart.shippingMethod = method;
+    await cart.save();
     return this.getCart(userId, sessionId);
   }
 
@@ -188,7 +178,7 @@ export class CartService {
     cart.voucherCode = '';
     cart.voucherDiscount = 0;
     await cart.save();
-    return this.calculateCartTotals(cart);
+    return this.calculateCartTotals(cart, userId);
   }
 
   private async findOrCreateCart(userId?: string, sessionId?: string): Promise<CartDocument> {
@@ -231,7 +221,7 @@ export class CartService {
     return cart;
   }
 
-  private calculateCartTotals(cart: CartDocument) {
+  private async calculateCartTotals(cart: CartDocument, userId?: string) {
     let itemsTotal = 0;
     let totalCustomItems = 0;
     let customItemsDeposit = 0;
@@ -245,16 +235,28 @@ export class CartService {
       }
     });
 
-    const shippingFee = itemsTotal > 500000 || itemsTotal === 0 ? 0 : 30000;
+    const baseShippingFee = shippingPrice(itemsTotal, cart.shippingMethod);
+    const vouchers = await this.vouchers.list(itemsTotal, baseShippingFee, userId);
+    const selected = vouchers.find(v => v.code === cart.voucherCode);
+    const appliedVoucher = selected?.eligible ? selected : null;
+    const voucherNotice = cart.voucherCode && !appliedVoucher
+      ? `Đã bỏ mã ${cart.voucherCode}: ${selected?.reason || 'Mã đã hết hạn hoặc không còn áp dụng'}.` : '';
+    if (cart.voucherCode && !appliedVoucher) {
+      cart.voucherCode = '';
+      cart.voucherDiscount = 0;
+      await cart.save();
+    }
+    const shippingDiscount = appliedVoucher?.shippingDiscount || 0;
+    const shippingFee = baseShippingFee - shippingDiscount;
     const giftWrapFee = 0; // Free today from Stitch banner
-    const voucherDiscount = cart.voucherDiscount || 0;
+    const voucherDiscount = appliedVoucher?.itemDiscount || 0;
     const totalAmount = Math.max(0, itemsTotal - voucherDiscount + shippingFee + giftWrapFee);
 
     let depositAmount = 0;
     if (cart.paymentMode === PaymentMode.FULL_PAYMENT) {
       depositAmount = totalAmount;
     } else {
-      depositAmount = customItemsDeposit;
+      depositAmount = Math.min(totalAmount, customItemsDeposit);
     }
 
     const remainingCodAmount = Math.max(0, totalAmount - depositAmount);
@@ -263,13 +265,15 @@ export class CartService {
       _id: cart._id,
       items: cart.items,
       paymentMode: cart.paymentMode,
+      shippingMethod: cart.shippingMethod,
       voucherCode: cart.voucherCode,
       voucherDiscount,
+      appliedVoucher, vouchers, voucherNotice,
       includeGiftWrap: cart.includeGiftWrap,
       pricing: {
         itemsTotal,
         voucherDiscount,
-        shippingFee,
+        shippingFee, baseShippingFee, shippingDiscount,
         giftWrapFee,
         totalAmount,
         depositAmount,

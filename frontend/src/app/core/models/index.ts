@@ -1,3 +1,4 @@
+import { VoucherOffer } from '../services/voucher.service';
 export interface User {
   _id: string;
   name: string;
@@ -131,6 +132,8 @@ export interface CustomDesign {
 }
 
 export interface CartItem {
+  _id?: string;
+  variantSku?: string;
   productId: any;
   name?: string;
   variantName?: string;
@@ -162,6 +165,10 @@ export interface CartItem {
 }
 
 export interface Cart {
+  shippingMethod?: 'STANDARD' | 'EXPRESS';
+  vouchers?: VoucherOffer[];
+  appliedVoucher?: VoucherOffer | null;
+  voucherNotice?: string;
   _id: string;
   items: CartItem[];
   paymentMode: 'DEPOSIT_50' | 'FULL_PAYMENT';
@@ -171,6 +178,8 @@ export interface Cart {
   pricing: {
     itemsTotal: number;
     voucherDiscount: number;
+    shippingDiscount?: number;
+    baseShippingFee?: number;
     shippingFee: number;
     giftWrapFee: number;
     totalAmount: number;
@@ -214,7 +223,20 @@ export interface OrderItemDetail {
   preparedBy?: string;
 }
 
+export interface GreetingCardTemplate {
+  id: string;
+  name: string;
+}
+
+export interface GreetingCard {
+  templateId: string;
+  templateName: string;
+  heading: string;
+  message: string;
+}
+
 export interface Order {
+  greetingCard?: GreetingCard | null;
   _id: string;
   orderCode: string;
   customerInfo?: {
@@ -222,6 +244,11 @@ export interface Order {
     phone: string;
     email?: string;
     address: string;
+    provinceCode?: string;
+    provinceName?: string;
+    wardCode?: string;
+    wardName?: string;
+    street?: string;
     note?: string;
   };
   shippingAddress?: {
@@ -237,6 +264,8 @@ export interface Order {
   pricing?: {
     itemsTotal: number;
     voucherDiscount: number;
+    shippingDiscount?: number;
+    baseShippingFee?: number;
     shippingFee: number;
     giftWrapFee: number;
     totalAmount: number;

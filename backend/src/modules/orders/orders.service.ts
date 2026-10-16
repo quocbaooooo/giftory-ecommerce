@@ -1,4 +1,8 @@
+import { VouchersService } from '../vouchers/vouchers.service';
+import { shippingPrice } from '../vouchers/voucher.rules';
 import { CareService } from '../care/care.service';
+import { normalizeAddress } from '../recipients/address.rules';
+import { normalizeGreetingCard } from './greeting-card.rules';
 import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -26,9 +30,15 @@ export class OrdersService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel(Product.name) private readonly productModel: Model<ProductDocument>,
     @InjectModel(LoyaltyTransaction.name) private readonly loyaltyModel: Model<LoyaltyTransactionDocument>,
+    private readonly vouchers?: VouchersService,
   ) {}
 
   async createOrder(dto: CreateOrderDto, userId?: string) {
+    const greetingCard = normalizeGreetingCard(dto.greetingCard);
+    const info = dto.customerInfo;
+    if (info?.provinceCode !== undefined || info?.wardCode !== undefined || info?.street !== undefined) {
+      dto.customerInfo = { ...info, ...normalizeAddress({ provinceCode: info.provinceCode, wardCode: info.wardCode, street: info.street }) };
+    }
     let orderItems: any[] = [];
     let itemsTotal = 0;
     let customDeposit = 0;
@@ -90,7 +100,7 @@ export class OrdersService {
         throw new BadRequestException('Giỏ hàng không hợp lệ hoặc đang trống, không thể tạo đơn hàng');
       }
 
-      voucherDiscount = cart.voucherDiscount || 0;
+
 
       orderItems = cart.items.map(item => {
         const product: any = item.productId;
@@ -124,12 +134,15 @@ export class OrdersService {
 
     // BP-03 Rule: Free shipping for orders >= 250,000 VND (Standard)
     const shippingMethod = dto.shippingMethod || 'STANDARD';
-    let shippingFee = 0;
-    if (shippingMethod === 'EXPRESS') {
-      shippingFee = 50000;
-    } else {
-      shippingFee = itemsTotal >= 250000 ? 0 : 30000;
+    const baseShippingFee = shippingPrice(itemsTotal, shippingMethod);
+    let voucher: any = null;
+    if (cart?.voucherCode) {
+      voucher = await this.vouchers.quote(cart.voucherCode, itemsTotal, baseShippingFee, userId);
+      if (!voucher.eligible) throw new BadRequestException(voucher.reason + '. Vui lòng quay lại giỏ hàng để chọn mã khác.');
     }
+    voucherDiscount = voucher?.itemDiscount || 0;
+    const shippingDiscount = voucher?.shippingDiscount || 0;
+    const shippingFee = baseShippingFee - shippingDiscount;
 
     const giftWrapFee = 0;
     const totalAmount = Math.max(0, itemsTotal - voucherDiscount + shippingFee + giftWrapFee);
@@ -196,46 +209,63 @@ export class OrdersService {
       ? PaymentStatus.UNPAID // COD Pending
       : PaymentStatus.UNPAID;
 
-    const order = await this.orderModel.create({
-      orderCode,
-      userId: userId ? new Types.ObjectId(userId) : undefined,
-      customerInfo: dto.customerInfo,
-      items: orderItems,
-      pricing: {
-        itemsTotal,
-        voucherDiscount,
-        shippingFee,
-        giftWrapFee,
-        totalAmount,
-        depositAmount,
-        remainingCodAmount
-      },
-      paymentMode: depositAmount < totalAmount ? PaymentMode.DEPOSIT_50 : PaymentMode.FULL_PAYMENT,
-      paymentMethod: dto.paymentMethod,
-      paymentStatus: initialPaymentStatus,
-      orderStatus: OrderStatus.AWAITING_CONFIRMATION,
-      fulfillmentStatus: FulfillmentStatus.AWAITING_CONFIRMATION,
-      timeline: initialTimeline,
-      trackingCode: `GHTK-VN-${Math.floor(1000000 + Math.random() * 9000000)}`,
-      shippingCarrier: shippingMethod === 'EXPRESS' ? 'Giao Hàng Hỏa Tốc (2h - 48h)' : 'Giao Hàng Tiêu Chuẩn',
-      confirmationWait: {
-        minWaitHours: 12,
-        maxWaitHours: 48,
-        eligibleAt: new Date(Date.now() + 12 * 3600000),
-        deadlineAt: new Date(Date.now() + 48 * 3600000),
-        confirmedAt: null,
-        confirmedBy: ''
-      },
-      isPackaged: false,
-      deliveryInfo: {
-        carrier: shippingMethod === 'EXPRESS' ? 'Giao Hàng Hỏa Tốc (2h - 48h)' : 'Giao Hàng Tiêu Chuẩn',
-        trackingCode: `GHTK-VN-${Math.floor(1000000 + Math.random() * 9000000)}`,
-        deliveryAttempts: [],
-        deliveryResult: 'PENDING',
-        failureReason: '',
-        allowRetry: true
+    if (voucher) {
+      const reserved = await this.vouchers.reserve(voucher.code, itemsTotal, baseShippingFee, userId, orderCode);
+      if (reserved.itemDiscount !== voucher.itemDiscount || reserved.shippingDiscount !== voucher.shippingDiscount || reserved.discountType !== voucher.discountType) {
+        await this.vouchers.release(voucher.code, orderCode);
+        throw new BadRequestException('Ưu đãi vừa thay đổi. Vui lòng kiểm tra lại giỏ hàng.');
       }
-    });
+    }
+    let order;
+    try {
+      order = await this.orderModel.create({
+        voucherCode: voucher?.code || '',
+        voucherType: voucher?.discountType || '',
+        orderCode,
+        userId: userId ? new Types.ObjectId(userId) : undefined,
+        customerInfo: dto.customerInfo,
+        greetingCard,
+        items: orderItems,
+        pricing: {
+          itemsTotal,
+          voucherDiscount,
+          shippingFee, baseShippingFee, shippingDiscount,
+          giftWrapFee,
+          totalAmount,
+          depositAmount,
+          remainingCodAmount
+        },
+        paymentMode: depositAmount < totalAmount ? PaymentMode.DEPOSIT_50 : PaymentMode.FULL_PAYMENT,
+        paymentMethod: dto.paymentMethod,
+        paymentStatus: initialPaymentStatus,
+        orderStatus: OrderStatus.AWAITING_CONFIRMATION,
+        fulfillmentStatus: FulfillmentStatus.AWAITING_CONFIRMATION,
+        timeline: initialTimeline,
+        trackingCode: `GHTK-VN-${Math.floor(1000000 + Math.random() * 9000000)}`,
+        shippingCarrier: shippingMethod === 'EXPRESS' ? 'Giao Hàng Hỏa Tốc (2h - 48h)' : 'Giao Hàng Tiêu Chuẩn',
+        confirmationWait: {
+          minWaitHours: 12,
+          maxWaitHours: 48,
+          eligibleAt: new Date(Date.now() + 12 * 3600000),
+          deadlineAt: new Date(Date.now() + 48 * 3600000),
+          confirmedAt: null,
+          confirmedBy: ''
+        },
+        isPackaged: false,
+        deliveryInfo: {
+          carrier: shippingMethod === 'EXPRESS' ? 'Giao Hàng Hỏa Tốc (2h - 48h)' : 'Giao Hàng Tiêu Chuẩn',
+          trackingCode: `GHTK-VN-${Math.floor(1000000 + Math.random() * 9000000)}`,
+          deliveryAttempts: [],
+          deliveryResult: 'PENDING',
+          failureReason: '',
+          allowRetry: true
+        }
+      });
+
+    } catch (error) {
+      if (voucher) await this.vouchers.release(voucher.code, orderCode);
+      throw error;
+    }
 
     // Clear cart items ONLY for regular cart orders (preserve cart for Buy Now)
     if (!dto.buyNowItem && cart) {
@@ -248,46 +278,43 @@ export class OrdersService {
     return order;
   }
 
-  async processPaymentSimulation(orderCode: string, body: { success: boolean; paymentType?: 'DEPOSIT_50' | 'FULL_100' }) {
-    const order = await this.orderModel.findOne({ orderCode: orderCode.toUpperCase() });
-    if (!order) {
-      throw new NotFoundException(`Không tìm thấy đơn hàng mã ${orderCode}`);
+  async processDemoPayment(orderCode: string, userId?: string, phone?: string) {
+    if (process.env.NODE_ENV === 'production' || process.env.ENABLE_PAYMENT_SIMULATION === 'false') {
+      throw new BadRequestException('Thanh toán mô phỏng không khả dụng trong môi trường này');
     }
-
-    if (process.env.ENABLE_PAYMENT_SIMULATION !== 'true') throw new BadRequestException('Thanh toán mô phỏng chưa được bật');
-    if (order.refundPending || [OrderStatus.CANCELLED, OrderStatus.DELIVERED, OrderStatus.RETURNED_BP06].includes(order.orderStatus) || order.paymentStatus === PaymentStatus.REFUNDED) throw new BadRequestException('Đơn không thể tiếp nhận thanh toán');
-
-    if (!body.success) {
-      order.timeline.push({
-        title: 'Thanh toán qua Payment Gateway thất bại',
-        description: 'Giao dịch thanh toán trực tuyến không thành công. Vui lòng thực hiện lại.',
-        timestamp: new Date(),
-        completed: false
-      });
-      await order.save();
-      throw new BadRequestException('Giao dịch thanh toán trực tuyến không thành công. Vui lòng thực hiện lại giao dịch (EF1).');
+    const order = await this.getOrderByCode(orderCode, userId, phone);
+    if (order.refundPending || [OrderStatus.CANCELLED, OrderStatus.DELIVERED, OrderStatus.RETURNED_BP06].includes(order.orderStatus) || order.paymentStatus === PaymentStatus.REFUNDED) {
+      throw new BadRequestException('Đơn không thể tiếp nhận thanh toán');
     }
+    if (order.pricing.depositAmount <= 0) throw new BadRequestException('Đơn COD không yêu cầu thanh toán trước');
+    if (order.paymentStatus !== PaymentStatus.UNPAID) return order;
 
-    // Payment Success
-    const isFull = body.paymentType === 'FULL_100' || order.pricing.depositAmount === order.pricing.totalAmount;
-    order.paymentStatus = isFull ? PaymentStatus.PAID_FULL : PaymentStatus.PARTIALLY_PAID_DEPOSIT_50;
-    order.fulfillmentStatus = FulfillmentStatus.AT_WORKSHOP;
-
-    if (order.timeline && order.timeline.length > 1) {
-      order.timeline[1].completed = true;
-      order.timeline[1].title = isFull ? 'Đã thanh toán 100%' : 'Đã cọc 50% thành công';
-      order.timeline[1].description = `Đã nhận ${order.pricing.depositAmount.toLocaleString('vi-VN')}đ qua Payment Gateway VietQR/MoMo/VNPAY.`;
-    }
-
-    order.timeline.push({
-      title: 'Payment Gateway xác nhận giao dịch',
-      description: `Giao dịch ${order.paymentStatus === PaymentStatus.PAID_FULL ? 'Thanh toán 100%' : 'Đặt cọc 50%'} hoàn tất thành công.`,
+    const isFull = order.pricing.depositAmount >= order.pricing.totalAmount;
+    const timeline = order.timeline.map((entry, index) => index === 1 ? {
+      ...entry,
+      completed: true,
+      title: isFull ? 'Đã thanh toán 100% (mô phỏng)' : 'Đã cọc 50% (mô phỏng)',
+      description: `Đồ án mô phỏng nhận ${order.pricing.depositAmount.toLocaleString('vi-VN')}đ. Không có giao dịch ngân hàng thực.`,
+    } : entry);
+    timeline.push({
+      title: 'Hệ thống mô phỏng xác nhận thanh toán',
+      description: 'Thanh toán thành công trong chế độ đồ án. Không có giao dịch ngân hàng thực.',
       timestamp: new Date(),
-      completed: true
+      completed: true,
     });
-
-    await order.save();
-    return order;
+    // Conditional update makes retries safe, including simultaneous requests.
+    const updated = await this.orderModel.findOneAndUpdate(
+      { _id: order._id, paymentStatus: PaymentStatus.UNPAID, orderStatus: order.orderStatus, refundPending: { $ne: true } },
+      {
+        $set: {
+          paymentStatus: isFull ? PaymentStatus.PAID_FULL : PaymentStatus.PARTIALLY_PAID_DEPOSIT_50,
+          fulfillmentStatus: FulfillmentStatus.AT_WORKSHOP,
+          timeline,
+        },
+      },
+      { new: true },
+    ).exec();
+    return updated || this.getOrderByCode(orderCode, userId, phone);
   }
 
   async getMyOrders(userId?: string) {
@@ -630,7 +657,7 @@ export class OrdersService {
 
     order.timeline.push({
       title: 'Đã hoàn tất đóng gói đơn hàng (US-04.04, BR-09)',
-      description: `Admin ${order.packagedBy} đã kiểm tra toàn bộ sản phẩm đạt yêu cầu và đóng hộp quà cẩn thận kèm thiệp. Sẵn sàng bàn giao cho Shipper.`,
+      description: `Admin ${order.packagedBy} đã kiểm tra toàn bộ sản phẩm đạt yêu cầu và đóng hộp quà cẩn thận${order.greetingCard ? ` kèm thiệp ${order.greetingCard.templateName}` : ''}. Sẵn sàng bàn giao cho Shipper.`,
       timestamp: new Date(),
       completed: true
     });

@@ -420,7 +420,7 @@ async function bootstrap() {
   // 4. Seed Vouchers
   const vouchersData = [
     { code: 'TRIAN30K', title: 'Ưu đãi tri ân khách hàng', description: 'Giảm ngay 30.000đ cho đơn hàng từ 200.000đ', discountType: 'FIXED', discountValue: 30000, minOrderValue: 200000, usageLimit: 500, requiredPoints: 0 },
-    { code: 'FREESHIP', title: 'Miễn phí vận chuyển toàn quốc', description: 'Freeship tối đa 35.000đ cho đơn từ 250.000đ', discountType: 'FIXED', discountValue: 35000, minOrderValue: 250000, usageLimit: 300, requiredPoints: 0 },
+    { code: 'FREESHIP', title: 'Miễn phí vận chuyển toàn quốc', description: 'Freeship tối đa 35.000đ cho đơn từ 250.000đ', discountType: 'FREESHIP', discountValue: 35000, minOrderValue: 250000, usageLimit: 300, requiredPoints: 0 },
     { code: 'BESPOKE50', title: 'Trợ giá chế tác riêng', description: 'Giảm 50.000đ cho các đơn hàng có quà Custom Studio', discountType: 'FIXED', discountValue: 50000, minOrderValue: 400000, usageLimit: 200, requiredPoints: 100 },
     { code: 'LOYALTY100K', title: 'Voucher Hội viên Kim Cương', description: 'Giảm 100.000đ đổi từ điểm tích lũy', discountType: 'FIXED', discountValue: 100000, minOrderValue: 500000, usageLimit: 100, requiredPoints: 200 },
     { code: 'GIFT20K', title: 'Voucher Đổi điểm 50 Point', description: 'Giảm 20.000đ trực tiếp khi thanh toán', discountType: 'FIXED', discountValue: 20000, minOrderValue: 150000, usageLimit: 1000, requiredPoints: 50 },

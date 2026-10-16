@@ -291,7 +291,7 @@ import { Product, ProductVariant } from '../../../core/models';
               <span class="material-symbols-outlined text-[#7C3AED] text-xl shrink-0 mt-0.5">card_giftcard</span>
               <div>
                 <h5 class="font-bold text-xs text-[#1E1B4B]">Đóng Gói Nơ Lụa</h5>
-                <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">Hộp quà cứng lót nhung/satin sang trọng tặng kèm thiệp chúc mừng viết tay.</p>
+                <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">Hộp quà cứng lót nhung/satin sang trọng kèm thiệp chúc mừng in theo lời chúc bạn chọn ở bước thanh toán.</p>
               </div>
             </div>
           </div>

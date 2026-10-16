@@ -46,14 +46,14 @@ import { Product, CustomDesign } from '../../core/models';
         <div *ngIf="wishlistItems().length > 0; else emptyWishlist" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <div
             *ngFor="let item of wishlistItems()"
-            class="bg-white rounded-3xl p-4 border border-giftory-border shadow-sm hover:shadow-md transition flex flex-col justify-between group"
+            class="relative bg-white rounded-3xl p-4 border border-giftory-border shadow-sm hover:shadow-md transition flex flex-col justify-between group"
           >
             <div class="space-y-3">
               <div class="relative aspect-square rounded-2xl overflow-hidden bg-giftory-surface">
                 <img [src]="item.images[0]" [alt]="item.name" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
                 <button
                   (click)="removeFromWishlist(item._id)"
-                  class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 text-giftory-sale hover:bg-white flex items-center justify-center shadow transition"
+                  class="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-white/90 text-giftory-sale hover:bg-white flex items-center justify-center shadow transition"
                   title="Xóa khỏi danh sách thích"
                 >
                   <span class="material-symbols-outlined text-lg">close</span>
@@ -61,8 +61,8 @@ import { Product, CustomDesign } from '../../core/models';
               </div>
 
               <div>
-                <a [routerLink]="['/products', item.slug]" class="text-sm font-bold text-giftory-ink hover:text-giftory-primary transition line-clamp-2">
-                  {{ item.name }}
+                <a [routerLink]="['/products', item.slug]" class="product-detail-link text-sm font-bold text-giftory-ink hover:text-giftory-primary transition">
+                  <span class="line-clamp-2">{{ item.name }}</span>
                 </a>
                 <div class="mt-2 flex items-center gap-2">
                   <span class="text-base font-black text-giftory-ink">{{ (item.salePrice || item.price) | number }} đ</span>
@@ -74,7 +74,7 @@ import { Product, CustomDesign } from '../../core/models';
             <div class="pt-4">
               <button
                 (click)="addToCart(item)"
-                class="w-full py-2 bg-giftory-primary hover:bg-giftory-primary-dark text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center justify-center gap-2"
+                class="relative z-10 w-full py-2 bg-giftory-primary hover:bg-giftory-primary-dark text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center justify-center gap-2"
               >
                 <span class="material-symbols-outlined text-sm">shopping_cart</span>
                 Thêm Vào Giỏ

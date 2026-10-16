@@ -1,8 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, ValidateNested, IsIn, MaxLength, Matches } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { GREETING_CARD_TEMPLATES } from '../greeting-card.rules';
 import { PaymentMethod, PaymentMode } from '../../../common/enums/role.enum';
 
 export class CustomerInfoDto {
+  @IsOptional()
+  @IsString()
+  provinceCode?: string;
+
+  @IsOptional()
+  @IsString()
+  wardCode?: string;
+
+  @IsOptional()
+  @IsString()
+  street?: string;
+
   @ApiProperty({ example: 'Nguyễn Minh Anh' })
   @IsString()
   @IsNotEmpty()
@@ -53,10 +67,39 @@ export class BuyNowItemDto {
   customDetails?: any;
 }
 
+export class GreetingCardDto {
+  @IsOptional()
+  @Transform(({ value }) => typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value)
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(80)
+  heading?: string;
+
+  @IsString()
+  @IsIn(GREETING_CARD_TEMPLATES.map(item => item.id))
+  templateId: string;
+
+  @Transform(({ value }) => typeof value === 'string' ? value.replace(/\r\n?/g, '\n').trim() : value)
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(300)
+  @Matches(/^(?:[^\n]*\n){0,5}[^\n]*$/, { message: 'Lời chúc tối đa 6 dòng' })
+  message: string;
+}
+
 export class CreateOrderDto {
+  @ApiProperty({ type: GreetingCardDto, required: false })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => GreetingCardDto)
+  greetingCard?: GreetingCardDto;
+
   @ApiProperty({ type: CustomerInfoDto })
   @IsObject()
   @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => CustomerInfoDto)
   customerInfo: CustomerInfoDto;
 
   @ApiProperty({ enum: PaymentMode, default: PaymentMode.DEPOSIT_50 })

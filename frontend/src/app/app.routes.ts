@@ -37,6 +37,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent)
   },
   {
+    path: 'payment-result/:code',
+    loadComponent: () => import('./features/checkout/payment-result.component').then(m => m.PaymentResultComponent)
+  },
+  {
     path: 'orders',
     loadComponent: () => import('./features/orders/orders.component').then(m => m.OrdersComponent)
   },
@@ -80,6 +84,11 @@ export const routes: Routes = [
   { path: 'reset-password', data: { authMode: 'reset' }, loadComponent: () => import('./features/auth/auth-page.component').then(m => m.AuthPageComponent) },
 
   // Admin Portal Routes (Guarded by adminGuard)
+  {
+    path: 'admin/orders/:code/greeting-card',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./features/admin/orders/greeting-card-print.component').then(m => m.GreetingCardPrintComponent)
+  },
   {
     path: 'admin',
     canActivate: [adminGuard],

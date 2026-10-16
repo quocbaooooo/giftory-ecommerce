@@ -23,14 +23,14 @@ export class ProductQueryDto {
   @IsString()
   isFlashSale?: string;
 
-  @ApiPropertyOptional({ description: 'Giá tối thiểu' })
+  @ApiPropertyOptional({ description: 'Giá bán tối thiểu (ưu tiên salePrice > 0, nếu không dùng price)' })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
   minPrice?: number;
 
-  @ApiPropertyOptional({ description: 'Giá tối đa' })
+  @ApiPropertyOptional({ description: 'Giá bán tối đa (ưu tiên salePrice > 0, nếu không dùng price)' })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()

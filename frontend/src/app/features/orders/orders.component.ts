@@ -7,11 +7,12 @@ import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Order } from '../../core/models';
+import { GreetingCardPreviewComponent } from '../../shared/components/greeting-card-preview.component';
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, GreetingCardPreviewComponent],
   template: `
     <div class="space-y-6 animate-fade-in max-w-7xl mx-auto pb-12">
       @if (isListView()) {
@@ -222,6 +223,13 @@ import { Order } from '../../core/models';
             </a>
           </div>
 
+          @if (activeOrder()?.greetingCard; as card) {
+            <div class="mb-4 space-y-3">
+              <h4 class="text-sm font-bold text-[#1E1B4B]">Thiệp chúc mừng · {{ card.templateName }}</h4>
+              <p class="text-xs text-slate-500">Xưởng in thiệp và đặt kèm trong gói quà.</p>
+              <app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" />
+            </div>
+          }
           <!-- Product items list -->
           <div class="space-y-3">
             <div *ngFor="let item of getOrderItems()" class="flex items-start gap-4 p-3 bg-slate-50/70 rounded-2xl border border-slate-100">

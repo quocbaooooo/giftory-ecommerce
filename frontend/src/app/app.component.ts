@@ -53,15 +53,15 @@ export class AppComponent {
     },
     {
       icon: 'local_shipping',
-      badge: 'Freeship 499K',
-      text: 'Miễn phí vận chuyển hỏa tốc cho tất cả đơn hàng từ 499.000đ',
+      badge: 'Freeship 250K',
+      text: 'Miễn phí giao hàng tiêu chuẩn cho đơn từ 250.000đ',
       linkText: 'Mua sắm ngay',
       link: '/products'
     },
     {
       icon: 'edit_note',
       badge: 'Thiệp Độc Bản',
-      text: 'Tặng kèm thiệp chúc mừng viết tay nghệ thuật cho mọi món quà',
+      text: 'Chọn mẫu thiệp và gửi lời chúc để xưởng in kèm trong gói quà',
       linkText: 'Xem chi tiết',
       link: '/shopping-guide'
     },

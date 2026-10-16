@@ -1,7 +1,8 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { GreetingCardPreviewComponent } from '../../../shared/components/greeting-card-preview.component';
 import { AdminService } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Order, OrderItemDetail } from '../../../core/models';
@@ -9,7 +10,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
 @Component({
   selector: 'app-admin-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule, GreetingCardPreviewComponent],
   template: `
     <div class="space-y-6 animate-fade-in pb-12">
       <!-- Header -->
@@ -301,6 +302,15 @@ import { Order, OrderItemDetail } from '../../../core/models';
           </div>
 
           <!-- ========================================================== -->
+          @if (ord.greetingCard; as card) {
+            <section class="p-5 rounded-2xl border border-purple-200 bg-purple-50/40 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div><h3 class="font-bold text-sm text-purple-900">Thiệp in kèm gói quà · {{ card.templateName }}</h3><p class="text-xs text-slate-500 mt-1">Kiểm tra lời chúc, in thiệp và cho vào hộp trước khi đóng gói.</p></div>
+                <a [routerLink]="['/admin/orders', ord.orderCode, 'greeting-card']" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-700 text-white font-bold text-xs"><span class="material-symbols-outlined text-base" aria-hidden="true">print</span>Mở bản in thiệp</a>
+              </div>
+              <app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" />
+            </section>
+          }
           <!-- STEP 1: XÁC NHẬN ĐƠN HÀNG (US-04.01, BR-01, BR-02, BR-03, BR-04) -->
           <!-- ========================================================== -->
           <div class="p-5 rounded-2xl border transition" [ngClass]="ord.orderStatus === 'AWAITING_CONFIRMATION' || ord.orderStatus === 'PENDING' ? 'bg-amber-50/50 border-amber-300 ring-2 ring-amber-100' : 'bg-slate-50/50 border-slate-200'">

@@ -34,8 +34,8 @@ import { VariantPickerComponent } from './variant-picker.component';
       <div class="fixed inset-0 bg-black/40 z-[110]" (click)="cart.miniCartOpen.set(false)">
         <aside appDialogFocus role="dialog" aria-modal="true" aria-label="Giỏ hàng" class="drawer absolute right-0 top-0 bottom-0 w-full max-w-md bg-white p-6 overflow-y-auto shadow-xl" (click)="$event.stopPropagation()">
           <button class="float-right p-2" aria-label="Đóng giỏ hàng" (click)="cart.miniCartOpen.set(false)">✕</button>
-          <h2 class="text-xl font-bold mb-6">Giỏ hàng ({{ cart.itemsCount() }})</h2>
-          @for (item of cart.items(); track $index) {
+          <h2 class="text-xl font-bold mb-6">Giỏ hàng ({{ cart.productCount() }} sản phẩm · {{ cart.itemsCount() }} món)</h2>
+          @for (item of cart.items(); track item._id || $index) {
             <div class="flex gap-3 border-b py-4">
               <img [src]="item.image || item.productId?.images?.[0]" [alt]="item.productId?.name || ''" class="w-16 h-16 object-cover rounded-lg">
               <div><p class="font-semibold">{{ item.productId?.name || item.name }}</p><p class="text-sm">{{ item.variantName }} × {{ item.quantity }}</p><p>{{ item.price * item.quantity | number }}đ</p></div>

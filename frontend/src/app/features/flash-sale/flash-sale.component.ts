@@ -1,3 +1,5 @@
+import { VoucherService, VoucherOffer } from '../../core/services/voucher.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -5,6 +7,7 @@ import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart.service';
 import { WishlistService } from '../../core/services/wishlist.service';
 import { Product } from '../../core/models';
+import { calculateDiscountPercent } from '../../core/utils/product-price.util';
 
 interface FlashSaleDeal {
   _id: string;
@@ -12,7 +15,6 @@ interface FlashSaleDeal {
   slug: string;
   price: number;
   salePrice: number;
-  discountBadge: string;
   featureTag: string;
   categoryTag: string;
   rating: number;
@@ -35,6 +37,8 @@ interface VoucherItem {
   statusLabel: string;
   statusColor: string;
   claimed: boolean;
+  exhausted: boolean;
+  offer: VoucherOffer;
 }
 
 @Component({
@@ -84,7 +88,7 @@ interface VoucherItem {
 
             <p class="text-sm sm:text-base text-[#4B5563] max-w-xl leading-relaxed">
               Đồng giá quà tặng Custom chỉ từ <strong class="text-[#7C3AED] font-bold">199.000đ</strong>. Áp dụng chính sách
-              <strong class="text-[#7C3AED] font-bold">Đặt cọc 50%</strong> để giữ trọn vẹn giá Deal &amp; nhận hoa lụa thiệp viết tay miễn phí.
+              <strong class="text-[#7C3AED] font-bold">Đặt cọc 50%</strong> để giữ trọn vẹn giá Deal &amp; nhận hoa lụa thiệp in lời chúc miễn phí.
             </p>
 
             <div class="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-3">
@@ -164,7 +168,7 @@ interface VoucherItem {
               </h2>
             </div>
             <p class="text-xs sm:text-sm text-[#6B7280] mt-0.5">
-              Thu thập voucher trước khi thanh toán để áp dụng kép cùng giá Flash Sale
+              Lưu mã vào tài khoản, chọn một mã khi thanh toán. Gói quà và thiệp luôn miễn phí.
             </p>
           </div>
 
@@ -174,6 +178,11 @@ interface VoucherItem {
           </div>
         </div>
 
+        @if (voucherLoading()) { <p role="status" class="text-sm text-slate-500">Đang tải mã ưu đãi…</p> }
+        @if (voucherError()) { <p role="alert" class="text-sm text-rose-700">{{ voucherError() }} <button (click)="loadVouchers()" class="underline">Thử lại</button></p> }
+        @if (!voucherLoading() && !voucherError() && !vouchers().length) { <p class="text-sm text-slate-500">Hiện chưa có mã ưu đãi. Hãy quay lại sau.</p> }
+        @if (!authService.isAuthenticated()) { <a routerLink="/login" class="inline-block text-sm text-purple-700 underline">Đăng nhập để lưu mã</a> }
+        <p class="text-xs text-slate-500">Lưu mã không giữ lượt. Hiệu lực và điều kiện được kiểm tra khi đặt hàng. Mã đổi điểm cần được đổi tại trang thành viên.</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div
             *ngFor="let v of vouchers()"
@@ -215,7 +224,7 @@ interface VoucherItem {
               <button
                 (click)="claimVoucher(v)"
                 type="button"
-                [disabled]="v.claimed"
+                [disabled]="v.claimed || v.exhausted || !!savingCode()"
                 class="w-full mt-1 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
                 [ngClass]="
                   v.claimed
@@ -224,7 +233,7 @@ interface VoucherItem {
                 "
               >
                 <span class="material-symbols-outlined text-sm">{{ v.claimed ? 'check_circle' : 'bookmark_add' }}</span>
-                <span>{{ v.claimed ? 'Đã Lưu ✓' : 'Lưu Mã' }}</span>
+                <span>{{ v.exhausted ? 'Hết lượt' : savingCode() === v.code ? 'Đang lưu…' : v.claimed ? 'Đã lưu ✓' : 'Lưu mã' }}</span>
               </button>
             </div>
           </div>
@@ -277,7 +286,7 @@ interface VoucherItem {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div
             *ngFor="let deal of displayDeals()"
-            class="group bg-white rounded-[28px] overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between border border-[#DDD6FE]"
+            class="relative group bg-white rounded-[28px] overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between border border-[#DDD6FE]"
           >
             <!-- Product Image Frame -->
             <div class="relative w-full aspect-square overflow-hidden bg-slate-50">
@@ -289,9 +298,11 @@ interface VoucherItem {
 
               <!-- Badges top-left -->
               <div class="absolute top-3 left-3 flex flex-col gap-1">
-                <span class="px-3 py-1 rounded-full text-xs font-bold text-white shadow-md bg-[#F43F5E]">
-                  {{ deal.discountBadge }}
-                </span>
+                @if (discountPercent(deal) > 0) {
+                  <span class="px-3 py-1 rounded-full text-xs font-bold text-white shadow-md bg-[#F43F5E]">
+                    -{{ discountPercent(deal) }}% FLASH SALE
+                  </span>
+                }
                 <span
                   *ngIf="deal.featureTag"
                   class="px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-xs text-[11px] font-semibold text-[#1E1B4B] shadow-xs"
@@ -304,7 +315,7 @@ interface VoucherItem {
               <button
                 (click)="toggleWishlist(deal._id)"
                 type="button"
-                class="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center transition-all shadow-xs"
+                class="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center transition-all shadow-xs"
                 [ngClass]="isWishlisted(deal._id) ? 'text-[#F43F5E]' : 'text-[#7C3AED] hover:bg-white'"
                 title="Yêu thích món quà này"
               >
@@ -332,9 +343,9 @@ interface VoucherItem {
                 <!-- Product Name -->
                 <a
                   [routerLink]="['/products', deal.slug]"
-                  class="text-sm sm:text-base font-bold text-[#1E1B4B] hover:text-[#7C3AED] transition-colors line-clamp-2"
+                  class="product-detail-link text-sm sm:text-base font-bold text-[#1E1B4B] hover:text-[#7C3AED] transition-colors"
                 >
-                  {{ deal.name }}
+                  <span class="line-clamp-2">{{ deal.name }}</span>
                 </a>
 
                 <!-- Price Row -->
@@ -342,9 +353,11 @@ interface VoucherItem {
                   <span class="text-xl sm:text-2xl font-black font-mono text-[#7C3AED]">
                     {{ deal.salePrice | number }}đ
                   </span>
-                  <span class="text-xs text-slate-400 line-through">
-                    {{ deal.price | number }}đ
-                  </span>
+                  @if (discountPercent(deal) > 0) {
+                    <span class="text-xs text-slate-400 line-through">
+                      {{ deal.price | number }}đ
+                    </span>
+                  }
                 </div>
 
                 <!-- Stock & Progress -->
@@ -375,7 +388,7 @@ interface VoucherItem {
                 <button
                   (click)="quickBuyDeal(deal)"
                   type="button"
-                  class="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 text-white bg-[#7C3AED] hover:bg-[#6D28D9]"
+                  class="relative z-10 w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 text-white bg-[#7C3AED] hover:bg-[#6D28D9]"
                   style="box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);"
                 >
                   <span class="material-symbols-outlined text-base">view_in_ar</span>
@@ -458,6 +471,9 @@ interface VoucherItem {
   `
 })
 export class FlashSaleComponent implements OnInit, OnDestroy {
+  discountPercent(deal: FlashSaleDeal): number {
+    return calculateDiscountPercent(deal.price, deal.salePrice);
+  }
   private productService = inject(ProductService);
   private cartService = inject(CartService);
   private wishlistService = inject(WishlistService);
@@ -477,56 +493,33 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
     { key: 'anniversary', icon: '🌸', label: 'Quà Dịp Kỷ Niệm & Sinh Nhật' }
   ];
 
-  vouchers = signal<VoucherItem[]>([
-    {
-      id: 'v1',
-      type: 'Giảm Tiền Mặt',
-      title: 'Giảm 50.000đ',
-      desc: 'Cho đơn hàng quà tặng bất kỳ từ 300.000đ',
-      code: 'TRIAN50K',
-      expiry: 'HSD: Hôm nay',
-      usedPercent: 82,
-      statusLabel: 'Sắp hết',
-      statusColor: 'text-[#F43F5E]',
-      claimed: false
-    },
-    {
-      id: 'v2',
-      type: 'Vận Chuyển',
-      title: 'Freeship Max',
-      desc: 'Miễn phí ship toàn quốc (Hỏa tốc 2h HCM & HN)',
-      code: 'FREESHIPMAX',
-      expiry: 'HSD: 24h tới',
-      usedPercent: 95,
-      statusLabel: 'Cháy vé',
-      statusColor: 'text-[#F43F5E]',
-      claimed: true
-    },
-    {
-      id: 'v3',
-      type: 'Quà Tặng Thêm',
-      title: 'Tặng Hộp Lụa 45K',
-      desc: 'Tặng kèm hộp quà cao cấp, nơ lụa & thiệp thơm viết tay',
-      code: 'LUABESPOKE',
-      expiry: 'HSD: 3 ngày',
-      usedPercent: 64,
-      statusLabel: 'Còn nhiều',
-      statusColor: 'text-[#7C3AED]',
-      claimed: false
-    },
-    {
-      id: 'v4',
-      type: 'Doanh Nghiệp',
-      title: 'Giảm 100.000đ',
-      desc: 'Cho đơn hàng quà doanh nghiệp hoặc combo từ 1.000.000đ',
-      code: 'CORP100',
-      expiry: 'HSD: 7 ngày',
-      usedPercent: 45,
-      statusLabel: 'Đang mở',
-      statusColor: 'text-[#7C3AED]',
-      claimed: false
-    }
-  ]);
+  private voucherService = inject(VoucherService);
+  authService = inject(AuthService);
+  vouchers = signal<VoucherItem[]>([]);
+  voucherLoading = signal(false);
+  voucherError = signal('');
+  savingCode = signal('');
+  loadVouchers() {
+    this.voucherLoading.set(true); this.voucherError.set('');
+    this.voucherService.list().subscribe({
+      next: offers => {
+        this.voucherLoading.set(false);
+        this.vouchers.set(offers.map(v => {
+          const usedPercent = v.usageLimit > 0 ? Math.min(100, Math.round(v.usedCount / v.usageLimit * 100)) : 100;
+          return { id: v.code, code: v.code, title: v.title,
+            desc: (v.discountType === 'PERCENT' ? `Giảm ${v.discountValue}%` : `Giảm ${v.discountValue.toLocaleString('vi-VN')}đ`) +
+              (v.maxDiscount > 0 ? ` (tối đa ${v.maxDiscount.toLocaleString('vi-VN')}đ)` : '') +
+              ` · Đơn từ ${v.minOrderValue.toLocaleString('vi-VN')}đ` + (v.requiredPoints ? ` · Cần đổi ${v.requiredPoints} điểm` : ''),
+            type: v.discountType === 'FREESHIP' ? 'Vận chuyển' : v.discountType === 'PERCENT' ? 'Giảm phần trăm' : 'Giảm tiền hàng',
+            expiry: `HSD: ${new Date(v.expiresAt).toLocaleDateString('vi-VN')}`,
+            usedPercent, statusLabel: v.usedCount >= v.usageLimit ? 'Hết lượt' : `Còn ${v.usageLimit - v.usedCount} lượt`,
+            statusColor: usedPercent >= 90 ? 'text-rose-600' : 'text-purple-700',
+            claimed: v.saved, exhausted: v.usedCount >= v.usageLimit, offer: v };
+        }));
+      },
+      error: () => { this.voucherLoading.set(false); this.voucherError.set('Chưa tải được mã ưu đãi.'); }
+    });
+  }
 
   // Bộ sưu tập Flash Sale theo đúng thiết kế Stitch
   mockDeals: FlashSaleDeal[] = [
@@ -536,7 +529,6 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
       slug: 'khung-go-ky-niem-led-khac-ten-bespoke',
       price: 350000,
       salePrice: 199000,
-      discountBadge: '-43% FLASH SALE',
       featureTag: '✨ Khắc tên lấy ngay 2h',
       categoryTag: 'Bespoke LED',
       rating: 4.9,
@@ -553,7 +545,6 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
       slug: 'hop-qua-binh-yen-ngay-moi',
       price: 650000,
       salePrice: 429000,
-      discountBadge: '-34% DEAL HOT',
       featureTag: '🌿 100% Thuần Tự Nhiên',
       categoryTag: 'Combo Chữa Lành',
       rating: 5.0,
@@ -570,7 +561,6 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
       slug: 'vi-da-sap-khac-ten-chu-ky-rieng',
       price: 600000,
       salePrice: 390000,
-      discountBadge: '-35% GIÁ TỐT',
       featureTag: '🖋️ Khắc chữ ký laser',
       categoryTag: 'Bespoke Leather',
       rating: 4.9,
@@ -587,7 +577,6 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
       slug: 'set-qua-moc-vung-vang-khac-logo',
       price: 680000,
       salePrice: 490000,
-      discountBadge: '-28% RIB DEAL',
       featureTag: '🏢 Khắc Logo Doanh Nghiệp',
       categoryTag: 'Quà Tri Ân',
       rating: 4.9,
@@ -604,7 +593,6 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
       slug: 'hop-ky-niem-tung-khoanh-khac',
       price: 490000,
       salePrice: 299000,
-      discountBadge: '-39% FLASH DEAL',
       featureTag: '🎞️ In 12 ảnh kỷ niệm',
       categoryTag: 'Bespoke Memories',
       rating: 4.9,
@@ -621,7 +609,6 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
       slug: 'set-tinh-dau-nen-thom-tinh-khiet',
       price: 520000,
       salePrice: 335000,
-      discountBadge: '-36% DỊP LỄ',
       featureTag: '🌸 Bộ quà Phụ Nữ & Tri Ân',
       categoryTag: 'Phiên Bản Giới Hạn',
       rating: 5.0,
@@ -639,6 +626,7 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
   private timerInterval: any;
 
   ngOnInit() {
+    this.loadVouchers();
     this.startCountdown();
     this.loadBackendProducts();
   }
@@ -653,15 +641,13 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
         const list: Product[] = Array.isArray(res) ? res : (res?.data || res?.items || []);
         if (list && list.length > 0) {
           const mapped: FlashSaleDeal[] = list.map((p, idx) => {
-            const salePrice = p.salePrice || Math.round(p.price * 0.7);
-            const discount = Math.round(((p.price - salePrice) / p.price) * 100);
+            const salePrice = p.salePrice && p.salePrice > 0 ? p.salePrice : p.price;
             return {
               _id: p._id,
               name: p.name,
               slug: p.slug,
               price: p.price,
               salePrice: salePrice,
-              discountBadge: `-${discount}% FLASH SALE`,
               featureTag: p.isCustomizable ? '✨ Khắc tên laser miễn phí' : '🎁 Hộp nơ lụa cao cấp',
               categoryTag: p.category?.name || 'Quà Tặng Giftory',
               rating: 4.9,
@@ -702,11 +688,18 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
   }
 
   claimVoucher(v: VoucherItem) {
-    if (v.claimed) return;
-    this.vouchers.update((list) =>
-      list.map((item) => (item.id === v.id ? { ...item, claimed: true } : item))
-    );
-    this.showToast(`Đã lưu mã ${v.code} thành công!`);
+    if (!this.authService.isAuthenticated()) { this.showToast('Đăng nhập để lưu mã vào tài khoản. Bạn vẫn có thể nhập mã công khai trong giỏ hàng.'); return; }
+    if (v.claimed || v.exhausted || this.savingCode()) return;
+    this.savingCode.set(v.code);
+    this.voucherService.save(v.code).subscribe({
+      next: () => {
+        this.savingCode.set('');
+        this.vouchers.update(list => list.map(item => item.code === v.code ? { ...item, claimed: true } : item));
+        this.cartService.loadCart();
+        this.showToast(`Đã lưu mã ${v.code}. Chọn mã khi thanh toán để áp dụng.`);
+      },
+      error: error => { this.savingCode.set(''); this.showToast(error.error?.message || 'Chưa lưu được mã. Vui lòng thử lại.'); }
+    });
   }
 
   showToast(msg: string) {

@@ -102,6 +102,12 @@ export class CartController {
     return this.cartService.applyVoucher(code, userId, sessionId);
   }
 
+  @Post('shipping-method')
+  @UseGuards(OptionalJwtAuthGuard)
+  async setShippingMethod(@Body('method') method: string, @Body('sessionId') sessionId: string, @CurrentUser('sub') userId?: string) {
+    return this.cartService.setShippingMethod(method, userId, sessionId);
+  }
+
   @Post('payment-mode')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()

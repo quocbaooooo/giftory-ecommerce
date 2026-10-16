@@ -5,6 +5,7 @@ import { Product } from '../../../core/models';
 import { CartService } from '../../../core/services/cart.service';
 import { WishlistService } from '../../../core/services/wishlist.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { calculateDiscountPercent } from '../../../core/utils/product-price.util';
 
 @Component({
   selector: 'app-product-card',
@@ -24,21 +25,21 @@ import { AuthService } from '../../../core/services/auth.service';
         >
 
         <!-- Top-Left Badge (Max 1 merged badge to avoid visual cluttering) -->
-        <div class="absolute top-2 left-2 z-10">
-          @if (product.isCustomizable && product.isFlashSale && product.flashSaleDiscountPercent) {
+        <div class="absolute top-2 left-2 z-10 pointer-events-none">
+          @if (product.isCustomizable && product.isFlashSale && discountPercent > 0) {
             <span class="px-2.5 py-1 rounded-full bg-[#10B981] text-white font-semibold text-[11px] shadow-sm flex items-center gap-1">
               <span class="material-symbols-outlined text-[13px]">palette</span>
-              Cọc 50% • -{{ product.flashSaleDiscountPercent }}%
+              Cọc 50% • -{{ discountPercent }}%
             </span>
           } @else if (product.isCustomizable) {
             <span class="px-2.5 py-1 rounded-full bg-[#10B981] text-white font-semibold text-[11px] shadow-sm flex items-center gap-1">
               <span class="material-symbols-outlined text-[13px]">palette</span>
               Cọc 50%
             </span>
-          } @else if (product.isFlashSale && product.flashSaleDiscountPercent) {
+          } @else if (product.isFlashSale && discountPercent > 0) {
             <span class="px-2.5 py-1 rounded-full bg-[#F43F5E] text-white font-bold text-[11px] shadow-sm flex items-center gap-1">
               <span class="material-symbols-outlined text-[13px]">bolt</span>
-              -{{ product.flashSaleDiscountPercent }}%
+              -{{ discountPercent }}%
             </span>
           }
         </div>
@@ -84,9 +85,9 @@ import { AuthService } from '../../../core/services/auth.service';
           <!-- Title: Standardized fixed 2-line height so 1-line and 2-line titles align perfectly -->
           <div class="h-10 sm:h-11 mb-1 flex items-start">
             <a [routerLink]="['/products', product.slug]" 
-               class="font-bold text-sm sm:text-base text-[#1E1B4B] hover:text-[#7C3AED] transition-colors line-clamp-2 leading-snug" 
+               class="product-detail-link font-bold text-sm sm:text-base text-[#1E1B4B] hover:text-[#7C3AED] transition-colors leading-snug"
                [title]="product.name">
-              {{ product.name }}
+              <span class="line-clamp-2">{{ product.name }}</span>
             </a>
           </div>
         </div>
@@ -121,7 +122,7 @@ import { AuthService } from '../../../core/services/auth.service';
           </div>
 
           <!-- Quick Action Button: Standardized height (h-9) -->
-          <div class="shrink-0 flex items-center">
+          <div class="relative z-10 shrink-0 flex items-center">
             @if (product.isCustomizable) {
               <a 
                 [routerLink]="['/custom-studio']"
@@ -149,6 +150,10 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class ProductCardComponent {
   @Input({ required: true }) product!: Product;
+
+  get discountPercent(): number {
+    return calculateDiscountPercent(this.product.price, this.product.salePrice);
+  }
 
   cartService = inject(CartService);
   wishlistService = inject(WishlistService);

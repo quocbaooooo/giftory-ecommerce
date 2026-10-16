@@ -14,7 +14,7 @@ export class Voucher {
   @Prop({ default: '' })
   description: string;
 
-  @Prop({ required: true, enum: ['FIXED', 'PERCENT'], default: 'FIXED' })
+  @Prop({ required: true, enum: ['FIXED', 'PERCENT', 'FREESHIP'], default: 'FIXED' })
   discountType: string;
 
   @Prop({ required: true, min: 0 })

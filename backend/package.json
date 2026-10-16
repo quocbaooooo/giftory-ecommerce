@@ -15,7 +15,9 @@
     "seed": "ts-node -r tsconfig-paths/register src/database/seed.ts",
     "migrate:bp04": "ts-node -r tsconfig-paths/register src/database/migrate-bp04.ts",
     "test:care": "npm run build && node test/care.integration.cjs",
-    "migrate:care": "ts-node -r tsconfig-paths/register src/database/migrate-care.ts"
+    "test:products": "npm run build && node test/products-price.integration.cjs",
+    "migrate:care": "ts-node -r tsconfig-paths/register src/database/migrate-care.ts",
+    "test:vouchers": "npm run build && node test/vouchers.integration.cjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.11",

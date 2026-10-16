@@ -4,8 +4,29 @@ import { UserRole } from '../../common/enums/role.enum';
 
 export type UserDocument = User & Document;
 
+@Schema({ _id: false })
+export class Recipient {
+  @Prop({ required: true }) id: string;
+  @Prop({ required: true }) key: string;
+  @Prop({ required: true, trim: true }) name: string;
+  @Prop({ required: true }) phone: string;
+  @Prop({ required: true }) provinceCode: string;
+  @Prop({ required: true }) provinceName: string;
+  @Prop({ required: true }) wardCode: string;
+  @Prop({ required: true }) wardName: string;
+  @Prop({ required: true, trim: true }) street: string;
+  @Prop({ required: true }) address: string;
+}
+export const RecipientSchema = SchemaFactory.createForClass(Recipient);
+
 @Schema({ timestamps: true })
 export class User {
+  @Prop({ type: [String], default: [] })
+  savedVoucherCodes: string[];
+
+  @Prop({ type: [RecipientSchema], default: [], select: false })
+  recipients: Recipient[];
+
   @Prop({ default: 0 })
   tokenVersion: number;
 

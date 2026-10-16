@@ -5,6 +5,9 @@ export type LoyaltyTransactionDocument = LoyaltyTransaction & Document;
 
 @Schema({ timestamps: true })
 export class LoyaltyTransaction {
+  @Prop({ default: '' })
+  voucherOrderCode: string;
+
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 

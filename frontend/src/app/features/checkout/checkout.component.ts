@@ -1,15 +1,21 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { CartVouchersComponent } from '../../shared/components/cart-vouchers.component';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Subscription, timer, of, catchError, exhaustMap, switchMap, timeout } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
+import { RecipientService, Recipient, LocationOption } from '../../core/services/recipient.service';
+import { GreetingCardTemplate } from '../../core/models';
+import { GreetingCardPreviewComponent } from '../../shared/components/greeting-card-preview.component';
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, GreetingCardPreviewComponent, CartVouchersComponent],
   template: `
     <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       
@@ -55,21 +61,43 @@ import { AuthService } from '../../core/services/auth.service';
               </div>
 
               <div class="space-y-4 text-xs">
+                @if (authService.isAuthenticated()) {
+                  <div class="p-4 rounded-2xl bg-purple-50/70 border border-purple-100 space-y-2">
+                    <label for="saved-recipient" class="font-bold text-[#1E1B4B] block">Danh bạ người nhận</label>
+                    <div class="flex gap-2 items-center">
+                      <select id="saved-recipient" [ngModel]="selectedRecipientId" (ngModelChange)="selectRecipient($event)" [disabled]="!!pendingOrder() || recipientsLoading() || recipientSaving()" class="min-w-0 flex-1 px-3 py-2.5 rounded-xl border border-purple-200 bg-white text-sm text-slate-800 disabled:bg-slate-50">
+                        <option value="">{{ recipientsLoading() ? 'Đang tải danh bạ…' : '+ Nhập người nhận mới' }}</option>
+                        @for (recipient of recipients(); track recipient.id) {
+                          <option [value]="recipient.id">{{ recipient.name }} · {{ recipient.phone }} · {{ recipient.address }}</option>
+                        }
+                      </select>
+                      @if (selectedRecipientId) {
+                        <button type="button" (click)="removeRecipient()" [disabled]="!!pendingOrder() || recipientSaving()" class="text-rose-600 font-semibold p-2 disabled:opacity-50" aria-label="Xóa người nhận đã chọn khỏi danh bạ">Xóa</button>
+                      }
+                    </div>
+                    <p class="text-slate-500">Chọn người nhận đã lưu để tự điền tên, số điện thoại và địa chỉ.</p>
+                    @if (recipientError()) {
+                      <p role="alert" class="text-rose-700">{{ recipientError() }} <button type="button" (click)="loadRecipients()" [disabled]="recipientsLoading()" class="underline font-semibold">Tải lại danh bạ</button></p>
+                    }
+                  </div>
+                }
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label class="font-bold text-slate-700 block mb-1">Họ và tên người nhận *</label>
+                    <label for="recipient-name" class="font-bold text-slate-700 block mb-1">Họ và tên người nhận *</label>
                     <input 
+                      id="recipient-name" maxlength="100" autocomplete="name"
                       [(ngModel)]="customerName"
-                      [disabled]="!!pendingOrder()"
+                      [disabled]="!!pendingOrder() || recipientSaving()"
                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#7C3AED] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
                       placeholder="Nguyễn Minh Anh"
                     >
                   </div>
                   <div>
-                    <label class="font-bold text-slate-700 block mb-1">Số điện thoại liên hệ *</label>
+                    <label for="recipient-phone" class="font-bold text-slate-700 block mb-1">Số điện thoại liên hệ *</label>
                     <input 
+                      id="recipient-phone" type="tel" maxlength="20" autocomplete="tel"
                       [(ngModel)]="customerPhone"
-                      [disabled]="!!pendingOrder()"
+                      [disabled]="!!pendingOrder() || recipientSaving()"
                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#7C3AED] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
                       placeholder="0912 345 678"
                     >
@@ -87,14 +115,39 @@ import { AuthService } from '../../core/services/auth.service';
                   >
                 </div>
 
-                <div>
-                  <label class="font-bold text-slate-700 block mb-1">Địa chỉ giao quà chi tiết *</label>
-                  <input 
-                    [(ngModel)]="customerAddress"
-                    [disabled]="!!pendingOrder()"
-                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#7C3AED] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
-                    placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"
-                  >
+                <div class="space-y-3">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label for="recipient-province" class="font-bold text-slate-700 block mb-1">Tỉnh/Thành phố *</label>
+                      <select id="recipient-province" [ngModel]="provinceCode" (ngModelChange)="changeProvince($event)" [disabled]="!!pendingOrder() || recipientSaving() || provincesLoading()" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-[#7C3AED] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50">
+                        <option value="">{{ provincesLoading() ? 'Đang tải tỉnh/thành…' : 'Chọn tỉnh/thành phố' }}</option>
+                        @for (province of provinces(); track province.code) { <option [value]="province.code">{{ province.name }}</option> }
+                      </select>
+                    </div>
+                    <div>
+                      <label for="recipient-ward" class="font-bold text-slate-700 block mb-1">Phường/Xã *</label>
+                      <select id="recipient-ward" [(ngModel)]="wardCode" [disabled]="!!pendingOrder() || recipientSaving() || !provinceCode || wardsLoading()" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-[#7C3AED] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50">
+                        <option value="">{{ wardsLoading() ? 'Đang tải phường/xã…' : 'Chọn phường/xã' }}</option>
+                        @for (ward of wards(); track ward.code) { <option [value]="ward.code">{{ ward.name }}</option> }
+                      </select>
+                    </div>
+                  </div>
+                  @if (locationError()) {
+                    <p role="alert" class="text-rose-700">{{ locationError() }} <button type="button" (click)="retryLocations()" class="underline font-semibold">Thử tải lại</button></p>
+                  }
+                  <div>
+                    <label for="recipient-street" class="font-bold text-slate-700 block mb-1">Số nhà, tên đường *</label>
+                    <input id="recipient-street" [(ngModel)]="street" [disabled]="!!pendingOrder() || recipientSaving()" maxlength="200" autocomplete="address-line1" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#7C3AED] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50" placeholder="Ví dụ: 128 Đường Số 7, căn hộ A12">
+                  </div>
+                  @if (customerAddress) { <p class="text-slate-500"><strong>Địa chỉ giao quà:</strong> {{ customerAddress }}</p> }
+                  @if (legacyAddress && !customerAddress) { <p class="text-slate-500">Địa chỉ hồ sơ: {{ legacyAddress }}. Vui lòng chọn tỉnh/thành và phường/xã để chuẩn hóa địa chỉ giao quà.</p> }
+                  @if (authService.isAuthenticated()) {
+                    <div class="flex flex-wrap items-center gap-3">
+                      <button type="button" (click)="saveRecipient()" [disabled]="!!pendingOrder() || recipientSaving() || recipientsLoading() || !recipientValid()" class="px-4 py-2.5 rounded-xl border border-purple-200 text-[#7C3AED] bg-purple-50 hover:bg-purple-100 font-bold disabled:opacity-50 disabled:cursor-not-allowed">{{ recipientSaving() ? 'Đang lưu…' : 'Lưu người nhận vào danh bạ' }}</button>
+                      @if (recipientNotice()) { <span role="status" class="text-emerald-700">{{ recipientNotice() }}</span> }
+                    </div>
+                  }
+                  @if (recipientFormError()) { <p role="alert" class="text-rose-700">{{ recipientFormError() }}</p> }
                 </div>
 
                 <div>
@@ -110,6 +163,51 @@ import { AuthService } from '../../core/services/auth.service';
               </div>
             </div>
 
+            <section class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#DDD6FE] space-y-4" aria-labelledby="greeting-card-title">
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" [ngModel]="includeGreetingCard()" (ngModelChange)="includeGreetingCard.set($event)" [disabled]="!!pendingOrder() || isSubmitting()" class="w-4 h-4 accent-[#7C3AED]">
+                <span>
+                  <span id="greeting-card-title" class="block text-base font-bold text-[#1E1B4B]">Thêm thiệp chúc mừng</span>
+                  <span class="text-xs text-slate-500">Chọn phong cách, viết tiêu đề và lời chúc để xưởng in kèm trong gói quà.</span>
+                </span>
+              </label>
+              @if (includeGreetingCard()) {
+                @if (greetingCardTemplatesLoading()) {
+                  <p role="status" class="text-xs text-slate-500">Đang tải mẫu thiệp…</p>
+                }
+                @if (greetingCardTemplatesError()) {
+                  <p role="alert" class="text-xs text-rose-700">Không tải được mẫu thiệp. <button type="button" (click)="loadGreetingCardTemplates()" class="font-semibold underline">Thử lại</button></p>
+                }
+                <fieldset [disabled]="!!pendingOrder() || isSubmitting()" class="space-y-3">
+                  <legend class="text-xs font-bold text-slate-700 mb-2">Chọn phong cách thiệp</legend>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    @for (template of greetingCardTemplates(); track template.id) {
+                      <label class="flex items-center gap-2 px-3 py-3 rounded-xl border cursor-pointer text-sm font-semibold" [ngClass]="greetingCardTemplateId() === template.id ? 'border-purple-500 bg-purple-50 text-purple-800' : 'border-slate-200 text-slate-600'">
+                        <input type="radio" name="greeting-card-template" [value]="template.id" [ngModel]="greetingCardTemplateId()" (ngModelChange)="greetingCardTemplateId.set($event)" class="accent-[#7C3AED]">
+                        {{ template.name }}
+                      </label>
+                    }
+                  </div>
+                  <p class="text-xs text-slate-500">Phong cách chỉ thay đổi màu sắc và họa tiết, giữ nguyên tiêu đề và lời chúc của bạn.</p>
+                  <div>
+                    <label for="greeting-heading" class="block text-xs font-bold text-slate-700 mb-1">Tiêu đề thiệp *</label>
+                    <input id="greeting-heading" [(ngModel)]="greetingCardHeading" maxlength="80" aria-describedby="greeting-heading-help" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:border-[#7C3AED] focus:outline-none text-sm" placeholder="Ví dụ: Gửi người bạn đặc biệt của mình">
+                    <p id="greeting-heading-help" class="text-xs text-slate-500 mt-1">{{ greetingCardHeading.length }}/80 ký tự · Bạn có thể thay đổi dòng mở đầu trên thiệp.</p>
+                  </div>
+                  <div>
+                    <label for="greeting-message" class="block text-xs font-bold text-slate-700 mb-1">Lời chúc trên thiệp *</label>
+                    <textarea id="greeting-message" [(ngModel)]="greetingCardMessage" rows="4" maxlength="300" aria-describedby="greeting-message-help" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:border-[#7C3AED] focus:outline-none text-sm" placeholder="Viết điều bạn muốn gửi gắm đến người nhận…"></textarea>
+                    <p id="greeting-message-help" class="text-xs text-slate-500 mt-1">{{ greetingCardMessage.length }}/300 ký tự · Tối đa 6 dòng. Nội dung được in đúng như bạn nhập.</p>
+                    @if (greetingCardError()) { <p role="alert" class="text-xs text-rose-700 mt-2">{{ greetingCardError() }}</p> }
+                  </div>
+                </fieldset>
+                @if (selectedGreetingCardTemplate(); as template) {
+                  <p class="text-xs font-bold text-slate-500">Xem trước thiệp</p>
+                  <app-greeting-card-preview [templateId]="template.id" [heading]="greetingCardHeading.trim()" [message]="greetingCardMessage.trim()" />
+                }
+              }
+            </section>
+
             <!-- Section 2: Shipping Method Selector (AC 4, PF Step 5-6) -->
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#DDD6FE]">
               <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
@@ -120,7 +218,7 @@ import { AuthService } from '../../core/services/auth.service';
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <!-- Standard Shipping -->
                 <label 
-                  (click)="!pendingOrder() && selectedShippingMethod.set('STANDARD')"
+                  (click)="!pendingOrder() && changeShipping('STANDARD')"
                   class="flex items-start gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all"
                   [ngClass]="selectedShippingMethod() === 'STANDARD' ? 'border-[#7C3AED] bg-purple-50/70 shadow-sm' : 'border-slate-200 hover:border-purple-200 bg-white'"
                 >
@@ -136,7 +234,7 @@ import { AuthService } from '../../core/services/auth.service';
 
                 <!-- Express Shipping -->
                 <label 
-                  (click)="!pendingOrder() && selectedShippingMethod.set('EXPRESS')"
+                  (click)="!pendingOrder() && changeShipping('EXPRESS')"
                   class="flex items-start gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all"
                   [ngClass]="selectedShippingMethod() === 'EXPRESS' ? 'border-[#7C3AED] bg-purple-50/70 shadow-sm' : 'border-slate-200 hover:border-purple-200 bg-white'"
                 >
@@ -291,7 +389,7 @@ import { AuthService } from '../../core/services/auth.service';
                 @for (item of displayItems(); track $index) {
                   <div class="flex items-center gap-3 text-xs">
                     <img 
-                      [src]="item.customDetails?.previewImage || (item.productId?.images && item.productId.images[0]) || item.productImage || 'https://placehold.co/100'" 
+                  [src]="item.customDetails?.previewImage || (item.productId?.images && item.productId.images[0]) || item.productImage || 'https://placehold.co/100'"
                       class="w-12 h-12 rounded-xl object-cover border border-slate-100 shrink-0"
                     >
                     <div class="flex-1 min-w-0">
@@ -303,6 +401,8 @@ import { AuthService } from '../../core/services/auth.service';
                 }
               </div>
 
+              @if (!pendingOrder() && !isBuyNowMode()) { <app-cart-vouchers /> }
+              @if (shippingSyncPending()) { <p role="status" class="text-xs text-purple-700">Đang cập nhật giao hàng…</p> }
               <!-- Dynamic Calculated Pricing Breakdown -->
               <div class="flex flex-col gap-2 pt-3 border-t border-slate-100 text-xs text-slate-600">
                 <div class="flex items-center justify-between">
@@ -312,9 +412,12 @@ import { AuthService } from '../../core/services/auth.service';
 
                 <div class="flex items-center justify-between">
                   <span>Phí vận chuyển ({{ selectedShippingMethod() === 'EXPRESS' ? 'Hỏa Tốc' : 'Tiêu Chuẩn' }}):</span>
-                  <span class="font-semibold text-slate-800">{{ displayPricing().shippingFee === 0 ? 'Miễn phí' : ((displayPricing().shippingFee | number:'1.0-0') + 'đ') }}</span>
+                  <span class="font-semibold text-slate-800">{{ (displayPricing().baseShippingFee ?? displayPricing().shippingFee) === 0 ? 'Miễn phí' : (((displayPricing().baseShippingFee ?? displayPricing().shippingFee) | number:'1.0-0') + 'đ') }}</span>
                 </div>
 
+                @if ((displayPricing().shippingDiscount || 0) > 0) {
+                  <div class="flex items-center justify-between text-purple-700"><span>Ưu đãi vận chuyển:</span><strong>-{{ displayPricing().shippingDiscount | number:'1.0-0' }}đ</strong></div>
+                }
                 @if (displayPricing().voucherDiscount > 0) {
                   <div class="flex items-center justify-between text-[#7C3AED]">
                     <span>Voucher giảm giá:</span>
@@ -328,6 +431,7 @@ import { AuthService } from '../../core/services/auth.service';
                 </div>
               </div>
 
+              @if (orderError()) { <p role="alert" class="text-sm text-rose-700">{{ orderError() }}</p> }
               <!-- Deposit / Payment Box -->
               <div class="p-4 rounded-2xl bg-[#F5EEFD] border border-[#DDD6FE] flex flex-col gap-1.5">
                 <div class="flex items-center justify-between">
@@ -356,7 +460,7 @@ import { AuthService } from '../../core/services/auth.service';
               @if (!pendingOrder()) {
                 <button 
                   (click)="submitOrder()"
-                  [disabled]="isSubmitting()"
+                  [disabled]="isSubmitting() || shippingSyncPending() || cartService.quantitySyncPending() || cartService.voucherSyncPending()"
                   class="w-full py-4 px-4 bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-50 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95 cursor-pointer"
                 >
                   @if (isSubmitting()) {
@@ -401,24 +505,31 @@ import { AuthService } from '../../core/services/auth.service';
               <p class="text-xs text-slate-500">
                 Mã đơn hàng: <strong class="text-slate-800 font-mono">#{{ pendingOrder().orderCode }}</strong>
               </p>
+              @if (demoPayment) {
+                <p class="text-xs font-semibold text-amber-800 bg-amber-50 rounded-xl p-3">Thanh toán mô phỏng cho đồ án. Không chuyển tiền thật. Hệ thống tự xác nhận sau khoảng 4 giây.</p>
+              }
             </div>
 
             <!-- Payment Failure Error Alert -->
             @if (paymentError()) {
-              <div class="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-start gap-2.5 animate-fade-in">
+              <div role="alert" class="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-start gap-2.5 animate-fade-in">
                 <span class="material-symbols-outlined text-rose-500 text-lg shrink-0 mt-0.5">error</span>
                 <div class="flex-1">
-                  <strong class="font-bold block">Thanh toán chưa hoàn tất</strong>
+                  <strong class="font-bold block">Thanh toán chưa thành công</strong>
                   <span>{{ paymentError() }}</span>
                 </div>
               </div>
             }
 
+            @if (qrImageFailed()) {
+              <p role="alert" class="text-xs text-rose-700">Không tải được mã QR. Bạn có thể chuyển khoản theo thông tin bên dưới hoặc thử lại.</p>
+            }
             <!-- QR Code Section -->
             <div class="bg-[#F5EEFD] rounded-2xl p-5 border border-[#DDD6FE] text-center space-y-4">
               <div class="bg-white p-3 rounded-2xl inline-block shadow-md">
                 <img 
-                  [src]="'https://img.vietqr.io/image/MB-0988889999-compact2.png?amount=' + pendingOrder().pricing.depositAmount + '&addInfo=' + pendingOrder().orderCode + '&accountName=GIFTORY%20STUDIO'"
+                  [hidden]="qrImageFailed()"
+                  [src]="demoPayment ? 'https://api.qrserver.com/v1/create-qr-code/?size=208x208&data=GIFTORY-DEMO-' + pendingOrder().orderCode + '&v=' + qrVersion() : 'https://img.vietqr.io/image/MB-0988889999-compact2.png?amount=' + pendingOrder().pricing.depositAmount + '&addInfo=' + pendingOrder().orderCode + '&accountName=GIFTORY%20STUDIO&v=' + qrVersion()"
                   alt="VietQR Code"
                   class="w-52 h-52 object-contain mx-auto rounded-xl"
                   (error)="onQrImageError($event)"
@@ -429,45 +540,30 @@ import { AuthService } from '../../core/services/auth.service';
                 <p class="font-bold text-[#7C3AED] text-base">
                   {{ pendingOrder().pricing.depositAmount | number:'1.0-0' }}đ
                 </p>
-                <p class="text-slate-600 font-semibold">Ngân hàng: MB Bank • STK: 0988889999</p>
-                <p class="text-slate-500">Chủ tài khoản: <strong>GIFTORY STUDIO CO., LTD</strong></p>
-                <p class="text-slate-500 font-mono font-bold">Nội dung CK: {{ pendingOrder().orderCode }}</p>
+                @if (demoPayment) {
+                  <p class="text-slate-500">Mã QR minh họa • Không phát sinh giao dịch thực</p>
+                } @else {
+                  <p class="text-slate-600 font-semibold">Ngân hàng: MB Bank • STK: 0988889999</p>
+                  <p class="text-slate-500">Chủ tài khoản: <strong>GIFTORY STUDIO CO., LTD</strong></p>
+                  <p class="text-slate-500 font-mono font-bold">Nội dung CK: {{ pendingOrder().orderCode }}</p>
+                }
               </div>
             </div>
 
-            <!-- Simulated Payment Gateway Action Buttons -->
-            <div class="space-y-3">
-              <button 
-                (click)="simulatePayment(true)"
-                [disabled]="isProcessingPayment()"
-                class="w-full py-3.5 px-4 bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-50 text-white font-bold text-sm rounded-2xl shadow-lg shadow-purple-300 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                @if (isProcessingPayment()) {
-                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Đang xử lý kết quả từ Payment Gateway...</span>
-                } @else {
-                  <span class="material-symbols-outlined text-lg">verified</span>
-                  <span>Xác Nhận Đã Thanh Toán (Thành Công)</span>
-                }
-              </button>
-
-              <button 
-                (click)="simulatePayment(false)"
-                [disabled]="isProcessingPayment()"
-                class="w-full py-2.5 px-4 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <span class="material-symbols-outlined text-base">cancel</span>
-                <span>Mô Phỏng Thanh Toán Thất Bại (Thử Lại)</span>
-              </button>
-            </div>
-
-            <div class="text-center">
-              <button 
-                (click)="cancelPaymentModal()" 
-                class="text-xs text-slate-400 hover:text-slate-600 font-semibold hover:underline"
-              >
-                Thanh toán sau trong Lộ Trình Đơn Hàng →
-              </button>
+            <div class="space-y-3 text-center" role="status" aria-live="polite">
+              @if (!paymentError()) {
+              <div class="flex items-center justify-center gap-2 text-sm font-semibold text-[#7C3AED]">
+                <span class="w-4 h-4 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin" aria-hidden="true"></span>
+                <span>Đang chờ hệ thống xác nhận thanh toán</span>
+              </div>
+              <p class="text-xs text-slate-500">{{ demoPayment ? 'Đang mô phỏng phản hồi từ cổng thanh toán…' : 'Quét mã QR bằng ứng dụng ngân hàng. Trang sẽ tự chuyển sang kết quả khi Giftory xác nhận đã nhận tiền.' }}</p>
+              }
+              @if (paymentError()) {
+                <button type="button" (click)="retryPayment()" class="w-full py-3 px-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-sm rounded-xl">
+                  Thử thanh toán lại
+                </button>
+                <p class="text-xs text-slate-500">{{ demoPayment ? 'Thử lại giao dịch mô phỏng trên cùng đơn hàng.' : 'Nếu đã chuyển tiền, vui lòng không chuyển thêm. Hệ thống vẫn tiếp tục kiểm tra giao dịch cho đơn hàng này.' }}</p>
+              }
             </div>
 
           </div>
@@ -477,27 +573,80 @@ import { AuthService } from '../../core/services/auth.service';
     </div>
   `
 })
-export class CheckoutComponent implements OnInit {
+export class CheckoutComponent implements OnInit, OnDestroy {
+  readonly demoPayment = !environment.production;
   cartService = inject(CartService);
   authService = inject(AuthService);
   private orderService = inject(OrderService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private recipientService = inject(RecipientService);
+  private readonly pageSubscriptions = new Subscription();
+  private wardsSubscription?: Subscription;
+  includeGreetingCard = signal(false);
+  greetingCardTemplateId = signal('BIRTHDAY');
+  greetingCardHeading = 'Gửi bạn thật nhiều yêu thương';
+  greetingCardMessage = '';
+  greetingCardTemplates = signal<GreetingCardTemplate[]>([]);
+  greetingCardTemplatesLoading = signal(false);
+  greetingCardTemplatesError = signal(false);
+  greetingCardError = signal<string | null>(null);
+  selectedGreetingCardTemplate = computed(() => this.greetingCardTemplates().find(item => item.id === this.greetingCardTemplateId()));
 
   customerName: string = '';
   customerPhone: string = '';
   customerEmail: string = '';
-  customerAddress: string = '';
+  provinceCode = '';
+  wardCode = '';
+  street = '';
+  legacyAddress = '';
+  selectedRecipientId = '';
+  recipients = signal<Recipient[]>([]);
+  provinces = signal<LocationOption[]>([]);
+  wards = signal<LocationOption[]>([]);
+  recipientsLoading = signal(false);
+  provincesLoading = signal(false);
+  wardsLoading = signal(false);
+  recipientSaving = signal(false);
+  recipientError = signal<string | null>(null);
+  recipientNotice = signal<string | null>(null);
+  recipientFormError = signal<string | null>(null);
+  locationError = signal<string | null>(null);
+
+  get customerAddress(): string {
+    const province = this.provinces().find(item => item.code === this.provinceCode);
+    const ward = this.wards().find(item => item.code === this.wardCode);
+    return province && ward && this.street.trim() ? `${this.street.trim().replace(/\s+/g, ' ')}, ${ward.name}, ${province.name}` : '';
+  }
   customerNote: string = '';
 
-  selectedShippingMethod = signal<'STANDARD' | 'EXPRESS'>('STANDARD');
+  selectedShippingMethod = signal<'STANDARD' | 'EXPRESS'>(this.cartService.cart()?.shippingMethod || 'STANDARD');
+  shippingSyncPending = signal(false);
+  changeShipping(method: 'STANDARD' | 'EXPRESS') {
+    if (this.shippingSyncPending() || this.pendingOrder()) return;
+    this.selectedShippingMethod.set(method);
+    if (this.isBuyNowMode()) return;
+    this.shippingSyncPending.set(true);
+    this.cartService.setShippingMethod(method).subscribe({
+      next: () => this.shippingSyncPending.set(false),
+      error: () => {
+        this.shippingSyncPending.set(false);
+        this.selectedShippingMethod.set(this.cartService.cart()?.shippingMethod || 'STANDARD');
+        this.cartService.notify('Không đổi được giao hàng. Vui lòng thử lại.');
+      }
+    });
+  }
   selectedPaymentMethod = signal<'VIETQR' | 'MOMO' | 'VNPAY' | 'COD'>('VIETQR');
   
   isSubmitting = signal<boolean>(false);
+  orderError = signal('');
   showPaymentModal = signal<boolean>(false);
   pendingOrder = signal<any>(null);
   paymentError = signal<string | null>(null);
-  isProcessingPayment = signal<boolean>(false);
+  private paymentPolling?: Subscription;
+  private paymentWaitStarted = 0;
+  qrImageFailed = signal(false);
+  qrVersion = signal(0);
 
   isBuyNowQuery = signal<boolean>(false);
 
@@ -529,13 +678,14 @@ export class CheckoutComponent implements OnInit {
     if (this.pendingOrder()) {
       return this.pendingOrder().pricing.shippingFee;
     }
-    if (this.selectedShippingMethod() === 'EXPRESS') {
-      return 50000;
-    }
     const total = this.isBuyNowMode()
       ? ((this.cartService.buyNowItem()?.price || 0) * (this.cartService.buyNowItem()?.quantity || 1))
       : this.cartService.pricing().itemsTotal;
-    return total >= 250000 ? 0 : 30000;
+    const base = total === 0 ? 0 : this.selectedShippingMethod() === 'EXPRESS' ? 50000 : total >= 250000 ? 0 : 30000;
+    const voucher = !this.isBuyNowMode() ? this.cartService.cart()?.appliedVoucher : null;
+    const discount = voucher?.discountType === 'FREESHIP' && total >= voucher.minOrderValue
+      ? Math.min(base, voucher.discountValue, voucher.maxDiscount || Infinity) : 0;
+    return base - discount;
   });
 
   // Dynamic Display Items (Switches seamlessly to pendingOrder or BuyNow item)
@@ -565,6 +715,8 @@ export class CheckoutComponent implements OnInit {
       itemsTotal,
       voucherDiscount,
       shippingFee: this.calculatedShippingFee(),
+      baseShippingFee: this.isBuyNowMode() ? this.calculatedShippingFee() : (this.cartService.pricing().baseShippingFee ?? this.calculatedShippingFee()),
+      shippingDiscount: this.isBuyNowMode() ? 0 : (this.cartService.pricing().shippingDiscount || 0),
       totalAmount: total,
       depositAmount: deposit,
       remainingCodAmount: Math.max(0, total - deposit)
@@ -614,12 +766,133 @@ export class CheckoutComponent implements OnInit {
       this.customerPhone = user.phone || '';
       this.customerEmail = user.email || '';
       if (user.address?.street) {
-        this.customerAddress = `${user.address.street}, ${user.address.ward || ''}, ${user.address.district || ''}, ${user.address.city || ''}`;
+        this.street = user.address.street;
+        this.legacyAddress = [user.address.street, user.address.ward, user.address.district, user.address.city].filter(Boolean).join(', ');
       }
     }
+    this.loadProvinces();
+    this.loadGreetingCardTemplates();
+    if (this.authService.isAuthenticated()) this.loadRecipients();
+  }
+
+  loadRecipients(): void {
+    if (!this.authService.isAuthenticated()) return;
+    this.recipientsLoading.set(true);
+    this.recipientError.set(null);
+    this.pageSubscriptions.add(this.recipientService.list().subscribe({
+      next: list => { this.recipients.set(list); this.recipientsLoading.set(false); },
+      error: () => { this.recipientsLoading.set(false); this.recipientError.set('Không tải được danh bạ. Bạn vẫn có thể nhập người nhận mới.'); },
+    }));
+  }
+
+  loadGreetingCardTemplates(): void {
+    if (this.greetingCardTemplatesLoading()) return;
+    this.greetingCardTemplatesLoading.set(true);
+    this.greetingCardTemplatesError.set(false);
+    this.pageSubscriptions.add(this.orderService.getGreetingCardTemplates().subscribe({
+      next: templates => { this.greetingCardTemplates.set(templates); this.greetingCardTemplatesLoading.set(false); },
+      error: () => { this.greetingCardTemplatesError.set(true); this.greetingCardTemplatesLoading.set(false); },
+    }));
+  }
+
+  private loadProvinces(): void {
+    this.provincesLoading.set(true);
+    this.locationError.set(null);
+    this.pageSubscriptions.add(this.recipientService.provinces().subscribe({
+      next: list => { this.provinces.set(list); this.provincesLoading.set(false); },
+      error: () => { this.provincesLoading.set(false); this.locationError.set('Không tải được tỉnh/thành phố. Vui lòng thử lại.'); },
+    }));
+  }
+
+  changeProvince(code: string, selectedWard = ''): void {
+    this.wardsSubscription?.unsubscribe();
+    this.provinceCode = code;
+    this.wardCode = '';
+    this.wards.set([]);
+    this.wardsLoading.set(false);
+    this.locationError.set(null);
+    this.recipientNotice.set(null);
+    if (!code) return;
+    this.wardsLoading.set(true);
+    this.wardsSubscription = this.recipientService.wards(code).subscribe({
+      next: list => {
+        this.wards.set(list);
+        this.wardCode = list.some(item => item.code === selectedWard) ? selectedWard : '';
+        this.wardsLoading.set(false);
+      },
+      error: () => { this.wardsLoading.set(false); this.locationError.set('Không tải được phường/xã. Vui lòng thử lại.'); },
+    });
+  }
+
+  retryLocations(): void {
+    if (!this.provinces().length) this.loadProvinces();
+    if (this.provinceCode) this.changeProvince(this.provinceCode, this.recipients().find(item => item.id === this.selectedRecipientId)?.wardCode);
+  }
+
+  selectRecipient(id: string): void {
+    this.selectedRecipientId = id;
+    this.recipientNotice.set(null);
+    this.recipientFormError.set(null);
+    const recipient = this.recipients().find(item => item.id === id);
+    this.customerName = recipient?.name || '';
+    this.customerPhone = recipient?.phone || '';
+    this.street = recipient?.street || '';
+    this.legacyAddress = '';
+    this.changeProvince(recipient?.provinceCode || '', recipient?.wardCode || '');
+  }
+
+  recipientValid(): boolean {
+    const phone = this.customerPhone.replace(/[\s().-]/g, '').replace(/^\+?84/, '0');
+    return this.customerName.trim().length >= 2 && this.customerName.trim().length <= 100 && /^0\d{9}$/.test(phone)
+      && this.street.trim().length >= 3 && this.street.trim().length <= 200 && !!this.customerAddress && !this.wardsLoading();
+  }
+
+  saveRecipient(): void {
+    if (!this.authService.isAuthenticated() || !this.recipientValid() || this.recipientSaving() || this.recipientsLoading() || this.pendingOrder()) return;
+    this.recipientSaving.set(true);
+    this.recipientNotice.set(null);
+    this.recipientFormError.set(null);
+    const input = {
+      name: this.customerName.trim().replace(/\s+/g, ' '),
+      phone: this.customerPhone.replace(/[\s().-]/g, '').replace(/^\+?84/, '0'),
+      provinceCode: this.provinceCode, wardCode: this.wardCode, street: this.street.trim().replace(/\s+/g, ' '),
+    };
+    this.pageSubscriptions.add(this.recipientService.save(input).subscribe({
+      next: list => {
+        this.recipients.set(list);
+        this.selectedRecipientId = list.find(item => item.phone === input.phone && item.name.toLocaleLowerCase('vi') === input.name.toLocaleLowerCase('vi') && item.provinceCode === input.provinceCode && item.wardCode === input.wardCode && item.street.toLocaleLowerCase('vi') === input.street.toLocaleLowerCase('vi'))?.id || '';
+        this.recipientSaving.set(false);
+        this.recipientNotice.set('Đã lưu người nhận. Lần sau bạn chỉ cần chọn từ danh bạ.');
+      },
+      error: err => { this.recipientSaving.set(false); this.recipientFormError.set(typeof err.error?.message === 'string' ? err.error.message : 'Không lưu được người nhận. Vui lòng thử lại.'); },
+    }));
+  }
+
+  removeRecipient(): void {
+    if (!this.authService.isAuthenticated() || !this.selectedRecipientId || this.pendingOrder() || this.recipientSaving()) return;
+    this.recipientSaving.set(true);
+    this.recipientFormError.set(null);
+    this.pageSubscriptions.add(this.recipientService.remove(this.selectedRecipientId).subscribe({
+      next: list => { this.recipients.set(list); this.selectedRecipientId = ''; this.recipientSaving.set(false); this.recipientNotice.set('Đã xóa khỏi danh bạ. Thông tin đang nhập vẫn được giữ để đặt hàng.'); },
+      error: () => { this.recipientSaving.set(false); this.recipientFormError.set('Không xóa được người nhận. Vui lòng thử lại.'); },
+    }));
   }
 
   submitOrder(): void {
+    if (this.isSubmitting() || this.pendingOrder() || this.shippingSyncPending() || this.cartService.quantitySyncPending() || this.cartService.voucherSyncPending()) return;
+    this.greetingCardError.set(null);
+    if (this.includeGreetingCard()) {
+      const heading = this.greetingCardHeading.trim();
+      if (!heading || heading.length > 80) {
+        this.greetingCardError.set('Vui lòng nhập tiêu đề thiệp từ 1 đến 80 ký tự.');
+        return;
+      }
+      const message = this.greetingCardMessage.trim().replace(/\r\n?/g, '\n');
+      if (!this.selectedGreetingCardTemplate() || !message || message.length > 300 || message.split('\n').length > 6) {
+        this.greetingCardError.set('Vui lòng chọn mẫu thiệp và nhập lời chúc từ 1 đến 300 ký tự, tối đa 6 dòng.');
+        return;
+      }
+    }
     if (this.isBuyNowMode()) {
       if (!this.cartService.buyNowItem()) {
         alert('Thông tin đơn hàng Mua Ngay không hợp lệ hoặc đã hết hạn.');
@@ -632,20 +905,26 @@ export class CheckoutComponent implements OnInit {
       }
     }
 
-    if (!this.customerName.trim() || !this.customerPhone.trim() || !this.customerAddress.trim()) {
-      alert('Vui lòng điền đầy đủ Họ tên, Số điện thoại và Địa chỉ nhận hàng');
+    if (!this.recipientValid()) {
+      this.recipientFormError.set('Vui lòng nhập tên người nhận, số điện thoại hợp lệ gồm 10 số, chọn tỉnh/thành và phường/xã, rồi nhập số nhà, tên đường.');
       return;
     }
+    this.recipientFormError.set(null);
 
+    this.orderError.set('');
     this.isSubmitting.set(true);
     this.paymentError.set(null);
 
     const orderPayload: any = {
+      ...(this.includeGreetingCard() ? { greetingCard: { templateId: this.greetingCardTemplateId(), heading: this.greetingCardHeading.trim().replace(/\s+/g, ' '), message: this.greetingCardMessage.trim() } } : {}),
       customerInfo: {
         name: this.customerName.trim(),
-        phone: this.customerPhone.trim(),
+        phone: this.customerPhone.replace(/[\s().-]/g, '').replace(/^\+?84/, '0'),
         email: this.customerEmail.trim(),
         address: this.customerAddress.trim(),
+        provinceCode: this.provinceCode,
+        wardCode: this.wardCode,
+        street: this.street.trim(),
         note: this.customerNote.trim()
       },
       paymentMode: this.calculatedDepositAmount() < this.calculatedTotalAmount() ? 'DEPOSIT_50' : 'FULL_PAYMENT',
@@ -675,52 +954,96 @@ export class CheckoutComponent implements OnInit {
         }
 
         // Standard product + COD => No QR payment modal needed, go directly to completion page (AF3)
-        if (!this.hasCustomItems() && this.selectedPaymentMethod() === 'COD') {
+        if (order.pricing.depositAmount === 0) {
           this.router.navigate(['/orders', order.orderCode], { state: { lookupPhone: order.customerInfo?.phone } });
         } else {
           // Requires Online Payment / QR Deposit => Display VietQR Payment Modal (AF2, AF4)
           this.pendingOrder.set(order);
           this.showPaymentModal.set(true);
+          this.startPaymentPolling();
         }
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        alert(err.error?.message || 'Có lỗi xảy ra khi khởi tạo đơn hàng');
+        this.orderError.set(err.error?.message || 'Có lỗi xảy ra khi khởi tạo đơn hàng');
+        if (!this.isBuyNowMode()) this.cartService.loadCart();
       }
     });
   }
 
-  simulatePayment(success: boolean): void {
-    if (!this.pendingOrder()) return;
-    this.isProcessingPayment.set(true);
+  ngOnDestroy(): void {
+    this.paymentPolling?.unsubscribe();
+    this.pageSubscriptions.unsubscribe();
+    this.wardsSubscription?.unsubscribe();
+  }
+
+  retryPayment(): void {
     this.paymentError.set(null);
+    this.qrImageFailed.set(false);
+    this.qrVersion.update(value => value + 1);
+    this.startPaymentPolling();
+  }
 
-    const orderCode = this.pendingOrder().orderCode;
-    const paymentType = this.calculatedDepositAmount() < this.calculatedTotalAmount() ? 'DEPOSIT_50' : 'FULL_100';
-
-    this.orderService.processPayment(orderCode, { success, paymentType }).subscribe({
-      next: () => {
-        this.isProcessingPayment.set(false);
-        this.showPaymentModal.set(false);
-        this.router.navigate(['/orders', orderCode], { state: { lookupPhone: this.pendingOrder()?.customerInfo?.phone } });
-      },
-      error: (err) => {
-        this.isProcessingPayment.set(false);
-        // EF1: Payment Failure Exception Flow
-        this.paymentError.set(err.error?.message || 'Giao dịch thanh toán trực tuyến không thành công. Vui lòng thực hiện lại giao dịch.');
+  private startPaymentPolling(): void {
+    this.paymentPolling?.unsubscribe();
+    const order = this.pendingOrder();
+    if (!order) return;
+    if (this.demoPayment) {
+      this.paymentPolling = timer(4000).pipe(
+        switchMap(() => this.orderService.simulateDemoPayment(order.orderCode, order.customerInfo?.phone).pipe(timeout(10000)))
+      ).subscribe({
+        next: latest => {
+          if (latest.paymentStatus === 'PAID_FULL' || latest.paymentStatus === 'PARTIALLY_PAID_DEPOSIT_50') {
+            this.showPaymentModal.set(false);
+            this.router.navigate(['/payment-result', latest.orderCode], { state: { lookupPhone: order.customerInfo?.phone } });
+          } else {
+            this.paymentError.set('Giao dịch mô phỏng chưa được xác nhận. Vui lòng thử lại.');
+          }
+        },
+        error: () => this.paymentError.set('Không thể hoàn tất giao dịch mô phỏng. Vui lòng kiểm tra kết nối và thử lại.'),
+      });
+      return;
+    }
+    this.paymentWaitStarted = Date.now();
+    this.paymentPolling = timer(0, 5000).pipe(
+      exhaustMap(() => this.orderService.getOrderByCode(order.orderCode, order.customerInfo?.phone).pipe(
+        timeout(10000),
+        catchError(() => of(null))
+      ))
+    ).subscribe(latest => {
+      if (latest) {
+        this.pendingOrder.set(latest);
+        const paid = latest.paymentStatus === 'PAID_FULL' ||
+          (latest.paymentStatus === 'PARTIALLY_PAID_DEPOSIT_50' && latest.pricing && latest.pricing.depositAmount < latest.pricing.totalAmount);
+        if (paid) {
+          this.paymentPolling?.unsubscribe();
+          this.showPaymentModal.set(false);
+          this.router.navigate(['/payment-result', latest.orderCode], {
+            state: { lookupPhone: order.customerInfo?.phone }
+          });
+          return;
+        }
+        if (['CANCELLED', 'RETURNED_BP06', 'DELIVERED'].includes(latest.orderStatus) || latest.paymentStatus === 'REFUNDED') {
+          this.paymentPolling?.unsubscribe();
+          this.showPaymentModal.set(false);
+          this.router.navigate(['/orders', latest.orderCode], { state: { lookupPhone: order.customerInfo?.phone } });
+          return;
+        }
+      }
+      if (!latest) {
+        this.paymentError.set('Chưa kết nối được với hệ thống xác nhận. Hệ thống sẽ tự kiểm tra lại; nếu đã chuyển tiền, vui lòng không thanh toán thêm.');
+      } else if (Date.now() - this.paymentWaitStarted >= 5 * 60 * 1000) {
+        this.paymentError.set('Chưa nhận được xác nhận thanh toán từ hệ thống. Nếu chưa chuyển tiền, bạn có thể thử lại bằng mã QR của đơn hàng này.');
+      } else if (!this.qrImageFailed()) {
+        this.paymentError.set(null);
       }
     });
   }
 
-  cancelPaymentModal(): void {
-    if (this.pendingOrder()) {
-      this.showPaymentModal.set(false);
-      this.router.navigate(['/orders', this.pendingOrder().orderCode], { state: { lookupPhone: this.pendingOrder()?.customerInfo?.phone } });
-    }
-  }
-
-  onQrImageError(event: any): void {
-    // Fallback QR placeholder if external API fails
-    event.target.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=GIFTORY-' + (this.pendingOrder()?.orderCode || 'PAY');
+  onQrImageError(event: Event): void {
+    // Never substitute a decorative QR that cannot initiate the bank transfer.
+    (event.target as HTMLImageElement).hidden = true;
+    this.qrImageFailed.set(true);
+    this.paymentError.set('Không tải được mã QR thanh toán. Vui lòng thử lại hoặc sử dụng thông tin chuyển khoản bên dưới.');
   }
 }

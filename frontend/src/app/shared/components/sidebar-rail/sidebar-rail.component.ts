@@ -30,8 +30,8 @@ import { CartService } from '../../../core/services/cart.service';
             <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.path === '/' }" ariaCurrentWhenActive="page" class="rail-link shrink-0" [title]="item.title" [attr.aria-label]="item.title">
               <span class="material-symbols-outlined text-[22px]" aria-hidden="true">{{ item.icon }}</span>
               <span class="text-[9px] md:text-[10px] font-semibold">{{ item.label }}</span>
-              @if (item.path === '/cart' && cartService.itemsCount() > 0) {
-                <span class="absolute top-0 right-0 min-w-[17px] px-1 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold" [attr.aria-label]="cartService.itemsCount() + ' sản phẩm'">{{ cartService.itemsCount() > 99 ? '99+' : cartService.itemsCount() }}</span>
+              @if (item.path === '/cart' && cartService.productCount() > 0) {
+                <span class="absolute top-0 right-0 min-w-[17px] px-1 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold" [attr.aria-label]="cartService.productCount() + ' sản phẩm, tổng số lượng ' + cartService.itemsCount()">{{ cartService.productCount() > 99 ? '99+' : cartService.productCount() }}</span>
               }
             </a>
           }

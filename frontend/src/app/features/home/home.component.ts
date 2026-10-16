@@ -225,7 +225,7 @@ import { Product, Category } from '../../core/models';
             </div>
             <div>
               <h4 class="font-bold text-sm text-[#1E1B4B]">Hỗ Trợ Quà Tặng 24/7</h4>
-              <p class="text-xs text-slate-500 mt-1 leading-relaxed">Chuyên viên tư vấn thông điệp, thiệp viết tay & thiết kế luôn sẵn sàng phục vụ.</p>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">Chuyên viên tư vấn thông điệp, thiệp in lời chúc & thiết kế luôn sẵn sàng phục vụ.</p>
             </div>
           </div>
         </div>
