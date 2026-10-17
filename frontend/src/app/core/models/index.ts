@@ -28,6 +28,11 @@ export interface Category {
   icon?: string;
   description?: string;
   imageUrl?: string;
+  order?: number;
+  isActive?: boolean;
+  productCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProductVariant {

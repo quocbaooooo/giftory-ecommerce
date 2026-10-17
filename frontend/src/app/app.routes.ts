@@ -109,6 +109,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/products/admin-products.component').then(m => m.AdminProductsComponent)
       },
       {
+        path: 'categories',
+        loadComponent: () => import('./features/admin/categories/admin-categories.component').then(m => m.AdminCategoriesComponent)
+      },
+      {
         path: 'orders',
         loadComponent: () => import('./features/admin/orders/admin-orders.component').then(m => m.AdminOrdersComponent)
       },

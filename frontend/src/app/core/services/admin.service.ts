@@ -106,4 +106,26 @@ export class AdminService {
     formData.append('file', file);
     return this.api.post('upload/image', formData);
   }
+
+  // Category Management
+  getAdminCategories(): Observable<any[]> {
+    return this.api.get<any[]>('categories/admin/all');
+  }
+
+  createCategory(categoryData: any): Observable<any> {
+    return this.api.post('categories', categoryData);
+  }
+
+  updateCategory(id: string, categoryData: any): Observable<any> {
+    return this.api.patch(`categories/${id}`, categoryData);
+  }
+
+  toggleCategoryStatus(id: string): Observable<any> {
+    return this.api.patch(`categories/${id}/status`, {});
+  }
+
+  deleteCategory(id: string, force: boolean = false): Observable<any> {
+    return this.api.delete(`categories/${id}`, { force: force ? 'true' : undefined });
+  }
 }
+

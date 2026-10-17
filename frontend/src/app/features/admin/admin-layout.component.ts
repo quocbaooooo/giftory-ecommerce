@@ -43,6 +43,15 @@ import { AuthService } from '../../core/services/auth.service';
             </a>
 
             <a
+              routerLink="/admin/categories"
+              routerLinkActive="bg-giftory-primary/10 text-giftory-primary font-bold"
+              class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold text-giftory-ink/70 hover:bg-giftory-canvas transition"
+            >
+              <span class="material-symbols-outlined text-lg">category</span>
+              Quản Lý Danh Mục
+            </a>
+
+            <a
               routerLink="/admin/orders"
               routerLinkActive="bg-giftory-primary/10 text-giftory-primary font-bold"
               class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold text-giftory-ink/70 hover:bg-giftory-canvas transition"
@@ -95,6 +104,7 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="flex items-center gap-4 text-xs font-bold">
             <a routerLink="/admin/dashboard">KPI</a>
             <a routerLink="/admin/products">Sản phẩm</a>
+            <a routerLink="/admin/categories">Danh mục</a>
             <a routerLink="/admin/orders">Đơn hàng</a><a routerLink="/admin/care">CSKH</a>
             <a routerLink="/">Cửa hàng</a>
           </div>

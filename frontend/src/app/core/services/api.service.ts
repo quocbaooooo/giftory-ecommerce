@@ -63,8 +63,17 @@ export class ApiService {
     );
   }
 
-  delete<T>(endpoint: string): Observable<T> {
-    return this.http.delete<ApiResponse<T>>(`${this.baseUrl}/${endpoint}`).pipe(
+  delete<T>(endpoint: string, params?: any): Observable<T> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+          httpParams = httpParams.set(key, params[key]);
+        }
+      });
+    }
+
+    return this.http.delete<ApiResponse<T>>(`${this.baseUrl}/${endpoint}`, { params: httpParams }).pipe(
       map(res => res.data)
     );
   }
