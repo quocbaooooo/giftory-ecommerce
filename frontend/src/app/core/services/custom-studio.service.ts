@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { Product, CustomDesign } from '../models';
+import { Product, CustomDesign, OpenClipartSearch, OpenClipartImportResult } from '../models';
 
 @Injectable({
   providedIn: 'root'
@@ -50,6 +50,14 @@ export class CustomStudioService {
 
   deleteAdminAsset(id: string): Observable<any> {
     return this.api.delete<any>(`custom-studio/admin/assets/${id}`);
+  }
+
+  searchOpenClipart(query: string, page = 1): Observable<OpenClipartSearch> {
+    return this.api.get<OpenClipartSearch>('custom-studio/admin/openclipart/search', { query, page });
+  }
+
+  importOpenClipart(ids: string[], category: string, query: string): Observable<OpenClipartImportResult> {
+    return this.api.post<OpenClipartImportResult>('custom-studio/admin/openclipart/import', { ids, category, query });
   }
 
   private readonly DRAFT_STORAGE_KEY = 'giftory_custom_design_draft';

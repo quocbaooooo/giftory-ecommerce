@@ -70,7 +70,11 @@ import { Product, Category } from '../../core/models';
             class="px-4 py-2 rounded-full text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
             [ngClass]="selectedCategory === cat.slug ? 'bg-[#7C3AED] text-white shadow-md shadow-purple-300' : 'bg-white text-slate-700 border border-[#DDD6FE] hover:bg-purple-50'"
           >
-            <span>{{ cat.emoji || '✨' }}</span>
+            @if (cat.emoji && (cat.emoji.startsWith('http') || cat.emoji.startsWith('/') || cat.emoji.startsWith('data:') || cat.emoji.length > 10)) {
+              <img [src]="cat.emoji" [alt]="cat.name" class="w-4 h-4 object-contain inline-block rounded-xs shrink-0" />
+            } @else {
+              <span>{{ cat.emoji || '✨' }}</span>
+            }
             <span>{{ cat.name }}</span>
           </button>
         }

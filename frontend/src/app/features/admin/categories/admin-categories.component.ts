@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, computed, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AdminService } from '../../../core/services/admin.service';
@@ -29,7 +29,7 @@ import { Category } from '../../../core/models';
           <span class="text-xs font-bold tracking-widest text-[#7C3AED] uppercase">Cấu Trúc Cửa Hàng & Phân Loại Quà</span>
           <h1 class="text-2xl md:text-3xl font-display font-black text-giftory-ink mt-1">Quản Lý Danh Mục Sản Phẩm</h1>
           <p class="text-xs text-giftory-ink/60 mt-1">
-            Thiết lập biểu tượng, emoji, thứ tự ưu tiên và trạng thái hiển thị cho từng nhóm quà tặng
+            Thiết lập biểu tượng, emoji/ảnh icon, thứ tự ưu tiên và trạng thái hiển thị cho từng nhóm quà tặng
           </p>
         </div>
 
@@ -189,11 +189,17 @@ import { Category } from '../../../core/models';
                         <div class="relative w-10 h-10 rounded-2xl bg-[#F4F0FA] border border-giftory-border/60 flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
                           @if (cat.imageUrl) {
                             <img [src]="cat.imageUrl" [alt]="cat.name" class="w-full h-full object-cover" />
+                          } @else if (isImageUrl(cat.emoji)) {
+                            <img [src]="cat.emoji" [alt]="cat.name" class="w-7 h-7 object-contain" />
                           } @else {
                             <span class="text-xl select-none">{{ cat.emoji || '🎁' }}</span>
                           }
-                          <span class="absolute -bottom-1 -right-1 text-[11px] bg-white rounded-full px-0.5 border border-slate-200">
-                            {{ cat.emoji || '🎁' }}
+                          <span class="absolute -bottom-1 -right-1 text-[11px] bg-white rounded-full px-0.5 border border-slate-200 flex items-center justify-center min-w-[16px] min-h-[16px] overflow-hidden">
+                            @if (isImageUrl(cat.emoji)) {
+                              <img [src]="cat.emoji" class="w-3.5 h-3.5 object-contain" />
+                            } @else {
+                              {{ cat.emoji || '🎁' }}
+                            }
                           </span>
                         </div>
                         <div>
@@ -343,22 +349,75 @@ import { Category } from '../../../core/models';
               </div>
 
               <!-- Emoji & Icon & Order -->
-              <div class="grid grid-cols-3 gap-3">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <!-- Emoji Field with Upload from Computer option -->
                 <div class="space-y-1">
-                  <label class="text-[11px] font-bold text-giftory-ink uppercase tracking-wider block">
-                    Emoji Quà
-                  </label>
-                  <div class="relative">
+                  <div class="flex items-center justify-between">
+                    <label class="text-[11px] font-bold text-giftory-ink uppercase tracking-wider block">
+                      Emoji Quà
+                    </label>
+                    <label for="emojiFileInput" class="text-[10px] text-[#7C3AED] font-bold hover:underline cursor-pointer flex items-center gap-0.5">
+                      <span class="material-symbols-outlined text-[13px]">upload_file</span>
+                      <span>{{ isUploadingEmoji() ? 'Đang tải...' : 'Tải từ máy' }}</span>
+                    </label>
                     <input
-                      type="text"
-                      formControlName="emoji"
-                      placeholder="🎁"
-                      maxlength="4"
-                      class="w-full text-center py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-base"
+                      id="emojiFileInput"
+                      type="file"
+                      (change)="onUploadEmoji($event)"
+                      accept="image/*"
+                      class="hidden"
+                      [disabled]="isUploadingEmoji()"
                     />
                   </div>
+
+                  @if (isImageUrl(categoryForm.get('emoji')?.value)) {
+                    <div class="flex items-center gap-2 p-1.5 rounded-xl border border-giftory-border bg-slate-50 h-[38px]">
+                      <img [src]="categoryForm.get('emoji')?.value" alt="Emoji" class="w-7 h-7 rounded-lg object-contain bg-white border border-slate-200 p-0.5 shrink-0" />
+                      <div class="flex-1 min-w-0">
+                        <span class="text-[10px] text-emerald-700 font-bold block truncate leading-none">Ảnh tải lên</span>
+                      </div>
+                      <label
+                        for="emojiFileInput"
+                        class="p-1 rounded-lg text-[#7C3AED] hover:bg-purple-50 cursor-pointer shrink-0"
+                        title="Đổi ảnh khác"
+                      >
+                        <span class="material-symbols-outlined text-sm">cached</span>
+                      </label>
+                      <button
+                        type="button"
+                        (click)="removeUploadedEmoji()"
+                        title="Xóa và dùng lại emoji ký tự"
+                        class="p-1 rounded-lg text-rose-500 hover:bg-rose-50 cursor-pointer shrink-0"
+                      >
+                        <span class="material-symbols-outlined text-sm">close</span>
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="relative flex items-center">
+                      <input
+                        type="text"
+                        formControlName="emoji"
+                        placeholder="🎁"
+                        class="w-full text-center py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-lg h-[38px]"
+                      />
+                      <label
+                        for="emojiFileInput"
+                        class="absolute right-2 p-1 rounded-lg text-slate-400 hover:text-[#7C3AED] hover:bg-purple-50 transition cursor-pointer"
+                        title="Tải ảnh emoji/icon từ máy tính"
+                      >
+                        <span class="material-symbols-outlined text-base">image</span>
+                      </label>
+                    </div>
+                  }
+                  @if (isUploadingEmoji()) {
+                    <div class="flex items-center gap-1 text-[10px] text-[#7C3AED] font-medium">
+                      <span class="material-symbols-outlined animate-spin text-[12px]">progress_activity</span>
+                      <span>Đang tải ảnh icon...</span>
+                    </div>
+                  }
                 </div>
 
+                <!-- Material Icon Field -->
                 <div class="space-y-1">
                   <label class="text-[11px] font-bold text-giftory-ink uppercase tracking-wider block">
                     Material Icon
@@ -368,7 +427,7 @@ import { Category } from '../../../core/models';
                       type="text"
                       formControlName="icon"
                       placeholder="local_cafe"
-                      class="w-full pl-3 pr-8 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-xs font-mono"
+                      class="w-full pl-3 pr-8 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-xs font-mono h-[38px]"
                     />
                     <span class="material-symbols-outlined absolute right-2 text-sm text-[#7C3AED]">
                       {{ categoryForm.get('icon')?.value || 'category' }}
@@ -376,6 +435,7 @@ import { Category } from '../../../core/models';
                   </div>
                 </div>
 
+                <!-- Order Field -->
                 <div class="space-y-1">
                   <label class="text-[11px] font-bold text-giftory-ink uppercase tracking-wider block">
                     Thứ Tự (Order)
@@ -385,7 +445,7 @@ import { Category } from '../../../core/models';
                     formControlName="order"
                     min="0"
                     placeholder="0"
-                    class="w-full px-3 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-xs font-bold text-center"
+                    class="w-full px-3 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-xs font-bold text-center h-[38px]"
                   />
                 </div>
               </div>
@@ -434,11 +494,11 @@ import { Category } from '../../../core/models';
                     placeholder="https://... hoặc tải ảnh từ máy tính"
                     class="flex-1 px-3.5 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-xs"
                   />
-                  <label class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0">
+                  <label for="catImageFileInput" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0">
                     <span class="material-symbols-outlined text-sm">upload</span>
                     <span>Tải ảnh</span>
-                    <input type="file" (change)="onUploadImage($event)" accept="image/*" class="hidden" />
                   </label>
+                  <input id="catImageFileInput" type="file" (change)="onUploadImage($event)" accept="image/*" class="hidden" />
                 </div>
                 @if (isUploadingImage()) {
                   <div class="flex items-center gap-2 text-[10px] text-[#7C3AED] font-bold mt-1">
@@ -469,6 +529,8 @@ import { Category } from '../../../core/models';
                   <div class="w-8 h-8 rounded-xl bg-[#F4F0FA] flex items-center justify-center text-lg overflow-hidden shrink-0">
                     @if (categoryForm.get('imageUrl')?.value) {
                       <img [src]="categoryForm.get('imageUrl')?.value" alt="Preview" class="w-full h-full object-cover" />
+                    } @else if (isImageUrl(categoryForm.get('emoji')?.value)) {
+                      <img [src]="categoryForm.get('emoji')?.value" alt="Emoji Preview" class="w-6 h-6 object-contain" />
                     } @else {
                       {{ categoryForm.get('emoji')?.value || '🎁' }}
                     }
@@ -581,11 +643,14 @@ export class AdminCategoriesComponent implements OnInit {
   private adminService = inject(AdminService);
   private fb = inject(FormBuilder);
 
+  @Output() categoriesChanged = new EventEmitter<void>();
+
   categories = signal<Category[]>([]);
   isLoading = signal(true);
   isSaving = signal(false);
   isDeleting = signal(false);
   isUploadingImage = signal(false);
+  isUploadingEmoji = signal(false);
 
   searchQuery = '';
   filterStatus = signal<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
@@ -738,20 +803,87 @@ export class AdminCategoriesComponent implements OnInit {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 5 * 1024 * 1024) {
+      this.showToast('Ảnh quá lớn (vui lòng chọn ảnh dưới 5MB)', 'error');
+      return;
+    }
+
     this.isUploadingImage.set(true);
-    this.adminService.uploadImage(file).subscribe({
-      next: (res) => {
-        this.isUploadingImage.set(false);
-        if (res?.url) {
-          this.categoryForm.patchValue({ imageUrl: res.url });
-          this.showToast('Tải ảnh danh mục lên thành công!', 'success');
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const dataUrl = e.target.result;
+      this.categoryForm.patchValue({ imageUrl: dataUrl });
+      this.isUploadingImage.set(false);
+      this.showToast('Đã tải ảnh danh mục từ máy tính!', 'success');
+
+      // Attempt background upload to server CDN
+      this.adminService.uploadImage(file).subscribe({
+        next: (res) => {
+          const url = res?.url || res?.data?.url || (typeof res === 'string' ? res : null);
+          if (url) {
+            this.categoryForm.patchValue({ imageUrl: url });
+          }
+        },
+        error: () => {
+          // Keep the local base64 dataUrl seamlessly
         }
-      },
-      error: (err) => {
-        this.isUploadingImage.set(false);
-        this.showToast(err.error?.message || 'Không thể tải ảnh lên', 'error');
-      }
-    });
+      });
+    };
+    reader.onerror = () => {
+      this.isUploadingImage.set(false);
+      this.showToast('Không thể đọc file ảnh từ máy', 'error');
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  }
+
+  onUploadEmoji(event: any) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      this.showToast('Ảnh quá lớn (vui lòng chọn ảnh dưới 5MB)', 'error');
+      return;
+    }
+
+    this.isUploadingEmoji.set(true);
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const dataUrl = e.target.result;
+      this.categoryForm.patchValue({ emoji: dataUrl });
+      this.isUploadingEmoji.set(false);
+      this.showToast('Đã tải ảnh biểu tượng từ máy tính!', 'success');
+
+      // Attempt background upload to server CDN
+      this.adminService.uploadImage(file).subscribe({
+        next: (res) => {
+          const url = res?.url || res?.data?.url || (typeof res === 'string' ? res : null);
+          if (url) {
+            this.categoryForm.patchValue({ emoji: url });
+          }
+        },
+        error: () => {
+          // Keep the local base64 dataUrl seamlessly
+        }
+      });
+    };
+    reader.onerror = () => {
+      this.isUploadingEmoji.set(false);
+      this.showToast('Không thể đọc file ảnh từ máy', 'error');
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  }
+
+  removeUploadedEmoji() {
+    this.categoryForm.patchValue({ emoji: '🎁' });
+  }
+
+  isImageUrl(val?: string): boolean {
+    if (!val) return false;
+    return val.startsWith('http://') || val.startsWith('https://') || val.startsWith('data:') || val.startsWith('/') || val.length > 10;
   }
 
   saveCategory() {
@@ -767,6 +899,7 @@ export class AdminCategoriesComponent implements OnInit {
           this.closeModal();
           this.showToast(`Đã cập nhật danh mục "${formValue.name}"`, 'success');
           this.loadCategories();
+          this.categoriesChanged.emit();
         },
         error: (err) => {
           this.isSaving.set(false);
@@ -780,6 +913,7 @@ export class AdminCategoriesComponent implements OnInit {
           this.closeModal();
           this.showToast(`Đã thêm danh mục mới "${formValue.name}"`, 'success');
           this.loadCategories();
+          this.categoriesChanged.emit();
         },
         error: (err) => {
           this.isSaving.set(false);
@@ -800,6 +934,7 @@ export class AdminCategoriesComponent implements OnInit {
           `Đã ${nextStatus ? 'kích hoạt' : 'tạm ẩn'} danh mục "${cat.name}"`,
           'success'
         );
+        this.categoriesChanged.emit();
       },
       error: (err) => {
         this.showToast(err.error?.message || 'Không thể thay đổi trạng thái', 'error');
@@ -828,6 +963,7 @@ export class AdminCategoriesComponent implements OnInit {
         this.cancelDelete();
         this.showToast(`Đã xóa danh mục "${cat.name}" thành công`, 'success');
         this.loadCategories();
+        this.categoriesChanged.emit();
       },
       error: (err) => {
         this.isDeleting.set(false);

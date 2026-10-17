@@ -1,16 +1,19 @@
-import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
 import { ProductService } from '../../../core/services/product.service';
 import { CustomStudioService } from '../../../core/services/custom-studio.service';
 import { ApiService } from '../../../core/services/api.service';
 import { Product, Category, StudioAsset, ProductVariant } from '../../../core/models';
+import { OpenClipartImporterComponent } from './openclipart-importer.component';
+import { AdminCategoriesComponent } from '../categories/admin-categories.component';
 
 @Component({
   selector: 'app-admin-products',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, AdminCategoriesComponent, OpenClipartImporterComponent],
   template: `
     <div class="space-y-6 animate-fade-in">
       <!-- Header -->
@@ -18,7 +21,7 @@ import { Product, Category, StudioAsset, ProductVariant } from '../../../core/mo
         <div>
           <span class="text-xs font-bold tracking-widest text-[#7C3AED] uppercase">Quản Trị Kho Quà & Custom Studio</span>
           <h1 class="text-2xl md:text-3xl font-display font-black text-giftory-ink mt-1">Danh Mục & Phôi Chế Tác Quà Tặng</h1>
-          <p class="text-xs text-giftory-ink/60 mt-1">Cấu hình phôi quà 2 mặt, quản lý thư viện icon/sticker và chính sách cọc 50%</p>
+          <p class="text-xs text-giftory-ink/60 mt-1">Cấu hình phôi quà 2 mặt, quản lý thư viện clipart và chính sách cọc 50%</p>
         </div>
 
         <div class="flex items-center gap-3 self-start sm:self-auto">
@@ -30,23 +33,31 @@ import { Product, Category, StudioAsset, ProductVariant } from '../../../core/mo
               <span class="material-symbols-outlined text-base">add</span>
               Thêm Mẫu Quà Mới
             </button>
-          } @else {
+          } @else if (activeTab() === 'CATEGORIES') {
+            <button
+              (click)="categoryComp?.openCreateModal()"
+              class="px-5 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">add_circle</span>
+              Thêm Danh Mục Mới
+            </button>
+          } @else if (activeTab() === 'STUDIO_ASSETS') {
             <button
               (click)="openAddAssetModal()"
               class="px-5 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
             >
               <span class="material-symbols-outlined text-base">add_reaction</span>
-              Thêm Icon / Sticker Mới
+              Thêm Clipart
             </button>
           }
         </div>
       </div>
 
       <!-- Navigation Tabs -->
-      <div class="flex items-center gap-3 border-b border-giftory-border pb-2">
+      <div class="flex items-center gap-3 border-b border-giftory-border pb-2 overflow-x-auto">
         <button
           (click)="activeTab.set('PRODUCTS')"
-          class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer"
+          class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer shrink-0"
           [ngClass]="activeTab() === 'PRODUCTS' ? 'bg-[#7C3AED] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
         >
           <span class="material-symbols-outlined text-[18px]">inventory_2</span>
@@ -54,14 +65,32 @@ import { Product, Category, StudioAsset, ProductVariant } from '../../../core/mo
         </button>
 
         <button
+          (click)="activeTab.set('CATEGORIES')"
+          class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer shrink-0"
+          [ngClass]="activeTab() === 'CATEGORIES' ? 'bg-[#7C3AED] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+        >
+          <span class="material-symbols-outlined text-[18px]">category</span>
+          <span>Danh Mục Quà Tặng ({{ categories().length }})</span>
+        </button>
+
+        <button
           (click)="activeTab.set('STUDIO_ASSETS')"
-          class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer"
+          class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer shrink-0"
           [ngClass]="activeTab() === 'STUDIO_ASSETS' ? 'bg-[#7C3AED] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
         >
           <span class="material-symbols-outlined text-[18px]">palette</span>
-          <span>Thư Viện Icon & Sticker Studio ({{ studioAssets().length }})</span>
+          <span>Thư Viện Clipart Studio ({{ studioAssets().length }})</span>
+        </button>
+        <button (click)="activeTab.set('CLIPART_IMPORT')"
+          class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer shrink-0"
+          [ngClass]="activeTab() === 'CLIPART_IMPORT' ? 'bg-[#7C3AED] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'">
+          <span class="material-symbols-outlined text-[18px]">download</span><span>Nhập clipart</span>
         </button>
       </div>
+
+      @if (activeTab() === 'CLIPART_IMPORT') {
+        <app-openclipart-importer (imported)="loadStudioAssets()"></app-openclipart-importer>
+      }
 
       <!-- ================= TAB 1: PRODUCTS & BLANKS TABLE ================= -->
       @if (activeTab() === 'PRODUCTS') {
@@ -158,16 +187,19 @@ import { Product, Category, StudioAsset, ProductVariant } from '../../../core/mo
         <div class="bg-white rounded-3xl p-6 border border-giftory-border shadow-xs space-y-6">
           <div class="flex items-center justify-between pb-2 border-b border-giftory-border/50">
             <div>
-              <h3 class="font-bold text-base text-[#1E1B4B]">Thư Viện Icon / Sticker Trang Trí Studio</h3>
-              <p class="text-xs text-slate-500 mt-0.5">Các biểu tượng này hiển thị trực tiếp cho khách hàng lựa chọn để trang trí lên quà tặng tại Studio</p>
+              <h3 class="font-bold text-base text-[#1E1B4B]">Thư Viện Clipart Studio</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Các clipart này hiển thị trực tiếp cho khách hàng lựa chọn để trang trí lên quà tặng tại Studio</p>
             </div>
+            <div class="flex gap-2 flex-wrap">
+            <button (click)="activeTab.set('CLIPART_IMPORT')" class="px-4 py-2 bg-purple-50 text-purple-700 text-xs font-bold rounded-xl cursor-pointer">Nhập clipart</button>
             <button
               (click)="openAddAssetModal()"
               class="px-4 py-2 bg-[#7C3AED] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm hover:bg-[#6D28D9] cursor-pointer"
             >
               <span class="material-symbols-outlined text-[16px]">add</span>
-              <span>Thêm Icon Mới</span>
+              <span>Thêm Clipart</span>
             </button>
+            </div>
           </div>
 
           <!-- Icons Grid -->
@@ -177,18 +209,26 @@ import { Product, Category, StudioAsset, ProductVariant } from '../../../core/mo
                 <button
                   (click)="deleteAsset(asset._id)"
                   class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                  title="Xóa icon này"
+                  title="Xóa clipart này"
                 >
                   <span class="material-symbols-outlined text-[14px]">close</span>
                 </button>
 
-                <span class="text-3xl my-1 select-none">{{ asset.icon }}</span>
+                <img [src]="asset.thumbnailUrl || asset.imageUrl || asset.icon" [alt]="asset.name" class="w-12 h-12 object-contain my-1">
                 <span class="text-xs font-bold text-slate-800 truncate w-full mt-1">{{ asset.name }}</span>
                 <span class="text-[10px] text-slate-400 truncate w-full">{{ asset.category || 'Phổ biến' }}</span>
+                @if (asset.sourceProvider === 'OPENCLIPART') {
+                  <a [href]="asset.sourceUrl" target="_blank" rel="noopener noreferrer" class="text-[10px] text-purple-600 underline">OpenClipart · CC0</a>
+                }
               </div>
             }
           </div>
         </div>
+      }
+
+      <!-- ================= TAB 3: CATEGORIES MANAGEMENT ================= -->
+      @if (activeTab() === 'CATEGORIES') {
+        <app-admin-categories #categoryComp (categoriesChanged)="loadCategories()"></app-admin-categories>
       }
 
       <!-- ================= MODAL: CREATE / EDIT PRODUCT & BESPOKE BLANK ================= -->
@@ -889,33 +929,22 @@ import { Product, Category, StudioAsset, ProductVariant } from '../../../core/mo
         <div class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div class="bg-white rounded-3xl p-6 max-w-md w-full border border-purple-200 shadow-2xl space-y-4 animate-fade-in">
             <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-              <h3 class="font-bold text-base text-[#1E1B4B]">Thêm Icon / Sticker Mới Vào Studio</h3>
+              <h3 class="font-bold text-base text-[#1E1B4B]">Thêm Clipart Vào Studio</h3>
               <button (click)="isAssetModalOpen.set(false)" class="text-slate-400 hover:text-slate-600 cursor-pointer">
                 <span class="material-symbols-outlined">close</span>
               </button>
             </div>
 
             <div class="space-y-3">
+                <label class="block text-xs font-bold text-slate-700">Ảnh PNG nền trong suốt (tối đa 5MB)
+                  <input type="file" accept="image/png" (change)="onAssetFileSelected($event)" [disabled]="isAssetUploading()" class="block mt-2 text-xs">
+                </label>
+                <input [(ngModel)]="newAssetImageUrl" aria-label="Đường dẫn clipart" placeholder="https://… đường dẫn ảnh PNG" class="w-full px-3 py-2 border rounded-xl text-xs">
+                @if (isAssetUploading()) { <p role="status" class="text-xs">Đang tải ảnh…</p> }
+                @if (newAssetImageUrl) { <img [src]="newAssetImageUrl" alt="Xem trước clipart" class="w-20 h-20 object-contain mx-auto"> }
+              <input [(ngModel)]="newAssetTags" aria-label="Từ khóa tìm kiếm" placeholder="Từ khóa, cách nhau bằng dấu phẩy" class="w-full px-3 py-2 border rounded-xl text-xs">
               <div>
-                <label class="text-xs font-bold text-slate-700 block mb-1">Ký tự Icon / Biểu tượng Emoji *</label>
-                <div class="flex items-center gap-2">
-                  <input
-                    type="text"
-                    [(ngModel)]="newAssetIcon"
-                    placeholder="VD: 🧸 hoặc 🌟 hoặc 🍷"
-                    class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-lg font-bold text-center focus:outline-none focus:border-[#7C3AED]"
-                  />
-                  <!-- Common emoji suggestions -->
-                  <div class="flex items-center gap-1">
-                    <button *ngFor="let em of ['🧸', '🌟', '🍷', '💍', '🕊️', '💐']" (click)="newAssetIcon = em" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-purple-100 text-base cursor-pointer">
-                      {{ em }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-700 block mb-1">Tên biểu tượng *</label>
+                <label class="text-xs font-bold text-slate-700 block mb-1">Tên clipart *</label>
                 <input
                   type="text"
                   [(ngModel)]="newAssetName"
@@ -925,7 +954,7 @@ import { Product, Category, StudioAsset, ProductVariant } from '../../../core/mo
               </div>
 
               <div>
-                <label class="text-xs font-bold text-slate-700 block mb-1">Danh mục biểu tượng</label>
+                <label class="text-xs font-bold text-slate-700 block mb-1">Danh mục clipart</label>
                 <select
                   [(ngModel)]="newAssetCategory"
                   class="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#7C3AED]"
@@ -946,10 +975,10 @@ import { Product, Category, StudioAsset, ProductVariant } from '../../../core/mo
                 </button>
                 <button
                   (click)="saveAsset()"
-                  [disabled]="!newAssetIcon || !newAssetName"
+                  [disabled]="!newAssetImageUrl.trim() || !newAssetName.trim() || isAssetUploading()"
                   class="px-5 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] disabled:bg-slate-300 text-white rounded-xl text-xs font-bold cursor-pointer"
                 >
-                  Lưu Icon Vào Studio
+                  Lưu Clipart Vào Studio
                 </button>
               </div>
             </div>
@@ -965,8 +994,11 @@ export class AdminProductsComponent implements OnInit {
   private adminService = inject(AdminService);
   private api = inject(ApiService);
   private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
 
-  activeTab = signal<'PRODUCTS' | 'STUDIO_ASSETS'>('PRODUCTS');
+  @ViewChild('categoryComp') categoryComp?: AdminCategoriesComponent;
+
+  activeTab = signal<'PRODUCTS' | 'CATEGORIES' | 'STUDIO_ASSETS' | 'CLIPART_IMPORT'>('PRODUCTS');
   products = signal<Product[]>([]);
   categories = signal<Category[]>([]);
   studioAssets = signal<StudioAsset[]>([]);
@@ -998,13 +1030,28 @@ export class AdminProductsComponent implements OnInit {
   });
 
   // Asset creation form state
-  newAssetIcon = '🧸';
+  isAssetUploading = signal(false);
+  newAssetTags = '';
+  newAssetImageUrl = '';
   newAssetName = '';
   newAssetCategory = 'Tình yêu';
 
   productForm!: FormGroup;
 
   ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      const tab = params['tab'];
+      if (tab === 'categories') {
+        this.activeTab.set('CATEGORIES');
+      } else if (tab === 'cliparts') {
+        this.activeTab.set('CLIPART_IMPORT');
+      } else if (tab === 'studio' || tab === 'assets') {
+        this.activeTab.set('STUDIO_ASSETS');
+      } else if (tab === 'products') {
+        this.activeTab.set('PRODUCTS');
+      }
+    });
+
     this.loadProducts();
     this.loadCategories();
     this.loadStudioAssets();
@@ -1236,7 +1283,7 @@ export class AdminProductsComponent implements OnInit {
   loadStudioAssets() {
     this.customStudioService.getAdminAssets().subscribe({
       next: (assets: any) => {
-        this.studioAssets.set(Array.isArray(assets) ? assets : []);
+        this.studioAssets.set(Array.isArray(assets) ? assets.filter(asset => asset.type === 'CLIPART') : []);
       },
       error: err => console.error('Error loading studio assets:', err)
     });
@@ -1690,34 +1737,55 @@ export class AdminProductsComponent implements OnInit {
 
   // Asset Modal Actions
   openAddAssetModal() {
-    this.newAssetIcon = '🧸';
+    this.newAssetTags = '';
+    this.newAssetImageUrl = '';
     this.newAssetName = '';
     this.newAssetCategory = 'Tình yêu';
     this.isAssetModalOpen.set(true);
   }
 
+  onAssetFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (file.type !== 'image/png' || file.size > 5 * 1024 * 1024) {
+      alert('Chọn ảnh PNG tối đa 5MB.'); input.value = ''; return;
+    }
+    this.isAssetUploading.set(true);
+    this.adminService.uploadImage(file).subscribe({
+      next: (res: any) => {
+        this.newAssetImageUrl = res?.url || res?.data?.url || (typeof res === 'string' ? res : '');
+        this.isAssetUploading.set(false);
+      },
+      error: () => { this.isAssetUploading.set(false); alert('Không tải được clipart. Vui lòng thử lại.'); }
+    });
+  }
+
   saveAsset() {
-    if (!this.newAssetIcon || !this.newAssetName) return;
+    if (!this.newAssetImageUrl.trim() || !this.newAssetName.trim() || this.isAssetUploading()) return;
+    if (!/^(https:\/\/|data:image\/png;base64,)/i.test(this.newAssetImageUrl.trim())) { alert('Vui lòng sử dụng đường dẫn ảnh HTTPS.'); return; }
 
     this.customStudioService.createAdminAsset({
       name: this.newAssetName.trim(),
-      icon: this.newAssetIcon.trim(),
-      type: 'STICKER',
+      icon: this.newAssetImageUrl.trim(),
+      type: 'CLIPART',
+      imageUrl: this.newAssetImageUrl.trim(),
+      tags: this.newAssetTags.split(',').map(tag => tag.trim()).filter(Boolean),
       category: this.newAssetCategory,
       surcharge: 0,
       isActive: true
     }).subscribe({
       next: () => {
-        alert('Đã thêm icon vào thư viện Custom Studio thành công!');
+        alert('Đã thêm clipart vào thư viện Custom Studio thành công!');
         this.isAssetModalOpen.set(false);
         this.loadStudioAssets();
       },
-      error: err => alert('Lỗi thêm icon: ' + (err?.error?.message || err.message))
+      error: err => alert('Lỗi thêm clipart: ' + (err?.error?.message || err.message))
     });
   }
 
   deleteAsset(id: string) {
-    if (confirm('Bạn có chắc muốn xóa icon này khỏi thư viện Custom Studio?')) {
+    if (confirm('Bạn có chắc muốn xóa clipart này khỏi thư viện Custom Studio?')) {
       this.customStudioService.deleteAdminAsset(id).subscribe({
         next: () => {
           this.loadStudioAssets();

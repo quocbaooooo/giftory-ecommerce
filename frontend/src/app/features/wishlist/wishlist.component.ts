@@ -211,15 +211,29 @@ export class WishlistComponent implements OnInit {
 
   orderDesign(design: CustomDesign) {
     this.cartService.addItem({
-      productId: (design as any).baseProductId || 'custom_base_01',
-      name: design.designName || 'Hộp Quà Bespoke Cá Nhân Hóa',
+      productId: typeof design.productId === 'object' ? design.productId._id : (design.productId || design.baseProductId || ''),
+      name: design.designName || design.title || 'Hộp Quà Bespoke Cá Nhân Hóa',
+      variantName: design.selectedColor,
       price: (design as any).price || 450000,
       quantity: 1,
       image: design.previewImage || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400',
       isCustom: true,
       customDetails: {
-        customText: design.customText,
+        frontMessage: design.frontMessage,
+        backMessage: design.backMessage,
+        customText: design.customText || design.frontMessage,
         fontFamily: design.fontFamily,
+        engraveColor: design.engraveColor,
+        selectedColor: design.selectedColor,
+        pattern: design.pattern,
+        uploadedImage: design.uploadedImage,
+        imageScale: design.imageScale,
+        stickers: design.stickers,
+        previewImage: design.previewImage,
+        frontPreviewImage: design.frontPreviewImage,
+        backPreviewImage: design.backPreviewImage,
+        customFee: design.customFee,
+        surcharges: design.surcharges,
         colorHex: design.colorHex,
         designData: design.designData
       },

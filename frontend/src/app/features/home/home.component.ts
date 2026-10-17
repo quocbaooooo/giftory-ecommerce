@@ -96,7 +96,13 @@ import { Product, Category } from '../../core/models';
         <div class="relative z-10 flex items-center justify-center gap-2.5 mt-6 flex-wrap max-w-5xl px-2">
           @for (cat of categories(); track cat._id) {
             <a [routerLink]="['/products']" [queryParams]="{ category: cat.slug }" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#DDD6FE] shadow-sm hover:bg-[#DDD6FE] hover:text-[#7C3AED] transition-all text-xs font-semibold text-[#1E1B4B]">
-              <span class="w-5 h-5 rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center text-[11px]">{{ cat.emoji }}</span>
+              <span class="w-5 h-5 rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center text-[11px] overflow-hidden">
+                @if (cat.emoji && (cat.emoji.startsWith('http') || cat.emoji.startsWith('/') || cat.emoji.startsWith('data:') || cat.emoji.length > 10)) {
+                  <img [src]="cat.emoji" [alt]="cat.name" class="w-full h-full object-contain" />
+                } @else {
+                  {{ cat.emoji }}
+                }
+              </span>
               <span>{{ cat.name }}</span>
             </a>
           }

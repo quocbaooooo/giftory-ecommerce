@@ -15,7 +15,7 @@ export class CloudinaryController {
   constructor(private readonly cloudinaryService: CloudinaryService) {}
 
   @Post('image')
-  @ApiOperation({ summary: 'Upload an image to Cloudinary' })
+  @ApiOperation({ summary: 'Upload an image' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -34,15 +34,15 @@ export class CloudinaryController {
       throw new BadRequestException('Vui lòng chọn file ảnh để tải lên');
     }
 
-    if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
-      throw new BadRequestException('Định dạng file không hợp lệ (chỉ chấp nhận JPG, PNG, WEBP, GIF)');
+    if (!file.mimetype || !file.mimetype.startsWith('image/')) {
+      throw new BadRequestException('Định dạng file không hợp lệ (vui lòng chọn file hình ảnh)');
     }
 
-    const url = await this.cloudinaryService.uploadImage(file.buffer);
+    const url = await this.cloudinaryService.uploadImage(file.buffer, 'giftory/products', file.mimetype);
     return {
       success: true,
       url,
-      message: 'Tải ảnh lên Cloudinary thành công',
+      message: 'Tải ảnh thành công',
     };
   }
 }

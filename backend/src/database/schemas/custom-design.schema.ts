@@ -46,6 +46,17 @@ export class CustomDesign {
     id: string;
     icon: string;
     name: string;
+    assetId?: string;
+    type?: 'STICKER' | 'CLIPART';
+    imageUrl?: string;
+    face?: 'front' | 'back';
+    coordinateSpace?: 'safe-area';
+    width?: number;
+    height?: number;
+    scaleX?: number;
+    scaleY?: number;
+    rotation?: number;
+    zIndex?: number;
     x: number;
     y: number;
     scale: number;

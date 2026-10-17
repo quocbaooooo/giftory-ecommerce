@@ -169,6 +169,9 @@ import { AuthService } from '../../core/services/auth.service';
                           <span>Font: <strong class="text-slate-700">{{ item.customDetails.fontFamily || 'Signature' }}</strong></span>
                           <span>•</span>
                           <span>Khắc: <strong class="text-slate-700">{{ item.customDetails.engraveColor || 'Gold' }}</strong></span>
+                          @if (item.customDetails.stickers?.length) {
+                            <p class="text-xs text-slate-500">Đồ họa: {{ item.customDetails.stickers?.length }} hình</p>
+                          }
                           @if (item.customDetails.pattern && item.customDetails.pattern !== 'none') {
                             <span>•</span>
                             <span>Họa tiết: <strong class="text-[#7C3AED]">{{ item.customDetails.pattern }}</strong></span>

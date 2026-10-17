@@ -25,9 +25,20 @@ import { AiChatbotModule } from './modules/ai-chatbot/ai-chatbot.module';
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI', 'mongodb://127.0.0.1:27017/giftory'),
-      }),
+      useFactory: async (configService: ConfigService) => {
+        let uri = configService.get<string>('MONGODB_URI', 'mongodb://127.0.0.1:27017/giftory_db');
+        if (uri.includes('mongodb.net') || uri.includes('mongodb+srv')) {
+          try {
+            const mongoose = await import('mongoose');
+            const testConn = await mongoose.createConnection(uri, { serverSelectionTimeoutMS: 2000 }).asPromise();
+            await testConn.close();
+          } catch (err: any) {
+            console.warn('⚠️ Atlas connection failed (likely IP Whitelist). Falling back to local MongoDB: mongodb://127.0.0.1:27017/giftory_db');
+            uri = 'mongodb://127.0.0.1:27017/giftory_db';
+          }
+        }
+        return { uri };
+      },
       inject: [ConfigService],
     }),
     DatabaseModule,

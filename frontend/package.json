@@ -8,7 +8,9 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:auth": "node test/auth-logic.cjs",
-    "test:cart": "node test/cart-quantity.cjs"
+    "test:cart": "node test/cart-quantity.cjs",
+    "test:studio": "node test/studio-graphics.cjs",
+    "test:cliparts": "node test/openclipart-importer.cjs"
   },
   "private": true,
   "dependencies": {

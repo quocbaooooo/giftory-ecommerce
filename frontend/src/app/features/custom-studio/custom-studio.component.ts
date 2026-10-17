@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import Konva from 'konva';
+import { CLIPART_LIBRARY, filterGraphics, graphicsForFace } from './graphics-library';
 import { CustomStudioService } from '../../core/services/custom-studio.service';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Product, StudioAsset, AreaBox } from '../../core/models';
+import { Product, StudioAsset, StudioGraphic, AreaBox } from '../../core/models';
 
 interface CustomPattern {
   id: string;
@@ -21,7 +22,7 @@ interface SurchargeBreakdown {
   amount: number;
 }
 
-type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMARY';
+type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
 
 @Component({
   selector: 'app-custom-studio',
@@ -172,29 +173,18 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
               }
             </button>
 
-            <!-- Tool 4: Stickers (From Admin) -->
+            <!-- Tool 4: Clipart library -->
             <button
-              (click)="activeToolTab.set('STICKER')"
+              (click)="activeToolTab.set('GRAPHICS')"
               class="w-12 sm:w-14 py-2 sm:py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer relative"
-              [ngClass]="activeToolTab() === 'STICKER' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
-              title="Sticker & Icon"
+              [ngClass]="activeToolTab() === 'GRAPHICS' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
+              title="Thư viện đồ họa"
             >
-              <span class="material-symbols-outlined text-[19px] sm:text-[20px]">sentiment_satisfied</span>
-              <span class="text-[9px] font-bold">Sticker</span>
+              <span class="material-symbols-outlined text-[19px] sm:text-[20px]">collections</span>
+              <span class="text-[9px] font-bold">Đồ họa</span>
               @if (activeStickers().length > 0) {
                 <span class="w-2 h-2 rounded-full bg-pink-500 absolute top-1.5 right-1.5 sm:top-2 sm:right-2 border-2 border-white"></span>
               }
-            </button>
-
-            <!-- Tool 5: Patterns -->
-            <button
-              (click)="activeToolTab.set('PATTERN')"
-              class="w-12 sm:w-14 py-2 sm:py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer"
-              [ngClass]="activeToolTab() === 'PATTERN' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
-              title="Hoa văn phủ"
-            >
-              <span class="material-symbols-outlined text-[19px] sm:text-[20px]">texture</span>
-              <span class="text-[9px] font-bold">Họa tiết</span>
             </button>
 
             <div class="hidden sm:block w-8 border-t border-slate-200 my-0.5"></div>
@@ -254,26 +244,17 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
                   </span>
                 }
               }
-              @if (activeToolTab() === 'STICKER') {
+              @if (activeToolTab() === 'GRAPHICS') {
                 <div>
                   <h3 class="font-bold text-xs sm:text-sm text-[#1E1B4B] flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">sentiment_satisfied</span>
-                    Kho Sticker & Icon
+                    <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">collections</span>
+                    Thư viện Đồ họa
                   </h3>
-                  <p class="text-[10px] text-slate-500 mt-0.5">Icon bản quyền đồng bộ từ Admin</p>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Thêm clipart vào mặt đang chỉnh</p>
                 </div>
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-[#7C3AED]">
-                  {{ activeStickers().length }}/3 icon
+                  {{ activeStickers().length }} hình
                 </span>
-              }
-              @if (activeToolTab() === 'PATTERN') {
-                <div>
-                  <h3 class="font-bold text-xs sm:text-sm text-[#1E1B4B] flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">texture</span>
-                    Họa Tiết Phủ Mặt
-                  </h3>
-                  <p class="text-[10px] text-slate-500 mt-0.5">Hoa văn chìm tinh tế quanh thân phôi</p>
-                </div>
               }
               @if (activeToolTab() === 'SUMMARY') {
                 <div>
@@ -563,45 +544,53 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'STICKER' | 'PATTERN' | 'SUMMA
                 </div>
               }
 
-              <!-- DRAWER 4: STICKERS (DYNAMIC FROM ADMIN & DATABASE) -->
-              @if (activeToolTab() === 'STICKER') {
-                <div class="space-y-4 animate-fade-in">
-                  <!-- Sticker Grid -->
-                  <div class="grid grid-cols-4 sm:grid-cols-5 gap-2 pr-1">
-                    @for (stk of dynamicStickers(); track stk._id || stk.name) {
-                      <button 
-                        (click)="toggleSticker(stk)"
-                        class="p-2.5 rounded-2xl border flex flex-col items-center gap-1 transition-all cursor-pointer"
-                        [ngClass]="isStickerActive(stk.name) ? 'border-[#7C3AED] bg-purple-50 shadow-xs ring-2 ring-purple-200' : 'border-slate-100 hover:border-purple-200 bg-slate-50/70'"
-                      >
-                        <span class="text-2xl select-none">{{ stk.icon }}</span>
-                        <span class="text-[9px] text-slate-600 truncate w-full text-center">{{ stk.name }}</span>
+              @if (activeToolTab() === 'GRAPHICS') {
+                <div class="space-y-3 animate-fade-in">
+                  <input type="search" [ngModel]="graphicsQuery()" (ngModelChange)="graphicsQuery.set($event)"
+                    aria-label="Tìm đồ họa" placeholder="Tìm hoa, trái tim, sinh nhật…"
+                    class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-purple-500">
+                  <select [ngModel]="graphicsCategory()" (ngModelChange)="graphicsCategory.set($event)" aria-label="Chủ đề đồ họa"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                    <option value="">Tất cả chủ đề</option>
+                    @for (category of graphicsCategories(); track category) { <option [value]="category">{{ category }}</option> }
+                  </select>
+                  @if (selectedPattern() !== 'none') {
+                    <div class="text-xs text-amber-700 bg-amber-50 rounded-xl p-2">
+                      Thiết kế này đang giữ họa tiết cũ và phụ phí tương ứng.
+                      <button (click)="setPattern('none')" class="underline font-bold cursor-pointer">Bỏ họa tiết cũ</button>
+                    </div>
+                  }
+                  <p class="text-[11px] text-slate-500">Bấm để thêm hình vào {{ isFrontFace() ? 'mặt trước' : 'mặt sau' }}. Có thể thêm cùng một hình nhiều lần. Miễn phí.</p>
+                  @if (pendingGraphicAdds()) { <p role="status" class="text-xs text-purple-600">Đang tải clipart…</p> }
+                  @if (graphicsNotice()) { <p role="status" class="text-xs text-amber-700">{{ graphicsNotice() }}</p> }
+                  <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    @for (asset of filteredGraphics(); track asset._id) {
+                      <button (click)="addGraphic(asset)" [title]="'Thêm ' + asset.name" [disabled]="activeStickers().length >= 30"
+                        class="p-2 rounded-xl border border-slate-200 hover:border-purple-400 hover:bg-purple-50 disabled:opacity-40 flex flex-col items-center gap-1 cursor-pointer">
+                          <img [src]="asset.thumbnailUrl || asset.imageUrl || asset.icon" [alt]="asset.name" loading="lazy" class="w-12 h-12 object-contain">
+                        <span class="text-[10px] text-slate-600 truncate w-full text-center">{{ asset.name }}</span>
                       </button>
-                    }
+                    } @empty { <p class="col-span-full text-xs text-slate-500 py-4">Không tìm thấy đồ họa phù hợp.</p> }
                   </div>
-                </div>
-              }
-
-              <!-- DRAWER 5: PATTERNS -->
-              @if (activeToolTab() === 'PATTERN') {
-                <div class="space-y-4 animate-fade-in">
-                  <div class="grid grid-cols-2 gap-2.5">
-                    @for (pat of patternLibrary; track pat.id) {
-                      <button 
-                        (click)="setPattern(pat.id)"
-                        class="p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between"
-                        [ngClass]="selectedPattern() === pat.id ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED] font-bold shadow-xs' : 'border-slate-200 hover:border-slate-300 text-slate-700'"
-                      >
-                        <div class="flex items-center gap-2">
-                          <span class="material-symbols-outlined text-[18px] text-[#7C3AED]">{{ pat.icon }}</span>
-                          <span class="text-xs font-semibold">{{ pat.name }}</span>
+                  <p class="text-[10px] text-slate-400">{{ activeStickers().length }}/30 hình trong thiết kế • Kéo, thu phóng và xoay trên canvas.</p>
+                  @if (activeStickers().length) {
+                    <div class="space-y-1 border-t border-slate-100 pt-2">
+                      <p class="text-[11px] font-bold text-slate-700">Hình trong thiết kế</p>
+                      @for (graphic of activeStickers(); track graphic.id) {
+                        <div class="flex items-center justify-between gap-2 text-[11px] text-slate-600">
+                          <span class="truncate">{{ graphic.name }} · {{ graphic.face === 'back' ? 'Mặt sau' : graphic.face === 'front' ? 'Mặt trước' : 'Hai mặt' }}</span>
+                          <button (click)="removeGraphic(graphic.id)" [attr.aria-label]="'Xóa ' + graphic.name" class="text-red-600 cursor-pointer px-2 py-1">Xóa</button>
                         </div>
-                        <div class="text-[10px] text-slate-500 mt-2">
-                          {{ pat.surcharge === 0 ? 'Miễn phí' : '+15.000đ' }}
-                        </div>
-                      </button>
-                    }
-                  </div>
+                      }
+                    </div>
+                  }
+                  @if (selectedNodeName()?.startsWith('Đồ họa')) {
+                    <div class="flex gap-2">
+                      <button (click)="duplicateGraphic()" class="px-3 py-2 bg-purple-50 rounded-xl text-xs cursor-pointer">Nhân bản</button>
+                      <button (click)="flipGraphic()" class="px-3 py-2 bg-purple-50 rounded-xl text-xs cursor-pointer">Lật ngang</button>
+                      <button (click)="deleteSelectedNode()" class="px-3 py-2 bg-red-50 text-red-600 rounded-xl text-xs cursor-pointer">Xóa</button>
+                    </div>
+                  }
                 </div>
               }
 
@@ -1020,10 +1009,21 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedPattern = signal<string>('none');
   uploadedImage = signal<string>('');
   imageScale = signal<number>(1);
-  activeStickers = signal<Array<{ id: string; icon: string; name: string }>>([]);
+  activeStickers = signal<StudioGraphic[]>([]);
 
-  // Dynamic Stickers from Admin Asset API
+  // Cliparts from Admin Asset API
   dynamicStickers = signal<StudioAsset[]>([]);
+
+  graphicsQuery = signal('');
+  graphicsCategory = signal('');
+  graphicsNotice = signal('');
+  pendingGraphicAdds = signal(0);
+  graphicsAssets = computed(() => [...CLIPART_LIBRARY, ...this.dynamicStickers().filter(a => a.type === 'CLIPART')]);
+  filteredGraphics = computed(() => filterGraphics(this.graphicsAssets(), this.graphicsCategory(), this.graphicsQuery()));
+  graphicsCategories = computed(() => [...new Set(this.graphicsAssets().map(a => a.category || 'Phổ biến'))]);
+  private graphicImages = new Map<string, HTMLImageElement>();
+  private graphicLoads = new Map<string, Promise<HTMLImageElement>>();
+  private graphicsRenderVersion = 0;
 
   // Editing state (AC14)
   isEditingCartItem = signal<boolean>(false);
@@ -1151,7 +1151,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   private productImgNode: Konva.Image | null = null;
   private textNode: Konva.Text | null = null;
   private photoNode: Konva.Image | null = null;
-  private stickerNodes: Konva.Text[] = [];
+  private stickerNodes: Konva.Shape[] = [];
   private transformer: Konva.Transformer | null = null;
 
   maxTextLength = computed(() => {
@@ -1292,11 +1292,37 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
                   if (cd.pattern) this.selectedPattern.set(cd.pattern);
                   if (cd.uploadedImage) this.uploadedImage.set(cd.uploadedImage);
                   if (cd.imageScale) this.imageScale.set(cd.imageScale);
-                  if (cd.stickers) this.activeStickers.set(cd.stickers);
+                  if (cd.stickers) this.restoreGraphics(cd.stickers);
                 }
                 this.updateKonvaCanvas();
                 return;
               }
+            }
+
+            if (params['editId']) {
+              this.studioService.getDesignById(params['editId']).subscribe({
+                next: design => {
+                  const productId = typeof design.productId === 'object' ? design.productId._id : design.productId;
+                  this.activeTemplate.set(tpls.find(t => t._id === productId) || tpls[0]);
+                  this.frontMessage.set(design.frontMessage || '');
+                  this.backMessage.set(design.backMessage || '');
+                  this.selectedColor.set(design.selectedColor || 'Navy Blue');
+                  this.selectedFont.set(design.fontFamily || 'Signature');
+                  this.selectedEngraveColor.set(design.engraveColor || 'Vàng Kim (Gold)');
+                  this.selectedPattern.set(design.pattern || 'none');
+                  this.uploadedImage.set(design.uploadedImage || '');
+                  this.imageScale.set(design.imageScale ?? 1);
+                  this.restoreGraphics(design.stickers || []);
+                  this.updateKonvaCanvas();
+                },
+                error: () => {
+                  this.activeTemplate.set(tpls[0]);
+                  this.activeToolTab.set('GRAPHICS');
+                  this.graphicsNotice.set('Không mở được thiết kế đã lưu. Vui lòng thử lại.');
+                  this.updateKonvaCanvas();
+                }
+              });
+              return;
             }
 
             let chosenTpl = tpls[0];
@@ -1320,7 +1346,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
                 if (savedDraft.selectedPattern) this.selectedPattern.set(savedDraft.selectedPattern);
                 if (savedDraft.uploadedImage) this.uploadedImage.set(savedDraft.uploadedImage);
                 if (savedDraft.imageScale) this.imageScale.set(savedDraft.imageScale);
-                if (savedDraft.stickers) this.activeStickers.set(savedDraft.stickers);
+                if (savedDraft.stickers) this.restoreGraphics(savedDraft.stickers);
                 this.hasRestoredDraft.set(true);
                 setTimeout(() => this.hasRestoredDraft.set(false), 4500);
               }
@@ -1346,6 +1372,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    ++this.graphicsRenderVersion;
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
@@ -1414,7 +1441,8 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.uiLayer.add(this.transformer);
 
     // Update overflow check when transforming
-    this.transformer.on('transform transformend', () => {
+    this.transformer.on('transform transformend', (event) => {
+      if (event.type === 'transformend') this.transformer?.nodes().forEach(node => this.persistGraphic(node));
       this.checkOverflowWarning();
     });
 
@@ -1498,6 +1526,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // Đồng bộ vẽ khung hướng dẫn theo kích thước chuẩn của phôi
       this.renderGuidesOnKonva();
+      this.renderStickersOnKonva();
       this.checkOverflowWarning();
     };
     imageObj.src = blankUrl;
@@ -1719,7 +1748,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       { node: this.photoNode, name: 'Ảnh Cá Nhân' }
     ];
     this.stickerNodes.forEach((stk, idx) => {
-      nodesToCheck.push({ node: stk, name: `Sticker #${idx + 1}` });
+      nodesToCheck.push({ node: stk, name: `Đồ họa #${idx + 1}` });
     });
 
     for (const item of nodesToCheck) {
@@ -1789,6 +1818,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     selected.x(selected.x() + shiftX);
     selected.y(selected.y() + shiftY);
+    this.persistGraphic(selected);
 
     this.drawLayer?.batchDraw();
     this.uiLayer?.batchDraw();
@@ -1800,33 +1830,129 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.renderGuidesOnKonva();
   }
 
+  removeGraphic(id: string): void {
+    this.activeStickers.update(items => items.filter(item => item.id !== id));
+    if (this.transformer?.nodes()[0]?.getAttr('graphicId') === id) {
+      this.transformer.nodes([]);
+      this.selectedNodeName.set(null);
+    }
+    this.graphicsNotice.set('');
+    this.renderStickersOnKonva();
+  }
+
+  private restoreGraphics(items: StudioGraphic[]): void {
+    this.activeStickers.set(items.map(item => ({ ...item })));
+    items.forEach(item => {
+      const url = item.imageUrl || (item.type === 'CLIPART' ? item.icon : '');
+      if (url) this.loadGraphicImage(url).catch(() => this.graphicsNotice.set('Một clipart không tải được. Bạn có thể xóa hình trong danh sách đồ họa.'));
+    });
+  }
+
+  private loadGraphicImage(url: string): Promise<HTMLImageElement> {
+    const cached = this.graphicImages.get(url);
+    if (cached) return Promise.resolve(cached);
+    const pending = this.graphicLoads.get(url);
+    if (pending) return pending;
+    const promise = new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.onload = () => { this.graphicImages.set(url, image); resolve(image); };
+      image.onerror = () => { reject(new Error('Không tải được hình')); };
+      image.src = url;
+    }).finally(() => this.graphicLoads.delete(url));
+    this.graphicLoads.set(url, promise);
+    return promise;
+  }
+
   private renderStickersOnKonva(): void {
     if (!this.drawLayer) return;
-
-    // Clear old sticker nodes
+    const version = ++this.graphicsRenderVersion;
+    const selectedId = this.transformer?.nodes()[0]?.getAttr('graphicId');
+    if (selectedId) this.transformer?.nodes([]);
     this.stickerNodes.forEach(n => n.destroy());
     this.stickerNodes = [];
-
-    const stickers = this.activeStickers();
-    stickers.forEach((stk, index) => {
-      const stickerText = new Konva.Text({
-        x: 170 + index * 40,
-        y: 170,
-        text: stk.icon,
-        fontSize: 26,
-        draggable: true
-      });
-      this.makeDraggableAndSelectable(stickerText, `Sticker ${stk.name}`);
-      this.drawLayer?.add(stickerText);
-      this.stickerNodes.push(stickerText);
+    const { saPx } = this.getGuideCoordinates();
+    const items = graphicsForFace(this.activeStickers(), this.isFrontFace());
+    items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0)).forEach(stk => {
+      const create = (image?: HTMLImageElement) => {
+        if (version !== this.graphicsRenderVersion || !this.drawLayer) return;
+        const normalized = stk.coordinateSpace === 'safe-area';
+        const config = {
+          x: normalized ? saPx.x + (stk.x ?? 0.35) * saPx.width : (stk.x ?? saPx.x + saPx.width * 0.35),
+          y: normalized ? saPx.y + (stk.y ?? 0.35) * saPx.height : (stk.y ?? saPx.y + saPx.height * 0.35),
+          scaleX: stk.scaleX ?? 1, scaleY: stk.scaleY ?? 1, rotation: stk.rotation ?? 0,
+          draggable: true, graphicId: stk.id,
+        };
+        const node: Konva.Shape = image
+          ? new Konva.Image({ ...config, image, width: (stk.width ?? 0.3) * saPx.width, height: (stk.height ?? 0.3) * saPx.height })
+          : new Konva.Text({ ...config, text: stk.icon, fontSize: 32 });
+        if (!image && stk.width && stk.height) {
+          node.width(stk.width * saPx.width);
+          node.height(stk.height * saPx.height);
+          (node as Konva.Text).fontSize(stk.height * saPx.height);
+        }
+        this.makeDraggableAndSelectable(node, `Đồ họa ${stk.name}`);
+        node.on('dragend transformend', () => this.persistGraphic(node));
+        this.drawLayer.add(node);
+        this.stickerNodes.push(node);
+        // Image load completion order must not change the saved stacking order.
+        this.stickerNodes.sort((a, b) => items.findIndex(i => i.id === a.getAttr('graphicId')) - items.findIndex(i => i.id === b.getAttr('graphicId')))
+          .forEach(n => n.moveToTop());
+        if (stk.id === selectedId) this.transformer?.nodes([node]);
+        this.persistGraphic(node);
+        this.drawLayer.batchDraw();
+        this.uiLayer?.batchDraw();
+        this.checkOverflowWarning();
+      };
+      const url = stk.imageUrl || (stk.type === 'CLIPART' ? stk.icon : '');
+      if (url) {
+        const cached = this.graphicImages.get(url);
+        if (cached) create(cached);
+        else this.loadGraphicImage(url).then(create).catch(() => {
+          if (version === this.graphicsRenderVersion) this.graphicsNotice.set('Không tải được một clipart. Hãy kiểm tra kết nối hoặc xóa hình bị lỗi.');
+        });
+      } else create();
     });
+  }
+
+  private persistGraphic(node: Konva.Node, saveOrder = false): void {
+    const id = node.getAttr('graphicId');
+    if (!id) return;
+    const { saPx } = this.getGuideCoordinates();
+    this.activeStickers.update(items => items.map(item => item.id === id ? {
+      ...item, coordinateSpace: 'safe-area',
+      x: (node.x() - saPx.x) / saPx.width, y: (node.y() - saPx.y) / saPx.height,
+      width: node.width() / saPx.width, height: node.height() / saPx.height,
+      scaleX: node.scaleX(), scaleY: node.scaleY(), rotation: node.rotation(), zIndex: saveOrder ? node.zIndex() : item.zIndex,
+    } : item));
+  }
+
+  duplicateGraphic(): void {
+    const node = this.transformer?.nodes()[0];
+    const item = this.activeStickers().find(i => i.id === node?.getAttr('graphicId'));
+    if (!item || this.activeStickers().length >= 30) return;
+    this.activeStickers.update(items => [...items, { ...item, id: crypto.randomUUID(), x: (item.x ?? 0.35) + 0.04, y: (item.y ?? 0.35) + 0.04, zIndex: Math.max(0, ...items.map(item => item.zIndex ?? 0)) + 1 }]);
+    this.renderStickersOnKonva();
+  }
+
+  flipGraphic(): void {
+    const node = this.transformer?.nodes()[0];
+    if (!node?.getAttr('graphicId')) return;
+    const angle = node.rotation() * Math.PI / 180;
+    const distance = node.width() * node.scaleX();
+    node.x(node.x() + Math.cos(angle) * distance);
+    node.y(node.y() + Math.sin(angle) * distance);
+    node.scaleX(-node.scaleX());
+    this.persistGraphic(node);
+    this.drawLayer?.batchDraw();
+    this.checkOverflowWarning();
   }
 
   private makeDraggableAndSelectable(node: Konva.Node, name: string): void {
     const selectNode = () => {
       this.selectedNodeName.set(name);
       if (this.transformer) {
-        if (name === 'Ảnh Cá Nhân' || name.startsWith('Sticker')) {
+        if (name === 'Ảnh Cá Nhân' || name.startsWith('Đồ họa')) {
           this.transformer.keepRatio(true);
         } else {
           this.transformer.keepRatio(false);
@@ -1838,8 +1964,8 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.activeToolTab.set('TEXT');
       } else if (name === 'Ảnh Cá Nhân') {
         this.activeToolTab.set('IMAGE');
-      } else if (name.startsWith('Sticker')) {
-        this.activeToolTab.set('STICKER');
+      } else if (name.startsWith('Đồ họa')) {
+        this.activeToolTab.set('GRAPHICS');
       }
     };
 
@@ -1854,6 +1980,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     const selected = this.transformer?.nodes()[0];
     if (selected) {
       selected.x((460 - (selected.width() * selected.scaleX())) / 2);
+      this.persistGraphic(selected);
       this.drawLayer?.batchDraw();
       this.uiLayer?.batchDraw();
       this.checkOverflowWarning();
@@ -1871,14 +1998,9 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (selected === this.photoNode) {
       this.removeImage();
-    } else if (this.stickerNodes.includes(selected as Konva.Text)) {
-      const idx = this.stickerNodes.indexOf(selected as Konva.Text);
-      if (idx > -1) {
-        const current = [...this.activeStickers()];
-        current.splice(idx, 1);
-        this.activeStickers.set(current);
-        this.renderStickersOnKonva();
-      }
+    } else if (selected.getAttr('graphicId')) {
+      this.activeStickers.update(items => items.filter(item => item.id !== selected.getAttr('graphicId')));
+      this.renderStickersOnKonva();
     } else if (selected === this.textNode) {
       if (this.isFrontFace()) {
         this.frontMessage.set('');
@@ -1897,6 +2019,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     const selected = this.transformer?.nodes()[0];
     if (selected) {
       selected.moveUp();
+      this.stickerNodes.forEach(node => this.persistGraphic(node, true));
       this.drawLayer?.batchDraw();
       this.uiLayer?.batchDraw();
     }
@@ -1906,6 +2029,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     const selected = this.transformer?.nodes()[0];
     if (selected) {
       selected.moveDown();
+      this.stickerNodes.forEach(node => this.persistGraphic(node, true));
       this.drawLayer?.batchDraw();
       this.uiLayer?.batchDraw();
     }
@@ -1996,6 +2120,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       this.uiLayer?.batchDraw();
       this.checkOverflowWarning();
     }
+    this.persistGraphic(selected);
   }
 
   downloadSnapshot(): void {
@@ -2065,34 +2190,9 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   loadStudioAssets(): void {
-    this.studioService.getAssets('STICKER').subscribe({
-      next: (assets: any) => {
-        if (Array.isArray(assets) && assets.length > 0) {
-          this.dynamicStickers.set(assets);
-        } else {
-          this.dynamicStickers.set([
-            { _id: '1', name: 'Trái tim', icon: '❤️', type: 'STICKER' },
-            { _id: '2', name: 'Tim đôi', icon: '💖', type: 'STICKER' },
-            { _id: '3', name: 'Tinh tú', icon: '✨', type: 'STICKER' },
-            { _id: '4', name: 'Crown', icon: '👑', type: 'STICKER' },
-            { _id: '5', name: 'Nơ quà', icon: '🎀', type: 'STICKER' },
-            { _id: '6', name: 'Bánh kem', icon: '🎂', type: 'STICKER' },
-            { _id: '7', name: 'Hộp quà', icon: '🎁', type: 'STICKER' },
-            { _id: '8', name: 'Nâng ly', icon: '🥂', type: 'STICKER' },
-            { _id: '9', name: 'Cỏ 4 lá', icon: '🍀', type: 'STICKER' },
-            { _id: '10', name: 'Hoa đào', icon: '🌸', type: 'STICKER' },
-            { _id: '11', name: 'Kim cương', icon: '💎', type: 'STICKER' },
-            { _id: '12', name: 'Ngọn lửa', icon: '🔥', type: 'STICKER' }
-          ]);
-        }
-      },
-      error: () => {
-        this.dynamicStickers.set([
-          { _id: '1', name: 'Trái tim', icon: '❤️', type: 'STICKER' },
-          { _id: '2', name: 'Tim đôi', icon: '💖', type: 'STICKER' },
-          { _id: '3', name: 'Tinh tú', icon: '✨', type: 'STICKER' }
-        ]);
-      }
+    this.studioService.getAssets('CLIPART').subscribe({
+      next: assets => this.dynamicStickers.set(Array.isArray(assets) ? assets.filter(asset => asset.type === 'CLIPART') : []),
+      error: () => this.dynamicStickers.set([]),
     });
   }
 
@@ -2160,23 +2260,29 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  isStickerActive(name: string): boolean {
-    return this.activeStickers().some(s => s.name === name);
-  }
-
-  toggleSticker(stk: any): void {
-    const current = [...this.activeStickers()];
-    const idx = current.findIndex(s => s.name === stk.name);
-    if (idx > -1) {
-      current.splice(idx, 1);
-    } else {
-      if (current.length >= 3) {
-        current.shift();
-      }
-      current.push({ id: String(Date.now()), icon: stk.icon, name: stk.name });
-    }
-    this.activeStickers.set(current);
-    this.renderStickersOnKonva();
+  async addGraphic(asset: StudioAsset): Promise<void> {
+    if (asset.type !== 'CLIPART' || !(asset.imageUrl || asset.icon)) return;
+    if (this.activeStickers().length >= 30) return;
+    this.graphicsNotice.set('');
+    const face = this.isFrontFace() ? 'front' : 'back';
+    this.pendingGraphicAdds.update(count => count + 1);
+    const url = asset.imageUrl || (asset.type === 'CLIPART' ? asset.icon : '');
+    try {
+      const image = url ? await this.loadGraphicImage(url) : null;
+      if (this.activeStickers().length >= 30) return;
+      const { saPx } = this.getGuideCoordinates();
+      const ratio = image ? image.naturalHeight / image.naturalWidth : 1;
+      const width = Math.min(saPx.width * 0.3, saPx.height * 0.3 / ratio);
+      this.activeStickers.update(items => [...items, {
+        id: crypto.randomUUID(), assetId: asset._id, name: asset.name, icon: asset.icon,
+        type: 'CLIPART', imageUrl: url || undefined, face,
+        coordinateSpace: 'safe-area', x: 0.35, y: 0.35,
+        ...(image ? { width: width / saPx.width, height: width * ratio / saPx.height } : {}),
+        zIndex: Math.max(0, ...items.map(item => item.zIndex ?? 0)) + 1,
+      }]);
+      this.renderStickersOnKonva();
+    } catch { this.graphicsNotice.set('Không tải được hình. Vui lòng kiểm tra kết nối và thử lại.'); }
+    finally { this.pendingGraphicAdds.update(count => count - 1); }
   }
 
   onImageFileSelected(event: any): void {
@@ -2213,6 +2319,16 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   validateInputs(): boolean {
+    if (this.pendingGraphicAdds()) {
+      this.graphicsNotice.set('Vui lòng chờ clipart tải xong trước khi lưu.');
+      this.activeToolTab.set('GRAPHICS');
+      return false;
+    }
+    if (this.activeStickers().some(item => item.imageUrl && !this.graphicImages.has(item.imageUrl))) {
+      this.graphicsNotice.set('Clipart chưa tải xong hoặc bị lỗi. Hãy chờ tải xong hoặc xóa hình bị lỗi trước khi lưu.');
+      this.activeToolTab.set('GRAPHICS');
+      return false;
+    }
     let isValid = true;
     const maxLen = this.maxTextLength();
 
@@ -2230,6 +2346,8 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       this.formErrors.backMessage = '';
     }
 
+    if (!isValid) this.activeToolTab.set('TEXT');
+    else if (this.formErrors.image) this.activeToolTab.set('IMAGE');
     return isValid && !this.formErrors.image;
   }
 
@@ -2286,7 +2404,6 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onPrimaryActionClick(): void {
     if (!this.validateInputs()) {
-      this.activeToolTab.set('TEXT');
       return;
     }
 
@@ -2344,7 +2461,6 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onSaveDesignClick(): void {
     if (!this.validateInputs()) {
-      this.activeToolTab.set('TEXT');
       return;
     }
 

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CustomDesign, CustomDesignDocument } from '../../database/schemas/custom-design.schema';
@@ -17,46 +17,27 @@ export class CustomStudioService {
   ) {}
 
   async getStudioAssets(type?: string) {
-    const count = await this.assetModel.countDocuments();
-    if (count === 0) {
-      // Seed initial stickers
-      const initialStickers = [
-        { name: 'Trái tim', icon: '❤️', type: 'STICKER', category: 'Tình yêu', surcharge: 0 },
-        { name: 'Tim đôi', icon: '💖', type: 'STICKER', category: 'Tình yêu', surcharge: 0 },
-        { name: 'Tinh tú', icon: '✨', type: 'STICKER', category: 'Lấp lánh', surcharge: 0 },
-        { name: 'Vương miện', icon: '👑', type: 'STICKER', category: 'Sang trọng', surcharge: 0 },
-        { name: 'Nơ quà', icon: '🎀', type: 'STICKER', category: 'Kỷ niệm', surcharge: 0 },
-        { name: 'Bánh kem', icon: '🎂', type: 'STICKER', category: 'Sinh nhật', surcharge: 0 },
-        { name: 'Hộp quà', icon: '🎁', type: 'STICKER', category: 'Kỷ niệm', surcharge: 0 },
-        { name: 'Nâng ly', icon: '🥂', type: 'STICKER', category: 'Tiệc tùng', surcharge: 0 },
-        { name: 'Cỏ 4 lá', icon: '🍀', type: 'STICKER', category: 'May mắn', surcharge: 0 },
-        { name: 'Hoa đào', icon: '🌸', type: 'STICKER', category: 'Hoa cỏ', surcharge: 0 },
-        { name: 'Kim cương', icon: '💎', type: 'STICKER', category: 'Sang trọng', surcharge: 0 },
-        { name: 'Ngọn lửa', icon: '🔥', type: 'STICKER', category: 'Nhiệt huyết', surcharge: 0 },
-        { name: 'Hoa sen', icon: '🪷', type: 'STICKER', category: 'Thanh lịch', surcharge: 0 },
-        { name: 'Cung trăng', icon: '🌙', type: 'STICKER', category: 'Thiên hà', surcharge: 0 },
-        { name: 'Bướm xuân', icon: '🦋', type: 'STICKER', category: 'Hoa cỏ', surcharge: 0 }
-      ];
-      await this.assetModel.insertMany(initialStickers);
-    }
-
-    const query: any = { isActive: true };
-    if (type) query.type = type;
-    return this.assetModel.find(query).sort({ order: 1, createdAt: -1 }).exec();
+    if (type && type !== 'CLIPART') return [];
+    return this.assetModel.find({ type: 'CLIPART', isActive: true }).sort({ order: 1, createdAt: -1 }).exec();
   }
 
   async getAllStudioAssetsAdmin() {
-    return this.assetModel.find().sort({ type: 1, order: 1, createdAt: -1 }).exec();
+    return this.assetModel.find({ type: 'CLIPART' }).sort({ order: 1, createdAt: -1 }).exec();
   }
 
   async createStudioAsset(data: Partial<StudioAsset>) {
-    return this.assetModel.create(data);
+    const imageUrl = (data.imageUrl || data.icon || '').trim();
+    if ((data.type && data.type !== 'CLIPART') || !/^(https:\/\/|data:image\/png;base64,)/i.test(imageUrl)) {
+      throw new BadRequestException('Thư viện chỉ hỗ trợ clipart bằng hình ảnh.');
+    }
+    if (!data.name?.trim()) throw new BadRequestException('Vui lòng nhập tên clipart.');
+    return this.assetModel.create({ ...data, name: data.name.trim(), type: 'CLIPART', icon: imageUrl, imageUrl });
   }
 
   async deleteStudioAsset(id: string) {
     const res = await this.assetModel.findByIdAndDelete(id);
-    if (!res) throw new NotFoundException('Không tìm thấy icon/asset này');
-    return { success: true, message: 'Đã xóa icon/asset thành công' };
+    if (!res) throw new NotFoundException('Không tìm thấy clipart này');
+    return { success: true, message: 'Đã xóa clipart thành công' };
   }
 
   async getCustomizableTemplates() {

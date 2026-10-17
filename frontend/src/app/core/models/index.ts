@@ -75,11 +75,62 @@ export interface StudioAsset {
   _id: string;
   name: string;
   icon: string;
-  type: 'STICKER' | 'PATTERN';
+  type: 'STICKER' | 'PATTERN' | 'CLIPART';
+  imageUrl?: string;
+  thumbnailUrl?: string;
+  sourceProvider?: string;
+  sourceId?: string;
+  sourceUrl?: string;
+  author?: string;
+  license?: string;
+  tags?: string[];
   category?: string;
   surcharge?: number;
   isActive?: boolean;
   order?: number;
+}
+
+export interface OpenClipartItem {
+  id: string;
+  name: string;
+  previewUrl: string;
+  sourceUrl: string;
+  imported?: boolean;
+}
+
+export interface OpenClipartSearch {
+  items: OpenClipartItem[];
+  query: string;
+  searchQuery: string;
+  total: number;
+  page: number;
+  hasNext: boolean;
+}
+
+export interface OpenClipartImportResult {
+  imported: number;
+  skipped: number;
+  failed: number;
+  results: Array<{ id: string; status: 'imported' | 'skipped' | 'failed'; message?: string }>;
+}
+
+export interface StudioGraphic {
+  id: string;
+  assetId?: string;
+  name: string;
+  icon: string;
+  type?: 'STICKER' | 'CLIPART';
+  imageUrl?: string;
+  face?: 'front' | 'back';
+  coordinateSpace?: 'safe-area';
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  scaleX?: number;
+  scaleY?: number;
+  rotation?: number;
+  zIndex?: number;
 }
 
 export interface Product {
@@ -125,7 +176,7 @@ export interface CustomDesign {
   pattern?: string;
   uploadedImage?: string;
   imageScale?: number;
-  stickers?: any[];
+  stickers?: StudioGraphic[];
   previewImage?: string;
   frontPreviewImage?: string;
   backPreviewImage?: string;
@@ -156,7 +207,7 @@ export interface CartItem {
     pattern?: string;
     uploadedImage?: string;
     imageScale?: number;
-    stickers?: any[];
+    stickers?: StudioGraphic[];
     previewImage?: string;
     frontPreviewImage?: string;
     backPreviewImage?: string;

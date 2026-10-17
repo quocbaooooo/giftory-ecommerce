@@ -9,10 +9,34 @@ export class StudioAsset {
   name: string;
 
   @Prop({ required: true, trim: true })
-  icon: string; // Emoji, SVG icon name, or image URL
+  icon: string; // Clipart image URL
 
-  @Prop({ required: true, enum: ['STICKER', 'PATTERN'], default: 'STICKER' })
+  @Prop({ required: true, enum: ['CLIPART'], default: 'CLIPART' })
   type: string;
+
+  @Prop({ trim: true })
+  imageUrl?: string;
+
+  @Prop({ trim: true })
+  thumbnailUrl?: string;
+
+  @Prop({ type: [String], default: [] })
+  tags?: string[];
+
+  @Prop({ trim: true })
+  sourceProvider?: string;
+
+  @Prop({ trim: true })
+  sourceId?: string;
+
+  @Prop({ trim: true })
+  sourceUrl?: string;
+
+  @Prop({ trim: true })
+  author?: string;
+
+  @Prop({ trim: true })
+  license?: string;
 
   @Prop({ default: 'Phổ biến' })
   category: string;
@@ -29,3 +53,7 @@ export class StudioAsset {
 
 export const StudioAssetSchema = SchemaFactory.createForClass(StudioAsset);
 StudioAssetSchema.index({ type: 1, isActive: 1 });
+StudioAssetSchema.index({ sourceProvider: 1, sourceId: 1 }, {
+  unique: true,
+  partialFilterExpression: { sourceProvider: 'OPENCLIPART', sourceId: { $type: 'string' } },
+});

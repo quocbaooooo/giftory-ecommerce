@@ -13,6 +13,10 @@ import { CustomStudioService } from './custom-studio.service';
 import { SaveDesignDto } from './dto/save-design.dto';
 import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { UserRole } from '../../common/enums/role.enum';
 
 @ApiTags('Custom Studio')
 @Controller('custom-studio')
@@ -26,25 +30,31 @@ export class CustomStudioController {
   }
 
   @Get('assets')
-  @ApiOperation({ summary: 'Lấy danh sách icon/sticker/họa tiết dùng trong Custom Studio' })
+  @ApiOperation({ summary: 'Lấy danh sách clipart dùng trong Custom Studio' })
   async getStudioAssets(@Query('type') type?: string) {
     return this.studioService.getStudioAssets(type);
   }
 
   @Get('admin/assets')
-  @ApiOperation({ summary: 'Admin lấy danh sách toàn bộ icon/sticker/họa tiết' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Admin lấy danh sách toàn bộ clipart' })
   async getAllAssetsAdmin() {
     return this.studioService.getAllStudioAssetsAdmin();
   }
 
   @Post('admin/assets')
-  @ApiOperation({ summary: 'Admin thêm mới icon/sticker/họa tiết vào thư viện' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Admin thêm mới clipart vào thư viện' })
   async createStudioAsset(@Body() body: any) {
     return this.studioService.createStudioAsset(body);
   }
 
   @Delete('admin/assets/:id')
-  @ApiOperation({ summary: 'Admin xóa icon/sticker khỏi thư viện' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Admin xóa clipart khỏi thư viện' })
   async deleteStudioAsset(@Param('id') id: string) {
     return this.studioService.deleteStudioAsset(id);
   }
