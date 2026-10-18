@@ -20,7 +20,8 @@ import { calculateDiscountPercent } from '../../../core/utils/product-price.util
       <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-slate-50 mb-3.5 flex items-center justify-center shrink-0">
         <img 
           [src]="product.images && product.images.length ? product.images[0] : 'https://placehold.co/400'" 
-          [alt]="product.name" 
+          [alt]="product.name"
+          loading="lazy" decoding="async"
           class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         >
 

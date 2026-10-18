@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -417,12 +418,14 @@ import { Product, Category } from '../../core/models';
     </div>
   `
 })
-export class ProductsComponent implements OnInit {
+export class ProductsComponent implements OnInit, OnDestroy {
   private productService = inject(ProductService);
   private aiChatbotService = inject(AiChatbotService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
+  private productsRequest?: Subscription;
+  private routeSubscription?: Subscription;
   products = signal<Product[]>([]);
   bestSellers = signal<Product[]>([]);
   categories = signal<Category[]>([]);
@@ -479,7 +482,7 @@ export class ProductsComponent implements OnInit {
     this.productService.getBestSellers(4).subscribe(res => this.bestSellers.set(res));
 
     // Subscribe to query params to restore state (US-PD-02 DoD)
-    this.route.queryParams.subscribe(params => {
+    this.routeSubscription = this.route.queryParams.subscribe(params => {
       this.selectedCategory = params['category'] || '';
       this.searchKeyword = params['search'] || '';
       this.filterBespoke = params['customizable'] === 'true';
@@ -502,6 +505,7 @@ export class ProductsComponent implements OnInit {
   }
 
   loadProducts(): void {
+    this.productsRequest?.unsubscribe();
     this.loading.set(true);
     const query: any = {
       sort: this.selectedSort,
@@ -519,7 +523,7 @@ export class ProductsComponent implements OnInit {
     if (this.selectedRecipient) query.recipient = this.selectedRecipient;
     if (this.minRating) query.minRating = this.minRating;
 
-    this.productService.getProducts(query).subscribe({
+    this.productsRequest = this.productService.getCatalogProducts(query).subscribe({
       next: res => {
         this.products.set(res.items || []);
         this.total.set(res.meta?.total || 0);
@@ -528,6 +532,11 @@ export class ProductsComponent implements OnInit {
       },
       error: () => this.loading.set(false)
     });
+  }
+
+  ngOnDestroy(): void {
+    this.productsRequest?.unsubscribe();
+    this.routeSubscription?.unsubscribe();
   }
 
   onFilterChange(resetPage: boolean = true): void {

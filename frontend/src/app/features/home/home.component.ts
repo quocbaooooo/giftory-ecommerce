@@ -252,11 +252,11 @@ export class HomeComponent implements OnInit {
       next: cats => this.categories.set(cats)
     });
 
-    this.productService.getProducts({ limit: 8 }).subscribe({
-      next: res => this.allProducts.set(res.items)
+    this.productService.getCatalogProducts({ limit: 8 }).subscribe({
+      next: res => { this.allProducts.set(res.items); this.productService.prefetchProductList(); }
     });
 
-    this.productService.getProducts({ isCustomizable: 'true', limit: 4 }).subscribe({
+    this.productService.getCatalogProducts({ isCustomizable: 'true', limit: 4 }).subscribe({
       next: res => this.bespokeProducts.set(res.items)
     });
 

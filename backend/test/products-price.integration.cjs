@@ -94,6 +94,34 @@ const prices = items => items.map(item => item.salePrice > 0 ? item.salePrice : 
     assert.equal(empty.meta.total, 0);
     assert.deepEqual(empty.items, []);
   });
+  await test('compact catalog preserves prices and filters while excluding heavy Studio and category payloads', async () => {
+    const heavy = 'data:image/png;base64,' + 'A'.repeat(300000);
+    await Category.updateOne({ _id: category._id }, { $set: { emoji: heavy } });
+    await Product.updateOne({ slug: 'gift-179' }, { $set: {
+      customConfig: { frontBlankImage: heavy }, images: ['first-image', 'extra-image'],
+      variants: [{ name: 'Style', price: 180000, stock: 2, image: heavy }], isFlashSale: true
+    } });
+    const full = await service.findAll({ sort: 'popular', limit: 100 });
+    for (const sort of ['popular', 'price_asc', 'price_desc']) {
+      const compact = await service.findAll({ sort, view: 'catalog', limit: 100 });
+      assert.equal(compact.meta.total, full.meta.total);
+      const gift = compact.items.find(item => item.slug === 'gift-179');
+      assert.equal(gift.salePrice, 179000);
+      assert.equal(gift.customConfig, undefined);
+      assert.equal(gift.variants, undefined);
+      assert.equal(gift.category.emoji, undefined);
+      assert.deepEqual(gift.images, ['first-image']);
+      assert.ok(JSON.stringify(compact).length < JSON.stringify(full).length / 10);
+      if (sort === 'price_asc') assert.deepEqual(prices(compact.items), expected);
+    }
+    const fullGift = full.items.find(item => item.slug === 'gift-179');
+    assert.equal(fullGift.customConfig.frontBlankImage, heavy, 'admin lists still include blank configuration');
+    const flash = await service.getFlashSaleProducts(true);
+    assert.equal(flash[0].customConfig, undefined);
+    assert.equal(flash[0].category.emoji, undefined);
+    const best = await service.getBestSellers(4, true);
+    assert.ok(best.every(item => item.customConfig === undefined && item.category.emoji === undefined));
+  });
   console.log(`${count} product price integration checks passed`);
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(async () => {
   if (connection) await connection.close();

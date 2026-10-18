@@ -31,8 +31,8 @@ export class ProductsController {
 
   @Get('flash-sale')
   @ApiOperation({ summary: 'Lấy danh sách các sản phẩm đang Flash Sale' })
-  async getFlashSale() {
-    return this.productsService.getFlashSaleProducts();
+  async getFlashSale(@Query('view') view?: string) {
+    return this.productsService.getFlashSaleProducts(view === 'catalog');
   }
 
   @Get('search-suggest')
@@ -43,8 +43,8 @@ export class ProductsController {
 
   @Get('best-sellers')
   @ApiOperation({ summary: 'Lấy danh sách sản phẩm bán chạy nhất làm fallback (US-PD-01.3)' })
-  async getBestSellers(@Query('limit') limit?: number) {
-    return this.productsService.getBestSellers(limit ? Number(limit) : 4);
+  async getBestSellers(@Query('limit') limit?: number, @Query('view') view?: string) {
+    return this.productsService.getBestSellers(limit ? Number(limit) : 4, view === 'catalog');
   }
 
   @Get('slug/:slug')

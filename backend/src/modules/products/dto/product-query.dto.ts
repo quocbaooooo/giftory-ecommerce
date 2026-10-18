@@ -1,8 +1,12 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsNumber, Min } from 'class-validator';
+import { IsOptional, IsString, IsNumber, Min, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ProductQueryDto {
+  @IsOptional()
+  @IsIn(['catalog'])
+  view?: 'catalog';
+
   @ApiPropertyOptional({ description: 'Từ khóa tìm kiếm (hỗ trợ tiếng Việt)' })
   @IsOptional()
   @IsString()

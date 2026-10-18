@@ -1,19 +1,21 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
+import { ProductService } from './product.service';
+import { tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AdminService {
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private products: ProductService) {}
 
   getCategoryDisplaySettings(): Observable<{ allCategoriesIcon: string }> {
     return this.api.get('categories/display-settings');
   }
 
   updateCategoryDisplaySettings(allCategoriesIcon: string): Observable<{ allCategoriesIcon: string }> {
-    return this.api.patch('categories/display-settings', { allCategoriesIcon });
+    return this.api.patch<{ allCategoriesIcon: string }>('categories/display-settings', { allCategoriesIcon }).pipe(tap(() => this.products.invalidateCatalog()));
   }
 
   getDashboard(): Observable<any> {
@@ -98,15 +100,15 @@ export class AdminService {
   }
 
   createProduct(productData: any): Observable<any> {
-    return this.api.post('products', productData);
+    return this.api.post('products', productData).pipe(tap(() => this.products.invalidateCatalog()));
   }
 
   updateProduct(id: string, productData: any): Observable<any> {
-    return this.api.patch(`products/${id}`, productData);
+    return this.api.patch(`products/${id}`, productData).pipe(tap(() => this.products.invalidateCatalog()));
   }
 
   deleteProduct(id: string): Observable<any> {
-    return this.api.delete(`products/${id}`);
+    return this.api.delete(`products/${id}`).pipe(tap(() => this.products.invalidateCatalog()));
   }
 
   uploadImage(file: File): Observable<any> {
@@ -121,19 +123,19 @@ export class AdminService {
   }
 
   createCategory(categoryData: any): Observable<any> {
-    return this.api.post('categories', categoryData);
+    return this.api.post('categories', categoryData).pipe(tap(() => this.products.invalidateCatalog()));
   }
 
   updateCategory(id: string, categoryData: any): Observable<any> {
-    return this.api.patch(`categories/${id}`, categoryData);
+    return this.api.patch(`categories/${id}`, categoryData).pipe(tap(() => this.products.invalidateCatalog()));
   }
 
   toggleCategoryStatus(id: string): Observable<any> {
-    return this.api.patch(`categories/${id}/status`, {});
+    return this.api.patch(`categories/${id}/status`, {}).pipe(tap(() => this.products.invalidateCatalog()));
   }
 
   deleteCategory(id: string, force: boolean = false): Observable<any> {
-    return this.api.delete(`categories/${id}`, { force: force ? 'true' : undefined });
+    return this.api.delete(`categories/${id}`, { force: force ? 'true' : undefined }).pipe(tap(() => this.products.invalidateCatalog()));
   }
 }
 

@@ -636,7 +636,7 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
   }
 
   loadBackendProducts() {
-    this.productService.getProducts({ isFlashSale: true }).subscribe({
+    this.productService.getCatalogProducts({ isFlashSale: true }).subscribe({
       next: (res: any) => {
         const list: Product[] = Array.isArray(res) ? res : (res?.data || res?.items || []);
         if (list && list.length > 0) {

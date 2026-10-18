@@ -7,6 +7,14 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { ProductQueryDto } from './dto/product-query.dto';
 import { buildVietnameseRegex } from '../../common/utils/vietnamese.util';
 
+// Cards and deal lists do not need Studio images, SKU galleries, or category icon payloads.
+const CATALOG_FIELDS = {
+  name: 1, slug: 1, description: 1, price: 1, salePrice: 1, category: 1,
+  stock: 1, isCustomizable: 1, isFlashSale: 1, flashSaleDiscountPercent: 1,
+  rating: 1, reviewCount: 1, soldCount: 1, customBaseFee: 1, createdAt: 1,
+};
+const CATALOG_PROJECTION = { ...CATALOG_FIELDS, images: { $slice: 1 } };
+
 @Injectable()
 export class ProductsService {
   constructor(
@@ -15,6 +23,8 @@ export class ProductsService {
   ) {}
 
   async findAll(query: ProductQueryDto) {
+    const catalog = query.view === 'catalog';
+    const categoryFields = catalog ? 'name slug' : 'name slug emoji icon';
     const filter: any = { status: 'ACTIVE' };
 
     // Search by Vietnamese keyword in name, description, or tags with unaccented support
@@ -111,14 +121,16 @@ export class ProductsService {
           { $sort: sortOption },
           { $skip: skip },
           { $limit: limit },
-          { $project: { __sellingPrice: 0 } },
-        ]).exec().then(products => this.productModel.populate(products, { path: 'category', select: 'name slug emoji icon' }))
+          { $project: catalog ? { ...CATALOG_FIELDS, images: { $slice: ['$images', 1] } } : { __sellingPrice: 0 } },
+        ]).exec().then(products => this.productModel.populate(products, { path: 'category', select: categoryFields }))
       : this.productModel
         .find(filter)
-        .populate('category', 'name slug emoji icon')
+        .select(catalog ? CATALOG_PROJECTION : undefined)
+        .populate('category', categoryFields)
         .sort(sortOption)
         .skip(skip)
         .limit(limit)
+        .lean(catalog)
         .exec();
 
     const [items, total] = await Promise.all([
@@ -189,12 +201,14 @@ export class ProductsService {
     };
   }
 
-  async getBestSellers(limit = 4) {
+  async getBestSellers(limit = 4, catalog = false) {
     return this.productModel
       .find({ status: 'ACTIVE' })
-      .populate('category', 'name slug emoji icon')
+      .select(catalog ? CATALOG_PROJECTION : undefined)
+      .populate('category', catalog ? 'name slug' : 'name slug emoji icon')
       .sort({ soldCount: -1, rating: -1, createdAt: -1 })
       .limit(Number(limit) || 4)
+      .lean(catalog)
       .exec();
   }
 
@@ -232,12 +246,14 @@ export class ProductsService {
     return product;
   }
 
-  async getFlashSaleProducts() {
+  async getFlashSaleProducts(catalog = false) {
     return this.productModel
       .find({ isFlashSale: true, status: 'ACTIVE' })
-      .populate('category', 'name slug emoji icon')
+      .select(catalog ? CATALOG_PROJECTION : undefined)
+      .populate('category', catalog ? 'name slug' : 'name slug emoji icon')
       .sort({ flashSaleDiscountPercent: -1 })
       .limit(10)
+      .lean(catalog)
       .exec();
   }
 
