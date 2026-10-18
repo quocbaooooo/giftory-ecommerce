@@ -3,6 +3,7 @@ import { shippingPrice } from '../vouchers/voucher.rules';
 import { CareService } from '../care/care.service';
 import { normalizeAddress } from '../recipients/address.rules';
 import { normalizeGreetingCard } from './greeting-card.rules';
+import { studioUnitPrice } from '../../common/utils/studio-pricing';
 import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -59,7 +60,8 @@ export class OrdersService {
       const variant = matches.length === 1 ? matches[0] : undefined;
       if (!isStudioItem && product.variants?.length && (!variant || variant.status === 'HIDDEN' || variant.status === 'OUT_OF_STOCK')) throw new BadRequestException('Vui lòng chọn biến thể còn hàng');
       if (!Number.isInteger(qty) || qty > (variant ? variant.stock : product.stock)) throw new BadRequestException('Số lượng vượt quá tồn kho');
-      const unitPrice = variant?.price ?? (product.salePrice || product.price);
+      const unitPrice = isStudioItem ? studioUnitPrice(product, dto.buyNowItem.customDetails)
+        : variant?.price ?? (product.salePrice || product.price);
 
       const subtotal = unitPrice * qty;
       itemsTotal = subtotal;
@@ -105,7 +107,8 @@ export class OrdersService {
 
       orderItems = cart.items.map(item => {
         const product: any = item.productId;
-        const unitPrice = item.price;
+        const isStudioItem = item.isCustom && product?.isCustomizable && item.customDetails && !item.variantSku;
+        const unitPrice = isStudioItem ? studioUnitPrice(product, item.customDetails) : item.price;
         const subtotal = unitPrice * item.quantity;
         itemsTotal += subtotal;
 

@@ -76,13 +76,13 @@ import { Product, ProductVariant } from '../../../core/models';
         }
 
         <!-- MAIN PRODUCT HERO: 2-COLUMN LUXURY SHOWCASE -->
-        <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-10">
+        <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-5 items-start mb-10">
           
           <!-- LEFT: GALLERY (5 COLUMNS) -->
-          <div class="lg:col-span-5 flex flex-col gap-4 lg:sticky lg:top-20">
+          <div class="lg:col-span-5 min-w-0 flex flex-col gap-4">
             <!-- Main Featured Image Stage -->
             <div (touchstart)="touchStart($event)" (touchend)="touchEnd($event)"
-              class="relative w-full aspect-square bg-white rounded-[28px] overflow-hidden shadow-[0_10px_25px_-5px_rgba(124,58,237,0.08)] border border-purple-100/70 flex items-center justify-center p-3 group">
+              class="product-cover relative w-full aspect-square bg-white rounded-[28px] overflow-hidden shadow-[0_10px_25px_-5px_rgba(124,58,237,0.08)] border border-purple-100/70 flex items-center justify-center p-3 group">
               
               <!-- Floating Status Badges -->
               <div class="absolute top-4 left-4 z-20 flex flex-col gap-2">
@@ -110,15 +110,11 @@ import { Product, ProductVariant } from '../../../core/models';
               <img [src]="activeImage() || 'https://placehold.co/600?text=Giftory'"
                 [alt]="prod.name"
                 (click)="lightbox.set(true)"
-                class="w-full h-full object-cover rounded-[22px] transition-all duration-300 cursor-pointer group-hover:scale-[1.01]">
+                class="absolute inset-3 w-[calc(100%-1.5rem)] h-[calc(100%-1.5rem)] object-cover rounded-[22px] transition-all duration-300 cursor-pointer group-hover:scale-[1.01]">
 
-              <!-- Watermark seal -->
-              <div class="absolute bottom-4 right-4 z-20 px-3 py-1 rounded-full bg-white/85 backdrop-blur-md flex items-center gap-1.5 text-slate-500 text-[11px] shadow-2xs">
-                <span class="material-symbols-outlined text-purple-600 text-[14px]">brush</span>
-                <span>Giftory Studio Mockup</span>
-              </div>
             </div>
 
+            <div class="flex flex-col gap-4 min-w-0">
             <!-- Thumbnail Selector -->
             @if (options.gallery().length > 1) {
               <div class="grid grid-cols-5 gap-2.5">
@@ -153,13 +149,14 @@ import { Product, ProductVariant } from '../../../core/models';
                 </div>
               </div>
             </div>
+            </div>
           </div>
 
           <!-- RIGHT: PRODUCT CONFIGURATOR & COMMERCE PANEL (7 COLUMNS) -->
-          <div class="lg:col-span-7 flex flex-col gap-5">
+          <div class="lg:col-span-7 min-w-0 flex flex-col gap-5">
             
             <!-- Card 1: Main Product Header & Pricing Box -->
-            <div class="bg-white rounded-[26px] p-6 shadow-[0_10px_25px_-5px_rgba(124,58,237,0.08)] border border-purple-100/60 flex flex-col gap-4">
+            <div class="product-overview min-w-0 bg-white rounded-[26px] p-6 shadow-[0_10px_25px_-5px_rgba(124,58,237,0.08)] border border-purple-100/60 flex flex-col gap-4">
               
               <!-- Badges & Ratings -->
               <div class="flex flex-wrap items-center justify-between gap-2">
@@ -235,7 +232,7 @@ import { Product, ProductVariant } from '../../../core/models';
             </div>
 
             <!-- Card 2: Variant Picker, Quantity & Engrave Input -->
-            <div class="bg-white rounded-[26px] p-6 shadow-[0_10px_25px_-5px_rgba(124,58,237,0.08)] border border-purple-100/60 flex flex-col gap-5">
+            <div class="min-w-0 bg-white rounded-[26px] p-6 shadow-[0_10px_25px_-5px_rgba(124,58,237,0.08)] border border-purple-100/60 flex flex-col gap-5">
               
               <!-- 1. Bộ Chọn Màu Sắc / Chất Liệu -->
               @if (options.colors().length) {

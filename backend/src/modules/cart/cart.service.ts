@@ -8,6 +8,7 @@ import { Product, ProductDocument } from '../../database/schemas/product.schema'
 import { Voucher, VoucherDocument } from '../../database/schemas/voucher.schema';
 import { AddToCartDto } from './dto/add-to-cart.dto';
 import { PaymentMode } from '../../common/enums/role.enum';
+import { customizationFee, studioUnitPrice } from '../../common/utils/studio-pricing';
 
 @Injectable()
 export class CartService {
@@ -24,6 +25,20 @@ export class CartService {
       path: 'items.productId',
       select: 'name slug price salePrice images isCustomizable customBaseFee'
     });
+    // Refresh Studio quotes, including carts saved with the former zero-fee fallback bug.
+    let priceChanged = false;
+    for (const item of cart.items) {
+      const product = item.productId as unknown as Product;
+      if (!item.isCustom || !product?.isCustomizable || !item.customDetails || item.variantSku) continue;
+      const price = studioUnitPrice(product, item.customDetails);
+      const deposit = Math.round(price * 0.5) * item.quantity;
+      if (item.price !== price || item.depositRequired !== deposit) {
+        item.price = price;
+        item.depositRequired = deposit;
+        priceChanged = true;
+      }
+    }
+    if (priceChanged) await cart.save();
     return this.calculateCartTotals(cart, userId);
   }
 
@@ -49,7 +64,7 @@ export class CartService {
 
     const unitPrice = variant?.price ?? (product.salePrice && product.salePrice > 0 ? product.salePrice : product.price);
     const isCustom = product.isCustomizable || !!dto.customDetails;
-    const customFee = (dto.customDetails && dto.customDetails.customFee) || (isCustom ? (product.customBaseFee || 0) : 0);
+    const customFee = customizationFee(product, dto.customDetails, isCustom);
     const finalPrice = unitPrice + customFee;
     const depositAmount = isCustom ? Math.round(finalPrice * 0.5) : 0;
 
@@ -159,9 +174,7 @@ export class CartService {
       throw new NotFoundException('Sản phẩm không tồn tại');
     }
 
-    const unitPrice = product.salePrice && product.salePrice > 0 ? product.salePrice : product.price;
-    const customFee = (customDetails && customDetails.customFee !== undefined) ? customDetails.customFee : (product.customBaseFee || 0);
-    const finalPrice = unitPrice + customFee;
+    const finalPrice = studioUnitPrice(product, customDetails);
     const depositAmount = Math.round(finalPrice * 0.5);
 
     item.customDetails = customDetails;

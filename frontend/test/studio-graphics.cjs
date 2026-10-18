@@ -93,7 +93,7 @@ function fixture(items) {
     drawLayer: { add() {}, batchDraw() {} }, uiLayer: { batchDraw() {} },
     transformer: { nodes(value) { if (value) selected = value; return selected; } },
     getGuideCoordinates: () => ({ saPx: { x: 50, y: 80, width: 200, height: 300 } }),
-    makeDraggableAndSelectable() {}, checkOverflowWarning() {},
+    makeDraggableAndSelectable() {}, syncSafeAreaClip() {},
   });
   return studio;
 }

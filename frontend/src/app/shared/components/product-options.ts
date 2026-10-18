@@ -21,15 +21,12 @@ export class ProductOptions {
   price() { return this.selected()?.price ?? (this.product()?.salePrice || this.product()?.price || 0); }
   stock() { return this.selected()?.stock ?? (this.variants().length ? 0 : this.product()?.stock || 0); }
   gallery() {
-    const selected = this.selected();
-    const matching = this.variants().filter(v => colorName(v) === this.color());
     const config = this.product()?.customConfig;
     const blankImages = new Set([
       config?.frontBlankImage, config?.backBlankImage,
       ...(config?.blanks || []).flatMap(blank => [blank.frontBlankImage, blank.backBlankImage])
     ].filter(Boolean));
     return [...new Set([
-      ...(selected ? variantImages(selected) : matching.flatMap(variantImages)),
       ...(this.product()?.images || []).filter(image => !blankImages.has(image)), ...this.variants().flatMap(variantImages)
     ])];
   }
@@ -37,7 +34,7 @@ export class ProductOptions {
     this.product.set(p); this.color.set(''); this.size.set(''); this.quantity.set(1); this.attempted.set(false);
     const choices = this.variants().filter(available);
     if (choices.length === 1) { this.color.set(colorName(choices[0])); this.size.set(choices[0].size || ''); }
-    this.activeImage.set(this.gallery()[0] || '');
+    this.changed();
   }
   colorAvailable(color: string) { return this.variants().some(v => colorName(v) === color && available(v)); }
   sizeAvailable(size: string) { return this.variants().some(v => (!this.color() || colorName(v) === this.color()) && v.size === size && available(v)); }
@@ -49,7 +46,14 @@ export class ProductOptions {
     this.changed();
   }
   chooseSize(size: string) { if (this.sizeAvailable(size)) { this.size.set(size); this.changed(); } }
-  changed() { this.quantity.set(1); this.activeImage.set(this.gallery()[0] || ''); }
+  changed() {
+    this.quantity.set(1);
+    const selected = this.selected();
+    const images = selected ? variantImages(selected)
+      : this.variants().filter(v => colorName(v) === this.color()).flatMap(variantImages);
+    // Select the matching photo without moving thumbnails out of their saved order.
+    this.activeImage.set(images[0] || this.gallery()[0] || '');
+  }
   error() {
     this.attempted.set(true);
     if (this.variants().length && !this.color()) return 'Vui lòng chọn màu sắc';

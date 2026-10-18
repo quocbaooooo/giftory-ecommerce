@@ -56,30 +56,34 @@ import { Product, Category } from '../../core/models';
       </div>
 
       <!-- Category Filter Tabs -->
-      <div class="flex items-center gap-2 overflow-x-auto pb-3 mb-6 no-scrollbar">
+      <div class="flex items-center gap-2 overflow-x-auto pt-2 -mt-2 pb-3 mb-6 no-scrollbar">
         <button 
           (click)="selectCategory('')"
-          class="px-4 py-2 rounded-full text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
+          class="group relative hover:z-10 focus-visible:z-10 px-4 py-2 rounded-full text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
           [ngClass]="!selectedCategory ? 'bg-[#7C3AED] text-white shadow-md shadow-purple-300' : 'bg-white text-slate-700 border border-[#DDD6FE] hover:bg-purple-50'"
         >
-          @if (isCategoryIconImage(allCategoriesIcon())) {
-            <img [src]="allCategoriesIcon()" alt="" class="w-4 h-4 object-contain shrink-0" />
-          } @else {
-            <span aria-hidden="true">{{ allCategoriesIcon() }}</span>
-          }
+          <span aria-hidden="true" class="w-4 h-4 shrink-0 inline-flex items-center justify-center origin-center transition-transform duration-200 ease-out group-hover:scale-150 group-focus-visible:scale-150 motion-reduce:transition-none">
+            @if (isCategoryIconImage(allCategoriesIcon())) {
+              <img [src]="allCategoriesIcon()" alt="" class="w-full h-full object-contain" />
+            } @else {
+              {{ allCategoriesIcon() }}
+            }
+          </span>
           <span>Tất cả danh mục</span>
         </button>
         @for (cat of categories(); track cat._id) {
           <button 
             (click)="selectCategory(cat.slug)"
-            class="px-4 py-2 rounded-full text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
+            class="group relative hover:z-10 focus-visible:z-10 px-4 py-2 rounded-full text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
             [ngClass]="selectedCategory === cat.slug ? 'bg-[#7C3AED] text-white shadow-md shadow-purple-300' : 'bg-white text-slate-700 border border-[#DDD6FE] hover:bg-purple-50'"
           >
-            @if (cat.emoji && (cat.emoji.startsWith('http') || cat.emoji.startsWith('/') || cat.emoji.startsWith('data:') || cat.emoji.length > 10)) {
-              <img [src]="cat.emoji" [alt]="cat.name" class="w-4 h-4 object-contain inline-block rounded-xs shrink-0" />
-            } @else {
-              <span>{{ cat.emoji || '✨' }}</span>
-            }
+            <span aria-hidden="true" class="w-4 h-4 shrink-0 inline-flex items-center justify-center origin-center transition-transform duration-200 ease-out group-hover:scale-150 group-focus-visible:scale-150 motion-reduce:transition-none">
+              @if (cat.emoji && (cat.emoji.startsWith('http') || cat.emoji.startsWith('/') || cat.emoji.startsWith('data:') || cat.emoji.length > 10)) {
+                <img [src]="cat.emoji" alt="" class="w-full h-full object-contain rounded-xs" />
+              } @else {
+                {{ cat.emoji || '✨' }}
+              }
+            </span>
             <span>{{ cat.name }}</span>
           </button>
         }

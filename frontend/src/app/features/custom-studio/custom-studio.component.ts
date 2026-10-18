@@ -256,7 +256,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                   {{ activeStickers().length }} hình
                 </span>
               }
-              @if (activeToolTab() === 'SUMMARY') {
+              @if (activeToolTab() === 'SUMMARY' && activeTemplate()) {
                 <div>
                   <h3 class="font-bold text-xs sm:text-sm text-[#1E1B4B] flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">receipt_long</span>
@@ -563,7 +563,11 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                 <div class="flex items-baseline gap-1.5">
                   <span class="text-xs text-slate-500 font-medium">Giá sản phẩm:</span>
                   <span class="text-base sm:text-lg font-black text-[#7C3AED] leading-none">
-                    {{ finalProductPrice() | number:'1.0-0' }}đ
+                    @if (activeTemplate()) {
+                      {{ finalProductPrice() | number:'1.0-0' }}đ
+                    } @else {
+                      <span class="text-xs" role="status">Đang tải giá…</span>
+                    }
                   </span>
                   @if (surchargeList().length > 0) {
                     <span class="text-[10px] text-purple-600 bg-purple-100 font-bold px-1.5 py-0.5 rounded-md hidden sm:inline">
@@ -574,7 +578,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                 
                 <div class="flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                   <span class="material-symbols-outlined text-[13px]">payments</span>
-                  <span>Cọc 50%: {{ depositPrice() | number:'1.0-0' }}đ</span>
+                  <span>Cọc 50%: @if (activeTemplate()) { {{ depositPrice() | number:'1.0-0' }}đ } @else { — }</span>
                 </div>
               </div>
 
@@ -582,6 +586,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
               <div class="flex items-center gap-2">
                 <button 
                   (click)="onPrimaryActionClick()"
+                  [disabled]="isFormInvalid()"
                   class="flex-1 py-2.5 px-3 rounded-xl text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer active:scale-[0.99]"
                   [ngClass]="isFormInvalid() ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] shadow-purple-300'"
                 >
@@ -637,22 +642,6 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                   <span>Mặt Sau</span>
                 </button>
               </div>
-
-              <!-- SLIM WARNING PILL IN TOOLBAR (DOES NOT OVERLAP CANVAS) -->
-              @if (isOverflowWarning()) {
-                <div class="flex items-center gap-1.5 bg-amber-50 border border-amber-300 text-amber-900 px-2.5 py-0.5 rounded-full text-[11px] shadow-2xs animate-fade-in shrink-0">
-                  <span class="material-symbols-outlined text-amber-600 text-[14px] shrink-0">warning</span>
-                  <span class="font-bold text-amber-800 text-[10.5px] truncate max-w-[180px] sm:max-w-none">{{ overflowWarningTarget() || 'Phần tử' }} chạm mép cong</span>
-                  <button 
-                    (click)="fitIntoSafeArea()" 
-                    class="ml-0.5 px-2 py-0.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[9px] rounded-md cursor-pointer transition flex items-center gap-0.5 shrink-0"
-                    title="Căn phần tử vừa vặn trong Vùng An Toàn"
-                  >
-                    <span class="material-symbols-outlined text-[11px]">fit_screen</span>
-                    <span>Căn an toàn</span>
-                  </button>
-                </div>
-              }
 
               <!-- Quick action icon buttons -->
               <div class="flex items-center gap-1 flex-wrap">
@@ -753,8 +742,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
               <div 
                 #konvaContainer
                 id="konva-container"
-                class="rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 relative cursor-crosshair transition-all"
-                [ngClass]="isOverflowWarning() ? 'border-amber-400 ring-2 ring-amber-200' : 'border-purple-100'"
+                class="rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 border-purple-100 relative cursor-crosshair"
                 [style.backgroundColor]="getColorCanvasBackground()"
                 [style.backgroundImage]="getActivePatternCss()"
               >
@@ -762,7 +750,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
 
               <!-- Canvas floating watermark -->
               <div class="absolute top-2 right-2 bg-white/90 backdrop-blur-md rounded-md px-2 py-0.5 text-[9px] font-bold text-slate-700 border border-slate-200/80 shadow-2xs flex items-center gap-1 pointer-events-none z-10">
-                <span class="w-1.5 h-1.5 rounded-full" [ngClass]="isOverflowWarning() ? 'bg-amber-500 animate-ping' : 'bg-emerald-500 animate-pulse'"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 <span>Konva • {{ isFrontFace() ? 'Mặt Trước' : 'Mặt Sau' }}</span>
               </div>
             </div>
@@ -1036,9 +1024,6 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Print Area & Safe Area Guides (BP-02 & Curved Edge error prevention)
   showGuides = signal<boolean>(true);
-  isOverflowWarning = signal<boolean>(false);
-  overflowWarningTarget = signal<string>('');
-  overflowWarningMessage = signal<string>('');
 
   currentPrintArea = computed<AreaBox>(() => {
     const raw = this.activeTemplate()?.customConfig?.printArea;
@@ -1173,14 +1158,14 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   baseProductPrice = computed(() => {
     const tpl = this.activeTemplate();
-    return tpl?.salePrice && tpl.salePrice > 0 ? tpl.salePrice : (tpl?.price || 250000);
+    return tpl?.salePrice && tpl.salePrice > 0 ? tpl.salePrice : (tpl?.price ?? 0);
   });
 
   surchargeList = computed<SurchargeBreakdown[]>(() => {
     const list: SurchargeBreakdown[] = [];
     const tpl = this.activeTemplate();
 
-    const backFee = tpl?.customConfig?.backEngraveFee || 20000;
+    const backFee = tpl?.customConfig?.backEngraveFee ?? 20000;
     if (this.textBlocks().some(block => block.face === 'back' && block.visible && block.text.trim())) {
       list.push({ label: 'Khắc laser mặt sau', amount: backFee });
     }
@@ -1190,7 +1175,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       list.push({ label: `Họa tiết ${pat.name}`, amount: pat.surcharge });
     }
 
-    const photoFee = tpl?.customConfig?.photoPrintFee || 30000;
+    const photoFee = tpl?.customConfig?.photoPrintFee ?? 30000;
     if (this.uploadedImage()) {
       list.push({ label: 'In ảnh cá nhân chuẩn HD', amount: photoFee });
     }
@@ -1421,10 +1406,10 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     this.uiLayer.add(this.transformer);
 
-    // Update overflow check when transforming
+    // Keep the artwork clip synchronized while transforming
     this.transformer.on('transform transformend', (event) => {
       if (event.type === 'transformend') this.transformer?.nodes().forEach(node => this.persistGraphic(node));
-      this.checkOverflowWarning();
+      this.syncSafeAreaClip();
     });
 
     // Deselect when clicking on stage empty area or background
@@ -1480,7 +1465,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       this.renderGuidesOnKonva();
       this.renderTextBlocks();
       this.renderStickersOnKonva();
-      this.checkOverflowWarning();
+      this.syncSafeAreaClip();
     }).catch(() => {
       if (this.studioDestroyed || version !== this.blankRenderVersion || template !== this.activeTemplate()) return;
       this.productImgNode?.hide();
@@ -1518,7 +1503,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
           this.photoNode.show();
         }
         this.drawLayer.batchDraw();
-        this.checkOverflowWarning();
+        this.syncSafeAreaClip();
       };
       photoImg.src = this.uploadedImage();
     } else if (this.photoNode) {
@@ -1530,13 +1515,14 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 5. Render Print Area & Safe Area Guides
     this.renderGuidesOnKonva();
-    this.checkOverflowWarning();
+    this.syncSafeAreaClip();
 
     this.drawLayer.batchDraw();
     this.uiLayer?.batchDraw();
   }
 
   private renderGuidesOnKonva(): void {
+    this.syncSafeAreaClip();
     if (!this.guidesLayer) return;
 
     if (!this.showGuides()) {
@@ -1592,8 +1578,8 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // 2. Safe Area Outline & Label (Curved Edge boundaries)
-    const safeStroke = this.isOverflowWarning() ? '#EF4444' : 'rgba(16, 185, 129, 0.75)';
-    const safeWidth = this.isOverflowWarning() ? 2 : 1.5;
+    const safeStroke = 'rgba(16, 185, 129, 0.75)';
+    const safeWidth = 1.5;
 
     if (!this.safeAreaRect) {
       this.safeAreaRect = new Konva.Rect({
@@ -1628,7 +1614,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
         fontSize: 7.5,
         fontFamily: 'sans-serif',
         fontStyle: 'bold',
-        fill: this.isOverflowWarning() ? '#EF4444' : '#10B981',
+        fill: '#10B981',
         opacity: 0.85,
         listening: false
       });
@@ -1637,71 +1623,20 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       this.safeAreaLabel.setAttrs({
         x: saPx.x + 6,
         y: safeLabelY,
-        fill: this.isOverflowWarning() ? '#EF4444' : '#10B981'
+        fill: '#10B981'
       });
     }
 
     this.guidesLayer.batchDraw();
   }
 
-  checkOverflowWarning(): void {
+  private syncSafeAreaClip(): void {
     if (!this.drawLayer) return;
-
+    // Clip artwork on both scene and hit canvases; keep background, guides and
+    // transformer handles on their own layers so cropped items remain editable.
     const { saPx } = this.getGuideCoordinates();
-
-    const tolerance = 4;
-    let hasOverflow = false;
-    let overflowingName = '';
-
-    const nodesToCheck: Array<{ node: Konva.Node | null; name: string }> = [
-      ...[...this.textNodes.values()].map(node => ({ node, name: 'Chữ Khắc' })),
-      { node: this.photoNode, name: 'Ảnh Cá Nhân' }
-    ];
-    this.stickerNodes.forEach((stk, idx) => {
-      nodesToCheck.push({ node: stk, name: `Đồ họa #${idx + 1}` });
-    });
-
-    for (const item of nodesToCheck) {
-      if (!item.node || !item.node.isVisible()) continue;
-
-      const box = item.node.getClientRect({ skipTransform: false });
-      const isLeft = box.x < (saPx.x - tolerance);
-      const isRight = (box.x + box.width) > (saPx.x + saPx.width + tolerance);
-      const isTop = box.y < (saPx.y - tolerance);
-      const isBottom = (box.y + box.height) > (saPx.y + saPx.height + tolerance);
-
-      if (isLeft || isRight || isTop || isBottom) {
-        hasOverflow = true;
-        overflowingName = item.name;
-        break;
-      }
-    }
-
-    if (hasOverflow) {
-      this.isOverflowWarning.set(true);
-      this.overflowWarningTarget.set(overflowingName);
-      this.overflowWarningMessage.set(`${overflowingName} chạm mép cong ngoài Vùng An Toàn`);
-      if (this.safeAreaRect) {
-        this.safeAreaRect.stroke('#EF4444');
-        this.safeAreaRect.strokeWidth(2);
-      }
-      if (this.safeAreaLabel) {
-        this.safeAreaLabel.fill('#EF4444');
-      }
-    } else {
-      this.isOverflowWarning.set(false);
-      this.overflowWarningTarget.set('');
-      this.overflowWarningMessage.set('');
-      if (this.safeAreaRect) {
-        this.safeAreaRect.stroke('rgba(16, 185, 129, 0.75)');
-        this.safeAreaRect.strokeWidth(1.5);
-      }
-      if (this.safeAreaLabel) {
-        this.safeAreaLabel.fill('#10B981');
-      }
-    }
-
-    this.guidesLayer?.batchDraw();
+    this.drawLayer.clip(saPx);
+    this.drawLayer.batchDraw();
   }
 
   fitIntoSafeArea(): void {
@@ -1731,7 +1666,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.drawLayer?.batchDraw();
     this.uiLayer?.batchDraw();
-    this.checkOverflowWarning();
+    this.syncSafeAreaClip();
   }
 
   toggleGuides(): void {
@@ -1811,7 +1746,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.persistGraphic(node);
         this.drawLayer.batchDraw();
         this.uiLayer?.batchDraw();
-        this.checkOverflowWarning();
+        this.syncSafeAreaClip();
       };
       const url = stk.imageUrl || (stk.type === 'CLIPART' ? stk.icon : '');
       if (url) {
@@ -2060,7 +1995,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.transformer?.forceUpdate();
     this.drawLayer.batchDraw();
     this.uiLayer?.batchDraw();
-    this.checkOverflowWarning();
+    this.syncSafeAreaClip();
   }
 
   private persistTextBlock(node: Konva.Node, saveOrder = false): void {
@@ -2111,7 +2046,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     node.scaleX(-node.scaleX());
     this.persistGraphic(node);
     this.drawLayer?.batchDraw();
-    this.checkOverflowWarning();
+    this.syncSafeAreaClip();
   }
 
   private makeDraggableAndSelectable(node: Konva.Node, name: string): void {
@@ -2138,8 +2073,8 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     node.on('click tap', selectNode);
     node.on('dragstart', selectNode);
-    node.on('dragmove', () => this.checkOverflowWarning());
-    node.on('dragend', () => { this.persistGraphic(node); this.checkOverflowWarning(); });
+    node.on('dragmove', () => this.syncSafeAreaClip());
+    node.on('dragend', () => { this.persistGraphic(node); this.syncSafeAreaClip(); });
   }
 
   // Canvas Action Toolbars
@@ -2150,13 +2085,13 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       this.persistGraphic(selected);
       this.drawLayer?.batchDraw();
       this.uiLayer?.batchDraw();
-      this.checkOverflowWarning();
+      this.syncSafeAreaClip();
     } else if (this.textNode) {
       this.textNode.x((460 - this.textNode.width()) / 2);
       this.persistTextBlock(this.textNode);
       this.drawLayer?.batchDraw();
       this.uiLayer?.batchDraw();
-      this.checkOverflowWarning();
+      this.syncSafeAreaClip();
     }
   }
 
@@ -2175,7 +2110,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.transformer?.nodes([]);
     this.selectedNodeName.set(null);
     this.uiLayer?.batchDraw();
-    this.checkOverflowWarning();
+    this.syncSafeAreaClip();
   }
 
   bringForward(): void {
@@ -2238,25 +2173,25 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       selected.y(selected.y() - (event.shiftKey ? 10 : 2));
       this.drawLayer?.batchDraw();
       this.uiLayer?.batchDraw();
-      this.checkOverflowWarning();
+      this.syncSafeAreaClip();
     } else if (event.key === 'ArrowDown') {
       event.preventDefault();
       selected.y(selected.y() + (event.shiftKey ? 10 : 2));
       this.drawLayer?.batchDraw();
       this.uiLayer?.batchDraw();
-      this.checkOverflowWarning();
+      this.syncSafeAreaClip();
     } else if (event.key === 'ArrowLeft') {
       event.preventDefault();
       selected.x(selected.x() - (event.shiftKey ? 10 : 2));
       this.drawLayer?.batchDraw();
       this.uiLayer?.batchDraw();
-      this.checkOverflowWarning();
+      this.syncSafeAreaClip();
     } else if (event.key === 'ArrowRight') {
       event.preventDefault();
       selected.x(selected.x() + (event.shiftKey ? 10 : 2));
       this.drawLayer?.batchDraw();
       this.uiLayer?.batchDraw();
-      this.checkOverflowWarning();
+      this.syncSafeAreaClip();
     }
     this.persistGraphic(selected);
   }
@@ -2442,6 +2377,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   validateInputs(): boolean {
+    if (!this.activeTemplate()) return false;
     if (!this.textFontsReady()) return false;
     if (this.pendingGraphicAdds()) {
       this.graphicsNotice.set('Vui lòng chờ clipart tải xong trước khi lưu.');
@@ -2458,7 +2394,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   isFormInvalid(): boolean {
-    return false;
+    return !this.activeTemplate();
   }
 
   private getConfirmedCustomDetails() {

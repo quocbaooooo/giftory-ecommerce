@@ -30,12 +30,13 @@ const loaded = { exports: {} };
 new Function('require', 'module', 'exports', code)(name => name === '@angular/core' ? core : name === 'konva' ? { default: { Text } } : {}, loaded, loaded.exports);
 function fixture() {
   const studio = new loaded.exports.CustomStudioComponent();
+  studio.activeTemplate.set({ _id: 'text-product', price: 220000 });
   let selected = [];
   studio.drawLayer = { add() {}, batchDraw() {} };
   studio.uiLayer = { batchDraw() {} };
   studio.transformer = { nodes(value) { if (value) selected = value; return selected; }, keepRatio() {}, forceUpdate() {} };
   studio.getGuideCoordinates = () => ({ saPx: { x: 50, y: 80, width: 200, height: 300 } });
-  studio.checkOverflowWarning = () => {};
+  studio.syncSafeAreaClip = () => {};
   studio.updateKonvaCanvas = () => studio.renderTextBlocks();
   return studio;
 }
