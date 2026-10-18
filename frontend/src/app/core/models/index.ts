@@ -60,7 +60,15 @@ export interface AreaBox {
   height: number; // % chiều cao so với ảnh mockup (0-100)
 }
 
+export interface StudioBlank {
+  name: string;
+  colorHex: string;
+  frontBlankImage: string;
+  backBlankImage: string;
+}
+
 export interface CustomBlankConfig {
+  blanks?: StudioBlank[];
   frontBlankImage?: string;
   backBlankImage?: string;
   supportedColors?: string[];
@@ -133,6 +141,29 @@ export interface StudioGraphic {
   zIndex?: number;
 }
 
+export interface StudioTextBlock {
+  id: string;
+  face: 'front' | 'back';
+  text: string;
+  fontFamily: string;
+  color: string;
+  engraveColor?: string; // Legacy saved designs
+  fontSize: number;
+  align: 'left' | 'center' | 'right';
+  bold: boolean;
+  italic: boolean;
+  letterSpacing: number;
+  lineHeight: number;
+  visible: boolean;
+  x: number;
+  y: number;
+  width: number;
+  scaleX: number;
+  scaleY: number;
+  rotation: number;
+  zIndex: number;
+}
+
 export interface Product {
   loyaltyEligible?: boolean;
   _id: string;
@@ -161,6 +192,7 @@ export interface Product {
 }
 
 export interface CustomDesign {
+  textBlocks?: StudioTextBlock[];
   _id?: string;
   productId?: string | Product;
   baseProductId?: string;
@@ -197,6 +229,7 @@ export interface CartItem {
   image?: string;
   customDesignId?: string;
   customDetails?: {
+    textBlocks?: StudioTextBlock[];
     frontMessage?: string;
     backMessage?: string;
     customText?: string;

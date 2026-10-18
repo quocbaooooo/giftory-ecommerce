@@ -107,7 +107,7 @@ import { Product, ProductVariant } from '../../../core/models';
               </button>
 
               <!-- Main Image -->
-              <img [src]="activeImage() || (prod.images && prod.images[0]) || ''"
+              <img [src]="activeImage() || 'https://placehold.co/600?text=Giftory'"
                 [alt]="prod.name"
                 (click)="lightbox.set(true)"
                 class="w-full h-full object-cover rounded-[22px] transition-all duration-300 cursor-pointer group-hover:scale-[1.01]">
@@ -688,7 +688,7 @@ export class ProductDetailComponent implements OnInit {
     const buyNowItem = {
       productId: p,
       name: p.name,
-      image: this.activeImage() || (p.images && p.images[0]) || '',
+      image: this.activeImage() || '',
       price: unitPrice,
       unitPrice: unitPrice,
       quantity: this.quantity(),

@@ -5,6 +5,10 @@ export type CustomDesignDocument = CustomDesign & Document;
 
 @Schema({ timestamps: true })
 export class CustomDesign {
+  // Undefined distinguishes legacy messages from intentionally empty text layers.
+  @Prop({ type: Array, default: undefined })
+  textBlocks?: Array<Record<string, any>>;
+
   @Prop({ type: Types.ObjectId, ref: 'User', required: false })
   userId?: Types.ObjectId;
 

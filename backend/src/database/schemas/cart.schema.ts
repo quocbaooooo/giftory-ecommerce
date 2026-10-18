@@ -75,4 +75,3 @@ export class Cart {
 
 export const CartSchema = SchemaFactory.createForClass(Cart);
 CartSchema.index({ userId: 1 });
-CartSchema.index({ sessionId: 1 });

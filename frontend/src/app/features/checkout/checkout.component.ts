@@ -264,7 +264,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   <span class="material-symbols-outlined text-amber-600 text-lg shrink-0 mt-0.5">auto_awesome</span>
                   <div>
                     <strong class="font-bold block">Đơn hàng có sản phẩm Custom thiết kế riêng:</strong>
-                    <span>Chọn COD sẽ cần <strong>đặt cọc trước 50%</strong> qua mã QR, 50% còn lại thanh toán COD khi nhận hàng. Chọn QR để thanh toán trước 100%.</span>
+                    <span>Chọn COD chỉ cần <strong>đặt cọc 50% tiền sản phẩm Custom</strong> qua mã QR. Tiền hàng tiêu chuẩn, phần Custom còn lại và phí vận chuyển thanh toán khi nhận hàng. Chọn QR để thanh toán trước 100% tổng đơn.</span>
                   </div>
                 </div>
               } @else {
@@ -352,11 +352,11 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                     <div class="flex items-center justify-between gap-2">
                       <span class="font-bold text-sm text-[#1E1B4B]">COD - Thanh toán khi nhận hàng</span>
                       <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full shrink-0" [ngClass]="hasCustomItems() ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'">
-                        {{ hasCustomItems() ? 'Yêu cầu cọc 50%' : 'COD Pending (0đ cọc)' }}
+                        {{ hasCustomItems() ? 'Cọc 50% tiền Custom' : 'COD Pending (0đ cọc)' }}
                       </span>
                     </div>
                     <p class="text-xs text-slate-500 mt-1 leading-snug">
-                      {{ hasCustomItems() ? 'Đơn có sản phẩm Custom: Đặt cọc 50% qua QR sau khi bấm Xác nhận, 50% còn lại thanh toán khi nhận hàng.' : 'Đơn sản phẩm sẵn: Ghi nhận trạng thái COD Pending, thanh toán 100% cho bưu tá khi nhận hàng.' }}
+                      {{ hasCustomItems() ? 'Chỉ cọc 50% tiền sản phẩm Custom qua QR sau khi xác nhận. Toàn bộ phần còn lại của đơn hàng thanh toán khi nhận hàng.' : 'Đơn sản phẩm sẵn: Ghi nhận trạng thái COD Pending, thanh toán 100% cho bưu tá khi nhận hàng.' }}
                     </p>
                   </div>
                 </div>
@@ -436,7 +436,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
               <div class="p-4 rounded-2xl bg-[#F5EEFD] border border-[#DDD6FE] flex flex-col gap-1.5">
                 <div class="flex items-center justify-between">
                   <span class="text-xs font-bold text-[#7C3AED]">
-                    {{ displayPricing().depositAmount < displayPricing().totalAmount ? 'TIỀN CỌC CẦN THANH TOÁN (50%):' : 'THANH TOÁN TRỰC TUYẾN (100%):' }}
+                    {{ displayPricing().depositAmount === 0 ? 'THANH TOÁN TRƯỚC:' : (displayPricing().depositAmount < displayPricing().totalAmount ? 'TIỀN CỌC (50% TIỀN CUSTOM):' : 'THANH TOÁN TRỰC TUYẾN (100%):') }}
                   </span>
                   <span class="text-xl font-extrabold text-[#7C3AED]">
                     {{ displayPricing().depositAmount | number:'1.0-0' }}đ
@@ -636,7 +636,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       }
     });
   }
-  selectedPaymentMethod = signal<'VIETQR' | 'MOMO' | 'VNPAY' | 'COD'>('VIETQR');
+  selectedPaymentMethod = signal<'VIETQR' | 'MOMO' | 'VNPAY' | 'COD'>(this.cartService.cart()?.paymentMode === 'FULL_PAYMENT' ? 'VIETQR' : 'COD');
   
   isSubmitting = signal<boolean>(false);
   orderError = signal('');
@@ -662,15 +662,16 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return this.cartService.itemsCount() > 0;
   });
 
-  // Check if items contain any customized item (Buy Now for ready-made is always non-custom)
+  // Use the same item classification as order creation.
   hasCustomItems = computed(() => {
     if (this.pendingOrder()) {
       return this.pendingOrder().items.some((item: any) => item.isCustom);
     }
     if (this.isBuyNowMode()) {
-      return false;
+      const item = this.cartService.buyNowItem();
+      return !!(item?.isCustom || item?.productId?.isCustomizable || item?.customDetails);
     }
-    return this.cartService.items().some(item => item.isCustom || item.productId?.isCustomizable);
+    return this.cartService.items().some(item => item.isCustom ?? !!item.productId?.isCustomizable);
   });
 
   // Calculate dynamic shipping fee
@@ -742,17 +743,15 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       return this.pendingOrder().pricing.depositAmount;
     }
     const total = this.calculatedTotalAmount();
-    if (this.hasCustomItems()) {
-      if (this.selectedPaymentMethod() === 'COD') {
-        return Math.round(total * 0.5); // 50% deposit for Custom COD
-      }
-      return total; // 100% for QR/Online Custom
-    } else {
-      if (this.selectedPaymentMethod() === 'COD') {
-        return 0; // 0 deposit for Standard COD (COD Pending)
-      }
-      return total; // 100% for QR/Online Standard
-    }
+    if (this.selectedPaymentMethod() !== 'COD') return total;
+    const items = this.displayItems();
+    const customDeposit = items.reduce((sum: number, item: any) => {
+      const isCustom = this.isBuyNowMode()
+        ? this.hasCustomItems()
+        : (item.isCustom ?? !!item.productId?.isCustomizable);
+      return sum + (isCustom ? Math.round((item.price ?? item.unitPrice ?? 0) * item.quantity * 0.5) : 0);
+    }, 0);
+    return Math.min(total, customDeposit);
   });
 
   ngOnInit(): void {

@@ -47,3 +47,9 @@ options.load({ images: [], stock: 2, price: 100, salePrice: 80 });
 assert.equal(options.error(), '');
 assert.equal(options.price(), 80);
 console.log('Product options: gallery, selection, price, stock, sold-out and reset checks passed');
+options.load({ price: 100, stock: 2, images: ['product', 'legacy-blank', 'blank-front', 'blank-back'], variants,
+  customConfig: { backBlankImage: 'legacy-blank', blanks: [{ name: 'Brown blank', colorHex: '#543210', frontBlankImage: 'blank-front', backBlankImage: 'blank-back' }] }
+});
+assert.deepEqual(options.gallery(), ['product', 'red', 'red-back', 'red-m', 'blue']);
+assert.ok(!options.colors().includes('Brown blank'));
+console.log('Studio blanks are excluded from the storefront gallery and variant choices');

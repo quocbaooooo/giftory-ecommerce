@@ -2,6 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class SaveDesignDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsArray()
+  textBlocks?: Array<Record<string, any>>;
+
   @ApiProperty({ example: '6741314524921336108...' })
   @IsString()
   @IsNotEmpty()

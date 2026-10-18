@@ -9,7 +9,7 @@
     "test": "ng test",
     "test:auth": "node test/auth-logic.cjs",
     "test:cart": "node test/cart-quantity.cjs",
-    "test:studio": "node test/studio-graphics.cjs",
+    "test:studio": "node test/studio-graphics.cjs && node test/studio-text-blocks.cjs && node test/studio-blanks.cjs && node test/studio-fonts.cjs",
     "test:cliparts": "node test/openclipart-importer.cjs"
   },
   "private": true,

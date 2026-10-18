@@ -33,7 +33,8 @@ export class CartService {
       throw new NotFoundException('Sản phẩm không tồn tại');
     }
 
-    const variants = product.variants || [];
+    const isStudioItem = product.isCustomizable && !!dto.customDetails && !dto.variantSku;
+    const variants = isStudioItem ? [] : product.variants || [];
     const matches = variants.filter(v => dto.variantSku ? v.sku === dto.variantSku : v.name === dto.variantName);
     const variant = matches.length === 1 ? matches[0] : undefined;
     if (variants.length && !variant) throw new BadRequestException('Vui lòng chọn đầy đủ màu sắc và kích thước');
@@ -41,7 +42,7 @@ export class CartService {
     const stock = variant ? variant.stock : product.stock;
     const cart = await this.findOrCreateCart(userId, dto.sessionId);
     const inCart = cart.items.filter(item => item.productId.toString() === dto.productId &&
-      (variant?.sku ? item.variantSku === variant.sku : item.variantName === (variant?.name || 'Tiêu chuẩn')))
+      (isStudioItem ? item.isCustom && !item.variantSku : variant?.sku ? item.variantSku === variant.sku : item.variantName === (variant?.name || 'Tiêu chuẩn')))
       .reduce((sum, item) => sum + item.quantity, 0);
     if (!Number.isInteger(dto.quantity) || dto.quantity < 1 || dto.quantity + inCart > stock) throw new BadRequestException('Số lượng vượt quá tồn kho');
 
@@ -93,10 +94,11 @@ export class CartService {
       const item = cart.items[itemIndex];
       const product = await this.productModel.findById(item.productId);
       if (!product) throw new NotFoundException('Sản phẩm không tồn tại');
-      const variant = product.variants?.find(v => item.variantSku ? v.sku === item.variantSku : v.name === item.variantName);
-      if (product.variants?.length && (!variant || variant.status === 'HIDDEN' || variant.status === 'OUT_OF_STOCK')) throw new BadRequestException('Biến thể không còn bán');
+      const isStudioItem = product.isCustomizable && !!item.customDetails && !item.variantSku;
+      const variant = isStudioItem ? undefined : product.variants?.find(v => item.variantSku ? v.sku === item.variantSku : v.name === item.variantName);
+      if (!isStudioItem && product.variants?.length && (!variant || variant.status === 'HIDDEN' || variant.status === 'OUT_OF_STOCK')) throw new BadRequestException('Biến thể không còn bán');
       const otherQuantity = cart.items.reduce((sum, other, index) => index !== itemIndex && other.productId.toString() === item.productId.toString() &&
-        (item.variantSku ? other.variantSku === item.variantSku : other.variantName === item.variantName) ? sum + other.quantity : sum, 0);
+        (isStudioItem ? other.isCustom && !other.variantSku : item.variantSku ? other.variantSku === item.variantSku : other.variantName === item.variantName) ? sum + other.quantity : sum, 0);
       if (!Number.isInteger(quantity) || quantity + otherQuantity > (variant ? variant.stock : product.stock)) throw new BadRequestException('Số lượng vượt quá tồn kho');
       cart.items[itemIndex].quantity = quantity;
       const unitDeposit = cart.items[itemIndex].isCustom ? Math.round(cart.items[itemIndex].price * 0.5) : 0;
@@ -163,7 +165,11 @@ export class CartService {
     const depositAmount = Math.round(finalPrice * 0.5);
 
     item.customDetails = customDetails;
-    if (variantName) item.variantName = variantName;
+    // Studio blank color belongs to customDetails, never to the sales variant.
+    if (product.isCustomizable) {
+      item.variantName = 'Tiêu chuẩn';
+      item.variantSku = undefined;
+    } else if (variantName) item.variantName = variantName;
     item.price = finalPrice;
     item.depositRequired = depositAmount * item.quantity;
     item.isCustom = true;

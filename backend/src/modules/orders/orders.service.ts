@@ -54,9 +54,10 @@ export class OrdersService {
       }
 
       const qty = Math.max(1, Number(dto.buyNowItem.quantity || 1));
-      const matches = (product.variants || []).filter(v => dto.buyNowItem.variantSku ? v.sku === dto.buyNowItem.variantSku : v.name === dto.buyNowItem.variantName);
+      const isStudioItem = product.isCustomizable && !!dto.buyNowItem.customDetails && !dto.buyNowItem.variantSku;
+      const matches = (isStudioItem ? [] : product.variants || []).filter(v => dto.buyNowItem.variantSku ? v.sku === dto.buyNowItem.variantSku : v.name === dto.buyNowItem.variantName);
       const variant = matches.length === 1 ? matches[0] : undefined;
-      if (product.variants?.length && (!variant || variant.status === 'HIDDEN' || variant.status === 'OUT_OF_STOCK')) throw new BadRequestException('Vui lòng chọn biến thể còn hàng');
+      if (!isStudioItem && product.variants?.length && (!variant || variant.status === 'HIDDEN' || variant.status === 'OUT_OF_STOCK')) throw new BadRequestException('Vui lòng chọn biến thể còn hàng');
       if (!Number.isInteger(qty) || qty > (variant ? variant.stock : product.stock)) throw new BadRequestException('Số lượng vượt quá tồn kho');
       const unitPrice = variant?.price ?? (product.salePrice || product.price);
 
@@ -108,7 +109,7 @@ export class OrdersService {
         const subtotal = unitPrice * item.quantity;
         itemsTotal += subtotal;
 
-        const isCustom = item.isCustom || (product && product.isCustomizable);
+        const isCustom = item.isCustom ?? !!product?.isCustomizable;
         if (isCustom) hasCustomProduct = true;
 
         const depositRequired = isCustom ? Math.round(subtotal * 0.5) : 0;
@@ -147,25 +148,10 @@ export class OrdersService {
     const giftWrapFee = 0;
     const totalAmount = Math.max(0, itemsTotal - voucherDiscount + shippingFee + giftWrapFee);
 
-    // Calculate deposit requirement based on BP-03
-    let depositAmount = 0;
-    if (hasCustomProduct) {
-      if (dto.paymentMethod === PaymentMethod.COD) {
-        // Custom product + COD => 50% deposit required via QR (BR-03, AF2)
-        depositAmount = Math.round(totalAmount * 0.5);
-      } else {
-        // Custom product + QR/Online => 100% payment (BR-03, AF2)
-        depositAmount = totalAmount;
-      }
-    } else {
-      if (dto.paymentMethod === PaymentMethod.COD) {
-        // Standard product + COD => No online deposit required (BR-04, AF3)
-        depositAmount = 0;
-      } else {
-        // Standard product + QR/Online => 100% payment (BR-04, AF4)
-        depositAmount = totalAmount;
-      }
-    }
+    // COD prepays only half of custom line totals; standard goods and shipping remain payable on delivery.
+    const depositAmount = dto.paymentMethod === PaymentMethod.COD
+      ? Math.min(totalAmount, customDeposit)
+      : totalAmount;
 
     const remainingCodAmount = Math.max(0, totalAmount - depositAmount);
     const orderCode = `GF-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -180,7 +166,7 @@ export class OrdersService {
         completed: true
       },
       {
-        title: isStandardCod ? 'Ghi nhận đơn hàng COD Pending' : (hasCustomProduct ? 'Đặt cọc 50% & Chờ duyệt xưởng' : 'Thanh toán trực tuyến QR 100%'),
+        title: isStandardCod ? 'Ghi nhận đơn hàng COD Pending' : (dto.paymentMethod === PaymentMethod.COD ? 'Đặt cọc 50% tiền Custom & Chờ duyệt xưởng' : 'Thanh toán trực tuyến QR 100%'),
         description: isStandardCod
           ? 'Đơn hàng sản phẩm có sẵn sử dụng COD (COD Pending). Chuẩn bị chuyển đóng gói.'
           : (depositAmount > 0 

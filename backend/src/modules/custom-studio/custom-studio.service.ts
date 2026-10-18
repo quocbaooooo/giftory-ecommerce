@@ -67,6 +67,7 @@ export class CustomStudioService {
       uploadedImage: dto.uploadedImage || '',
       imageScale: dto.imageScale !== undefined ? dto.imageScale : 1,
       stickers: dto.stickers || [],
+      textBlocks: dto.textBlocks,
       previewImage: dto.previewImage || dto.frontPreviewImage || product.images[0] || '',
       frontPreviewImage: dto.frontPreviewImage || dto.previewImage || product.images[0] || '',
       backPreviewImage: dto.backPreviewImage || '',

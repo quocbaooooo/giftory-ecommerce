@@ -113,6 +113,12 @@ export class CreateProductDto {
   @ApiProperty({ required: false })
   @IsOptional()
   customConfig?: {
+    blanks?: Array<{
+      name: string;
+      colorHex: string;
+      frontBlankImage: string;
+      backBlankImage: string;
+    }>;
     frontBlankImage?: string;
     backBlankImage?: string;
     supportedColors?: string[];

@@ -20,7 +20,7 @@ import { environment } from '../../../environments/environment';
         @if (demoPayment) {
           <p class="text-xs font-semibold text-amber-800 bg-amber-50 rounded-xl p-3">Kết quả mô phỏng cho đồ án • Không có giao dịch ngân hàng thực</p>
         }
-        <p class="text-slate-600">{{ order()?.paymentStatus === 'PARTIALLY_PAID_DEPOSIT_50' ? 'Đã ghi nhận đặt cọc 50% cho đơn hàng.' : 'Đã ghi nhận thanh toán 100% cho đơn hàng.' }}</p>
+        <p class="text-slate-600">{{ order()?.paymentStatus === 'PARTIALLY_PAID_DEPOSIT_50' ? 'Đã ghi nhận khoản cọc cho sản phẩm Custom. Phần còn lại thanh toán khi nhận hàng.' : 'Đã ghi nhận thanh toán 100% cho đơn hàng.' }}</p>
         <p class="font-mono font-bold text-purple-700">#{{ order()?.orderCode }}</p>
         <p class="text-xl font-bold">{{ order()?.pricing?.depositAmount | number:'1.0-0' }}đ</p>
         @if (order()?.paymentStatus === 'PARTIALLY_PAID_DEPOSIT_50') {

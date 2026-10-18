@@ -43,4 +43,3 @@ export class Voucher {
 }
 
 export const VoucherSchema = SchemaFactory.createForClass(Voucher);
-VoucherSchema.index({ code: 1 });

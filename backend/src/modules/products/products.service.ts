@@ -278,9 +278,6 @@ export class ProductsService {
         status: Number(v.stock) <= 0 ? (v.status === 'HIDDEN' ? 'HIDDEN' : 'OUT_OF_STOCK') : (v.status || 'ACTIVE')
       }));
 
-      if (createDto.isCustomizable && createDto.customConfig) {
-        createDto.customConfig.supportedColors = createDto.variants.map(v => v.name);
-      }
     }
 
     return this.productModel.create({
@@ -303,9 +300,6 @@ export class ProductsService {
         status: Number(v.stock) <= 0 ? (v.status === 'HIDDEN' ? 'HIDDEN' : 'OUT_OF_STOCK') : (v.status || 'ACTIVE')
       }));
 
-      if (updateDto.isCustomizable && updateDto.customConfig) {
-        updateDto.customConfig.supportedColors = updateDto.variants.map((v: any) => v.name);
-      }
     }
 
     const updated = await this.productModel

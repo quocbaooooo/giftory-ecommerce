@@ -7,7 +7,7 @@ import { CLIPART_LIBRARY, filterGraphics, graphicsForFace } from './graphics-lib
 import { CustomStudioService } from '../../core/services/custom-studio.service';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Product, StudioAsset, StudioGraphic, AreaBox } from '../../core/models';
+import { Product, StudioAsset, StudioGraphic, StudioTextBlock, AreaBox } from '../../core/models';
 
 interface CustomPattern {
   id: string;
@@ -212,7 +212,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                     <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">palette</span>
                     Phối Màu Vỏ Phôi
                   </h3>
-                  <p class="text-[10px] text-slate-500 mt-0.5">Sơn tĩnh điện vi sinh bền màu chuẩn Giftory</p>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Chọn màu phôi riêng cho thiết kế của bạn</p>
                 </div>
                 <span class="text-[11px] font-bold text-[#7C3AED] bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
                   {{ selectedColor() }}
@@ -222,9 +222,9 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                 <div>
                   <h3 class="font-bold text-xs sm:text-sm text-[#1E1B4B] flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">format_shapes</span>
-                    Khắc Laser 2 Mặt
+                    Khắc Chữ Đa Tầng
                   </h3>
-                  <p class="text-[10px] text-slate-500 mt-0.5">Khắc vi điểm sắc nét tên & lời chúc</p>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Nhiều khối chữ độc lập · Tự do xuống dòng và định dạng</p>
                 </div>
                 <span class="text-[11px] font-bold text-[#7C3AED] bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
                   {{ isFrontFace() ? 'Mặt Trước' : 'Mặt Sau' }}
@@ -300,7 +300,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                           } @else if (c.sku) {
                             <span class="text-[9px] font-mono text-purple-600 block truncate font-medium">{{ c.sku }}</span>
                           } @else {
-                            <span class="text-[10px] text-slate-400">Sơn tĩnh điện</span>
+                            <span class="text-[10px] text-slate-400">Phôi thiết kế</span>
                           }
                         </div>
                       </div>
@@ -330,170 +330,88 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                     </button>
                   </div>
 
-                  <!-- Input for Active Face -->
-                  @if (isFrontFace()) {
-                    <div class="space-y-1">
-                      <div class="flex items-center justify-between">
-                        <label class="text-xs font-bold text-slate-700">Lời nhắn mặt trước: <span class="text-red-500">*</span></label>
-                        <span class="text-[10px] text-slate-400 font-mono">{{ frontMessage().length }}/{{ maxTextLength() }}</span>
-                      </div>
-                      <div class="relative">
-                        <input 
-                          [(ngModel)]="frontMessage"
-                          (ngModelChange)="onFrontMessageChange($event)"
-                          [maxlength]="maxTextLength()"
-                          class="w-full px-3.5 py-2.5 rounded-xl border text-xs font-medium outline-none text-slate-800 pr-8"
-                          [ngClass]="formErrors.frontMessage ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-[#7C3AED]'"
-                          placeholder="VD: Happy Anniversary Minh Anh ❤️"
-                        />
-                        @if (frontMessage()) {
-                          <button (click)="onFrontMessageChange('')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
-                            <span class="material-symbols-outlined text-[15px]">close</span>
+                  <div class="flex items-center justify-between text-xs text-slate-500">
+                    <span>{{ faceTextBlocks().length }} khối chữ · Không giới hạn số khối</span>
+                    <span>Mỗi khối có định dạng riêng</span>
+                  </div>
+                  <button type="button" (click)="addTextBlock()" class="w-full py-3 border-2 border-dashed border-purple-200 rounded-xl text-xs font-bold text-purple-600 hover:bg-purple-50 flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-lg">add</span> Thêm khối chữ / thông điệp mới
+                  </button>
+                  <div class="space-y-2">
+                    @for (block of faceTextBlocks(); track block.id; let idx = $index) {
+                      <div class="rounded-xl border-2 overflow-hidden" [ngClass]="selectedTextBlockId() === block.id ? 'border-purple-500 bg-purple-50/40' : 'border-slate-100 bg-white'">
+                        <div class="flex items-center gap-1 px-2 py-2">
+                          <button type="button" (click)="selectTextBlock(block.id)" class="flex-1 min-w-0 flex items-center gap-2 text-left text-xs font-semibold text-slate-700">
+                            <span class="rounded bg-purple-100 text-purple-600 w-5 h-5 flex items-center justify-center shrink-0">{{ idx + 1 }}</span>
+                            <span class="truncate" [class.opacity-40]="!block.visible">{{ block.text.trim() || 'Khối chữ mới' }}</span>
                           </button>
+                          <button type="button" (click)="updateTextBlock(block.id, {visible: !block.visible})" [attr.aria-label]="block.visible ? 'Ẩn khối chữ' : 'Hiện khối chữ'" class="p-1 text-slate-400 hover:text-purple-600"><span class="material-symbols-outlined text-base">{{ block.visible ? 'visibility' : 'visibility_off' }}</span></button>
+                          <button type="button" (click)="duplicateTextBlock(block.id)" aria-label="Nhân bản khối chữ" class="p-1 text-slate-400 hover:text-purple-600"><span class="material-symbols-outlined text-base">content_copy</span></button>
+                          <button type="button" (click)="removeTextBlock(block.id)" aria-label="Xóa khối chữ" class="p-1 text-red-400 hover:text-red-600"><span class="material-symbols-outlined text-base">delete</span></button>
+                        </div>
+                        <div class="px-3 pb-2 grid grid-cols-[minmax(0,1fr)_90px] gap-2">
+                          <label class="text-[10px] text-slate-500 space-y-1">Font chữ
+                            <select [attr.aria-label]="'Font chữ khối ' + (idx + 1)" [ngModel]="block.fontFamily" (ngModelChange)="setBlockFont(block.id, $event)" [style.font-family]="fontFamilyFor(block.fontFamily)" class="block w-full rounded-lg border border-purple-200 bg-white px-2 py-2 text-xs text-slate-800 outline-none focus:border-purple-500">
+                              @for (font of fontOptions; track font.name) { <option [value]="font.name">{{ font.label }}</option> }
+                            </select>
+                          </label>
+                          <label class="text-[10px] text-slate-500 space-y-1">Cỡ chữ (px)
+                            <input type="number" min="8" max="120" step="1" [attr.aria-label]="'Cỡ chữ khối ' + (idx + 1)" [ngModel]="block.fontSize" (ngModelChange)="setBlockFontSize(block.id, $event)" class="block w-full rounded-lg border border-purple-200 bg-white px-2 py-2 text-xs text-slate-800 outline-none focus:border-purple-500" />
+                          </label>
+                        </div>
+                        @if (selectedTextBlockId() === block.id) {
+                          <div class="px-3 pb-3 space-y-2">
+                            <div class="flex justify-between text-[10px] text-slate-500"><label [for]="'text-' + block.id">Nội dung khắc · hỗ trợ nhiều dòng</label><span>{{ block.text.length }} ký tự</span></div>
+                            <textarea [id]="'text-' + block.id" [style.font-family]="fontFamilyFor(block.fontFamily)" [style.font-weight]="block.bold ? '700' : '400'" [style.font-style]="block.italic ? 'italic' : 'normal'" rows="3" [ngModel]="block.text" (ngModelChange)="updateTextBlock(block.id, {text: $event})" placeholder="Nhập lời nhắn, xuống dòng tùy ý…" class="w-full rounded-lg border border-purple-200 bg-white p-2 text-xs outline-none focus:border-purple-500 resize-y"></textarea>
+                            <div class="flex items-center justify-between gap-2 border-t border-purple-100 pt-2">
+                              <div class="flex items-center gap-1 rounded-xl bg-slate-100 p-1" role="group" [attr.aria-label]="'Căn lề khối ' + (idx + 1)">
+                                @for (alignment of textAlignments; track alignment.value) {
+                                  <button type="button" (click)="editTextBlock(block.id, {align: alignment.value})" [attr.aria-label]="alignment.label + ' khối ' + (idx + 1)" [attr.aria-pressed]="block.align === alignment.value" class="w-7 h-7 rounded-lg flex items-center justify-center" [ngClass]="block.align === alignment.value ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500'">
+                                    <span class="material-symbols-outlined text-[18px]">{{ alignment.icon }}</span>
+                                  </button>
+                                }
+                              </div>
+                              <div class="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
+                                <button type="button" (click)="editTextBlock(block.id, {bold: !block.bold})" [attr.aria-label]="'Chữ đậm khối ' + (idx + 1)" [attr.aria-pressed]="block.bold" class="w-7 h-7 rounded-lg font-bold" [ngClass]="block.bold ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500'">B</button>
+                                <button type="button" (click)="editTextBlock(block.id, {italic: !block.italic})" [attr.aria-label]="'Chữ nghiêng khối ' + (idx + 1)" [attr.aria-pressed]="block.italic" class="w-7 h-7 rounded-lg italic font-bold" [ngClass]="block.italic ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500'">I</button>
+                              </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 border-t border-purple-100 pt-2">
+                              <label class="text-[10px] text-slate-500">Giãn ký tự: {{ block.letterSpacing }}px
+                                <input type="range" min="-2" max="12" step="0.5" [attr.aria-label]="'Giãn ký tự khối ' + (idx + 1)" [ngModel]="block.letterSpacing" (ngModelChange)="editTextBlock(block.id, {letterSpacing: +$event})" class="w-full accent-purple-600" />
+                              </label>
+                              <label class="text-[10px] text-slate-500">Giãn dòng: {{ block.lineHeight }}×
+                                <input type="range" min="0.8" max="3" step="0.1" [attr.aria-label]="'Giãn dòng khối ' + (idx + 1)" [ngModel]="block.lineHeight" (ngModelChange)="editTextBlock(block.id, {lineHeight: +$event})" class="w-full accent-purple-600" />
+                              </label>
+                            </div>
+                            <div class="space-y-2 border-t border-purple-100 pt-2">
+                              <div class="flex items-center justify-between gap-2">
+                                <span class="text-[11px] font-semibold text-slate-600">Màu chữ</span>
+                                <label class="flex items-center gap-2 text-[10px] font-mono text-slate-500">
+                                  <input type="color" [attr.aria-label]="'Màu chữ khối ' + (idx + 1)" [ngModel]="block.color" (ngModelChange)="editTextBlock(block.id, {color: $event})" class="h-7 w-9 rounded border border-slate-200 bg-white cursor-pointer" />
+                                  {{ block.color }}
+                                </label>
+                              </div>
+                              <div class="flex flex-wrap gap-2">
+                                @for (color of textColors; track color.hex) {
+                                  <button type="button" (click)="editTextBlock(block.id, {color: color.hex})" [attr.aria-label]="color.name + ' cho khối ' + (idx + 1)" [attr.aria-pressed]="block.color === color.hex" class="w-6 h-6 rounded-full border-2 shadow-sm" [style.background-color]="color.hex" [ngClass]="block.color === color.hex ? 'border-purple-600 ring-2 ring-purple-200' : 'border-slate-200'"></button>
+                                }
+                              </div>
+                            </div>
+                            <p class="text-[10px] text-slate-500">{{ block.visible ? 'Đang hiển thị' : 'Đã ẩn' }} · Hỗ trợ đầy đủ dấu tiếng Việt</p>
+                          </div>
                         }
                       </div>
-                      @if (formErrors.frontMessage) {
-                        <span class="text-[10px] text-red-500">{{ formErrors.frontMessage }}</span>
-                      }
-                    </div>
-                  } @else {
-                    <div class="space-y-1">
-                      <div class="flex items-center justify-between">
-                        <label class="text-xs font-bold text-slate-700">Lời nhắn mặt sau (Ngày kỷ niệm, ký tên):</label>
-                        <span class="text-[10px] text-slate-400 font-mono">{{ backMessage().length }}/{{ maxTextLength() }}</span>
-                      </div>
-                      <div class="relative">
-                        <input 
-                          [(ngModel)]="backMessage"
-                          (ngModelChange)="onBackMessageChange($event)"
-                          [maxlength]="maxTextLength()"
-                          class="w-full px-3.5 py-2.5 rounded-xl border text-xs font-medium outline-none text-slate-800 pr-8"
-                          [ngClass]="formErrors.backMessage ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-[#7C3AED]'"
-                          placeholder="VD: 14.02.2024 • Yêu Em Mãi Mãi"
-                        />
-                        @if (backMessage()) {
-                          <button (click)="onBackMessageChange('')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
-                            <span class="material-symbols-outlined text-[15px]">close</span>
-                          </button>
-                        }
-                      </div>
-                      <span class="text-[10px] text-[#7C3AED] font-medium">+20.000đ phụ phí khắc laser mặt sau nếu có chữ</span>
-                    </div>
+                    } @empty {
+                      <div class="text-center py-6 rounded-xl bg-slate-50 text-xs text-slate-500">Thêm khối chữ đầu tiên để bắt đầu.<br/>Kéo, co giãn và xoay từng khối trên phôi.</div>
+                    }
+                  </div>
+                  @if (pendingTextFonts()) {
+                    <p role="status" class="text-xs text-purple-600">Đang tải font tiếng Việt…</p>
                   }
-
-                  <!-- Font Selection -->
-                  <div>
-                    <label class="text-xs font-bold text-slate-700 block mb-1.5">Font chữ nghệ thuật:</label>
-                    <div class="grid grid-cols-2 gap-2">
-                      @for (f of fontOptions; track f.name) {
-                        <button 
-                          (click)="setFont(f.name)"
-                          class="p-2.5 rounded-xl border text-left transition-all cursor-pointer"
-                          [ngClass]="selectedFont() === f.name ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED] font-bold shadow-2xs' : 'border-slate-200 hover:border-slate-300 text-slate-700'"
-                        >
-                          <div class="text-[10px] font-semibold text-slate-500">{{ f.name }}</div>
-                          <div class="text-xs mt-0.5 truncate" [ngClass]="f.class">Minh Anh & Hoàng</div>
-                        </button>
-                      }
-                    </div>
-                  </div>
-
-                  <!-- Engrave Color -->
-                  <div>
-                    <label class="text-xs font-bold text-slate-700 block mb-1.5">Màu lớp phủ khắc laser:</label>
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                      @for (ec of engraveColors; track ec.name) {
-                        <button 
-                          (click)="setEngraveColor(ec.name)"
-                          class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all"
-                          [ngClass]="selectedEngraveColor() === ec.name ? 'border-[#7C3AED] bg-purple-50 text-[#7C3AED]' : 'border-slate-200 text-slate-600'"
-                        >
-                          <span class="w-3 h-3 rounded-full border border-slate-300 shrink-0" [style.backgroundColor]="ec.hex"></span>
-                          <span class="text-[11px]">{{ ec.name }}</span>
-                          @if (ec.surcharge > 0) {
-                            <span class="text-[9px] text-amber-600 font-bold">+10k</span>
-                          }
-                        </button>
-                      }
-                    </div>
-                  </div>
-
-                  <!-- Text Typography & Styling Controls (Konva Text Properties) -->
-                  <div class="space-y-2 pt-3 border-t border-slate-100">
-                    <div class="flex items-center justify-between">
-                      <label class="text-xs font-bold text-slate-700">Kích thước chữ ({{ textSize() }}px):</label>
-                      <div class="flex items-center gap-1.5">
-                        <button 
-                          (click)="setTextSize(textSize() - 2)"
-                          [disabled]="textSize() <= 10"
-                          class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs cursor-pointer disabled:opacity-40"
-                        >-</button>
-                        <button 
-                          (click)="setTextSize(textSize() + 2)"
-                          [disabled]="textSize() >= 32"
-                          class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs cursor-pointer disabled:opacity-40"
-                        >+</button>
-                      </div>
-                    </div>
-                    <input 
-                      type="range" 
-                      min="10" 
-                      max="32" 
-                      [ngModel]="textSize()" 
-                      (ngModelChange)="setTextSize($event)"
-                      class="w-full accent-[#7C3AED] h-1.5 bg-slate-200 rounded-lg cursor-pointer"
-                    />
-
-                    <div class="flex items-center justify-between pt-1">
-                      <!-- Text Align -->
-                      <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-                        <button 
-                          (click)="setTextAlign('left')"
-                          class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
-                          [ngClass]="textAlign() === 'left' ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
-                          title="Căn trái"
-                        >
-                          <span class="material-symbols-outlined text-[16px]">format_align_left</span>
-                        </button>
-                        <button 
-                          (click)="setTextAlign('center')"
-                          class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
-                          [ngClass]="textAlign() === 'center' ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
-                          title="Căn giữa"
-                        >
-                          <span class="material-symbols-outlined text-[16px]">format_align_center</span>
-                        </button>
-                        <button 
-                          (click)="setTextAlign('right')"
-                          class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
-                          [ngClass]="textAlign() === 'right' ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
-                          title="Căn phải"
-                        >
-                          <span class="material-symbols-outlined text-[16px]">format_align_right</span>
-                        </button>
-                      </div>
-
-                      <!-- Bold & Italic -->
-                      <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-                        <button 
-                          (click)="toggleBold()"
-                          class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
-                          [ngClass]="isTextBold() ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
-                          title="Chữ in đậm"
-                        >
-                          <span class="material-symbols-outlined text-[16px]">format_bold</span>
-                        </button>
-                        <button 
-                          (click)="toggleItalic()"
-                          class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
-                          [ngClass]="isTextItalic() ? 'bg-white text-[#7C3AED] shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
-                          title="Chữ nghiêng"
-                        >
-                          <span class="material-symbols-outlined text-[16px]">format_italic</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  @if (textFontNotice()) {
+                    <div role="alert" class="rounded-xl bg-amber-50 p-3 text-xs text-amber-800">{{ textFontNotice() }} <button type="button" (click)="retryTextFonts()" class="font-bold underline">Thử lại</button></div>
+                  }
                 </div>
               }
 
@@ -866,7 +784,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                 <span>•</span>
                 <span>Font: <strong class="text-[#7C3AED]">{{ selectedFont() }}</strong></span>
                 <span>•</span>
-                <span>Khắc: <strong class="text-[#7C3AED]">{{ selectedEngraveColor() }}</strong></span>
+                <span>Màu chữ: <strong class="text-[#7C3AED]">{{ selectedTextColor() }}</strong></span>
               </div>
               <div class="text-[10px] text-slate-400 hidden sm:block">
                 Kéo thả / xoay chỉnh trực quan
@@ -1001,11 +919,15 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   activeTemplate = signal<Product | null>(null);
 
   isFrontFace = signal<boolean>(true);
+  textBlocks = signal<StudioTextBlock[]>([]);
+  selectedTextBlockId = signal<string | null>(null);
+  faceTextBlocks = computed(() => this.textBlocks().filter(block => block.face === (this.isFrontFace() ? 'front' : 'back')));
+  selectedTextBlock = computed(() => this.textBlocks().find(block => block.id === this.selectedTextBlockId()));
   frontMessage = signal<string>('');
   backMessage = signal<string>('');
-  selectedColor = signal<string>('Navy Blue');
+  selectedColor = signal<string>('Mặc định');
   selectedFont = signal<string>('Signature');
-  selectedEngraveColor = signal<string>('Vàng Kim (Gold)');
+  selectedTextColor = signal<string>('#0F172A');
   selectedPattern = signal<string>('none');
   uploadedImage = signal<string>('');
   imageScale = signal<number>(1);
@@ -1054,20 +976,31 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   ];
 
   fontOptions = [
-    { name: 'Signature', class: 'font-serif italic', fontFamily: 'Georgia, serif' },
-    { name: 'Serif Elegant', class: 'font-serif font-bold uppercase', fontFamily: 'Times New Roman, serif' },
-    { name: 'Sans Minimal', class: 'font-sans font-bold', fontFamily: 'Arial, sans-serif' },
-    { name: 'Vintage Typewriter', class: 'font-mono', fontFamily: 'Courier New, monospace' },
-    { name: 'Romantic Script', class: 'font-serif italic font-semibold', fontFamily: 'Brush Script MT, cursive, Georgia' },
-    { name: 'Royal Calligraphy', class: 'font-serif uppercase tracking-widest', fontFamily: 'Palatino Linotype, serif' }
+    { name: 'Signature', label: 'Dancing Script · Chữ ký', family: 'Dancing Script', fontFamily: 'Dancing Script, "Giftory Card Serif", serif' },
+    { name: 'Serif Elegant', label: 'Noto Serif · Thanh lịch', family: 'Giftory Card Serif', fontFamily: '"Giftory Card Serif", serif' },
+    { name: 'Sans Minimal', label: 'Be Vietnam Pro · Tối giản', family: 'Be Vietnam Pro', fontFamily: 'Be Vietnam Pro, "Giftory Card Serif", sans-serif' },
+    { name: 'Vintage Typewriter', label: 'Roboto Mono · Máy chữ', family: 'Roboto Mono', fontFamily: 'Roboto Mono, "Giftory Card Serif", monospace' },
+    { name: 'Romantic Script', label: 'Mali · Viết tay', family: 'Mali', fontFamily: 'Mali, "Giftory Card Serif", cursive' },
+    { name: 'Royal Calligraphy', label: 'Lora · Cổ điển', family: 'Lora', fontFamily: 'Lora, "Giftory Card Serif", serif' }
   ];
+  pendingTextFonts = signal(0);
+  textFontNotice = signal('');
+  private loadedTextFonts = new Set<string>();
+  private loadingTextFonts = new Set<string>();
+  private failedTextFonts = new Set<string>();
+  private studioDestroyed = false;
 
-  engraveColors = [
-    { name: 'Vàng Kim (Gold)', hex: '#F59E0B', surcharge: 10000 },
-    { name: 'Bạc Ánh Kim (Silver)', hex: '#E2E8F0', surcharge: 0 },
-    { name: 'Đen Huyền Bí', hex: '#0F172A', surcharge: 0 },
-    { name: 'Đỏ Ruby', hex: '#DC2626', surcharge: 0 },
-    { name: 'Vàng Hồng (Rose Gold)', hex: '#FB7185', surcharge: 10000 }
+  textAlignments: { value: 'left' | 'center' | 'right'; label: string; icon: string }[] = [
+    { value: 'left', label: 'Căn trái', icon: 'format_align_left' },
+    { value: 'center', label: 'Căn giữa', icon: 'format_align_center' },
+    { value: 'right', label: 'Căn phải', icon: 'format_align_right' }
+  ];
+  textColors = [
+    { name: 'Đen', hex: '#0F172A' }, { name: 'Trắng', hex: '#FFFFFF' },
+    { name: 'Đỏ', hex: '#DC2626' }, { name: 'Cam', hex: '#F97316' },
+    { name: 'Vàng', hex: '#F59E0B' }, { name: 'Xanh lá', hex: '#16A34A' },
+    { name: 'Xanh dương', hex: '#2563EB' }, { name: 'Tím', hex: '#7C3AED' },
+    { name: 'Hồng', hex: '#EC4899' }
   ];
 
   patternLibrary: CustomPattern[] = [
@@ -1149,7 +1082,10 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private bgRectNode: Konva.Rect | null = null;
   private productImgNode: Konva.Image | null = null;
-  private textNode: Konva.Text | null = null;
+  private textNodes = new Map<string, Konva.Text>();
+  private get textNode(): Konva.Text | null {
+    return this.textNodes.get(this.selectedTextBlockId() || '') || null;
+  }
   private photoNode: Konva.Image | null = null;
   private stickerNodes: Konva.Shape[] = [];
   private transformer: Konva.Transformer | null = null;
@@ -1159,35 +1095,20 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   });
 
   availableColorOptions = computed(() => {
-    const tpl = this.activeTemplate();
-    if (tpl?.variants && tpl.variants.length > 0) {
-      return tpl.variants
-        .filter(v => v.status !== 'HIDDEN')
-        .map(v => ({
-          name: v.name,
-          hex: v.colorHex || '#1E1B4B',
-          sku: v.sku || '',
-          price: v.price,
-          stock: v.stock ?? 0,
-          image: v.image,
-          isOutOfStock: (v.stock ?? 0) <= 0 || v.status === 'OUT_OF_STOCK'
-        }));
-    }
-    const supported = tpl?.customConfig?.supportedColors;
-    if (supported && supported.length > 0) {
-      return this.colorOptions
-        .filter(c => supported.includes(c.name))
-        .map(c => ({ ...c, sku: '', isOutOfStock: false }));
-    }
-    return this.colorOptions.map(c => ({ ...c, sku: '', isOutOfStock: false }));
+    const config = this.activeTemplate()?.customConfig;
+    const blanks = config?.blanks?.length ? config.blanks : [{
+      name: 'Mặc định', colorHex: '#FFFFFF',
+      frontBlankImage: config?.frontBlankImage || '',
+      backBlankImage: config?.backBlankImage || ''
+    }];
+    return blanks.map(blank => ({
+      name: blank.name, hex: blank.colorHex || '#FFFFFF',
+      sku: '', isOutOfStock: false
+    }));
   });
 
   baseProductPrice = computed(() => {
     const tpl = this.activeTemplate();
-    const matchedVariant = tpl?.variants?.find(v => v.name === this.selectedColor());
-    if (matchedVariant?.price && matchedVariant.price > 0) {
-      return matchedVariant.price;
-    }
     return tpl?.salePrice && tpl.salePrice > 0 ? tpl.salePrice : (tpl?.price || 250000);
   });
 
@@ -1196,7 +1117,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     const tpl = this.activeTemplate();
 
     const backFee = tpl?.customConfig?.backEngraveFee || 20000;
-    if (this.backMessage().trim().length > 0) {
+    if (this.textBlocks().some(block => block.face === 'back' && block.visible && block.text.trim())) {
       list.push({ label: 'Khắc laser mặt sau', amount: backFee });
     }
 
@@ -1210,10 +1131,6 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       list.push({ label: 'In ảnh cá nhân chuẩn HD', amount: photoFee });
     }
 
-    const ec = this.engraveColors.find(e => e.name === this.selectedEngraveColor());
-    if (ec && ec.surcharge > 0) {
-      list.push({ label: `Phủ ánh kim ${ec.name}`, amount: ec.surcharge });
-    }
 
     return list;
   });
@@ -1231,11 +1148,12 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor() {
     effect(() => {
       const tpl = this.activeTemplate();
+      const blocks = this.textBlocks();
       const front = this.frontMessage();
       const back = this.backMessage();
       const col = this.selectedColor();
       const font = this.selectedFont();
-      const engCol = this.selectedEngraveColor();
+      const engCol = this.selectedTextColor();
       const pat = this.selectedPattern();
       const img = this.uploadedImage();
       const scale = this.imageScale();
@@ -1244,11 +1162,12 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       if (tpl && !this.isEditingCartItem()) {
         const draft = {
           productId: tpl._id,
+          textBlocks: blocks,
           frontMessage: front,
           backMessage: back,
           selectedColor: col,
           selectedFont: font,
-          selectedEngraveColor: engCol,
+          selectedTextColor: engCol,
           selectedPattern: pat,
           uploadedImage: img,
           imageScale: scale,
@@ -1280,15 +1199,14 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
               const cartItem = this.cartService.items()[idx];
               if (cartItem) {
                 const matched = tpls.find(t => t._id === (typeof cartItem.productId === 'object' ? cartItem.productId._id : cartItem.productId));
-                if (matched) this.activeTemplate.set(matched);
+                if (matched) this.selectTemplate(matched);
 
                 if (cartItem.customDetails) {
                   const cd = cartItem.customDetails;
-                  if (cd.frontMessage !== undefined) this.frontMessage.set(cd.frontMessage);
-                  if (cd.backMessage !== undefined) this.backMessage.set(cd.backMessage);
-                  if (cd.selectedColor) this.selectedColor.set(cd.selectedColor);
+                  this.restoreTextBlocks(cd);
+                  if (cd.selectedColor) this.setColor(cd.selectedColor);
                   if (cd.fontFamily) this.selectedFont.set(cd.fontFamily);
-                  if (cd.engraveColor) this.selectedEngraveColor.set(cd.engraveColor);
+                  this.syncTextControls();
                   if (cd.pattern) this.selectedPattern.set(cd.pattern);
                   if (cd.uploadedImage) this.uploadedImage.set(cd.uploadedImage);
                   if (cd.imageScale) this.imageScale.set(cd.imageScale);
@@ -1303,12 +1221,11 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
               this.studioService.getDesignById(params['editId']).subscribe({
                 next: design => {
                   const productId = typeof design.productId === 'object' ? design.productId._id : design.productId;
-                  this.activeTemplate.set(tpls.find(t => t._id === productId) || tpls[0]);
-                  this.frontMessage.set(design.frontMessage || '');
-                  this.backMessage.set(design.backMessage || '');
-                  this.selectedColor.set(design.selectedColor || 'Navy Blue');
+                  this.selectTemplate(tpls.find(t => t._id === productId) || tpls[0]);
+                  this.restoreTextBlocks(design);
+                  if (design.selectedColor) this.setColor(design.selectedColor);
                   this.selectedFont.set(design.fontFamily || 'Signature');
-                  this.selectedEngraveColor.set(design.engraveColor || 'Vàng Kim (Gold)');
+                  this.syncTextControls();
                   this.selectedPattern.set(design.pattern || 'none');
                   this.uploadedImage.set(design.uploadedImage || '');
                   this.imageScale.set(design.imageScale ?? 1);
@@ -1316,7 +1233,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
                   this.updateKonvaCanvas();
                 },
                 error: () => {
-                  this.activeTemplate.set(tpls[0]);
+                  this.selectTemplate(tpls[0]);
                   this.activeToolTab.set('GRAPHICS');
                   this.graphicsNotice.set('Không mở được thiết kế đã lưu. Vui lòng thử lại.');
                   this.updateKonvaCanvas();
@@ -1331,18 +1248,17 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
               if (matched) chosenTpl = matched;
             }
 
-            this.activeTemplate.set(chosenTpl);
+            this.selectTemplate(chosenTpl);
 
             const savedDraft = this.studioService.getDraftFromStorage();
             if (savedDraft && (!pid || savedDraft.productId === pid)) {
               if (savedDraft.frontMessage === 'Happy Anniversary Minh Anh ❤️') {
                 this.studioService.clearDraftFromStorage();
               } else {
-                if (savedDraft.frontMessage !== undefined) this.frontMessage.set(savedDraft.frontMessage);
-                if (savedDraft.backMessage !== undefined) this.backMessage.set(savedDraft.backMessage);
-                if (savedDraft.selectedColor) this.selectedColor.set(savedDraft.selectedColor);
+                this.restoreTextBlocks(savedDraft);
+                if (savedDraft.selectedColor) this.setColor(savedDraft.selectedColor);
                 if (savedDraft.selectedFont) this.selectedFont.set(savedDraft.selectedFont);
-                if (savedDraft.selectedEngraveColor) this.selectedEngraveColor.set(savedDraft.selectedEngraveColor);
+                this.syncTextControls();
                 if (savedDraft.selectedPattern) this.selectedPattern.set(savedDraft.selectedPattern);
                 if (savedDraft.uploadedImage) this.uploadedImage.set(savedDraft.uploadedImage);
                 if (savedDraft.imageScale) this.imageScale.set(savedDraft.imageScale);
@@ -1372,6 +1288,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.studioDestroyed = true;
     ++this.graphicsRenderVersion;
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
@@ -1483,7 +1400,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     const imageObj = new Image();
     imageObj.crossOrigin = 'Anonymous';
     imageObj.onload = () => {
-      if (!this.bgLayer) return;
+      if (!this.bgLayer || blankUrl !== this.getCurrentBlankImage()) return;
 
       const stageW = 460;
       const stageH = 460;
@@ -1526,59 +1443,13 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // Đồng bộ vẽ khung hướng dẫn theo kích thước chuẩn của phôi
       this.renderGuidesOnKonva();
+      this.renderTextBlocks();
       this.renderStickersOnKonva();
       this.checkOverflowWarning();
     };
     imageObj.src = blankUrl;
 
-    // 2. Render Laser Engraved Text on drawLayer
-    const engraveColorCode = this.getEngraveColorCode();
-    const fontObj = this.fontOptions.find(f => f.name === this.selectedFont());
-    const fontFamily = fontObj ? fontObj.fontFamily : 'Georgia, serif';
-    const message = (this.isFrontFace() ? this.frontMessage() : this.backMessage()).trim();
-    const fontStyleStr = ((this.isTextBold() ? 'bold ' : '') + (this.isTextItalic() ? 'italic' : 'normal')).trim();
-
-    if (this.textNode) {
-      if (message) {
-        this.textNode.text(message);
-        this.textNode.fontFamily(fontFamily);
-        this.textNode.fontSize(this.textSize());
-        this.textNode.align(this.textAlign());
-        this.textNode.fontStyle(fontStyleStr);
-        this.textNode.fill(engraveColorCode);
-        this.textNode.shadowColor(engraveColorCode);
-        this.textNode.show();
-      } else {
-        this.textNode.text('');
-        this.textNode.hide();
-        if (this.transformer?.nodes().includes(this.textNode)) {
-          this.transformer.nodes([]);
-        }
-      }
-    } else if (message) {
-      const { saPx } = this.getGuideCoordinates();
-      const textWidth = Math.min(220, saPx.width * 0.85);
-      const textX = Math.round(saPx.x + (saPx.width - textWidth) / 2);
-      const textY = Math.round(saPx.y + saPx.height * 0.5 - 12);
-
-      this.textNode = new Konva.Text({
-        x: textX,
-        y: textY,
-        text: message,
-        fontSize: this.textSize(),
-        fontFamily: fontFamily,
-        fontStyle: fontStyleStr,
-        fill: engraveColorCode,
-        width: textWidth,
-        align: this.textAlign(),
-        shadowColor: engraveColorCode,
-        shadowBlur: 3,
-        shadowOpacity: 0.4,
-        draggable: true
-      });
-      this.makeDraggableAndSelectable(this.textNode, 'Chữ Khắc');
-      this.drawLayer.add(this.textNode);
-    }
+    this.renderTextBlocks();
 
     // 3. Render Photo Node if uploaded
     if (this.uploadedImage()) {
@@ -1744,7 +1615,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     let overflowingName = '';
 
     const nodesToCheck: Array<{ node: Konva.Node | null; name: string }> = [
-      { node: this.textNode, name: 'Chữ Khắc' },
+      ...[...this.textNodes.values()].map(node => ({ node, name: 'Chữ Khắc' })),
       { node: this.photoNode, name: 'Ảnh Cá Nhân' }
     ];
     this.stickerNodes.forEach((stk, idx) => {
@@ -1753,7 +1624,6 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     for (const item of nodesToCheck) {
       if (!item.node || !item.node.isVisible()) continue;
-      if (item.node === this.textNode && !this.textNode.text().trim()) continue;
 
       const box = item.node.getClientRect({ skipTransform: false });
       const isLeft = box.x < (saPx.x - tolerance);
@@ -1896,8 +1766,8 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.drawLayer.add(node);
         this.stickerNodes.push(node);
         // Image load completion order must not change the saved stacking order.
-        this.stickerNodes.sort((a, b) => items.findIndex(i => i.id === a.getAttr('graphicId')) - items.findIndex(i => i.id === b.getAttr('graphicId')))
-          .forEach(n => n.moveToTop());
+        this.stickerNodes.sort((a, b) => items.findIndex(i => i.id === a.getAttr('graphicId')) - items.findIndex(i => i.id === b.getAttr('graphicId')));
+        this.applyElementOrder();
         if (stk.id === selectedId) this.transformer?.nodes([node]);
         this.persistGraphic(node);
         this.drawLayer.batchDraw();
@@ -1915,7 +1785,264 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  fontFamilyFor(name: string): string {
+    return this.fontOptions.find(font => font.name === name)?.fontFamily || '"Giftory Card Serif", serif';
+  }
+
+  setBlockFont(id: string, name: string): void {
+    if (!this.fontOptions.some(font => font.name === name)) return;
+    this.selectTextBlock(id);
+    this.updateTextBlock(id, { fontFamily: name });
+  }
+
+  setBlockFontSize(id: string, value: number | null): void {
+    if (value === null || !Number.isFinite(Number(value))) return;
+    this.selectTextBlock(id);
+    this.updateTextBlock(id, { fontSize: Math.max(8, Math.min(120, Number(value))) });
+  }
+
+  retryTextFonts(): void {
+    this.failedTextFonts.clear();
+    this.textFontNotice.set('');
+    this.renderTextBlocks();
+  }
+
+  private ensureTextFont(block: StudioTextBlock): boolean {
+    if (!block.visible || !block.text.trim() || typeof document === 'undefined' || !document.fonts) return true;
+    const font = this.fontOptions.find(font => font.name === block.fontFamily) || this.fontOptions[1];
+    const spec = `${block.italic ? 'italic' : 'normal'} ${block.bold ? 700 : 400} 16px "${font.family}"`;
+    if (this.loadedTextFonts.has(spec)) return true;
+    if (this.loadingTextFonts.has(spec) || this.failedTextFonts.has(spec)) return false;
+    this.loadingTextFonts.add(spec);
+    this.pendingTextFonts.update(count => count + 1);
+    const sample = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ĂÂĐÊÔƠƯ ăâđêôơư ÁÀẢÃẠẮẰẲẴẶẤẦẨẪẬÉÈẺẼẸẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌỐỒỔỖỘỚỜỞỠỢÚÙỦŨỤỨỪỬỮỰÝỲỶỸỴ áàảãạắằẳẵặấầẩẫậéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ';
+    document.fonts.load(spec, sample).then(faces => {
+      if (!faces.length) throw new Error('Font unavailable');
+      this.loadedTextFonts.add(spec);
+    }).catch(() => {
+      this.failedTextFonts.add(spec);
+      this.textFontNotice.set('Chưa tải được font chữ. Vui lòng thử lại trước khi lưu hoặc xuất ảnh.');
+    }).finally(() => {
+      this.loadingTextFonts.delete(spec);
+      this.pendingTextFonts.update(count => count - 1);
+      if (!this.studioDestroyed) this.renderTextBlocks();
+    });
+    return false;
+  }
+
+  private textFontsReady(): boolean {
+    const ready = this.faceTextBlocks().map(block => this.ensureTextFont(block)).every(Boolean);
+    if (!ready || this.pendingTextFonts()) {
+      this.activeToolTab.set('TEXT');
+      return false;
+    }
+    return true;
+  }
+
+  private newTextBlock(face: 'front' | 'back', text = ''): StudioTextBlock {
+    return {
+      id: crypto.randomUUID(), face, text, fontFamily: 'Sans Minimal',
+      color: '#0F172A', fontSize: 14, align: 'center', bold: false, italic: false,
+      letterSpacing: 0, lineHeight: 1.3, visible: true,
+      x: 0.1, y: 0.15, width: 0.8, scaleX: 1, scaleY: 1, rotation: 0,
+      zIndex: Math.max(0, ...this.textBlocks().map(b => b.zIndex), ...this.activeStickers().map(b => b.zIndex || 0)) + 1
+    };
+  }
+
+  addTextBlock(): void {
+    const face = this.isFrontFace() ? 'front' : 'back';
+    const block = this.newTextBlock(face);
+    const previous = this.faceTextBlocks().at(-1);
+    const previousNode = previous && this.textNodes.get(previous.id);
+    if (previous && previousNode) {
+      const { saPx } = this.getGuideCoordinates();
+      block.y = Math.min(0.8, previous.y + previousNode.height() * Math.abs(previous.scaleY) / saPx.height + 0.06);
+    }
+    this.textBlocks.update(blocks => [...blocks, block]);
+    this.syncTextSummaries();
+    this.renderTextBlocks();
+    this.selectTextBlock(block.id);
+  }
+
+  selectTextBlock(id: string, selectCanvas = true): void {
+    const block = this.textBlocks().find(item => item.id === id);
+    if (!block) return;
+    this.selectedTextBlockId.set(id);
+    this.activeToolTab.set('TEXT');
+    this.syncTextControls();
+    if (selectCanvas) {
+      const node = this.textNodes.get(id);
+      this.transformer?.nodes(node && block.visible ? [node] : []);
+      this.transformer?.keepRatio(false);
+      this.selectedNodeName.set('Chữ Khắc');
+      this.uiLayer?.batchDraw();
+    }
+  }
+
+  private syncTextControls(): void {
+    const block = this.selectedTextBlock();
+    if (!block) return;
+    this.selectedFont.set(block.fontFamily);
+    this.selectedTextColor.set(this.resolveTextColor(block.color));
+    this.textSize.set(block.fontSize);
+    this.textAlign.set(block.align);
+    this.isTextBold.set(block.bold);
+    this.isTextItalic.set(block.italic);
+  }
+
+  private resolveTextColor(value: unknown): string {
+    if (typeof value !== 'string') return '#0F172A';
+    if (/^#[0-9a-f]{6}$/i.test(value)) return value.toUpperCase();
+    if (/^#[0-9a-f]{3}$/i.test(value)) return '#' + value.slice(1).split('').map(char => char + char).join('').toUpperCase();
+    const legacy: Record<string, string> = {
+      'Vàng Kim (Gold)': '#F59E0B', Gold: '#F59E0B',
+      'Bạc Ánh Kim (Silver)': '#E2E8F0', Silver: '#E2E8F0',
+      'Đen Huyền Bí': '#0F172A', 'Dark Slate': '#0F172A',
+      'Đỏ Ruby': '#DC2626', Red: '#DC2626', 'Vàng Hồng (Rose Gold)': '#FB7185'
+    };
+    return legacy[value] || '#0F172A';
+  }
+
+  editTextBlock(id: string, patch: Partial<StudioTextBlock>): void {
+    this.selectTextBlock(id);
+    this.updateTextBlock(id, patch);
+  }
+
+  updateTextBlock(id: string, patch: Partial<StudioTextBlock>): void {
+    const changes = patch.color !== undefined ? { ...patch, color: this.resolveTextColor(patch.color) } : patch;
+    this.textBlocks.update(blocks => blocks.map(block => block.id === id ? { ...block, ...changes, id: block.id, face: block.face } : block));
+    this.syncTextControls();
+    this.syncTextSummaries();
+    this.renderTextBlocks();
+  }
+
+  updateSelectedTextBlock(patch: Partial<StudioTextBlock>): void {
+    const id = this.selectedTextBlockId();
+    if (id) this.updateTextBlock(id, patch);
+  }
+
+  duplicateTextBlock(id: string): void {
+    const source = this.textBlocks().find(block => block.id === id);
+    if (!source) return;
+    const block = { ...source, id: crypto.randomUUID(), x: source.x + 0.04, y: source.y + 0.04, zIndex: this.newTextBlock(source.face).zIndex };
+    this.textBlocks.update(blocks => [...blocks, block]);
+    this.syncTextSummaries();
+    this.renderTextBlocks();
+    this.selectTextBlock(block.id);
+  }
+
+  removeTextBlock(id: string): void {
+    this.textBlocks.update(blocks => blocks.filter(block => block.id !== id));
+    if (this.selectedTextBlockId() === id) {
+      this.selectedTextBlockId.set(this.faceTextBlocks()[0]?.id || null);
+      this.transformer?.nodes([]);
+      this.selectedNodeName.set(null);
+    }
+    this.syncTextControls();
+    this.syncTextSummaries();
+    this.renderTextBlocks();
+  }
+
+  private syncTextSummaries(): void {
+    const message = (face: 'front' | 'back') => this.textBlocks()
+      .filter(block => block.face === face && block.visible && block.text.trim())
+      .map(block => block.text).join('\n');
+    this.frontMessage.set(message('front'));
+    this.backMessage.set(message('back'));
+  }
+
+  private restoreTextBlocks(source: any): void {
+    const legacy = () => (['front', 'back'] as const).flatMap(face => {
+      const text = face === 'front' ? source.frontMessage : source.backMessage;
+      if (!text) return [];
+      return [{ ...this.newTextBlock(face, text), fontFamily: source.fontFamily || source.selectedFont || 'Signature',
+        color: this.resolveTextColor(source.color || source.engraveColor || source.selectedTextColor || source.selectedEngraveColor), fontSize: 14, italic: true, y: 0.45 }];
+    });
+    const ids = new Set<string>();
+    const blocks: StudioTextBlock[] = Array.isArray(source.textBlocks)
+      ? source.textBlocks.filter((block: any) => block && typeof block.text === 'string').map((block: any) => {
+        const base = this.newTextBlock(block.face === 'back' ? 'back' : 'front');
+        const finite = (key: keyof StudioTextBlock, min: number, max: number) => Number.isFinite(block[key]) ? Math.max(min, Math.min(max, block[key])) : base[key];
+        const id = typeof block.id === 'string' && block.id && !ids.has(block.id) ? block.id : base.id;
+        ids.add(id);
+        return { ...base, id, text: block.text,
+          fontFamily: this.fontOptions.some(font => font.name === block.fontFamily) ? block.fontFamily : base.fontFamily,
+          color: this.resolveTextColor(block.color || block.engraveColor),
+          fontSize: finite('fontSize', 8, 120), align: ['left', 'center', 'right'].includes(block.align) ? block.align : 'center',
+          bold: block.bold === true, italic: block.italic === true, visible: block.visible !== false,
+          letterSpacing: finite('letterSpacing', -2, 12), lineHeight: finite('lineHeight', 0.8, 3),
+          x: finite('x', -10, 10), y: finite('y', -10, 10), width: finite('width', 0.01, 10),
+          scaleX: finite('scaleX', -100, 100), scaleY: finite('scaleY', -100, 100), rotation: finite('rotation', -36000, 36000),
+          zIndex: finite('zIndex', 0, Number.MAX_SAFE_INTEGER)
+        } as StudioTextBlock;
+      }) : legacy();
+    this.textBlocks.set(blocks);
+    this.selectedTextBlockId.set(this.faceTextBlocks()[0]?.id || null);
+    this.syncTextControls();
+    this.syncTextSummaries();
+    this.renderTextBlocks();
+  }
+
+  private renderTextBlocks(): void {
+    if (!this.drawLayer) return;
+    const { saPx } = this.getGuideCoordinates();
+    const blocks = this.faceTextBlocks();
+    let fontsReady = true;
+    for (const [id, node] of this.textNodes) {
+      if (!blocks.some(block => block.id === id)) {
+        if (this.transformer?.nodes().includes(node)) this.transformer.nodes([]);
+        node.destroy();
+        this.textNodes.delete(id);
+      }
+    }
+    for (const block of blocks) {
+      let node = this.textNodes.get(block.id);
+      if (!node) {
+        node = new Konva.Text({ textBlockId: block.id, draggable: true });
+        this.makeDraggableAndSelectable(node, 'Chữ Khắc');
+        node.on('transformend', () => this.persistTextBlock(node!));
+        this.textNodes.set(block.id, node);
+        this.drawLayer.add(node);
+      }
+      const font = this.fontOptions.find(font => font.name === block.fontFamily);
+      const color = this.resolveTextColor(block.color);
+      const fontReady = this.ensureTextFont(block);
+      fontsReady = fontsReady && fontReady;
+      node.setAttrs({ text: block.text.normalize('NFC'), x: saPx.x + block.x * saPx.width, y: saPx.y + block.y * saPx.height,
+        width: Math.max(1, block.width * saPx.width), fontSize: block.fontSize,
+        fontFamily: font?.fontFamily || '"Giftory Card Serif", serif', fontStyle: `${block.bold ? 'bold ' : ''}${block.italic ? 'italic' : 'normal'}`,
+        fill: color, align: block.align, lineHeight: block.lineHeight, letterSpacing: block.letterSpacing,
+        visible: block.visible && fontReady, scaleX: block.scaleX, scaleY: block.scaleY, rotation: block.rotation,
+      });
+      if (!block.visible && this.transformer?.nodes().includes(node)) this.transformer.nodes([]);
+    }
+    if (fontsReady && !this.pendingTextFonts()) this.textFontNotice.set('');
+    this.applyElementOrder();
+    this.transformer?.forceUpdate();
+    this.drawLayer.batchDraw();
+    this.uiLayer?.batchDraw();
+    this.checkOverflowWarning();
+  }
+
+  private persistTextBlock(node: Konva.Node, saveOrder = false): void {
+    const id = node.getAttr('textBlockId');
+    if (!id) return;
+    const { saPx } = this.getGuideCoordinates();
+    this.textBlocks.update(blocks => blocks.map(block => block.id === id ? { ...block,
+      x: (node.x() - saPx.x) / saPx.width, y: (node.y() - saPx.y) / saPx.height,
+      width: node.width() / saPx.width, scaleX: node.scaleX(), scaleY: node.scaleY(), rotation: node.rotation(),
+      zIndex: saveOrder ? node.zIndex() : block.zIndex
+    } : block));
+  }
+
+  private applyElementOrder(): void {
+    const text = [...(this.textNodes?.values() || [])].map(node => ({ node, order: this.textBlocks().find(block => block.id === node.getAttr('textBlockId'))?.zIndex || 0 }));
+    const graphics = this.stickerNodes.map(node => ({ node, order: this.activeStickers().find(block => block.id === node.getAttr('graphicId'))?.zIndex || 0 }));
+    [...text, ...graphics].sort((a, b) => a.order - b.order).forEach(item => item.node.moveToTop());
+  }
+
   private persistGraphic(node: Konva.Node, saveOrder = false): void {
+    if (node.getAttr('textBlockId')) { this.persistTextBlock(node, saveOrder); return; }
     const id = node.getAttr('graphicId');
     if (!id) return;
     const { saPx } = this.getGuideCoordinates();
@@ -1951,6 +2078,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   private makeDraggableAndSelectable(node: Konva.Node, name: string): void {
     const selectNode = () => {
       this.selectedNodeName.set(name);
+      if (node.getAttr('textBlockId')) this.selectTextBlock(node.getAttr('textBlockId'), false);
       if (this.transformer) {
         if (name === 'Ảnh Cá Nhân' || name.startsWith('Đồ họa')) {
           this.transformer.keepRatio(true);
@@ -1972,7 +2100,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     node.on('click tap', selectNode);
     node.on('dragstart', selectNode);
     node.on('dragmove', () => this.checkOverflowWarning());
-    node.on('dragend', () => this.checkOverflowWarning());
+    node.on('dragend', () => { this.persistGraphic(node); this.checkOverflowWarning(); });
   }
 
   // Canvas Action Toolbars
@@ -1986,6 +2114,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       this.checkOverflowWarning();
     } else if (this.textNode) {
       this.textNode.x((460 - this.textNode.width()) / 2);
+      this.persistTextBlock(this.textNode);
       this.drawLayer?.batchDraw();
       this.uiLayer?.batchDraw();
       this.checkOverflowWarning();
@@ -2001,13 +2130,8 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     } else if (selected.getAttr('graphicId')) {
       this.activeStickers.update(items => items.filter(item => item.id !== selected.getAttr('graphicId')));
       this.renderStickersOnKonva();
-    } else if (selected === this.textNode) {
-      if (this.isFrontFace()) {
-        this.frontMessage.set('');
-      } else {
-        this.backMessage.set('');
-      }
-      this.updateKonvaCanvas();
+    } else if (selected.getAttr('textBlockId')) {
+      this.removeTextBlock(selected.getAttr('textBlockId'));
     }
     this.transformer?.nodes([]);
     this.selectedNodeName.set(null);
@@ -2020,6 +2144,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     if (selected) {
       selected.moveUp();
       this.stickerNodes.forEach(node => this.persistGraphic(node, true));
+      this.textNodes.forEach(node => this.persistTextBlock(node, true));
       this.drawLayer?.batchDraw();
       this.uiLayer?.batchDraw();
     }
@@ -2030,52 +2155,26 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     if (selected) {
       selected.moveDown();
       this.stickerNodes.forEach(node => this.persistGraphic(node, true));
+      this.textNodes.forEach(node => this.persistTextBlock(node, true));
       this.drawLayer?.batchDraw();
       this.uiLayer?.batchDraw();
     }
   }
 
   setTextSize(size: number): void {
-    const clamped = Math.max(10, Math.min(32, size));
-    this.textSize.set(clamped);
-    if (this.textNode) {
-      this.textNode.fontSize(clamped);
-      this.drawLayer?.batchDraw();
-      this.uiLayer?.batchDraw();
-      this.checkOverflowWarning();
-    }
+    this.updateSelectedTextBlock({ fontSize: Math.max(8, Math.min(120, Number(size))) });
   }
 
   setTextAlign(align: 'left' | 'center' | 'right'): void {
-    this.textAlign.set(align);
-    if (this.textNode) {
-      this.textNode.align(align);
-      this.drawLayer?.batchDraw();
-      this.uiLayer?.batchDraw();
-      this.checkOverflowWarning();
-    }
+    this.updateSelectedTextBlock({ align });
   }
 
   toggleBold(): void {
-    this.isTextBold.set(!this.isTextBold());
-    if (this.textNode) {
-      const style = ((this.isTextBold() ? 'bold ' : '') + (this.isTextItalic() ? 'italic' : 'normal')).trim();
-      this.textNode.fontStyle(style);
-      this.drawLayer?.batchDraw();
-      this.uiLayer?.batchDraw();
-      this.checkOverflowWarning();
-    }
+    this.updateSelectedTextBlock({ bold: !this.selectedTextBlock()?.bold });
   }
 
   toggleItalic(): void {
-    this.isTextItalic.set(!this.isTextItalic());
-    if (this.textNode) {
-      const style = ((this.isTextBold() ? 'bold ' : '') + (this.isTextItalic() ? 'italic' : 'normal')).trim();
-      this.textNode.fontStyle(style);
-      this.drawLayer?.batchDraw();
-      this.uiLayer?.batchDraw();
-      this.checkOverflowWarning();
-    }
+    this.updateSelectedTextBlock({ italic: !this.selectedTextBlock()?.italic });
   }
 
   setZoom(zoom: number): void {
@@ -2124,7 +2223,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   downloadSnapshot(): void {
-    if (!this.stage) return;
+    if (!this.stage || !this.textFontsReady()) return;
     this.transformer?.nodes([]);
     this.uiLayer?.batchDraw();
 
@@ -2150,29 +2249,14 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Synchronizers for Text & Options
-  onFrontMessageChange(val: string): void {
-    this.frontMessage.set(val);
-    this.updateKonvaCanvas();
-  }
-
-  onBackMessageChange(val: string): void {
-    this.backMessage.set(val);
-    this.updateKonvaCanvas();
-  }
-
   setFont(fontName: string): void {
-    this.selectedFont.set(fontName);
-    this.updateKonvaCanvas();
-  }
-
-  setEngraveColor(colorName: string): void {
-    this.selectedEngraveColor.set(colorName);
-    this.updateKonvaCanvas();
+    this.updateSelectedTextBlock({ fontFamily: fontName });
   }
 
   setColor(colorName: string): void {
     const opt = this.availableColorOptions().find(c => c.name === colorName);
-    if (opt?.isOutOfStock) {
+    if (!opt) return;
+    if (opt.isOutOfStock) {
       alert(`Màu "${colorName}" hiện đã hết hàng trong kho. Vui lòng chọn màu khác!`);
       return;
     }
@@ -2186,6 +2270,11 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   switchFace(isFront: boolean): void {
     this.isFrontFace.set(isFront);
+    this.transformer?.nodes([]);
+    this.selectedNodeName.set(null);
+    const first = this.faceTextBlocks()[0];
+    this.selectedTextBlockId.set(first?.id || null);
+    this.syncTextControls();
     this.updateKonvaCanvas();
   }
 
@@ -2200,47 +2289,33 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     const tpl = this.activeTemplate();
     if (!tpl) return 'https://placehold.co/400';
 
-    if (this.isFrontFace()) {
-      // Find variant corresponding to selectedColor
-      const matchedVariant = tpl.variants?.find(v => v.name === this.selectedColor());
-      if (matchedVariant?.image) {
-        return matchedVariant.image;
-      }
-      return tpl.customConfig?.frontBlankImage || tpl.images[0] || 'https://placehold.co/400';
-    } else {
-      return tpl.customConfig?.backBlankImage || tpl.images[1] || tpl.images[0] || 'https://placehold.co/400';
-    }
+    const blank = tpl.customConfig?.blanks?.find(b => b.name === this.selectedColor());
+    return (this.isFrontFace()
+      ? blank?.frontBlankImage || tpl.customConfig?.frontBlankImage
+      : blank?.backBlankImage || tpl.customConfig?.backBlankImage) || 'https://placehold.co/400?text=Chua+co+anh+phoi';
   }
 
   selectTemplate(tpl: Product): void {
     this.activeTemplate.set(tpl);
-    if (tpl.variants && tpl.variants.length > 0) {
-      const activeVar = tpl.variants.find(v => v.status !== 'HIDDEN' && (v.stock ?? 0) > 0) || tpl.variants[0];
-      if (activeVar) {
-        this.selectedColor.set(activeVar.name);
-      }
-    }
+    this.selectedColor.set(this.availableColorOptions()[0]?.name || 'Mặc định');
     this.updateKonvaCanvas();
   }
 
   resetToDefaults(): void {
     this.studioService.clearDraftFromStorage();
-    this.frontMessage.set('');
-    this.backMessage.set('');
-    this.selectedColor.set('Navy Blue');
+    this.textBlocks.set([]);
+    this.selectedTextBlockId.set(null);
+    this.syncTextSummaries();
+    this.renderTextBlocks();
+    this.selectedColor.set(this.availableColorOptions()[0]?.name || 'Mặc định');
     this.selectedFont.set('Signature');
-    this.selectedEngraveColor.set('Vàng Kim (Gold)');
+    this.selectedTextColor.set('#0F172A');
     this.selectedPattern.set('none');
     this.uploadedImage.set('');
     this.imageScale.set(1);
     this.activeStickers.set([]);
     this.hasRestoredDraft.set(false);
     this.updateKonvaCanvas();
-  }
-
-  getEngraveColorCode(): string {
-    const ec = this.engraveColors.find(o => o.name === this.selectedEngraveColor());
-    return ec ? ec.hex : '#F59E0B';
   }
 
   getActivePatternCss(): string {
@@ -2319,6 +2394,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   validateInputs(): boolean {
+    if (!this.textFontsReady()) return false;
     if (this.pendingGraphicAdds()) {
       this.graphicsNotice.set('Vui lòng chờ clipart tải xong trước khi lưu.');
       this.activeToolTab.set('GRAPHICS');
@@ -2329,26 +2405,8 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       this.activeToolTab.set('GRAPHICS');
       return false;
     }
-    let isValid = true;
-    const maxLen = this.maxTextLength();
-
-    if (this.frontMessage().length > maxLen) {
-      this.formErrors.frontMessage = `Độ dài tối đa không quá ${maxLen} ký tự.`;
-      isValid = false;
-    } else {
-      this.formErrors.frontMessage = '';
-    }
-
-    if (this.backMessage().length > maxLen) {
-      this.formErrors.backMessage = `Độ dài mặt sau tối đa không quá ${maxLen} ký tự.`;
-      isValid = false;
-    } else {
-      this.formErrors.backMessage = '';
-    }
-
-    if (!isValid) this.activeToolTab.set('TEXT');
-    else if (this.formErrors.image) this.activeToolTab.set('IMAGE');
-    return isValid && !this.formErrors.image;
+    if (this.formErrors.image) this.activeToolTab.set('IMAGE');
+    return !this.formErrors.image;
   }
 
   isFormInvalid(): boolean {
@@ -2383,14 +2441,15 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
-    const msg = this.frontMessage().trim() || (tpl ? tpl.name : 'Giftory Custom');
+    const msg = this.frontMessage();
 
     return {
+      textBlocks: this.textBlocks().map(block => ({ ...block })),
       frontMessage: msg,
       backMessage: this.backMessage(),
       customText: msg,
       fontFamily: this.selectedFont(),
-      engraveColor: this.selectedEngraveColor(),
+      engraveColor: this.selectedTextColor(),
       selectedColor: this.selectedColor(),
       pattern: this.selectedPattern(),
       uploadedImage: this.uploadedImage(),
@@ -2415,8 +2474,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.isEditingCartItem() && this.editingCartItemIndex() !== null) {
       this.cartService.updateCustomDetails(
         this.editingCartItemIndex()!,
-        customDetails,
-        this.selectedColor()
+        customDetails
       ).subscribe({
         next: () => {
           this.studioService.clearDraftFromStorage();
@@ -2430,7 +2488,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Directly add item to cart for both logged in and guest users
-    this.cartService.addItem(tpl._id, 1, this.selectedColor(), customDetails).subscribe({
+    this.cartService.addItem(tpl._id, 1, undefined, customDetails).subscribe({
       next: () => {
         this.studioService.clearDraftFromStorage();
         this.router.navigate(['/cart']);
@@ -2452,7 +2510,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!tpl) return;
 
     const customDetails = this.getConfirmedCustomDetails();
-    this.cartService.addItem(tpl._id, 1, this.selectedColor(), customDetails).subscribe({
+    this.cartService.addItem(tpl._id, 1, undefined, customDetails).subscribe({
       next: () => {
         this.router.navigate(['/cart']);
       }

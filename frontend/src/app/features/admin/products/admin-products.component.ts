@@ -6,7 +6,7 @@ import { AdminService } from '../../../core/services/admin.service';
 import { ProductService } from '../../../core/services/product.service';
 import { CustomStudioService } from '../../../core/services/custom-studio.service';
 import { ApiService } from '../../../core/services/api.service';
-import { Product, Category, StudioAsset, ProductVariant } from '../../../core/models';
+import { Product, Category, StudioAsset, ProductVariant, StudioBlank } from '../../../core/models';
 import { OpenClipartImporterComponent } from './openclipart-importer.component';
 import { AdminCategoriesComponent } from '../categories/admin-categories.component';
 
@@ -366,7 +366,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                   @if (hasVariantMissingImage()) {
                     <div class="p-3 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-2.5 text-xs text-red-700">
                       <span class="material-symbols-outlined text-red-500 text-lg">error</span>
-                      <span class="font-medium">Có biến thể màu đang thiếu ảnh mockup! Trong Custom Studio bắt buộc cần ảnh mockup riêng để khách đổi màu trực quan.</span>
+                      <span class="font-medium">Có biến thể đang thiếu ảnh sản phẩm riêng để khách xem phong cách màu trên cửa hàng.</span>
                     </div>
                   }
 
@@ -378,7 +378,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                         Bảng Quản Lý Biến Thể Màu & Tồn Kho (SKU)
                       </h4>
                       <p class="text-[11px] text-slate-500 mt-0.5">
-                        Mỗi dòng là một màu với SKU, giá, tồn kho và ảnh mockup riêng. Studio sẽ tự động lấy danh sách màu từ đây.
+                        Mỗi dòng là một biến thể sản phẩm với SKU, giá, tồn kho và ảnh riêng. Cấu hình màu phôi tại tab Studio.
                       </p>
                     </div>
                     <button
@@ -533,6 +533,35 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                     <h4 class="font-bold text-xs text-[#1E1B4B] uppercase tracking-wide">Cấu Hình Phôi Chế Tác Studio (Blank Config)</h4>
                   </div>
 
+                  <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <h5 class="text-xs font-bold">Các màu phôi riêng cho Studio</h5>
+                        <p class="text-[11px] text-slate-500">Phôi dùng để thiết kế, không phải biến thể và không hiển thị ở trang chi tiết sản phẩm.</p>
+                      </div>
+                      <button type="button" (click)="addStudioBlank()" class="px-3 py-2 rounded-xl bg-purple-600 text-white text-xs">Thêm phôi</button>
+                    </div>
+                    @for (blank of studioBlanks(); track $index; let idx = $index) {
+                      <div class="p-3 rounded-xl border border-purple-200 bg-white space-y-2">
+                        <div class="flex items-center gap-2">
+                          <input type="color" aria-label="Màu phôi" [ngModel]="blank.colorHex" (ngModelChange)="updateStudioBlank(idx, 'colorHex', $event)" [ngModelOptions]="{standalone: true}" />
+                          <input type="text" placeholder="Tên màu phôi" aria-label="Tên màu phôi" [ngModel]="blank.name" (ngModelChange)="updateStudioBlank(idx, 'name', $event)" [ngModelOptions]="{standalone: true}" class="flex-1 border rounded-lg p-2 text-xs" />
+                          <button type="button" (click)="removeStudioBlank(idx)" class="text-xs text-red-600">Xóa phôi</button>
+                        </div>
+                        @for (face of blankFaces; track face.key) {
+                          <div class="flex items-center gap-2">
+                            <span class="text-xs w-16">{{ face.label }}</span>
+                            <input type="url" [attr.aria-label]="'Ảnh phôi ' + face.label" placeholder="URL ảnh phôi" [ngModel]="blank[face.key]" (ngModelChange)="updateStudioBlank(idx, face.key, $event)" [ngModelOptions]="{standalone: true}" class="flex-1 min-w-0 border rounded-lg p-2 text-xs" />
+                            <label class="text-xs text-purple-600 cursor-pointer">Tải ảnh<input type="file" accept="image/*" (change)="onStudioBlankFileSelected($event, blank, face.key)" class="hidden" /></label>
+                            @if (blank[face.key]) { <img [src]="blank[face.key]" alt="Ảnh phôi" class="w-12 h-12 object-contain rounded border" /> }
+                          </div>
+                        }
+                      </div>
+                    } @empty {
+                      <p class="text-xs text-slate-500">Chưa thêm màu phôi. Studio dùng ảnh phôi mặc định bên dưới.</p>
+                    }
+                  </div>
+
                   <!-- Front Blank & Back Blank Images -->
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Front Blank Image -->
@@ -546,7 +575,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                         </label>
                       </div>
                       <div class="flex gap-2 items-center">
-                        <input type="text" formControlName="frontBlankImage" placeholder="Mặc định lấy ảnh chính nếu để trống" class="flex-1 px-3 py-1.5 bg-white rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#7C3AED]" />
+                        <input type="text" formControlName="frontBlankImage" placeholder="URL ảnh phôi mặc định mặt trước" class="flex-1 px-3 py-1.5 bg-white rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#7C3AED]" />
                         @if (productForm.get('frontBlankImage')?.value) {
                           <img [src]="productForm.get('frontBlankImage')?.value" alt="Front" class="w-8 h-8 rounded-lg object-contain border bg-white shrink-0" />
                         }
@@ -800,7 +829,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                 </button>
                 <button
                   type="submit"
-                  [disabled]="productForm.invalid || isSaving()"
+                  [disabled]="productForm.invalid || isSaving() || pendingStudioUploads() > 0"
                   class="px-6 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] disabled:bg-gray-300 text-white text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
                 >
                   <span *ngIf="isSaving()" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -882,7 +911,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                       <div class="flex items-center justify-between">
                         <label class="text-xs font-bold text-giftory-ink flex items-center gap-1">
                           <span>Ảnh Mockup Riêng Của Màu Này *</span>
-                          <span class="text-[10px] text-red-500 font-bold">(Bắt buộc cho studio)</span>
+                          <span class="text-[10px] text-red-500 font-bold">(Ảnh biến thể sản phẩm)</span>
                         </label>
                         <label class="cursor-pointer text-[11px] font-bold text-[#7C3AED] hover:underline flex items-center gap-1 bg-purple-50 px-2 py-0.5 rounded-lg">
                           <span class="material-symbols-outlined text-[13px]">upload</span>
@@ -896,14 +925,14 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                           <img [src]="variantForm.get('image')?.value" alt="Variant Preview" class="w-10 h-10 rounded-xl object-cover border border-slate-300 shadow-2xs shrink-0" />
                         }
                       </div>
-                      <p class="text-[10px] text-slate-500 italic">Đúng nguyên tắc: Khi khách đổi màu vỏ phôi trong studio, phôi canvas sẽ đổi sang ảnh mockup này.</p>
+                      <p class="text-[10px] text-slate-500 italic">Ảnh phong cách màu của sản phẩm, hiển thị tại trang chi tiết. Phôi Studio được cấu hình riêng trong tab Studio.</p>
                     </div>
 
                     <div class="space-y-1.5">
                       <label class="text-xs font-bold text-giftory-ink">Trạng thái biến thể</label>
                       <select formControlName="status" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#7C3AED]">
                         <option value="ACTIVE">Đang bán (Hiển thị đầy đủ)</option>
-                        <option value="HIDDEN">Ẩn (Không hiện trên cửa hàng & studio)</option>
+                        <option value="HIDDEN">Ẩn (Không hiện trên cửa hàng)</option>
                         <option value="OUT_OF_STOCK">Hết hàng (Hiển thị nhãn hết hàng, vô hiệu hóa)</option>
                       </select>
                     </div>
@@ -1014,6 +1043,8 @@ export class AdminProductsComponent implements OnInit {
   modalTab = signal<'GENERAL' | 'VARIANTS' | 'STUDIO'>('GENERAL');
 
   // Variants state (SKU)
+  studioBlanks = signal<StudioBlank[]>([]);
+  pendingStudioUploads = signal(0);
   variants = signal<ProductVariant[]>([]);
   selectedVariantIndexes = signal<number[]>([]);
   isVariantDrawerOpen = signal<boolean>(false);
@@ -1057,6 +1088,49 @@ export class AdminProductsComponent implements OnInit {
     this.loadStudioAssets();
     this.initForm();
     this.initVariantForm();
+  }
+
+  blankFaces: { key: 'frontBlankImage' | 'backBlankImage'; label: string }[] = [
+    { key: 'frontBlankImage', label: 'Mặt trước' }, { key: 'backBlankImage', label: 'Mặt sau' }
+  ];
+
+  addStudioBlank() {
+    this.studioBlanks.update(blanks => [...blanks, { name: '', colorHex: '#FFFFFF', frontBlankImage: '', backBlankImage: '' }]);
+  }
+
+  updateStudioBlank(index: number, key: keyof StudioBlank, value: string) {
+    this.studioBlanks.update(blanks => {
+      Object.assign(blanks[index], { [key]: value });
+      return [...blanks];
+    });
+  }
+
+  removeStudioBlank(index: number) {
+    this.studioBlanks.update(blanks => blanks.filter((_, i) => i !== index));
+  }
+
+  onStudioBlankFileSelected(event: Event, blank: StudioBlank, face: 'frontBlankImage' | 'backBlankImage') {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    const product = this.editingProduct();
+    if (!file) return;
+    this.pendingStudioUploads.update(count => count + 1);
+    this.adminService.uploadImage(file).subscribe({
+      next: (res: any) => {
+        this.pendingStudioUploads.update(count => count - 1);
+        const url = res?.url || res?.data?.url || (typeof res === 'string' ? res : '');
+        // Locate the same row even if other rows were removed during upload.
+        if (url && this.editingProduct() === product && this.isModalOpen()) {
+          this.studioBlanks.update(blanks => {
+            if (blanks.includes(blank)) Object.assign(blank, { [face]: url });
+            return [...blanks];
+          });
+        }
+      },
+      error: () => {
+        this.pendingStudioUploads.update(count => count - 1);
+        alert('Không thể tải ảnh phôi. Vui lòng thử lại.');
+      }
+    });
   }
 
   initVariantForm() {
@@ -1314,6 +1388,7 @@ export class AdminProductsComponent implements OnInit {
   }
 
   openCreateModal() {
+    this.studioBlanks.set([]);
     this.editingProduct.set(null);
     this.modalTab.set('GENERAL');
     this.variants.set([]);
@@ -1326,6 +1401,7 @@ export class AdminProductsComponent implements OnInit {
   }
 
   openEditModal(p: Product) {
+    this.studioBlanks.set((p.customConfig?.blanks || []).map(blank => ({ ...blank })));
     this.editingProduct.set(p);
     this.modalTab.set('GENERAL');
     this.selectedVariantIndexes.set([]);
@@ -1342,15 +1418,7 @@ export class AdminProductsComponent implements OnInit {
         status: (v.status as any) || (v.stock && v.stock > 0 ? 'ACTIVE' : 'OUT_OF_STOCK')
       })));
     } else {
-      this.variants.set([{
-        name: 'Mặc định',
-        colorHex: '#1E1B4B',
-        sku: p.sku || 'GF-01',
-        price: p.price,
-        stock: p.stock,
-        image: p.images && p.images[0] ? p.images[0] : '',
-        status: p.stock > 0 ? 'ACTIVE' : 'OUT_OF_STOCK'
-      }]);
+      this.variants.set([]);
     }
 
     const catId = typeof p.category === 'object' && p.category ? (p.category as any)._id : p.category;
@@ -1366,8 +1434,8 @@ export class AdminProductsComponent implements OnInit {
       loyaltyEligible: p.loyaltyEligible !== false,
       isCustomizable: p.isCustomizable,
       customBaseFee: p.customBaseFee || 30000,
-      frontBlankImage: p.customConfig?.frontBlankImage || (p.images && p.images[0] ? p.images[0] : ''),
-      backBlankImage: p.customConfig?.backBlankImage || (p.images && p.images[1] ? p.images[1] : ''),
+      frontBlankImage: p.customConfig?.frontBlankImage || '',
+      backBlankImage: p.customConfig?.backBlankImage || '',
       backEngraveFee: p.customConfig?.backEngraveFee || 20000,
       photoPrintFee: p.customConfig?.photoPrintFee || 30000,
       maxTextLength: p.customConfig?.maxTextLength || 35,
@@ -1632,29 +1700,28 @@ export class AdminProductsComponent implements OnInit {
   }
 
   saveProduct() {
-    if (this.productForm.invalid) return;
+    if (this.productForm.invalid || this.isSaving() || this.pendingStudioUploads() > 0) return;
 
-    if (this.hasVariantMissingImage()) {
-      const proceed = confirm('Cảnh báo: Có biến thể màu chưa có ảnh mockup riêng! Custom Studio bắt buộc cần ảnh mockup để hiển thị chuẩn xác khi khách đổi màu. Bạn có muốn tiếp tục lưu không?');
-      if (!proceed) {
-        this.modalTab.set('VARIANTS');
-        return;
-      }
+    const blanks = this.studioBlanks().map(blank => ({
+      ...blank, name: blank.name.trim(),
+      frontBlankImage: blank.frontBlankImage.trim(), backBlankImage: blank.backBlankImage.trim()
+    }));
+    if (this.productForm.value.isCustomizable && blanks.some(blank => !blank.name || !blank.frontBlankImage)) {
+      alert('Mỗi phôi cần tên màu và ảnh mặt trước.');
+      this.modalTab.set('STUDIO');
+      return;
+    }
+    if (new Set(blanks.map(blank => blank.name.toLocaleLowerCase())).size !== blanks.length) {
+      alert('Tên màu phôi không được trùng nhau.');
+      this.modalTab.set('STUDIO');
+      return;
     }
 
     this.isSaving.set(true);
 
     const val = this.productForm.value;
     const images = [val.imageUrl || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600'];
-    if (val.backBlankImage && !images.includes(val.backBlankImage)) {
-      images.push(val.backBlankImage);
-    }
-
-    // Auto-compute total stock from variants if defined
     const computedStock = this.variants().length > 0 ? this.totalVariantStock() : Number(val.stock);
-    const supportedColors = this.variants().length > 0 
-      ? this.variants().map(v => v.name) 
-      : ['Navy Blue', 'Deep Slate', 'Sand Beige', 'Terracotta', 'Pure White', 'Emerald Green'];
 
     const payload: any = {
       name: val.name,
@@ -1670,7 +1737,8 @@ export class AdminProductsComponent implements OnInit {
       isCustomizable: val.isCustomizable,
       customBaseFee: Number(val.customBaseFee) || 30000,
       customConfig: val.isCustomizable ? {
-        frontBlankImage: val.frontBlankImage || images[0],
+        blanks,
+        frontBlankImage: val.frontBlankImage || '',
         backBlankImage: val.backBlankImage || '',
         backEngraveFee: Number(val.backEngraveFee) || 20000,
         photoPrintFee: Number(val.photoPrintFee) || 30000,
@@ -1687,7 +1755,7 @@ export class AdminProductsComponent implements OnInit {
           width: Math.max(10, Math.min(100 - Math.max(0, Math.min(90, Number(val.safeAreaX) || 26)), Number(val.safeAreaWidth) || 48)),
           height: Math.max(10, Math.min(100 - Math.max(0, Math.min(90, Number(val.safeAreaY) || 25)), Number(val.safeAreaHeight) || 50))
         },
-        supportedColors
+        supportedColors: []
       } : null,
       status: 'ACTIVE'
     };

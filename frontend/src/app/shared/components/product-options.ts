@@ -23,9 +23,14 @@ export class ProductOptions {
   gallery() {
     const selected = this.selected();
     const matching = this.variants().filter(v => colorName(v) === this.color());
+    const config = this.product()?.customConfig;
+    const blankImages = new Set([
+      config?.frontBlankImage, config?.backBlankImage,
+      ...(config?.blanks || []).flatMap(blank => [blank.frontBlankImage, blank.backBlankImage])
+    ].filter(Boolean));
     return [...new Set([
       ...(selected ? variantImages(selected) : matching.flatMap(variantImages)),
-      ...(this.product()?.images || []), ...this.variants().flatMap(variantImages)
+      ...(this.product()?.images || []).filter(image => !blankImages.has(image)), ...this.variants().flatMap(variantImages)
     ])];
   }
   load(p: Product) {

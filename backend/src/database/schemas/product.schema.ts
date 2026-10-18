@@ -50,14 +50,34 @@ export class ProductSpec {
 export const ProductSpecSchema = SchemaFactory.createForClass(ProductSpec);
 
 @Schema()
+export class StudioBlank {
+  @Prop({ required: true, trim: true })
+  name: string;
+
+  @Prop({ default: '#FFFFFF' })
+  colorHex: string;
+
+  @Prop({ default: '' })
+  frontBlankImage: string;
+
+  @Prop({ default: '' })
+  backBlankImage: string;
+}
+
+export const StudioBlankSchema = SchemaFactory.createForClass(StudioBlank);
+
+@Schema()
 export class CustomBlankConfig {
+  @Prop({ type: [StudioBlankSchema], default: [] })
+  blanks: StudioBlank[];
+
   @Prop({ default: '' })
   frontBlankImage: string;
 
   @Prop({ default: '' })
   backBlankImage: string;
 
-  @Prop({ type: [String], default: ['Navy Blue', 'Deep Slate', 'Sand Beige', 'Terracotta', 'Pure White', 'Emerald Green'] })
+  @Prop({ type: [String], default: [] })
   supportedColors: string[];
 
   @Prop({ default: 35 })
