@@ -44,6 +44,33 @@ import { Category } from '../../../core/models';
         </div>
       </div>
 
+      <section class="rounded-3xl border border-purple-200 bg-white p-5 space-y-4" aria-labelledby="all-categories-icon-title">
+        <div>
+          <h2 id="all-categories-icon-title" class="font-bold text-sm text-giftory-ink">Biểu tượng “Tất cả danh mục”</h2>
+          <p class="text-xs text-slate-500 mt-1">Đổi icon của nút xem toàn bộ sản phẩm trên cửa hàng. Nhập emoji, URL ảnh hoặc tải ảnh từ máy tính.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="inline-flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-xs font-semibold text-white shrink-0">
+            @if (isAllCategoriesIconImage(allCategoriesIcon)) {
+              <img [src]="allCategoriesIcon" alt="Xem trước biểu tượng" class="w-5 h-5 object-contain" />
+            } @else { <span aria-hidden="true">{{ allCategoriesIcon || '🎁' }}</span> }
+            Tất cả danh mục
+          </span>
+          <input aria-label="Biểu tượng Tất cả danh mục" type="text" [(ngModel)]="allCategoriesIcon" placeholder="🎁 hoặc URL ảnh" [disabled]="!displaySettingsReady() || displaySettingsSaving() || displayIconUploading()" class="min-w-0 flex-1 basis-48 rounded-xl border border-purple-200 px-3 py-2 text-xs" />
+          <label class="text-xs font-bold text-purple-600 cursor-pointer">
+            {{ displayIconUploading() ? 'Đang tải ảnh…' : 'Tải ảnh icon' }}
+            <input type="file" accept="image/*" (change)="uploadAllCategoriesIcon($event)" [disabled]="!displaySettingsReady() || displaySettingsSaving() || displayIconUploading()" class="hidden" />
+          </label>
+          <button type="button" (click)="allCategoriesIcon = '🎁'" [disabled]="!displaySettingsReady() || displaySettingsSaving() || displayIconUploading()" class="text-xs text-slate-500 disabled:opacity-50">Mặc định</button>
+          <button type="button" (click)="saveDisplaySettings()" [disabled]="!displaySettingsReady() || displaySettingsSaving() || displayIconUploading() || !allCategoriesIcon.trim()" class="rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">
+            {{ displaySettingsSaving() ? 'Đang lưu…' : 'Lưu biểu tượng' }}
+          </button>
+        </div>
+        @if (displaySettingsError()) {
+          <p role="alert" class="text-xs text-red-600">Không tải được cấu hình biểu tượng. <button type="button" (click)="loadDisplaySettings()" class="underline font-bold">Thử lại</button></p>
+        } @else if (!displaySettingsReady()) { <p role="status" class="text-xs text-slate-500">Đang tải cấu hình…</p> }
+      </section>
+
       <!-- KPI Overview Cards -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white p-5 rounded-3xl border border-giftory-border shadow-xs">
@@ -205,11 +232,6 @@ import { Category } from '../../../core/models';
                         <div>
                           <div class="font-bold text-giftory-ink flex items-center gap-1.5">
                             <span>{{ cat.name }}</span>
-                            @if (cat.icon) {
-                              <span class="material-symbols-outlined text-[14px] text-[#7C3AED]" [title]="cat.icon">
-                                {{ cat.icon }}
-                              </span>
-                            }
                           </div>
                           <span class="text-[10px] text-giftory-ink/40">ID: {{ cat._id }}</span>
                         </div>
@@ -348,13 +370,13 @@ import { Category } from '../../../core/models';
                 </div>
               </div>
 
-              <!-- Emoji & Icon & Order -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <!-- Category icon & display order -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <!-- Emoji Field with Upload from Computer option -->
                 <div class="space-y-1">
                   <div class="flex items-center justify-between">
                     <label class="text-[11px] font-bold text-giftory-ink uppercase tracking-wider block">
-                      Emoji Quà
+                      Biểu tượng (emoji/ảnh)
                     </label>
                     <label for="emojiFileInput" class="text-[10px] text-[#7C3AED] font-bold hover:underline cursor-pointer flex items-center gap-0.5">
                       <span class="material-symbols-outlined text-[13px]">upload_file</span>
@@ -417,24 +439,6 @@ import { Category } from '../../../core/models';
                   }
                 </div>
 
-                <!-- Material Icon Field -->
-                <div class="space-y-1">
-                  <label class="text-[11px] font-bold text-giftory-ink uppercase tracking-wider block">
-                    Material Icon
-                  </label>
-                  <div class="relative flex items-center">
-                    <input
-                      type="text"
-                      formControlName="icon"
-                      placeholder="local_cafe"
-                      class="w-full pl-3 pr-8 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-xs font-mono h-[38px]"
-                    />
-                    <span class="material-symbols-outlined absolute right-2 text-sm text-[#7C3AED]">
-                      {{ categoryForm.get('icon')?.value || 'category' }}
-                    </span>
-                  </div>
-                </div>
-
                 <!-- Order Field -->
                 <div class="space-y-1">
                   <label class="text-[11px] font-bold text-giftory-ink uppercase tracking-wider block">
@@ -447,25 +451,6 @@ import { Category } from '../../../core/models';
                     placeholder="0"
                     class="w-full px-3 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-xs font-bold text-center h-[38px]"
                   />
-                </div>
-              </div>
-
-              <!-- Quick Emoji Pickers -->
-              <div class="space-y-1.5 bg-[#FAF7FC] p-3 rounded-2xl border border-giftory-border/50">
-                <span class="text-[10px] font-bold text-giftory-ink/60 uppercase tracking-wider block">
-                  Gợi Ý Nhanh Biểu Tượng & Icon Quà Tặng:
-                </span>
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  @for (preset of presetIcons; track preset.emoji) {
-                    <button
-                      type="button"
-                      (click)="applyPreset(preset)"
-                      class="px-2 py-1 rounded-lg bg-white border border-giftory-border text-xs flex items-center gap-1 hover:border-[#7C3AED] hover:bg-purple-50 transition cursor-pointer"
-                    >
-                      <span>{{ preset.emoji }}</span>
-                      <span class="text-[10px] text-giftory-ink/70">{{ preset.label }}</span>
-                    </button>
-                  }
                 </div>
               </div>
 
@@ -538,9 +523,6 @@ import { Category } from '../../../core/models';
                   <div>
                     <div class="text-xs font-bold text-giftory-ink flex items-center gap-1">
                       <span>{{ categoryForm.get('name')?.value || 'Tên Danh Mục Quà Tặng' }}</span>
-                      <span class="material-symbols-outlined text-[13px] text-[#7C3AED]">
-                        {{ categoryForm.get('icon')?.value || 'category' }}
-                      </span>
                     </div>
                     <span class="text-[10px] text-giftory-ink/50 font-mono">
                       /products?category={{ categoryForm.get('slug')?.value || 'slug-danh-muc' }}
@@ -642,6 +624,76 @@ import { Category } from '../../../core/models';
 export class AdminCategoriesComponent implements OnInit {
   private adminService = inject(AdminService);
   private fb = inject(FormBuilder);
+  allCategoriesIcon = '🎁';
+  displaySettingsReady = signal(false);
+  displaySettingsError = signal(false);
+  displaySettingsSaving = signal(false);
+  displayIconUploading = signal(false);
+
+  isAllCategoriesIconImage(value: string): boolean {
+    return /^(https?:\/\/|\/(?!\/)|data:image\/)/i.test(value);
+  }
+
+  loadDisplaySettings(): void {
+    this.displaySettingsReady.set(false);
+    this.displaySettingsError.set(false);
+    this.adminService.getCategoryDisplaySettings().subscribe({
+      next: settings => {
+        this.allCategoriesIcon = settings.allCategoriesIcon || '🎁';
+        this.displaySettingsReady.set(true);
+      },
+      error: () => this.displaySettingsError.set(true),
+    });
+  }
+
+  saveDisplaySettings(): void {
+    if (!this.displaySettingsReady() || this.displaySettingsSaving() || this.displayIconUploading() || !this.allCategoriesIcon.trim()) return;
+    this.displaySettingsSaving.set(true);
+    this.adminService.updateCategoryDisplaySettings(this.allCategoriesIcon.trim()).subscribe({
+      next: settings => {
+        this.allCategoriesIcon = settings.allCategoriesIcon;
+        this.displaySettingsSaving.set(false);
+        this.showToast('Đã cập nhật biểu tượng Tất cả danh mục trên cửa hàng.');
+      },
+      error: () => {
+        this.displaySettingsSaving.set(false);
+        this.showToast('Không lưu được biểu tượng. Vui lòng thử lại.', 'error');
+      },
+    });
+  }
+
+  uploadAllCategoriesIcon(event: Event): void {
+    if (!this.displaySettingsReady() || this.displaySettingsSaving() || this.displayIconUploading()) return;
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    input.value = '';
+    if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) {
+      this.showToast('Vui lòng chọn ảnh icon dưới 5MB.', 'error');
+      return;
+    }
+    this.displayIconUploading.set(true);
+    const reader = new FileReader();
+    reader.onerror = () => {
+      this.displayIconUploading.set(false);
+      this.showToast('Không đọc được ảnh icon.', 'error');
+    };
+    reader.onload = () => {
+      const dataUrl = String(reader.result);
+      this.adminService.uploadImage(file).subscribe({
+        next: (res: any) => {
+          this.allCategoriesIcon = res?.url || res?.data?.url || (typeof res === 'string' ? res : dataUrl);
+          this.displayIconUploading.set(false);
+        },
+        error: () => {
+          this.allCategoriesIcon = dataUrl;
+          this.displayIconUploading.set(false);
+          this.showToast('Đã đọc ảnh icon. Bấm Lưu biểu tượng để áp dụng.');
+        },
+      });
+    };
+    reader.readAsDataURL(file);
+  }
 
   @Output() categoriesChanged = new EventEmitter<void>();
 
@@ -669,24 +721,10 @@ export class AdminCategoriesComponent implements OnInit {
   toastMessage = signal<string | null>(null);
   toastType = signal<'success' | 'error'>('success');
 
-  // Preset suggestions for emojis and Material icons
-  presetIcons = [
-    { emoji: '☕', icon: 'local_cafe', label: 'Cốc Sứ / Bình Giữ Nhiệt' },
-    { emoji: '✒️', icon: 'edit_note', label: 'Bút Ký / Sổ Da' },
-    { emoji: '🕯️', icon: 'spa', label: 'Nến Thơm / Spa' },
-    { emoji: '🐰', icon: 'key', label: 'Móc Khóa / Gỗ' },
-    { emoji: '👕', icon: 'apparel', label: 'Áo Thun / Vải' },
-    { emoji: '🎁', icon: 'featured_seasonal_and_gifts', label: 'Set Quà Tặng' },
-    { emoji: '🌸', icon: 'local_florist', label: 'Hoa & Thiệp' },
-    { emoji: '🍫', icon: 'cookie', label: 'Bánh Kẹo & Socola' },
-    { emoji: '🎨', icon: 'palette', label: 'Custom Tự Thiết Kế' },
-  ];
-
   categoryForm: FormGroup = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
     slug: [''],
     emoji: ['🎁'],
-    icon: ['category'],
     description: [''],
     imageUrl: [''],
     order: [0],
@@ -725,6 +763,7 @@ export class AdminCategoriesComponent implements OnInit {
 
   ngOnInit() {
     this.loadCategories();
+    this.loadDisplaySettings();
   }
 
   loadCategories() {
@@ -750,7 +789,6 @@ export class AdminCategoriesComponent implements OnInit {
       name: '',
       slug: '',
       emoji: '🎁',
-      icon: 'category',
       description: '',
       imageUrl: '',
       order: this.categories().length,
@@ -768,7 +806,6 @@ export class AdminCategoriesComponent implements OnInit {
       name: cat.name,
       slug: cat.slug,
       emoji: cat.emoji || '🎁',
-      icon: cat.icon || 'category',
       description: cat.description || '',
       imageUrl: cat.imageUrl || '',
       order: cat.order ?? 0,
@@ -790,13 +827,6 @@ export class AdminCategoriesComponent implements OnInit {
       const slug = this.slugify(name);
       this.categoryForm.patchValue({ slug }, { emitEvent: false });
     }
-  }
-
-  applyPreset(preset: { emoji: string; icon: string; label: string }) {
-    this.categoryForm.patchValue({
-      emoji: preset.emoji,
-      icon: preset.icon,
-    });
   }
 
   onUploadImage(event: any) {

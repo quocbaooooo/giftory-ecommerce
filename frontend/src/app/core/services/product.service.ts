@@ -32,5 +32,9 @@ export class ProductService {
   getCategories(): Observable<Category[]> {
     return this.api.get<Category[]>('categories');
   }
+
+  getCategoryDisplaySettings(): Observable<{ allCategoriesIcon: string }> {
+    return this.api.get('categories/display-settings');
+  }
 }
 

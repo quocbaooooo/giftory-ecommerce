@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import Konva from 'konva';
-import { CLIPART_LIBRARY, filterGraphics, graphicsForFace } from './graphics-library';
+import { filterGraphics, graphicsForFace } from './graphics-library';
 import { CustomStudioService } from '../../core/services/custom-studio.service';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -273,6 +273,8 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
               <!-- DRAWER 1: COLORS -->
               @if (activeToolTab() === 'COLOR') {
                 <div class="space-y-4 animate-fade-in">
+                  <p class="text-[11px] text-slate-500">Các màu phôi dùng chung vùng in và vùng an toàn của phôi gốc.</p>
+                  @if (blankImageNotice()) { <p role="alert" class="text-xs text-amber-700">{{ blankImageNotice() }}</p> }
                   <div class="grid grid-cols-2 gap-2.5">
                     @for (c of availableColorOptions(); track c.name) {
                       <div 
@@ -481,6 +483,12 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                   <p class="text-[11px] text-slate-500">Bấm để thêm hình vào {{ isFrontFace() ? 'mặt trước' : 'mặt sau' }}. Có thể thêm cùng một hình nhiều lần. Miễn phí.</p>
                   @if (pendingGraphicAdds()) { <p role="status" class="text-xs text-purple-600">Đang tải clipart…</p> }
                   @if (graphicsNotice()) { <p role="status" class="text-xs text-amber-700">{{ graphicsNotice() }}</p> }
+                  @if (graphicsLibraryLoading()) {
+                    <p role="status" class="text-xs text-purple-600">Đang tải thư viện clipart…</p>
+                  }
+                  @if (graphicsLibraryError()) {
+                    <p role="alert" class="text-xs text-amber-700">Không tải được thư viện clipart. <button type="button" (click)="loadStudioAssets()" class="underline font-bold">Thử lại</button></p>
+                  }
                   <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     @for (asset of filteredGraphics(); track asset._id) {
                       <button (click)="addGraphic(asset)" [title]="'Thêm ' + asset.name" [disabled]="activeStickers().length >= 30"
@@ -488,7 +496,11 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                           <img [src]="asset.thumbnailUrl || asset.imageUrl || asset.icon" [alt]="asset.name" loading="lazy" class="w-12 h-12 object-contain">
                         <span class="text-[10px] text-slate-600 truncate w-full text-center">{{ asset.name }}</span>
                       </button>
-                    } @empty { <p class="col-span-full text-xs text-slate-500 py-4">Không tìm thấy đồ họa phù hợp.</p> }
+                    } @empty {
+                      @if (!graphicsLibraryLoading() && !graphicsLibraryError()) {
+                        <p class="col-span-full text-xs text-slate-500 py-4">{{ graphicsAssets().length ? 'Không tìm thấy clipart phù hợp.' : 'Thư viện chưa có clipart đang hoạt động.' }}</p>
+                      }
+                    }
                   </div>
                   <p class="text-[10px] text-slate-400">{{ activeStickers().length }}/30 hình trong thiết kế • Kéo, thu phóng và xoay trên canvas.</p>
                   @if (activeStickers().length) {
@@ -935,12 +947,14 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Cliparts from Admin Asset API
   dynamicStickers = signal<StudioAsset[]>([]);
+  graphicsLibraryLoading = signal(false);
+  graphicsLibraryError = signal(false);
 
   graphicsQuery = signal('');
   graphicsCategory = signal('');
   graphicsNotice = signal('');
   pendingGraphicAdds = signal(0);
-  graphicsAssets = computed(() => [...CLIPART_LIBRARY, ...this.dynamicStickers().filter(a => a.type === 'CLIPART')]);
+  graphicsAssets = computed(() => this.dynamicStickers().filter(asset => asset.type === 'CLIPART' && asset.isActive !== false));
   filteredGraphics = computed(() => filterGraphics(this.graphicsAssets(), this.graphicsCategory(), this.graphicsQuery()));
   graphicsCategories = computed(() => [...new Set(this.graphicsAssets().map(a => a.category || 'Phổ biến'))]);
   private graphicImages = new Map<string, HTMLImageElement>();
@@ -1046,6 +1060,43 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Kích thước và tọa độ hiển thị chuẩn của phôi trên canvas (bảo toàn tỷ lệ gốc aspect ratio)
   private currentMockupBounds = { x: 20, y: 20, width: 420, height: 420 };
+  private blankImages = new Map<string, Promise<HTMLImageElement>>();
+  private blankRenderVersion = 0;
+  blankImageNotice = signal('');
+
+  private getGuideReferenceImage(): string {
+    const config = this.activeTemplate()?.customConfig;
+    // The admin area editor uses the original front image as its coordinate reference.
+    return config?.frontBlankImage || config?.backBlankImage
+      || config?.blanks?.[0]?.frontBlankImage || config?.blanks?.[0]?.backBlankImage
+      || this.getCurrentBlankImage();
+  }
+
+  private fitBlankImage(image: HTMLImageElement): AreaBox {
+    const width = image.naturalWidth || 420;
+    const height = image.naturalHeight || 420;
+    const scale = Math.min(430 / width, 430 / height);
+    const displayWidth = Math.round(width * scale);
+    const displayHeight = Math.round(height * scale);
+    return { x: Math.round((460 - displayWidth) / 2), y: Math.round((460 - displayHeight) / 2), width: displayWidth, height: displayHeight };
+  }
+
+  private loadBlankImage(url: string): Promise<HTMLImageElement> {
+    const cached = this.blankImages.get(url);
+    if (cached) return cached;
+    const request = new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.crossOrigin = 'Anonymous';
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error('Không tải được ảnh phôi'));
+      image.src = url;
+    }).catch(error => {
+      this.blankImages.delete(url);
+      throw error;
+    });
+    this.blankImages.set(url, request);
+    return request;
+  }
 
   getGuideCoordinates(): { paPx: AreaBox; saPx: AreaBox } {
     const b = this.currentMockupBounds;
@@ -1094,14 +1145,27 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.activeTemplate()?.customConfig?.maxTextLength || 35;
   });
 
-  availableColorOptions = computed(() => {
+  studioBlankOptions = computed(() => {
     const config = this.activeTemplate()?.customConfig;
-    const blanks = config?.blanks?.length ? config.blanks : [{
-      name: 'Mặc định', colorHex: '#FFFFFF',
-      frontBlankImage: config?.frontBlankImage || '',
-      backBlankImage: config?.backBlankImage || ''
-    }];
-    return blanks.map(blank => ({
+    const blanks = config?.blanks || [];
+    const front = config?.frontBlankImage?.trim() || '';
+    const back = config?.backBlankImage?.trim() || '';
+    const hasOriginal = !!(front || back);
+    const originalListed = blanks.some(blank =>
+      (blank.frontBlankImage?.trim() || '') === front && (blank.backBlankImage?.trim() || '') === back);
+    if ((hasOriginal && !originalListed) || !blanks.length) {
+      const names = new Set(blanks.map(blank => blank.name));
+      let name = 'Mặc định';
+      for (let suffix = 1; names.has(name); suffix++) {
+        name = suffix === 1 ? 'Phôi gốc' : `Phôi gốc (${suffix})`;
+      }
+      return [{ name, colorHex: '#FFFFFF', frontBlankImage: front, backBlankImage: back }, ...blanks];
+    }
+    return blanks;
+  });
+
+  availableColorOptions = computed(() => {
+    return this.studioBlankOptions().map(blank => ({
       name: blank.name, hex: blank.colorHex || '#FFFFFF',
       sku: '', isOutOfStock: false
     }));
@@ -1395,59 +1459,34 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
       this.bgRectNode.fill(this.getColorCanvasBackground());
     }
 
-    // 1. Render Product Blank Image on bgLayer
+    // Keep guides anchored to the original blank, regardless of the selected color image's aspect ratio.
     const blankUrl = this.getCurrentBlankImage();
-    const imageObj = new Image();
-    imageObj.crossOrigin = 'Anonymous';
-    imageObj.onload = () => {
-      if (!this.bgLayer || blankUrl !== this.getCurrentBlankImage()) return;
-
-      const stageW = 460;
-      const stageH = 460;
-      const padding = 15;
-      const maxW = stageW - padding * 2;
-      const maxH = stageH - padding * 2;
-
-      const natW = imageObj.naturalWidth || 420;
-      const natH = imageObj.naturalHeight || 420;
-
-      // Giữ nguyên kích thước và tỉ lệ chuẩn của phôi (aspect-ratio contain, không làm méo phôi)
-      const scale = Math.min(maxW / natW, maxH / natH);
-      const dispW = Math.round(natW * scale);
-      const dispH = Math.round(natH * scale);
-      const dispX = Math.round((stageW - dispW) / 2);
-      const dispY = Math.round((stageH - dispH) / 2);
-
-      this.currentMockupBounds = { x: dispX, y: dispY, width: dispW, height: dispH };
-
+    const referenceUrl = this.getGuideReferenceImage();
+    const template = this.activeTemplate();
+    const version = ++this.blankRenderVersion;
+    this.blankImageNotice.set('');
+    Promise.all([this.loadBlankImage(blankUrl), this.loadBlankImage(referenceUrl)]).then(([image, reference]) => {
+      if (this.studioDestroyed || !this.bgLayer || version !== this.blankRenderVersion || template !== this.activeTemplate()) return;
+      this.currentMockupBounds = this.fitBlankImage(reference);
+      const bounds = this.fitBlankImage(image);
+      const attrs = { ...bounds, image, visible: true, listening: true };
       if (!this.productImgNode) {
-        this.productImgNode = new Konva.Image({
-          x: dispX,
-          y: dispY,
-          image: imageObj,
-          width: dispW,
-          height: dispH,
-          listening: true
-        });
+        this.productImgNode = new Konva.Image(attrs);
         this.bgLayer.add(this.productImgNode);
       } else {
-        this.productImgNode.setAttrs({
-          x: dispX,
-          y: dispY,
-          image: imageObj,
-          width: dispW,
-          height: dispH
-        });
+        this.productImgNode.setAttrs(attrs);
       }
       this.bgLayer.batchDraw();
-
-      // Đồng bộ vẽ khung hướng dẫn theo kích thước chuẩn của phôi
       this.renderGuidesOnKonva();
       this.renderTextBlocks();
       this.renderStickersOnKonva();
       this.checkOverflowWarning();
-    };
-    imageObj.src = blankUrl;
+    }).catch(() => {
+      if (this.studioDestroyed || version !== this.blankRenderVersion || template !== this.activeTemplate()) return;
+      this.productImgNode?.hide();
+      this.bgLayer?.batchDraw();
+      this.blankImageNotice.set('Không tải được ảnh phôi hoặc ảnh phôi gốc. Vui lòng chọn lại màu phôi.');
+    });
 
     this.renderTextBlocks();
 
@@ -2279,9 +2318,18 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   loadStudioAssets(): void {
+    this.graphicsLibraryLoading.set(true);
+    this.graphicsLibraryError.set(false);
     this.studioService.getAssets('CLIPART').subscribe({
-      next: assets => this.dynamicStickers.set(Array.isArray(assets) ? assets.filter(asset => asset.type === 'CLIPART') : []),
-      error: () => this.dynamicStickers.set([]),
+      next: assets => {
+        this.dynamicStickers.set(Array.isArray(assets) ? assets : []);
+        this.graphicsLibraryLoading.set(false);
+      },
+      error: () => {
+        this.dynamicStickers.set([]);
+        this.graphicsLibraryLoading.set(false);
+        this.graphicsLibraryError.set(true);
+      },
     });
   }
 
@@ -2289,7 +2337,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     const tpl = this.activeTemplate();
     if (!tpl) return 'https://placehold.co/400';
 
-    const blank = tpl.customConfig?.blanks?.find(b => b.name === this.selectedColor());
+    const blank = this.studioBlankOptions().find(b => b.name === this.selectedColor());
     return (this.isFrontFace()
       ? blank?.frontBlankImage || tpl.customConfig?.frontBlankImage
       : blank?.backBlankImage || tpl.customConfig?.backBlankImage) || 'https://placehold.co/400?text=Chua+co+anh+phoi';

@@ -18,16 +18,20 @@ const signal = value => {
   return read;
 };
 const library = compile('src/app/features/custom-studio/graphics-library.ts');
-const { CLIPART_LIBRARY, filterGraphics, graphicsForFace } = library;
-assert.equal(CLIPART_LIBRARY.length, 12);
-assert.equal(filterGraphics(CLIPART_LIBRARY, '', 'dong vat').length, 1);
-for (const asset of CLIPART_LIBRARY) {
+const { filterGraphics, graphicsForFace } = library;
+const SAMPLE_ASSETS = [
+  { _id: 'heart', type: 'CLIPART', name: 'Trái tim', imageUrl: '/cliparts/heart.svg', category: 'Tình yêu' },
+  { _id: 'cat', type: 'CLIPART', name: 'Mèo nhỏ', imageUrl: '/cliparts/cat.svg', category: 'Động vật' },
+  { _id: 'cake', type: 'CLIPART', name: 'Bánh sinh nhật', imageUrl: '/cliparts/cake.svg', category: 'Sinh nhật' }
+];
+assert.equal(filterGraphics(SAMPLE_ASSETS, '', 'dong vat').length, 1);
+for (const asset of SAMPLE_ASSETS) {
   assert.ok(fs.existsSync(path.join(root, 'public', asset.imageUrl)));
 }
-assert.ok(filterGraphics(CLIPART_LIBRARY, '', 'trai tim').some(a => a.name === 'Trái tim'));
-assert.equal(filterGraphics([{ _id: 'old', type: 'STICKER', icon: '❤️', name: 'Tim' }, ...CLIPART_LIBRARY], '', '').length, CLIPART_LIBRARY.length);
-assert.ok(filterGraphics(CLIPART_LIBRARY, 'Sinh nhật', '').every(a => a.category === 'Sinh nhật'));
-assert.equal(filterGraphics(CLIPART_LIBRARY, '', 'missing').length, 0);
+assert.ok(filterGraphics(SAMPLE_ASSETS, '', 'trai tim').some(a => a.name === 'Trái tim'));
+assert.equal(filterGraphics([{ _id: 'old', type: 'STICKER', icon: '❤️', name: 'Tim' }, ...SAMPLE_ASSETS], '', '').length, SAMPLE_ASSETS.length);
+assert.ok(filterGraphics(SAMPLE_ASSETS, 'Sinh nhật', '').every(a => a.category === 'Sinh nhật'));
+assert.equal(filterGraphics(SAMPLE_ASSETS, '', 'missing').length, 0);
 const legacy = { id: 'legacy', icon: '❤️', name: 'Tim' };
 const front = { ...legacy, id: 'front', face: 'front' };
 const back = { ...legacy, id: 'back', face: 'back' };
@@ -51,10 +55,35 @@ for (const key of ['x', 'y', 'width', 'height', 'scaleX', 'scaleY', 'rotation'])
 }
 const decorator = () => () => {};
 const { CustomStudioComponent } = compile('src/app/features/custom-studio/custom-studio.component.ts', {
-  '@angular/core': { Component: decorator, ViewChild: decorator, HostListener: decorator },
+  '@angular/core': { Component: decorator, ViewChild: decorator, HostListener: decorator, signal, computed: fn => fn, inject: () => ({}), effect() {} },
   'konva': { default: { Text: Shape, Image: Shape } },
   './graphics-library': library,
 });
+// The catalog must come exclusively from the admin API, including the empty/error cases.
+const catalog = new CustomStudioComponent();
+assert.deepEqual(catalog.graphicsAssets(), []);
+let response;
+catalog.studioService = { getAssets(type) {
+  assert.equal(type, 'CLIPART');
+  return { subscribe(handlers) { response = handlers; } };
+} };
+catalog.loadStudioAssets();
+assert.equal(catalog.graphicsLibraryLoading(), true);
+response.next([SAMPLE_ASSETS[0], { ...SAMPLE_ASSETS[1], isActive: false }, { _id: 'emoji', type: 'STICKER' }]);
+assert.deepEqual(catalog.graphicsAssets().map(asset => asset._id), ['heart']);
+assert.equal(catalog.graphicsLibraryLoading(), false);
+catalog.loadStudioAssets();
+response.next([]);
+assert.deepEqual(catalog.graphicsAssets(), [], 'an empty admin library must not inject built-in graphics');
+catalog.loadStudioAssets();
+response.error(new Error('Offline'));
+assert.deepEqual(catalog.graphicsAssets(), []);
+assert.equal(catalog.graphicsLibraryError(), true);
+catalog.loadStudioAssets();
+response.next([SAMPLE_ASSETS[2]]);
+assert.equal(catalog.graphicsLibraryError(), false);
+assert.deepEqual(catalog.graphicsAssets().map(asset => asset._id), ['cake']);
+
 function fixture(items) {
   const studio = Object.create(CustomStudioComponent.prototype);
   let selected = [];
@@ -126,7 +155,7 @@ async function run() {
 
   const failed = fixture([]);
   failed.loadGraphicImage = async () => { throw new Error('Offline'); };
-  await failed.addGraphic(CLIPART_LIBRARY[0]);
+  await failed.addGraphic(SAMPLE_ASSETS[0]);
   assert.equal(failed.activeStickers().length, 0);
   assert.ok(failed.graphicsNotice());
   assert.equal(failed.pendingGraphicAdds(), 0);

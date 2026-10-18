@@ -61,7 +61,11 @@ import { Product, Category } from '../../core/models';
           class="px-4 py-2 rounded-full text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
           [ngClass]="!selectedCategory ? 'bg-[#7C3AED] text-white shadow-md shadow-purple-300' : 'bg-white text-slate-700 border border-[#DDD6FE] hover:bg-purple-50'"
         >
-          <span>🎁</span>
+          @if (isCategoryIconImage(allCategoriesIcon())) {
+            <img [src]="allCategoriesIcon()" alt="" class="w-4 h-4 object-contain shrink-0" />
+          } @else {
+            <span aria-hidden="true">{{ allCategoriesIcon() }}</span>
+          }
           <span>Tất cả danh mục</span>
         </button>
         @for (cat of categories(); track cat._id) {
@@ -422,6 +426,11 @@ export class ProductsComponent implements OnInit {
   products = signal<Product[]>([]);
   bestSellers = signal<Product[]>([]);
   categories = signal<Category[]>([]);
+  allCategoriesIcon = signal('🎁');
+
+  isCategoryIconImage(value: string): boolean {
+    return /^(https?:\/\/|\/(?!\/)|data:image\/)/i.test(value);
+  }
   loading = signal<boolean>(true);
   total = signal<number>(0);
   totalPages = signal<number>(1);
@@ -461,6 +470,10 @@ export class ProductsComponent implements OnInit {
   ngOnInit(): void {
     // Load categories
     this.productService.getCategories().subscribe(cats => this.categories.set(cats));
+    this.productService.getCategoryDisplaySettings().subscribe({
+      next: settings => this.allCategoriesIcon.set(settings.allCategoriesIcon || '🎁'),
+      error: () => this.allCategoriesIcon.set('🎁'),
+    });
 
     // Load best-sellers upfront for instant zero-results fallback
     this.productService.getBestSellers(4).subscribe(res => this.bestSellers.set(res));

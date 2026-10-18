@@ -18,6 +18,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../common/enums/role.enum';
+import { CategoryDisplaySettingsDto } from './dto/category-display-settings.dto';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -37,6 +38,20 @@ export class CategoriesController {
   @ApiOperation({ summary: 'Lấy toàn bộ danh mục cho Admin (kèm số lượng sản phẩm)' })
   async findAllAdmin(): Promise<any[]> {
     return this.categoriesService.findAllAdmin();
+  }
+
+  @Get('display-settings')
+  @ApiOperation({ summary: 'Lấy cấu hình biểu tượng nút Tất cả danh mục' })
+  getDisplaySettings() {
+    return this.categoriesService.getDisplaySettings();
+  }
+
+  @Patch('display-settings')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
+  updateDisplaySettings(@Body() dto: CategoryDisplaySettingsDto) {
+    return this.categoriesService.updateDisplaySettings(dto);
   }
 
   @Get(':slug')

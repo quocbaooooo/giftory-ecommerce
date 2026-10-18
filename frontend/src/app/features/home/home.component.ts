@@ -95,8 +95,8 @@ import { Product, Category } from '../../core/models';
         <!-- Quick Category Pills -->
         <div class="relative z-10 flex items-center justify-center gap-2.5 mt-6 flex-wrap max-w-5xl px-2">
           @for (cat of categories(); track cat._id) {
-            <a [routerLink]="['/products']" [queryParams]="{ category: cat.slug }" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#DDD6FE] shadow-sm hover:bg-[#DDD6FE] hover:text-[#7C3AED] transition-all text-xs font-semibold text-[#1E1B4B]">
-              <span class="w-5 h-5 rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center text-[11px] overflow-hidden">
+            <a [routerLink]="['/products']" [queryParams]="{ category: cat.slug }" class="group relative hover:z-20 focus-visible:z-20 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#DDD6FE] shadow-sm hover:bg-[#DDD6FE] hover:text-[#7C3AED] transition-all text-xs font-semibold text-[#1E1B4B]">
+              <span class="w-5 h-5 shrink-0 rounded-full bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center text-[11px] overflow-hidden origin-center transition-transform duration-200 ease-out group-hover:scale-150 group-focus-visible:scale-150 motion-reduce:transition-none">
                 @if (cat.emoji && (cat.emoji.startsWith('http') || cat.emoji.startsWith('/') || cat.emoji.startsWith('data:') || cat.emoji.length > 10)) {
                   <img [src]="cat.emoji" [alt]="cat.name" class="w-full h-full object-contain" />
                 } @else {

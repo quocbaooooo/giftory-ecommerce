@@ -562,12 +562,13 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                     }
                   </div>
 
+                  <p class="text-[11px] text-slate-500">Phôi gốc bên dưới vẫn hiển thị ở lựa chọn “Mặc định” trong Studio khi bạn thêm màu phôi mới. Nếu đã khai báo cùng ảnh hai mặt trong danh sách màu, Studio sẽ chỉ hiển thị một lần.</p>
                   <!-- Front Blank & Back Blank Images -->
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Front Blank Image -->
                     <div class="space-y-1.5">
                       <div class="flex items-center justify-between">
-                        <label class="text-[11px] font-bold text-slate-700">Ảnh Phôi Mặt Trước (Front Blank):</label>
+                        <label class="text-[11px] font-bold text-slate-700">Phôi gốc — Mặt trước:</label>
                         <label class="cursor-pointer text-[10px] font-bold text-[#7C3AED] hover:underline flex items-center gap-0.5">
                           <span class="material-symbols-outlined text-[13px]">upload</span>
                           <span>Tải ảnh mặt trước</span>
@@ -585,7 +586,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                     <!-- Back Blank Image -->
                     <div class="space-y-1.5">
                       <div class="flex items-center justify-between">
-                        <label class="text-[11px] font-bold text-slate-700">Ảnh Phôi Mặt Sau (Back Blank):</label>
+                        <label class="text-[11px] font-bold text-slate-700">Phôi gốc — Mặt sau:</label>
                         <label class="cursor-pointer text-[10px] font-bold text-[#7C3AED] hover:underline flex items-center gap-0.5">
                           <span class="material-symbols-outlined text-[13px]">upload</span>
                           <span>Tải ảnh mặt sau</span>

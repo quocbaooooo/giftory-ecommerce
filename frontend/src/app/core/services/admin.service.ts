@@ -8,6 +8,14 @@ import { ApiService } from './api.service';
 export class AdminService {
   constructor(private api: ApiService) {}
 
+  getCategoryDisplaySettings(): Observable<{ allCategoriesIcon: string }> {
+    return this.api.get('categories/display-settings');
+  }
+
+  updateCategoryDisplaySettings(allCategoriesIcon: string): Observable<{ allCategoriesIcon: string }> {
+    return this.api.patch('categories/display-settings', { allCategoriesIcon });
+  }
+
   getDashboard(): Observable<any> {
     return this.api.get('admin/dashboard');
   }

@@ -5,13 +5,30 @@ import { Category, CategoryDocument } from '../../database/schemas/category.sche
 import { Product, ProductDocument } from '../../database/schemas/product.schema';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CategoryDisplaySettings, CategoryDisplaySettingsDocument } from '../../database/schemas/category-display-settings.schema';
+import { CategoryDisplaySettingsDto } from './dto/category-display-settings.dto';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectModel(Category.name) private readonly categoryModel: Model<CategoryDocument>,
     @InjectModel(Product.name) private readonly productModel: Model<ProductDocument>,
+    @InjectModel(CategoryDisplaySettings.name) private readonly displaySettingsModel: Model<CategoryDisplaySettingsDocument>,
   ) {}
+
+  async getDisplaySettings() {
+    const settings = await this.displaySettingsModel.findOne({ key: 'storefront' }).lean().exec();
+    return { allCategoriesIcon: settings?.allCategoriesIcon || '🎁' };
+  }
+
+  async updateDisplaySettings(dto: CategoryDisplaySettingsDto) {
+    const settings = await this.displaySettingsModel.findOneAndUpdate(
+      { key: 'storefront' },
+      { $set: { allCategoriesIcon: dto.allCategoriesIcon.trim() } },
+      { new: true, upsert: true, runValidators: true },
+    ).lean().exec();
+    return { allCategoriesIcon: settings.allCategoriesIcon };
+  }
 
   private slugify(text: string): string {
     return text
