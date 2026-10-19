@@ -8,6 +8,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:auth": "node test/auth-logic.cjs",
+    "test:catalog": "node test/catalog-cache.cjs && node test/catalog-auth.cjs",
     "test:cart": "node test/cart-quantity.cjs",
     "test:studio": "node test/studio-graphics.cjs && node test/studio-text-blocks.cjs && node test/studio-blanks.cjs && node test/studio-fonts.cjs",
     "test:cliparts": "node test/openclipart-importer.cjs"

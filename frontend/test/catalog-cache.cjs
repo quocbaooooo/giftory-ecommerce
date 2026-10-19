@@ -11,6 +11,7 @@ function compile(file) {
   new Function('require', 'module', 'exports', code)(name => {
     if (name === '@angular/core') return { Injectable: () => target => target };
     if (name === 'rxjs' || name === 'rxjs/operators') return rx;
+    if (name.includes('environments/environment')) return { environment: { apiUrl: '/api' } };
     return {};
   }, loaded, loaded.exports);
   return loaded.exports;
@@ -70,5 +71,49 @@ try {
   assert.equal(requests.length, count + 4, 'product details and purchase options remain fresh');
   for (let i = 0; i < 50; i++) service.getCatalogProducts({ search: 'query-' + i }).subscribe();
   assert.ok(service.catalogCache.size <= 40, 'searching cannot grow the cache without bound');
+  const storage = new Map();
+  global.sessionStorage = {
+    getItem: key => storage.get(key) ?? null,
+    setItem: (key, value) => storage.set(key, value),
+    removeItem: key => storage.delete(key),
+  };
+  const persisted = new ProductService(api);
+  persisted.getCatalogProducts({ limit: 8 }).subscribe();
+  requests.at(-1).response.next(payload); requests.at(-1).response.complete();
+  let before = requests.length;
+  new ProductService(api).getCatalogProducts({ limit: 8 }).subscribe(value => assert.deepEqual(value, payload));
+  assert.equal(requests.length, before, 'reload restores a fresh response without a network request');
+  clock += 60001;
+  const values = [];
+  const restored = new ProductService(api);
+  restored.getCatalogProducts({ limit: 8 }).subscribe(value => values.push(value));
+  restored.getCatalogProducts({ limit: 8 }).subscribe();
+  assert.deepEqual(values, [payload], 'stale response displays before backend wakes');
+  assert.equal(requests.length, before + 1, 'restored subscribers share one background refresh');
+  const updated = { items: [{ _id: 'one', price: 456 }], meta: { total: 1 } };
+  requests.at(-1).response.next(updated); requests.at(-1).response.complete();
+  assert.deepEqual(values, [payload, updated], 'fresh server data replaces the saved response');
+  clock += 60001;
+  new ProductService(api).getCatalogProducts({ limit: 8 }).subscribe({ error: () => assert.fail('cached catalog should survive refresh failure') });
+  requests.at(-1).response.error(new Error('Backend unavailable'));
+  clock += 31 * 60_000;
+  const expiredValues = [];
+  new ProductService(api).getCatalogProducts({ limit: 8 }).subscribe(value => expiredValues.push(value));
+  assert.equal(expiredValues.length, 0, 'old prices are not restored beyond the stale window');
+  persisted.invalidateCatalog();
+  assert.equal(storage.size, 0, 'admin invalidation also removes persisted catalog');
+  const pending = new ProductService(api);
+  pending.getCategories().subscribe();
+  pending.invalidateCatalog();
+  requests.at(-1).response.next([]); requests.at(-1).response.complete();
+  assert.equal(storage.size, 0, 'late requests cannot restore data invalidated by an edit');
+  storage.set(persisted.storageKey, '{broken');
+  assert.doesNotThrow(() => new ProductService(api).getCategories().subscribe());
+  global.sessionStorage = { getItem() { throw new Error('Disabled'); }, setItem() { throw new Error('Full'); } };
+  const unavailable = new ProductService(api);
+  unavailable.getCategories().subscribe();
+  assert.doesNotThrow(() => { requests.at(-1).response.next([]); requests.at(-1).response.complete(); });
+  delete global.sessionStorage;
   console.log('Catalog cache: deduplication, instant revisit, expiry, filter isolation, retries, admin invalidation, prefetch and fresh details passed');
+  console.log('Persistent catalog: reload, stale refresh, deduplication, fresh prices, offline, expiry, invalidation and unavailable storage passed');
 } finally { Date.now = originalNow; }

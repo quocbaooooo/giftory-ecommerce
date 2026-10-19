@@ -173,3 +173,9 @@ ProductSchema.index({ category: 1 });
 ProductSchema.index({ isCustomizable: 1 });
 ProductSchema.index({ isFlashSale: 1 });
 ProductSchema.index({ name: 'text', description: 'text', tags: 'text' });
+// Match storefront equality filters before the fields used for sorting.
+ProductSchema.index({ status: 1, createdAt: -1 });
+ProductSchema.index({ status: 1, soldCount: -1, rating: -1, createdAt: -1 });
+ProductSchema.index({ status: 1, category: 1, soldCount: -1, rating: -1 });
+ProductSchema.index({ status: 1, isCustomizable: 1, createdAt: -1 });
+ProductSchema.index({ status: 1, isFlashSale: 1, flashSaleDiscountPercent: -1 });

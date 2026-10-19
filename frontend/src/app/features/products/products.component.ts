@@ -482,9 +482,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
       error: () => this.allCategoriesIcon.set('🎁'),
     });
 
-    // Load best-sellers upfront for instant zero-results fallback
-    this.productService.getBestSellers(4).subscribe(res => this.bestSellers.set(res));
-
     // Subscribe to query params to restore state (US-PD-02 DoD)
     this.routeSubscription = this.route.queryParams.subscribe(params => {
       this.selectedCategory = params['category'] || '';
@@ -533,6 +530,11 @@ export class ProductsComponent implements OnInit, OnDestroy {
         this.total.set(res.meta?.total || 0);
         this.totalPages.set(res.meta?.totalPages || 1);
         this.loading.set(false);
+        if (!res.items?.length && !this.bestSellers().length) {
+          this.productService.getBestSellers(4).subscribe({
+            next: products => this.bestSellers.set(products), error: () => {},
+          });
+        }
       },
       error: () => this.loading.set(false)
     });
