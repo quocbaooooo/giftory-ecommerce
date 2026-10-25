@@ -6,6 +6,7 @@ import { Product, ProductDocument } from '../../database/schemas/product.schema'
 import { User, UserDocument } from '../../database/schemas/user.schema';
 import { StudioAsset, StudioAssetDocument } from '../../database/schemas/studio-asset.schema';
 import { SaveDesignDto } from './dto/save-design.dto';
+import { isStudioSupportedProduct, supportsCustomization } from '../../common/utils/studio-support';
 
 @Injectable()
 export class CustomStudioService {
@@ -41,10 +42,11 @@ export class CustomStudioService {
   }
 
   async getCustomizableTemplates() {
-    return this.productModel
+    const products = await this.productModel
       .find({ isCustomizable: true, status: 'ACTIVE' })
       .populate('category', 'name slug emoji icon')
       .exec();
+    return products.filter(product => supportsCustomization(product) && isStudioSupportedProduct(product));
   }
 
   async saveDesign(dto: SaveDesignDto, userId?: string) {

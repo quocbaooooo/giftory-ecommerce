@@ -176,9 +176,9 @@ export interface ChatMessage {
                                       {{ prod.price | number:'1.0-0' }}đ
                                     </span>
                                   }
-                                  @if (prod.isCustomizable) {
+                                  @if (prod.supportsCustomization === true && prod.studioSupported === true) {
                                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-pink-100 text-pink-700 border border-pink-200">
-                                      Cọc 50%
+                                      Có thể tùy chỉnh
                                     </span>
                                   }
                                 </div>
@@ -199,6 +199,7 @@ export interface ChatMessage {
                               >
                                 Xem chi tiết
                               </a>
+                              @if (prod.supportsCustomization === true && prod.studioSupported === true) {
                               <a 
                                 [routerLink]="['/custom-studio']"
                                 [queryParams]="{ product: prod.slug, ref: 'ai_recommendation' }"
@@ -207,6 +208,7 @@ export interface ChatMessage {
                               >
                                 Tùy chỉnh ngay
                               </a>
+                              }
                             </div>
                           </div>
                         }

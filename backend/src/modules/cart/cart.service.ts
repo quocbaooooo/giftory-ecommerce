@@ -48,7 +48,7 @@ export class CartService {
       throw new NotFoundException('Sản phẩm không tồn tại');
     }
 
-    const isStudioItem = product.isCustomizable && !!dto.customDetails && !dto.variantSku;
+    const isStudioItem = product.isCustomizable && (!!dto.customDesignId || hasDesignContent(dto.customDetails)) && !dto.variantSku;
     const variants = isStudioItem ? [] : product.variants || [];
     const matches = variants.filter(v => dto.variantSku ? v.sku === dto.variantSku : v.name === dto.variantName);
     const variant = matches.length === 1 ? matches[0] : undefined;
@@ -57,13 +57,13 @@ export class CartService {
     const stock = variant ? variant.stock : product.stock;
     const cart = await this.findOrCreateCart(userId, dto.sessionId);
     const inCart = cart.items.filter(item => item.productId.toString() === dto.productId &&
-      (isStudioItem ? item.isCustom && !item.variantSku : variant?.sku ? item.variantSku === variant.sku : item.variantName === (variant?.name || 'Tiêu chuẩn')))
+      (isStudioItem ? item.isCustom && !item.variantSku && JSON.stringify(item.customDetails) === JSON.stringify(dto.customDetails) : !item.isCustom && (variant?.sku ? item.variantSku === variant.sku : item.variantName === (variant?.name || 'Tiêu chuẩn'))))
       .reduce((sum, item) => sum + item.quantity, 0);
     if (!Number.isInteger(dto.quantity) || dto.quantity < 1 || dto.quantity + inCart > stock) throw new BadRequestException('Số lượng vượt quá tồn kho');
 
 
     const unitPrice = variant?.price ?? (product.salePrice && product.salePrice > 0 ? product.salePrice : product.price);
-    const isCustom = product.isCustomizable || !!dto.customDetails;
+    const isCustom = isStudioItem;
     const customFee = customizationFee(product, dto.customDetails, isCustom);
     const finalPrice = unitPrice + customFee;
     const depositAmount = isCustom ? Math.round(finalPrice * 0.5) : 0;
@@ -109,7 +109,7 @@ export class CartService {
       const item = cart.items[itemIndex];
       const product = await this.productModel.findById(item.productId);
       if (!product) throw new NotFoundException('Sản phẩm không tồn tại');
-      const isStudioItem = product.isCustomizable && !!item.customDetails && !item.variantSku;
+      const isStudioItem = item.isCustom && product.isCustomizable && (!!item.customDesignId || hasDesignContent(item.customDetails)) && !item.variantSku;
       const variant = isStudioItem ? undefined : product.variants?.find(v => item.variantSku ? v.sku === item.variantSku : v.name === item.variantName);
       if (!isStudioItem && product.variants?.length && (!variant || variant.status === 'HIDDEN' || variant.status === 'OUT_OF_STOCK')) throw new BadRequestException('Biến thể không còn bán');
       const otherQuantity = cart.items.reduce((sum, other, index) => index !== itemIndex && other.productId.toString() === item.productId.toString() &&
@@ -162,7 +162,7 @@ export class CartService {
     return this.getCart(userId, sessionId);
   }
 
-  async updateItemCustomDetails(itemIndex: number, customDetails: any, variantName?: string, userId?: string, sessionId?: string) {
+  async updateItemCustomDetails(itemIndex: number, customDetails: any, variantName?: string, customDesignId?: string, userId?: string, sessionId?: string) {
     const cart = await this.findOrCreateCart(userId, sessionId);
     if (!cart.items[itemIndex]) {
       throw new NotFoundException('Sản phẩm không có trong giỏ hàng');
@@ -174,18 +174,23 @@ export class CartService {
       throw new NotFoundException('Sản phẩm không tồn tại');
     }
 
-    const finalPrice = studioUnitPrice(product, customDetails);
+    const isCustom = product.isCustomizable && hasDesignContent(customDetails);
+    const finalPrice = isCustom ? studioUnitPrice(product, customDetails) : (product.salePrice || product.price);
     const depositAmount = Math.round(finalPrice * 0.5);
 
     item.customDetails = customDetails;
     // Studio blank color belongs to customDetails, never to the sales variant.
-    if (product.isCustomizable) {
+    if (isCustom) {
       item.variantName = 'Tiêu chuẩn';
       item.variantSku = undefined;
     } else if (variantName) item.variantName = variantName;
     item.price = finalPrice;
     item.depositRequired = depositAmount * item.quantity;
-    item.isCustom = true;
+    item.isCustom = isCustom;
+    item.customDesignId = isCustom && customDesignId && Types.ObjectId.isValid(customDesignId)
+      ? new Types.ObjectId(customDesignId)
+      : undefined;
+    if (!item.isCustom) item.depositRequired = 0;
 
     await cart.save();
     return this.getCart(userId, sessionId);
@@ -301,4 +306,13 @@ export class CartService {
       }
     };
   }
+}
+
+function hasDesignContent(details: any): boolean {
+  if (!details || typeof details !== 'object') return false;
+  const text = [details.frontMessage, details.backMessage, details.customText, details.message]
+    .some(value => typeof value === 'string' && value.trim().length > 0);
+  return text || !!details.uploadedImage || (Array.isArray(details.stickers) && details.stickers.length > 0)
+    || (Array.isArray(details.textBlocks) && details.textBlocks.some((block: any) => typeof block?.text === 'string' && block.text.trim().length > 0))
+    || (!!details.pattern && details.pattern !== 'none');
 }

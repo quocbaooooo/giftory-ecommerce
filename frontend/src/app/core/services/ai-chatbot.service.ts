@@ -10,6 +10,8 @@ export interface AiProductCard {
   salePrice?: number;
   image: string;
   isCustomizable: boolean;
+  supportsCustomization: boolean;
+  studioSupported: boolean;
   rating: number;
   fitReason: string;
   categoryName?: string;

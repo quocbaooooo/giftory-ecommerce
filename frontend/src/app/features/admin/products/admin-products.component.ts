@@ -357,6 +357,21 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                     <label class="text-xs font-bold text-giftory-ink">Mô tả sản phẩm</label>
                     <textarea rows="3" formControlName="description" placeholder="Mô tả chất liệu, quy cách quà tặng..." class="w-full px-4 py-2 bg-[#F3EBF9]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#7C3AED]"></textarea>
                   </div>
+
+                  <div class="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/60 p-4">
+                    <div>
+                      <h4 class="text-xs font-bold text-slate-800">Metadata tư vấn catalog</h4>
+                      <p class="text-[11px] text-slate-600">Nhập audience và occasions theo tag đã được duyệt. Sản phẩm thiếu tag sẽ không khớp bộ lọc chatbot.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <label class="space-y-1 text-xs font-semibold">Audience (phân tách bằng dấu phẩy)
+                        <input type="text" formControlName="audienceCsv" placeholder="mẹ, người yêu, bố" class="w-full rounded-lg border p-2 font-normal" />
+                      </label>
+                      <label class="space-y-1 text-xs font-semibold">Occasions (phân tách bằng dấu phẩy)
+                        <input type="text" formControlName="occasionsCsv" placeholder="sinh nhật, kỷ niệm, 20/10" class="w-full rounded-lg border p-2 font-normal" />
+                      </label>
+                    </div>
+                  </div>
                 </div>
               }
 
@@ -524,6 +539,11 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                 </div>
                 <input type="checkbox" formControlName="isCustomizable" class="w-5 h-5 accent-[#7C3AED] rounded cursor-pointer" />
               </div>
+
+              <label class="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs">
+                <input type="checkbox" formControlName="studioSupported" class="mt-0.5 accent-emerald-600" />
+                <span><b>Được Studio hỗ trợ</b><span class="block text-slate-600">Chỉ bật khi sản phẩm thực sự có trong danh mục phôi Studio. Cần đồng thời bật hỗ trợ tùy chỉnh.</span></span>
+              </label>
 
               <!-- BESPOKE BLANK CONFIGURATION BOX (BP-02) -->
               @if (productForm.get('isCustomizable')?.value) {
@@ -1434,6 +1454,9 @@ export class AdminProductsComponent implements OnInit {
       description: p.description || '',
       loyaltyEligible: p.loyaltyEligible !== false,
       isCustomizable: p.isCustomizable,
+      studioSupported: p.studioSupported === true,
+      audienceCsv: (p.audience || []).join(', '),
+      occasionsCsv: (p.occasions || []).join(', '),
       customBaseFee: p.customBaseFee || 30000,
       frontBlankImage: p.customConfig?.frontBlankImage || '',
       backBlankImage: p.customConfig?.backBlankImage || '',
@@ -1683,6 +1706,9 @@ export class AdminProductsComponent implements OnInit {
       description: [''],
       loyaltyEligible: [true],
       isCustomizable: [false],
+      studioSupported: [false],
+      audienceCsv: [''],
+      occasionsCsv: [''],
       customBaseFee: [30000],
       frontBlankImage: [''],
       backBlankImage: [''],
@@ -1736,6 +1762,10 @@ export class AdminProductsComponent implements OnInit {
       variants: this.variants(),
       loyaltyEligible: val.loyaltyEligible,
       isCustomizable: val.isCustomizable,
+      supportsCustomization: !!val.isCustomizable,
+      studioSupported: !!val.studioSupported && !!val.isCustomizable,
+      audience: String(val.audienceCsv || '').split(',').map((tag: string) => tag.trim()).filter(Boolean),
+      occasions: String(val.occasionsCsv || '').split(',').map((tag: string) => tag.trim()).filter(Boolean),
       customBaseFee: Number(val.customBaseFee) || 30000,
       customConfig: val.isCustomizable ? {
         blanks,

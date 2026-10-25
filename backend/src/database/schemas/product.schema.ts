@@ -139,6 +139,18 @@ export class Product {
   @Prop({ type: [String], default: [] })
   tags: string[];
 
+  @Prop({ type: [String], default: [] })
+  audience: string[];
+
+  @Prop({ type: [String], default: [] })
+  occasions: string[];
+
+  @Prop({ default: false })
+  supportsCustomization: boolean;
+
+  @Prop({ default: false })
+  studioSupported: boolean;
+
   @Prop({ default: false })
   isCustomizable: boolean; // Bespoke product (triggers 50% deposit)
 

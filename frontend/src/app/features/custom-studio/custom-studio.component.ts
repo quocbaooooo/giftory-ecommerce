@@ -6,6 +6,7 @@ import Konva from 'konva';
 import { filterGraphics, graphicsForFace } from './graphics-library';
 import { CustomStudioService } from '../../core/services/custom-studio.service';
 import { CartService } from '../../core/services/cart.service';
+import { ProductService } from '../../core/services/product.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Product, StudioAsset, StudioGraphic, StudioTextBlock, AreaBox } from '../../core/models';
 
@@ -110,6 +111,20 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
           </button>
         </div>
       </header>
+
+      @if (requestedProductNotFound()) {
+        <section role="alert" class="shrink-0 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950">
+          <p class="font-bold">Không tìm thấy sản phẩm hỗ trợ tùy chỉnh theo liên kết này. Hãy chọn một sản phẩm trong Studio:</p>
+          <div class="mt-2 flex flex-wrap gap-2">
+            @for (tpl of templates(); track tpl._id) {
+              <button type="button" (click)="selectTemplate(tpl); requestedProductNotFound.set(false)" class="flex items-center gap-2 rounded-lg border border-amber-200 bg-white px-2.5 py-1.5 text-left hover:border-purple-400">
+                <img [src]="tpl.images[0]" [alt]="tpl.name" class="h-7 w-7 rounded object-cover">
+                <span class="font-semibold">{{ tpl.name }}</span>
+              </button>
+            }
+          </div>
+        </section>
+      }
 
       <!-- RESTORED DRAFT TOAST (Floating, Auto-dismissing, Non-intrusive) -->
       @if (hasRestoredDraft() && !isEditingCartItem()) {
@@ -908,6 +923,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private studioService = inject(CustomStudioService);
   private cartService = inject(CartService);
+  private productService = inject(ProductService);
   authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -917,6 +933,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   templates = signal<Product[]>([]);
   activeTemplate = signal<Product | null>(null);
+  requestedProductNotFound = signal(false);
 
   isFrontFace = signal<boolean>(true);
   textBlocks = signal<StudioTextBlock[]>([]);
@@ -1237,8 +1254,9 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.templates.set(tpls);
         if (tpls.length > 0) {
           this.route.queryParams.subscribe(params => {
-            const pid = params['productId'];
+            const requestedProduct = params['product'] || params['productId'];
             const cartIndex = params['cartItemIndex'];
+            this.requestedProductNotFound.set(false);
 
             if (cartIndex !== undefined && cartIndex !== null) {
               const idx = parseInt(cartIndex, 10);
@@ -1292,15 +1310,29 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
             }
 
             let chosenTpl = tpls[0];
-            if (pid) {
-              const matched = tpls.find(t => t._id === pid);
+            if (requestedProduct) {
+              const matched = tpls.find(t => t._id === requestedProduct || t.slug === requestedProduct);
               if (matched) chosenTpl = matched;
+              else {
+                const lookup = /^[a-f\d]{24}$/i.test(requestedProduct)
+                  ? this.productService.getProductById(requestedProduct)
+                  : this.productService.getProductBySlug(requestedProduct);
+                lookup.subscribe({
+                  next: product => this.router.navigate(['/products', product.slug]),
+                  error: () => {
+                    this.requestedProductNotFound.set(true);
+                    this.selectTemplate(chosenTpl);
+                    this.updateKonvaCanvas();
+                  }
+                });
+                return;
+              }
             }
 
             this.selectTemplate(chosenTpl);
 
             const savedDraft = this.studioService.getDraftFromStorage();
-            if (savedDraft && (!pid || savedDraft.productId === pid)) {
+            if (savedDraft && (!requestedProduct || savedDraft.productId === chosenTpl._id)) {
               if (savedDraft.frontMessage === 'Happy Anniversary Minh Anh ❤️') {
                 this.studioService.clearDraftFromStorage();
               } else {
@@ -2456,31 +2488,19 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     const customDetails = this.getConfirmedCustomDetails();
 
     if (this.isEditingCartItem() && this.editingCartItemIndex() !== null) {
-      this.cartService.updateCustomDetails(
-        this.editingCartItemIndex()!,
-        customDetails
-      ).subscribe({
-        next: () => {
-          this.studioService.clearDraftFromStorage();
-          this.router.navigate(['/cart']);
-        },
-        error: (err) => {
-          alert(err.error?.message || 'Có lỗi xảy ra khi cập nhật sản phẩm.');
-        }
-      });
+      this.saveStudioDesignId(tpl, customDetails, designId => {
+        this.cartService.updateCustomDetails(this.editingCartItemIndex()!, customDetails, undefined, designId).subscribe({
+          next: () => {
+            this.studioService.clearDraftFromStorage();
+            this.router.navigate(['/cart']);
+          },
+          error: err => alert(err.error?.message || 'Có lỗi xảy ra khi cập nhật sản phẩm.')
+        });
+      }, err => alert(err.error?.message || 'Không thể lưu thiết kế. Vui lòng thử lại.'));
       return;
     }
 
-    // Directly add item to cart for both logged in and guest users
-    this.cartService.addItem(tpl._id, 1, undefined, customDetails).subscribe({
-      next: () => {
-        this.studioService.clearDraftFromStorage();
-        this.router.navigate(['/cart']);
-      },
-      error: (err) => {
-        alert(err.error?.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.');
-      }
-    });
+    this.addStudioItem(tpl, customDetails, () => this.router.navigate(['/cart']));
   }
 
   handleGuestLoginAndSync(): void {
@@ -2494,11 +2514,37 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!tpl) return;
 
     const customDetails = this.getConfirmedCustomDetails();
-    this.cartService.addItem(tpl._id, 1, undefined, customDetails).subscribe({
-      next: () => {
-        this.router.navigate(['/cart']);
-      }
-    });
+    this.addStudioItem(tpl, customDetails, () => this.router.navigate(['/cart']));
+  }
+
+  private addStudioItem(tpl: Product, customDetails: any, onSuccess: () => void): void {
+    this.saveStudioDesignId(tpl, customDetails, customDesignId => {
+      this.cartService.addItem({ productId: tpl._id, quantity: 1, customDetails, customDesignId }).subscribe({
+        next: () => {
+          this.studioService.clearDraftFromStorage();
+          onSuccess();
+        },
+        error: err => alert(err.error?.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.')
+      });
+    }, err => alert(err.error?.message || 'Không thể lưu thiết kế. Vui lòng thử lại.'));
+  }
+
+  private saveStudioDesignId(tpl: Product, customDetails: any, onReady: (designId?: string) => void, onError: (error: any) => void): void {
+    if (!this.hasDesignContent(customDetails)) {
+      onReady(undefined);
+      return;
+    }
+    this.studioService.saveDesign({ productId: tpl._id, title: `Thiết kế ${tpl.name}`, ...customDetails }, this.cartService.getSessionId())
+      .subscribe({ next: design => design._id ? onReady(design._id) : onError({ error: { message: 'Không nhận được mã thiết kế.' } }), error: onError });
+  }
+
+  private hasDesignContent(details: any): boolean {
+    if (!details || typeof details !== 'object') return false;
+    const text = [details.frontMessage, details.backMessage, details.customText, details.message]
+      .some(value => typeof value === 'string' && value.trim().length > 0);
+    return text || !!details.uploadedImage || (Array.isArray(details.stickers) && details.stickers.length > 0)
+      || (Array.isArray(details.textBlocks) && details.textBlocks.some((block: any) => typeof block?.text === 'string' && block.text.trim().length > 0))
+      || (!!details.pattern && details.pattern !== 'none');
   }
 
   onSaveDesignClick(): void {

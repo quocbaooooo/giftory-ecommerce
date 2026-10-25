@@ -129,7 +129,7 @@ import { AuthService } from '../../core/services/auth.service';
                       @if (item.isCustom) {
                         <span class="px-2.5 py-0.5 rounded-full bg-[#10B981] text-white font-bold text-[10px] flex items-center gap-1 shadow-sm">
                           <span class="material-symbols-outlined text-[12px]">palette</span>
-                          Sản phẩm Custom • Cọc 50%
+                          Thiết kế riêng • Cọc 50%
                         </span>
                       } @else {
                         <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold text-[10px] flex items-center gap-1">

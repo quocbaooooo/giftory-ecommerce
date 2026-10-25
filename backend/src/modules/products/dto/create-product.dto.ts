@@ -66,6 +66,26 @@ export class CreateProductDto {
   @IsArray()
   tags?: string[];
 
+  @ApiProperty({ required: false, type: [String], example: ['mẹ', 'người yêu'] })
+  @IsOptional()
+  @IsArray()
+  audience?: string[];
+
+  @ApiProperty({ required: false, type: [String], example: ['sinh nhật', 'kỷ niệm'] })
+  @IsOptional()
+  @IsArray()
+  occasions?: string[];
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  supportsCustomization?: boolean;
+
+  @ApiProperty({ required: false, description: 'Explicitly enabled in Custom Studio' })
+  @IsOptional()
+  @IsBoolean()
+  studioSupported?: boolean;
+
   @ApiProperty({ required: false, default: false })
   @IsOptional()
   @IsBoolean()

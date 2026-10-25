@@ -6,11 +6,13 @@ import { Category, CategoryDocument } from '../../database/schemas/category.sche
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductQueryDto } from './dto/product-query.dto';
 import { buildVietnameseRegex } from '../../common/utils/vietnamese.util';
+import { isStudioSupportedProduct, supportsCustomization } from '../../common/utils/studio-support';
 
 // Cards and deal lists do not need Studio images, SKU galleries, or category icon payloads.
 const CATALOG_FIELDS = {
   name: 1, slug: 1, description: 1, price: 1, salePrice: 1, category: 1,
   stock: 1, isCustomizable: 1, isFlashSale: 1, flashSaleDiscountPercent: 1,
+  supportsCustomization: 1, studioSupported: 1, audience: 1, occasions: 1,
   rating: 1, reviewCount: 1, soldCount: 1, customBaseFee: 1, createdAt: 1,
 };
 const CATALOG_PROJECTION = { ...CATALOG_FIELDS, images: { $slice: 1 } };
@@ -234,6 +236,8 @@ export class ProductsService {
 
     return {
       ...product.toObject(),
+      supportsCustomization: supportsCustomization(product),
+      studioSupported: isStudioSupportedProduct(product),
       relatedProducts: related
     };
   }
@@ -298,6 +302,10 @@ export class ProductsService {
 
     return this.productModel.create({
       ...createDto,
+      supportsCustomization: createDto.supportsCustomization ?? createDto.isCustomizable ?? false,
+      studioSupported: createDto.studioSupported ?? false,
+      audience: createDto.audience || [],
+      occasions: createDto.occasions || [],
       slug,
       category: categoryId,
       images,
@@ -306,6 +314,9 @@ export class ProductsService {
   }
 
   async update(id: string, updateDto: any) {
+    if (updateDto.supportsCustomization === undefined && updateDto.isCustomizable !== undefined) {
+      updateDto.supportsCustomization = updateDto.isCustomizable;
+    }
     if (updateDto.variants && updateDto.variants.length > 0) {
       const totalStock = updateDto.variants.reduce((sum: number, v: any) => sum + (Number(v.stock) || 0), 0);
       updateDto.stock = totalStock;

@@ -324,7 +324,7 @@ import { Product, ProductVariant } from '../../../core/models';
               </div>
 
               <!-- 4. Ô Khắc Laser Nhanh (Quick Engrave Input) -->
-              @if (prod.isCustomizable) {
+              @if (prod.supportsCustomization === true && prod.studioSupported === true) {
                 <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col gap-2">
                   <div class="flex items-center justify-between">
                     <span class="text-xs text-slate-800 font-bold flex items-center gap-1">
@@ -351,7 +351,7 @@ import { Product, ProductVariant } from '../../../core/models';
 
               <!-- 5. Khối Nút Kêu Gọi Hành Động (CTA Buttons) -->
               <div class="flex flex-col gap-3 pt-2">
-                @if (prod.isCustomizable) {
+                @if (prod.supportsCustomization === true && prod.studioSupported === true) {
                   <!-- Nút Thiết Kế 3D Nổi Bật -->
                   <a [routerLink]="['/custom-studio']"
                     [queryParams]="{ productId: prod._id, text: engraveText() || undefined }"
@@ -365,7 +365,7 @@ import { Product, ProductVariant } from '../../../core/models';
                     <button type="button" (click)="buyNow()" [disabled]="pending() || options.stock() <= 0"
                       class="w-full py-3.5 px-4 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] disabled:opacity-50">
                       <span class="material-symbols-outlined text-[18px]">shopping_cart_checkout</span>
-                      <span>MUA NGAY (Cọc {{ (options.price() * 0.5) | number:'1.0-0' }}₫)</span>
+                      <span>MUA NGAY</span>
                     </button>
                     <button type="button" (click)="addToCart()" [disabled]="pending() || options.stock() <= 0"
                       class="w-full py-3.5 px-4 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50">
@@ -692,7 +692,7 @@ export class ProductDetailComponent implements OnInit {
       variantName: vName || 'Tiêu chuẩn',
       variantSku: this.options.selected()?.sku,
       isCustom: false,
-      customDetails: this.engraveText() ? { customText: this.engraveText() } : null
+      customDetails: null
     };
 
     this.cartService.setBuyNowItem(buyNowItem);

@@ -394,7 +394,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                     >
                     <div class="flex-1 min-w-0">
                       <div class="font-semibold text-slate-800 truncate">{{ item.productId?.name || item.productName }}</div>
-                      <div class="text-[11px] text-slate-400">SL: {{ item.quantity }} • {{ item.isCustom ? 'Custom' : 'Có sẵn' }}</div>
+                      <div class="text-[11px] text-slate-400 flex items-center gap-1.5">SL: {{ item.quantity }} <span *ngIf="item.isCustom" class="px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 font-bold">Thiết kế riêng</span><span *ngIf="!item.isCustom" class="text-slate-400">• Có sẵn</span></div>
                     </div>
                     <span class="font-bold text-[#1E1B4B]">{{ ((item.price || item.unitPrice) * item.quantity) | number:'1.0-0' }}đ</span>
                   </div>
@@ -669,9 +669,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     }
     if (this.isBuyNowMode()) {
       const item = this.cartService.buyNowItem();
-      return !!(item?.isCustom || item?.productId?.isCustomizable || item?.customDetails);
+      return !!item?.isCustom;
     }
-    return this.cartService.items().some(item => item.isCustom ?? !!item.productId?.isCustomizable);
+    return this.cartService.items().some(item => !!item.isCustom);
   });
 
   // Calculate dynamic shipping fee
@@ -748,7 +748,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     const customDeposit = items.reduce((sum: number, item: any) => {
       const isCustom = this.isBuyNowMode()
         ? this.hasCustomItems()
-        : (item.isCustom ?? !!item.productId?.isCustomizable);
+        : !!item.isCustom;
       return sum + (isCustom ? Math.round((item.price ?? item.unitPrice ?? 0) * item.quantity * 0.5) : 0);
     }, 0);
     return Math.min(total, customDeposit);

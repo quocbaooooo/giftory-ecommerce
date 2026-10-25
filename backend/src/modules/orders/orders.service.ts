@@ -55,7 +55,7 @@ export class OrdersService {
       }
 
       const qty = Math.max(1, Number(dto.buyNowItem.quantity || 1));
-      const isStudioItem = product.isCustomizable && !!dto.buyNowItem.customDetails && !dto.buyNowItem.variantSku;
+      const isStudioItem = product.isCustomizable && (!!dto.buyNowItem.customDesignId || hasDesignContent(dto.buyNowItem.customDetails)) && !dto.buyNowItem.variantSku;
       const matches = (isStudioItem ? [] : product.variants || []).filter(v => dto.buyNowItem.variantSku ? v.sku === dto.buyNowItem.variantSku : v.name === dto.buyNowItem.variantName);
       const variant = matches.length === 1 ? matches[0] : undefined;
       if (!isStudioItem && product.variants?.length && (!variant || variant.status === 'HIDDEN' || variant.status === 'OUT_OF_STOCK')) throw new BadRequestException('Vui lòng chọn biến thể còn hàng');
@@ -66,7 +66,7 @@ export class OrdersService {
       const subtotal = unitPrice * qty;
       itemsTotal = subtotal;
 
-      const isCustom = product.isCustomizable || !!dto.buyNowItem.customDetails;
+      const isCustom = isStudioItem;
       if (isCustom) hasCustomProduct = true;
 
       const depositRequired = isCustom ? Math.round(subtotal * 0.5) : 0;
@@ -84,6 +84,7 @@ export class OrdersService {
         isCustom,
         itemType: isCustom ? 'CUSTOM' : 'READY_MADE',
         status: OrderItemStatus.PENDING,
+        customDesignId: dto.buyNowItem.customDesignId ? new Types.ObjectId(dto.buyNowItem.customDesignId) : undefined,
         customDetails: dto.buyNowItem.customDetails || null,
         depositRequired
       }];
@@ -107,12 +108,12 @@ export class OrdersService {
 
       orderItems = cart.items.map(item => {
         const product: any = item.productId;
-        const isStudioItem = item.isCustom && product?.isCustomizable && item.customDetails && !item.variantSku;
+        const isStudioItem = item.isCustom && product?.isCustomizable && (!!item.customDesignId || hasDesignContent(item.customDetails)) && !item.variantSku;
         const unitPrice = isStudioItem ? studioUnitPrice(product, item.customDetails) : item.price;
         const subtotal = unitPrice * item.quantity;
         itemsTotal += subtotal;
 
-        const isCustom = item.isCustom ?? !!product?.isCustomizable;
+        const isCustom = !!item.customDesignId || !!isStudioItem;
         if (isCustom) hasCustomProduct = true;
 
         const depositRequired = isCustom ? Math.round(subtotal * 0.5) : 0;
@@ -130,6 +131,7 @@ export class OrdersService {
           isCustom,
           itemType: isCustom ? 'CUSTOM' : 'READY_MADE',
           status: OrderItemStatus.PENDING,
+          customDesignId: item.customDesignId,
           customDetails: item.customDetails || null,
           depositRequired
         };
@@ -841,5 +843,14 @@ export class OrdersService {
     await this.care.transfer(order);
     return order;
   }
+}
+
+function hasDesignContent(details: any): boolean {
+  if (!details || typeof details !== 'object') return false;
+  const text = [details.frontMessage, details.backMessage, details.customText, details.message]
+    .some(value => typeof value === 'string' && value.trim().length > 0);
+  return text || !!details.uploadedImage || (Array.isArray(details.stickers) && details.stickers.length > 0)
+    || (Array.isArray(details.textBlocks) && details.textBlocks.some((block: any) => typeof block?.text === 'string' && block.text.trim().length > 0))
+    || (!!details.pattern && details.pattern !== 'none');
 }
 

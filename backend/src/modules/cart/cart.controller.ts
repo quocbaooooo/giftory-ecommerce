@@ -66,12 +66,13 @@ export class CartController {
     @Param('index') index: number,
     @Body('customDetails') customDetails: any,
     @Body('variantName') variantName?: string,
+    @Body('customDesignId') customDesignId?: string,
     @Body('sessionId') bodySessionId?: string,
     @Query('sessionId') querySessionId?: string,
     @CurrentUser('sub') userId?: string
   ) {
     const sessionId = bodySessionId || querySessionId;
-    return this.cartService.updateItemCustomDetails(Number(index), customDetails, variantName, userId, sessionId);
+    return this.cartService.updateItemCustomDetails(Number(index), customDetails, variantName, customDesignId, userId, sessionId);
   }
 
   @Delete('items/:index')

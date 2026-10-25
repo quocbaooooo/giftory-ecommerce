@@ -184,6 +184,7 @@ export class CartService {
         quantity: param.quantity || 1,
         variantName: param.variantName,
         variantSku: param.variantSku,
+        customDesignId: param.customDesignId,
         customDetails: param.customDetails,
         sessionId
       };
@@ -215,14 +216,14 @@ export class CartService {
     });
   }
 
-  updateCustomDetails(index: number, customDetails: any, variantName?: string) {
+  updateCustomDetails(index: number, customDetails: any, variantName?: string, customDesignId?: string) {
     const sessionId = this.getSessionId();
     const item = this.items()[index];
     const key = item && this.itemKey(item);
     return this.mutate(() => {
       const currentIndex = this.confirmedCart?.items.findIndex(candidate => this.itemKey(candidate) === key) ?? -1;
       if (currentIndex < 0) return of(this.confirmedCart!);
-      return this.api.patch<Cart>(`cart/items/${currentIndex}/custom?sessionId=${encodeURIComponent(sessionId)}`, { customDetails, variantName });
+      return this.api.patch<Cart>(`cart/items/${currentIndex}/custom?sessionId=${encodeURIComponent(sessionId)}`, { customDetails, variantName, customDesignId });
     });
   }
 

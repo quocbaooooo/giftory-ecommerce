@@ -4,7 +4,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Product, ProductDocument } from '../../database/schemas/product.schema';
 import { Order, OrderDocument } from '../../database/schemas/order.schema';
-import { buildVietnameseRegex, removeVietnameseAccents } from '../../common/utils/vietnamese.util';
+import { removeVietnameseAccents } from '../../common/utils/vietnamese.util';
+import { isStudioSupportedProduct, supportsCustomization } from '../../common/utils/studio-support';
 import { ChatMessageDto } from './dto/chat-message.dto';
 
 export interface ChatResponse {
@@ -27,6 +28,31 @@ export interface ChatResponse {
     preferences?: string;
   };
   isProximateFallback?: boolean;
+}
+
+function normalizeCatalogTag(value: string): string {
+  return removeVietnameseAccents(String(value || '')).toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+function catalogTagAliases(value: string, kind: 'audience' | 'occasion'): Set<string> {
+  const normalized = normalizeCatalogTag(value);
+  const groups: Record<string, string[]> = kind === 'audience' ? {
+    'ban than': ['ban than', 'ban be'],
+    'ban trai': ['nguoi yeu'],
+    'ban gai': ['nguoi yeu'],
+    'vo': ['nguoi yeu'],
+    'chong': ['nguoi yeu'],
+    'crush': ['nguoi yeu'],
+    'sep': ['sep', 'dong nghiep'],
+    'dong nghiep / sep': ['sep', 'dong nghiep'],
+  } : {
+    'ngay phu nu': ['ngay phu nu', '8/3', '20/10'],
+    'ky niem tinh yeu': ['ky niem', 'valentine'],
+    'tet': ['tet', 'nam moi'],
+    'nam moi': ['nam moi', 'tet'],
+    'giang sinh / nam moi': ['giang sinh', 'noel', 'nam moi', 'tet'],
+  };
+  return new Set(groups[normalized] || [normalized]);
 }
 
 interface GeminiExtractionResult {
@@ -291,16 +317,8 @@ BẮT BUỘC trả về DUY NHẤT một chuỗi JSON thuần túy (không dùng
     mergedContext: ChatMessageDto['context'] = {},
     customIntroReply?: string
   ): Promise<ChatResponse> {
-    // Kiểm tra ngưỡng tối thiểu 2 tiêu chí (BR-REC04)
-    const criteriaCount = [
-      mergedContext.recipient,
-      mergedContext.occasion,
-      mergedContext.budget,
-      mergedContext.preferences
-    ].filter(Boolean).length;
-
-    if (criteriaCount < 2) {
-      if (!mergedContext.recipient) {
+    // Collect all three explicit catalog filters in order: audience, occasion, then budget.
+    if (!mergedContext.recipient) {
         return {
           reply: customIntroReply || 'Dạ để gợi ý món quà phù hợp nhất, bạn muốn tặng quà cho ai thế ạ? (ví dụ: Người yêu, Mẹ, Bố, Bạn bè, Sếp...)',
           intent: 'RECOMMENDATION',
@@ -313,7 +331,8 @@ BẮT BUỘC trả về DUY NHẤT một chuỗi JSON thuần túy (không dùng
             { label: 'Sếp / Đồng nghiệp', value: 'Tặng sếp hoặc đồng nghiệp', step: 1 }
           ]
         };
-      } else if (!mergedContext.occasion) {
+    }
+    if (!mergedContext.occasion) {
         return {
           reply: customIntroReply || `Dạ bạn muốn tìm quà cho ${mergedContext.recipient} nhân dịp gì thế ạ?`,
           intent: 'RECOMMENDATION',
@@ -326,7 +345,8 @@ BẮT BUỘC trả về DUY NHẤT một chuỗi JSON thuần túy (không dùng
             { label: '🎄 Giáng sinh / Năm mới', value: 'Dịp Giáng sinh và Năm mới', step: 2 }
           ]
         };
-      } else {
+    }
+    if (!mergedContext.budget) {
         return {
           reply: customIntroReply || `Dạ quà cho ${mergedContext.recipient} dịp ${mergedContext.occasion}, ngân sách dự kiến của bạn khoảng bao nhiêu ạ?`,
           intent: 'RECOMMENDATION',
@@ -338,57 +358,26 @@ BẮT BUỘC trả về DUY NHẤT một chuỗi JSON thuần túy (không dùng
             { label: 'Trên 1.000.000đ (Cao cấp)', value: 'Ngân sách trên 1 triệu cao cấp', step: 3 }
           ]
         };
-      }
     }
 
-    // Truy vấn CSDL Catalog thực tế (BR-REC01, BR-REC02, BR-REC03)
+    // Strictly match structured audience and occasion metadata before considering fallback.
     const baseFilter: any = {
       status: 'ACTIVE',
       stock: { $gt: 0 }
     };
-
-    if (mergedContext.budget) {
-      baseFilter.price = { $lte: mergedContext.budget * 1.25 }; // Dung sai 25%
-    }
-
-    const searchTerms: string[] = [];
-    if (mergedContext.recipient) searchTerms.push(mergedContext.recipient);
-    if (mergedContext.occasion) searchTerms.push(mergedContext.occasion);
-    if (mergedContext.preferences) searchTerms.push(mergedContext.preferences);
-
-    let matchedProducts: any[] = [];
-
-    if (searchTerms.length > 0) {
-      const orConditions = searchTerms.map(term => {
-        const regex = buildVietnameseRegex(term);
-        return {
-          $or: [
-            { name: regex },
-            { tags: regex },
-            { description: regex }
-          ]
-        };
-      });
-
-      matchedProducts = await this.productModel
-        .find({
-          ...baseFilter,
-          $or: orConditions
-        })
-        .populate('category', 'name slug')
-        .sort({ soldCount: -1, rating: -1 })
-        .limit(5)
-        .exec();
-    }
-
-    if (matchedProducts.length === 0 && mergedContext.budget) {
-      matchedProducts = await this.productModel
-        .find(baseFilter)
-        .populate('category', 'name slug')
-        .sort({ soldCount: -1, rating: -1 })
-        .limit(5)
-        .exec();
-    }
+    const candidates = await this.productModel.find(baseFilter)
+      .populate('category', 'name slug')
+      .sort({ soldCount: -1, rating: -1 })
+      .exec();
+    const audienceAliases = catalogTagAliases(mergedContext.recipient, 'audience');
+    const occasionAliases = catalogTagAliases(mergedContext.occasion, 'occasion');
+    const budgetLimit = mergedContext.budget * 1.25;
+    let matchedProducts = candidates.filter(product => {
+      const audienceMatches = (product.audience || []).some(tag => audienceAliases.has(normalizeCatalogTag(tag)));
+      const occasionMatches = (product.occasions || []).some(tag => occasionAliases.has(normalizeCatalogTag(tag)));
+      const sellingPrice = product.salePrice && product.salePrice > 0 ? product.salePrice : product.price;
+      return audienceMatches && occasionMatches && sellingPrice <= budgetLimit;
+    }).slice(0, 5);
 
     // Cơ chế Fallback tiệm cận (BR-REC05)
     let isProximateFallback = false;
@@ -403,9 +392,9 @@ BẮT BUỘC trả về DUY NHẤT một chuỗi JSON thuần túy (không dùng
         .limit(4)
         .exec();
 
-      replyText = customIntroReply 
-        ? `${customIntroReply}\n\n*(Lưu ý: Giftory đang gợi ý các lựa chọn quà bán chạy tiệm cận nhất do tiêu chí tìm kiếm hiện tại chưa có sản phẩm khớp 100%)*`
-        : `Giftory chưa có sản phẩm khớp 100% tất cả tiêu chí của bạn (cho ${mergedContext.recipient || 'người nhận'}, dịp ${mergedContext.occasion || 'đặc biệt'}), nhưng trợ lý đề xuất các món quà bán chạy và được yêu thích nhất có thể tùy chỉnh tên riêng phù hợp dưới đây:`;
+      replyText = customIntroReply
+        ? `${customIntroReply}\n\n*(Lý do gợi ý dự phòng: catalog chưa có sản phẩm được gắn đủ tag đối tượng “${mergedContext.recipient}”, dịp “${mergedContext.occasion}” và mức giá phù hợp. Danh sách dưới đây là sản phẩm bán chạy, không phải kết quả khớp tag.)*`
+        : `Catalog chưa có sản phẩm được gắn đủ tag đối tượng “${mergedContext.recipient}”, dịp “${mergedContext.occasion}” và mức giá phù hợp. Danh sách dưới đây là gợi ý dự phòng dựa trên độ phổ biến, không phải kết quả khớp tag:`;
     } else {
       const occasionText = mergedContext.occasion ? ` dịp ${mergedContext.occasion}` : '';
       const recipientText = mergedContext.recipient ? ` cho ${mergedContext.recipient}` : '';
@@ -429,9 +418,11 @@ BẮT BUỘC trả về DUY NHẤT một chuỗi JSON thuần túy (không dùng
         salePrice: p.salePrice || 0,
         image: p.images?.[0] || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600',
         isCustomizable: p.isCustomizable,
+        supportsCustomization: supportsCustomization(p),
+        studioSupported: isStudioSupportedProduct(p),
         rating: p.rating,
         fitReason,
-        categoryName: p.category?.name || 'Quà tặng'
+        categoryName: (p.category as any)?.name || 'Quà tặng'
       };
     });
 

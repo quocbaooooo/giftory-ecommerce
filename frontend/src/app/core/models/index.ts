@@ -180,6 +180,10 @@ export interface Product {
   sku?: string;
   tags?: string[];
   isCustomizable?: boolean;
+  supportsCustomization?: boolean;
+  studioSupported?: boolean;
+  audience?: string[];
+  occasions?: string[];
   isFlashSale?: boolean;
   flashSaleDiscountPercent?: number;
   rating?: number;

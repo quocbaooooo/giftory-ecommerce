@@ -98,6 +98,10 @@ export class ProductService {
     return this.api.get<Product>(`products/slug/${slug}`);
   }
 
+  getProductById(id: string): Observable<Product> {
+    return this.api.get<Product>(`products/${id}`);
+  }
+
   getFlashSaleProducts(): Observable<Product[]> {
     return this.cached('products/flash-sale', {}, () => this.api.get<Product[]>('products/flash-sale', { view: 'catalog' }));
   }

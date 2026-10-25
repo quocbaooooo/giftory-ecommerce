@@ -55,6 +55,9 @@ export class OrderItem {
   @Prop({ type: String, enum: OrderItemStatus, default: OrderItemStatus.PENDING })
   status: OrderItemStatus;
 
+  @Prop({ type: Types.ObjectId, ref: 'CustomDesign', required: false })
+  customDesignId?: Types.ObjectId;
+
   @Prop({ type: Object, default: null })
   customDetails?: any;
 

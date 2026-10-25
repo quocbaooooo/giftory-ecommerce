@@ -64,6 +64,11 @@ export class BuyNowItemDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
+  @IsString()
+  customDesignId?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
   customDetails?: any;
 }
 

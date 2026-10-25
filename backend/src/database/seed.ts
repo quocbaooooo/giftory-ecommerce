@@ -107,7 +107,7 @@ async function bootstrap() {
   console.log(`✅ Đã tạo ${categoriesData.length} danh mục sản phẩm`);
 
   // 3. Seed Products (18 sản phẩm thực tế theo Stitch)
-  const productsData = [
+  const productsData: any[] = [
     // 1. Bình Nordic Bespoke
     {
       name: 'Bình Giữ Nhiệt Nordic Bọc Da & Khắc Laser Cá Nhân (500ml)',
@@ -121,6 +121,8 @@ async function bootstrap() {
         'https://lh3.googleusercontent.com/aida-public/AB6AXuCnbFnr2bFrmqaeDLx_elgUmNO1zsXditnQ03OwaUohpSw85hopV7UoMrufnrskIYaA7OoLwB8lq9fG6wZK51zDXAaalVUGhlcwmAjVemlLNow5PANugfRdvlyzkw-y7S17vl8CJXw9_rJLZxiicLlqMA84C4TWLpIFwcV8iks14JnTvN9lSyb8HfnF3GT49kfeuybrcNJCRzQDKQj0pdZuwULSz7u-PuDs-xUYJLIWebl-2RaYdJc1ECqMjNKEsjuGH8Q'
       ],
       isCustomizable: true,
+      supportsCustomization: true,
+      studioSupported: true,
       isFlashSale: true,
       flashSaleDiscountPercent: 20,
       customBaseFee: 30000,
@@ -410,6 +412,10 @@ async function bootstrap() {
     const categoryId = categoryMap.get(p.categorySlug);
     const prod = await productModel.create({
       ...p,
+      supportsCustomization: p.supportsCustomization ?? p.isCustomizable ?? false,
+      studioSupported: p.studioSupported ?? false,
+      audience: p.audience || [],
+      occasions: p.occasions || [],
       category: categoryId,
       status: 'ACTIVE'
     });
