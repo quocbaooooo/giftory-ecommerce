@@ -15,7 +15,7 @@ import { calculateDiscountPercent } from '../../../core/utils/product-price.util
     class: 'flex flex-col h-full w-full'
   },
   template: `
-    <article class="g-card g-card-hover w-full h-full bg-white rounded-2xl p-4 sm:p-5 shadow-shop-card border border-[#DDD6FE]/60 hover:shadow-floating hover:border-purple-300 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
+    <article class="g-card g-card-hover w-full h-full bg-white rounded-2xl p-4 sm:p-5 shadow-shop-card border border-[#DDD6FE]/60 hover:-translate-y-1 hover:border-purple-300 transition-all duration-200 ease-out flex flex-col justify-between group relative overflow-hidden">
       <!-- Top Image with Floating Badges -->
       <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-slate-50 mb-3.5 flex items-center justify-center shrink-0">
         <img 

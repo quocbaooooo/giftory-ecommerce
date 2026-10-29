@@ -236,12 +236,13 @@ import { Product, ProductVariant } from '../../../core/models';
               
               <!-- 1. Bộ Chọn Màu Sắc / Chất Liệu -->
               @if (options.colors().length) {
-                <div class="flex flex-col gap-2">
+                <div data-variant-picker class="flex flex-col gap-2 rounded-xl transition-colors"
+                  [ngClass]="options.attempted() && !options.color() ? 'border border-rose-300 bg-rose-50/50 p-2' : ''">
                   <div class="flex items-center justify-between">
                     <label class="text-xs text-slate-800 font-bold flex items-center gap-1.5 uppercase tracking-wider">
                       <span class="w-2 h-2 rounded-full bg-purple-600"></span>
                       1. Màu sắc / Chất liệu:
-                      <span class="text-purple-700 font-extrabold normal-case ml-1">{{ options.color() || 'Vui lòng chọn' }}</span>
+                      <span class="font-extrabold normal-case ml-1" [class.text-purple-700]="!!options.color() || !options.attempted()" [class.text-rose-600]="!options.color() && options.attempted()">{{ options.color() || 'Vui lòng chọn màu' }}</span>
                     </label>
                     <span class="text-xs text-slate-400 font-normal">{{ options.colors().length }} lựa chọn</span>
                   </div>
@@ -268,7 +269,7 @@ import { Product, ProductVariant } from '../../../core/models';
 
               <!-- 2. Bộ Chọn Kích Thước / Size nếu có -->
               @if (options.sizes().length) {
-                <div class="flex flex-col gap-2 pt-1 border-t border-slate-100">
+                <div data-variant-picker class="flex flex-col gap-2 pt-1 border-t border-slate-100">
                   <div class="flex items-center justify-between">
                     <label class="text-xs text-slate-800 font-bold flex items-center gap-1.5 uppercase tracking-wider">
                       <span class="w-2 h-2 rounded-full bg-purple-600"></span>
@@ -313,7 +314,10 @@ import { Product, ProductVariant } from '../../../core/models';
                 </div>
 
                 <div class="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-                  @if (options.stock() > 0) {
+                  @if (options.variants().length && !options.selected()) {
+                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    <span class="text-amber-700">Chọn màu / kích thước để xem tồn kho</span>
+                  } @else if (options.stock() > 0) {
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span>Còn <strong>{{ options.stock() }} sản phẩm</strong> tại xưởng</span>
                   } @else {
@@ -362,28 +366,28 @@ import { Product, ProductVariant } from '../../../core/models';
                   </a>
                   
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button type="button" (click)="buyNow()" [disabled]="pending() || options.stock() <= 0"
+                    <button type="button" (click)="buyNow()" [disabled]="pending() || !options.canPurchase()"
                       class="w-full py-3.5 px-4 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] disabled:opacity-50">
-                      <span class="material-symbols-outlined text-[18px]">shopping_cart_checkout</span>
-                      <span>MUA NGAY</span>
+                      @if (pending()) { <span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true"></span><span>Đang xử lý…</span> }
+                      @else { <span class="material-symbols-outlined text-[18px]">shopping_cart_checkout</span><span>MUA NGAY</span> }
                     </button>
-                    <button type="button" (click)="addToCart()" [disabled]="pending() || options.stock() <= 0"
+                    <button type="button" (click)="addToCart()" [disabled]="pending() || !options.canPurchase()"
                       class="w-full py-3.5 px-4 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50">
-                      <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-                      <span>Thêm Vào Giỏ Hàng</span>
+                      @if (pending()) { <span class="inline-block w-4 h-4 rounded-full border-2 border-purple-300 border-t-purple-700 animate-spin" aria-hidden="true"></span><span>Đang thêm…</span> }
+                      @else { <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span><span>Thêm Vào Giỏ Hàng</span> }
                     </button>
                   </div>
                 } @else {
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button type="button" (click)="buyNow()" [disabled]="pending() || options.stock() <= 0"
+                    <button type="button" (click)="buyNow()" [disabled]="pending() || !options.canPurchase()"
                       class="w-full py-3.5 px-4 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20 transition-all active:scale-[0.98] disabled:opacity-50">
-                      <span class="material-symbols-outlined text-[20px]">bolt</span>
-                      <span>MUA NGAY</span>
+                      @if (pending()) { <span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true"></span><span>Đang xử lý…</span> }
+                      @else { <span class="material-symbols-outlined text-[20px]">bolt</span><span>MUA NGAY</span> }
                     </button>
-                    <button type="button" (click)="addToCart()" [disabled]="pending() || options.stock() <= 0"
+                    <button type="button" (click)="addToCart()" [disabled]="pending() || !options.canPurchase()"
                       class="w-full py-3.5 px-4 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50">
-                      <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span>
-                      <span>Thêm Vào Giỏ</span>
+                      @if (pending()) { <span class="inline-block w-4 h-4 rounded-full border-2 border-purple-300 border-t-purple-700 animate-spin" aria-hidden="true"></span><span>Đang thêm…</span> }
+                      @else { <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span><span>Thêm Vào Giỏ</span> }
                     </button>
                   </div>
                 }
@@ -648,6 +652,7 @@ export class ProductDetailComponent implements OnInit {
     const error = this.options.error();
     if (error) {
       this.cartService.notify(error);
+      this.focusVariantPickerIfNeeded(error);
       return;
     }
     if (this.pending()) return;
@@ -670,6 +675,15 @@ export class ProductDetailComponent implements OnInit {
     });
   }
 
+  private focusVariantPickerIfNeeded(error: string): void {
+    if (!error.includes('chọn màu') && !error.includes('chọn kích thước') && !error.includes('chọn phân loại')) return;
+    setTimeout(() => {
+      const picker = document.querySelector<HTMLElement>('[data-variant-picker]');
+      picker?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      picker?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus({ preventScroll: true });
+    });
+  }
+
   buyNow(): void {
     const p = this.product();
     if (!p) return;
@@ -677,10 +691,13 @@ export class ProductDetailComponent implements OnInit {
     const error = this.options.error();
     if (error) {
       this.cartService.notify(error);
+      this.focusVariantPickerIfNeeded(error);
       return;
     }
     const unitPrice = this.options.price();
     const vName = this.options.selected()?.name;
+    if (this.pending()) return;
+    this.pending.set(true);
 
     const buyNowItem = {
       productId: p,
@@ -696,6 +713,8 @@ export class ProductDetailComponent implements OnInit {
     };
 
     this.cartService.setBuyNowItem(buyNowItem);
-    this.router.navigate(['/checkout'], { queryParams: { buyNow: '1' } });
+    this.router.navigate(['/checkout'], { queryParams: { buyNow: '1' } }).then(navigated => {
+      if (!navigated) this.pending.set(false);
+    }).catch(() => this.pending.set(false));
   }
 }

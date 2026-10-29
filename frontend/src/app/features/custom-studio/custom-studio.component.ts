@@ -601,12 +601,17 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
               <div class="flex items-center gap-2">
                 <button 
                   (click)="onPrimaryActionClick()"
-                  [disabled]="isFormInvalid()"
+                  [disabled]="savingToCart() || isFormInvalid()"
                   class="flex-1 py-2.5 px-3 rounded-xl text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer active:scale-[0.99]"
                   [ngClass]="isFormInvalid() ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] shadow-purple-300'"
                 >
-                  <span class="material-symbols-outlined text-[17px]">shopping_bag</span>
-                  <span>{{ isEditingCartItem() ? 'Cập Nhật Giỏ Hàng' : 'Thêm Vào Giỏ & Cọc 50%' }}</span>
+                  @if (savingToCart()) {
+                    <span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true"></span>
+                    <span>Đang lưu vào giỏ…</span>
+                  } @else {
+                    <span class="material-symbols-outlined text-[17px]">shopping_bag</span>
+                    <span>{{ isEditingCartItem() ? 'Cập Nhật Giỏ Hàng' : 'Thêm Vào Giỏ & Cọc 50%' }}</span>
+                  }
                 </button>
 
                 <button 
@@ -1003,6 +1008,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     { name: 'Royal Calligraphy', label: 'Lora · Cổ điển', family: 'Lora', fontFamily: 'Lora, "Giftory Card Serif", serif' }
   ];
   pendingTextFonts = signal(0);
+  savingToCart = signal(false);
   textFontNotice = signal('');
   private loadedTextFonts = new Set<string>();
   private loadingTextFonts = new Set<string>();
@@ -2484,6 +2490,8 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const tpl = this.activeTemplate();
     if (!tpl) return;
+    if (this.savingToCart()) return;
+    this.savingToCart.set(true);
 
     const customDetails = this.getConfirmedCustomDetails();
 
@@ -2492,15 +2500,21 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cartService.updateCustomDetails(this.editingCartItemIndex()!, customDetails, undefined, designId).subscribe({
           next: () => {
             this.studioService.clearDraftFromStorage();
-            this.router.navigate(['/cart']);
+            this.navigateBackToCart();
           },
-          error: err => alert(err.error?.message || 'Có lỗi xảy ra khi cập nhật sản phẩm.')
+          error: err => {
+            this.savingToCart.set(false);
+            alert(err.error?.message || 'Có lỗi xảy ra khi cập nhật sản phẩm.');
+          }
         });
-      }, err => alert(err.error?.message || 'Không thể lưu thiết kế. Vui lòng thử lại.'));
+      }, err => {
+        this.savingToCart.set(false);
+        alert(err.error?.message || 'Không thể lưu thiết kế. Vui lòng thử lại.');
+      });
       return;
     }
 
-    this.addStudioItem(tpl, customDetails, () => this.router.navigate(['/cart']));
+    this.addStudioItem(tpl, customDetails, () => this.navigateBackToCart());
   }
 
   handleGuestLoginAndSync(): void {
@@ -2518,15 +2532,28 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private addStudioItem(tpl: Product, customDetails: any, onSuccess: () => void): void {
+    this.savingToCart.set(true);
     this.saveStudioDesignId(tpl, customDetails, customDesignId => {
       this.cartService.addItem({ productId: tpl._id, quantity: 1, customDetails, customDesignId }).subscribe({
         next: () => {
           this.studioService.clearDraftFromStorage();
           onSuccess();
         },
-        error: err => alert(err.error?.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.')
+        error: err => {
+          this.savingToCart.set(false);
+          alert(err.error?.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.');
+        }
       });
-    }, err => alert(err.error?.message || 'Không thể lưu thiết kế. Vui lòng thử lại.'));
+    }, err => {
+      this.savingToCart.set(false);
+      alert(err.error?.message || 'Không thể lưu thiết kế. Vui lòng thử lại.');
+    });
+  }
+
+  private navigateBackToCart(): void {
+    this.router.navigate(['/cart']).then(navigated => {
+      if (!navigated) this.savingToCart.set(false);
+    }).catch(() => this.savingToCart.set(false));
   }
 
   private saveStudioDesignId(tpl: Product, customDetails: any, onReady: (designId?: string) => void, onError: (error: any) => void): void {

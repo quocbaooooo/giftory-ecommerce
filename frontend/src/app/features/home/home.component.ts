@@ -6,6 +6,7 @@ import { ProductCardComponent } from '../../shared/components/product-card/produ
 import { ProductService } from '../../core/services/product.service';
 import { Product, Category } from '../../core/models';
 import { MarketingCampaign, MarketingService } from '../../core/services/marketing.service';
+import { FlashSaleCountdownService } from '../../core/services/flash-sale-countdown.service';
 
 @Component({
   selector: 'app-home',
@@ -142,9 +143,9 @@ import { MarketingCampaign, MarketingService } from '../../core/services/marketi
               <div class="flex items-center gap-2">
                 <span class="text-xs text-purple-200 font-medium">Kết thúc trong:</span>
                 <div class="flex items-center gap-1 text-sm font-bold">
-                  <span class="px-2.5 py-1 rounded-lg bg-black/40 border border-white/20">05</span>:
-                  <span class="px-2.5 py-1 rounded-lg bg-black/40 border border-white/20">42</span>:
-                  <span class="px-2.5 py-1 rounded-lg bg-black/40 border border-white/20">18</span>
+                  <span class="px-2.5 py-1 rounded-lg bg-black/40 border border-white/20">{{ countdown.hours() }}</span>:
+                  <span class="px-2.5 py-1 rounded-lg bg-black/40 border border-white/20">{{ countdown.minutes() }}</span>:
+                  <span class="px-2.5 py-1 rounded-lg bg-black/40 border border-white/20">{{ countdown.seconds() }}</span>
                 </div>
                 <a routerLink="/flash-sale" class="ml-3 text-xs font-semibold text-white hover:text-purple-200 underline">Xem tất cả deal</a>
               </div>
@@ -260,6 +261,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   private autoplayId?: number;
 
   private marketingService = inject(MarketingService);
+  readonly countdown = inject(FlashSaleCountdownService);
 
   categories = signal<Category[]>([]);
   allProducts = signal<Product[]>([]);

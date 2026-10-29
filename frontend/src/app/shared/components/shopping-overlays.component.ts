@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { ProductService } from '../../core/services/product.service';
 import { ProductOptions } from './product-options';
+import { Product } from '../../core/models';
 
 @Component({
   selector: 'app-shopping-overlays',
@@ -23,15 +24,28 @@ import { ProductOptions } from './product-options';
       0% { transform: translateY(-16px); opacity: 0; }
       100% { transform: translateY(0); opacity: 1; }
     }
-    .toast-anim { animation: slideInTop .28s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes slideOutTop {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-10px); opacity: 0; }
+    }
+    .toast-anim { animation: slideInTop .28s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .toast-anim.toast-leaving { animation: slideOutTop .22s ease-in forwards; }
+    .toast-action { color:#c4b5fd; font-weight:700; text-decoration:underline; text-underline-offset:3px; pointer-events:auto; }
+    .toast-action:hover { color:#fff; }
+    @media (prefers-reduced-motion: reduce) {
+      .toast-anim { animation-duration: 1ms; }
+    }
   `],
   template: `
     <!-- Toast Notification -->
     @if (cart.toast()) {
       <div role="status" aria-live="polite" class="fixed top-5 left-1/2 -translate-x-1/2 z-[150] pointer-events-none">
-        <div class="flex items-center gap-2.5 px-5 py-2.5 bg-slate-900/95 backdrop-blur-md text-white rounded-full shadow-2xl text-xs sm:text-sm font-medium border border-white/10 toast-anim">
+        <div class="flex items-center gap-2.5 px-5 py-2.5 bg-slate-900/95 backdrop-blur-md text-white rounded-full shadow-2xl text-xs sm:text-sm font-medium border border-white/10 toast-anim" [class.toast-leaving]="cart.toastLeaving()">
           <div class="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold shrink-0">✓</div>
           <span>{{ cart.toast() }}</span>
+          @if (cart.toastAction(); as action) {
+            <button type="button" class="toast-action" (click)="cart.runToastAction()">{{ action.label }}</button>
+          }
         </div>
       </div>
     }
@@ -47,25 +61,13 @@ import { ProductOptions } from './product-options';
           <button type="button" class="absolute top-3.5 right-4 z-20 w-8 h-8 rounded-full bg-slate-100/90 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-sm font-bold transition-all focus:outline-none"
             aria-label="Đóng" (click)="close()">✕</button>
 
-          <!-- Sub-header & Mode Switcher -->
+          <!-- Sub-header: quick add luôn thêm dòng hàng không gắn thiết kế -->
           <div class="pt-3.5 px-5 pb-3 border-b border-slate-100 bg-[#fdfcff] flex items-center justify-between pr-14">
             <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-              <span class="w-2 h-2 rounded-full bg-purple-600 animate-pulse"></span>
-              <span class="tracking-wider uppercase text-[11px] font-bold text-slate-700">Quick Add</span>
+              <span class="material-symbols-outlined text-lg text-purple-700">shopping_bag</span>
+              <span class="tracking-wide text-xs font-bold text-slate-800">Thêm nhanh vào giỏ</span>
             </div>
-            <!-- Mode Switcher -->
-            <div class="inline-flex p-0.5 bg-slate-100 rounded-xl text-[11px] font-medium" role="tablist">
-              <button type="button" (click)="mode.set('standard')"
-                class="px-2.5 py-1 rounded-lg transition-all"
-                [class]="mode() === 'standard' ? 'bg-white text-purple-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'">
-                ⚡ Hàng Có Sẵn
-              </button>
-              <button type="button" (click)="mode.set('bespoke')"
-                class="px-2.5 py-1 rounded-lg transition-all"
-                [class]="mode() === 'bespoke' ? 'bg-white text-purple-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'">
-                ✨ Hàng Bespoke
-              </button>
-            </div>
+            <span class="text-[11px] font-medium text-slate-400">Chọn phân loại · số lượng</span>
           </div>
 
           <!-- Nội dung chính -->
@@ -86,7 +88,10 @@ import { ProductOptions } from './product-options';
                   <div class="flex items-center gap-1.5 mb-1">
                     @if (options.stock() > 0) {
                       <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                      <span class="text-[11px] font-semibold text-emerald-700">Sẵn sàng giao nhanh 24h ({{ options.stock() }} có sẵn)</span>
+                      <span class="text-[11px] font-semibold text-emerald-700">Còn {{ options.stock() }} sản phẩm · Giao dự kiến 24h</span>
+                    } @else if (options.hasAvailableVariants()) {
+                      <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                      <span class="text-[11px] font-semibold text-emerald-700">Còn {{ options.availableVariantCount() }} phân loại · Chọn màu để xem tồn kho</span>
                     } @else {
                       <span class="inline-block w-2 h-2 rounded-full bg-rose-500"></span>
                       <span class="text-[11px] font-semibold text-rose-600">Hết hàng tạm thời</span>
@@ -113,7 +118,7 @@ import { ProductOptions } from './product-options';
                 <div>
                   <div class="flex justify-between items-center mb-2">
                     <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Màu sắc / Chất liệu</span>
-                    <span class="text-xs font-semibold text-purple-700">{{ options.color() || 'Chưa chọn' }}</span>
+                    <span class="text-xs font-semibold" [class.text-purple-700]="options.color()" [class.text-amber-700]="!options.color()">{{ options.color() || 'Bắt buộc chọn' }}</span>
                   </div>
                   <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     @for (color of options.colors(); track color) {
@@ -131,6 +136,8 @@ import { ProductOptions } from './product-options';
                   </div>
                   @if (options.attempted() && !options.color()) {
                     <p class="text-xs text-rose-600 mt-1 font-medium">Vui lòng chọn màu sắc</p>
+                  } @else if (!options.color() && options.hasAvailableVariants()) {
+                    <p class="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-amber-700"><span class="material-symbols-outlined text-sm">info</span>Chọn màu để mở khóa thêm vào giỏ</p>
                   }
                 </div>
               }
@@ -169,7 +176,7 @@ import { ProductOptions } from './product-options';
                     <button type="button" (click)="decrementQty()" [disabled]="options.quantity() <= 1"
                       class="w-7 h-7 rounded-lg text-slate-600 hover:bg-slate-100 active:scale-95 flex items-center justify-center text-sm font-bold transition-all focus:outline-none disabled:opacity-40">−</button>
                     <span class="w-8 text-center text-xs font-bold text-slate-800 select-none">{{ options.quantity() }}</span>
-                    <button type="button" (click)="incrementQty()" [disabled]="options.quantity() >= options.stock()"
+                    <button type="button" (click)="incrementQty()" [disabled]="!options.selected() || options.quantity() >= options.stock()"
                       class="w-7 h-7 rounded-lg text-slate-600 hover:bg-slate-100 active:scale-95 flex items-center justify-center text-sm font-bold transition-all focus:outline-none disabled:opacity-40">+</button>
                   </div>
                 </div>
@@ -179,32 +186,30 @@ import { ProductOptions } from './product-options';
                 </div>
               </div>
 
-              <!-- 4. Nút CTA duy nhất -->
+              <!-- Quick add không gắn designId nên luôn tạo dòng hàng thường. -->
               <div class="pt-1">
-                @if (mode() === 'standard') {
-                  <button type="button" (click)="add()" [disabled]="pending() || options.stock() <= 0"
-                    class="w-full py-3.5 px-4 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group">
-                    @if (pending()) {
-                      <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                      </svg>
-                      <span class="text-sm">Đang thêm vào giỏ...</span>
-                    } @else {
-                      <svg class="w-5 h-5 transition-transform group-hover:-translate-y-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                      </svg>
-                      <span class="text-sm">Thêm Vào Giỏ Hàng</span>
-                    }
-                  </button>
-                } @else {
-                  <a [routerLink]="['/custom-studio']" [queryParams]="{ productId: p._id, slug: p.slug }" (click)="close()"
-                    class="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 via-purple-600 to-purple-700 hover:opacity-95 text-white font-bold rounded-2xl shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2 transition-all active:scale-[0.98] text-center">
-                    <span class="text-sm">Tùy Chỉnh Trong Studio 3D →</span>
+                <button type="button" (click)="add()" [disabled]="pending() || !options.canPurchase()"
+                  class="w-full py-3.5 px-4 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed group">
+                  @if (pending()) {
+                    <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                    <span class="text-sm">Đang thêm vào giỏ…</span>
+                  } @else {
+                    <svg class="w-5 h-5 transition-transform group-hover:-translate-y-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                    <span class="text-sm">{{ options.selectionHint() || 'Thêm vào giỏ' }}</span>
+                  }
+                </button>
+                @if (isCustomizationAvailable(p)) {
+                  <a [routerLink]="['/custom-studio']" [queryParams]="{ product: p.slug }" (click)="close()"
+                    class="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-purple-200 bg-white px-4 py-3 text-sm font-bold text-purple-700 transition hover:border-purple-400 hover:bg-purple-50">
+                    <span class="material-symbols-outlined text-lg">draw</span>
+                    Tự thiết kế trong Studio
                   </a>
-                  <p class="text-[11px] text-slate-500 text-center mt-2 flex items-center justify-center gap-1">
-                    <span class="text-purple-600 font-bold">✦</span> Chuyển vào Studio phác thảo mockup laser 3D chuẩn xác trước khi chốt đơn
-                  </p>
+                  <p class="mt-2 text-center text-[11px] leading-4 text-slate-500">Muốn thêm chữ hoặc hình riêng? Tạo thiết kế trong Studio để lưu thành một dòng hàng custom.</p>
                 }
               </div>
 
@@ -219,12 +224,7 @@ import { ProductOptions } from './product-options';
             <!-- 6. Footer hướng dẫn tương tác -->
             <div class="px-5 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
               <span class="flex items-center gap-1">
-                <kbd class="px-1.5 py-0.5 text-[10px] bg-white border border-slate-200 rounded text-slate-500 font-mono shadow-2xs">ESC</kbd> 
-                hoặc click nền để đóng
-              </span>
-              <span class="flex items-center gap-1 text-slate-500">
-                <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-                Mobile: Vuốt dưới
+                <kbd class="px-1.5 py-0.5 text-[10px] bg-white border border-slate-200 rounded text-slate-500 font-mono shadow-2xs">ESC</kbd>
               </span>
             </div>
           }
@@ -276,13 +276,11 @@ export class ShoppingOverlaysComponent {
   options = new ProductOptions();
   loading = signal(false);
   pending = signal(false);
-  mode = signal<'standard' | 'bespoke'>('standard');
 
   constructor() {
     this.cart.openQuick = product => {
       this.cart.quickProduct.set(product);
       this.loading.set(true);
-      this.mode.set('standard');
       this.products.getProductBySlug(product.slug).subscribe({
         next: p => {
           if (this.cart.quickProduct() !== product) return;
@@ -296,6 +294,10 @@ export class ShoppingOverlaysComponent {
         }
       });
     };
+  }
+
+  isCustomizationAvailable(product: Product): boolean {
+    return product.supportsCustomization === true && product.studioSupported === true;
   }
 
   close() {

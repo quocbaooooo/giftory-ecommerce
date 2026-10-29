@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, ViewChild, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -13,6 +13,15 @@ import { CartService } from '../../../core/services/cart.service';
     .rail-link { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:100%;min-height:54px;border-radius:14px;color:#64748b;position:relative;transition:background .15s,color .15s }
     .rail-link:hover { background:#f3ebf9;color:#7c3aed }
     .rail-link.active { background:#7c3aed;color:white }
+    .cart-count-badge { transform-origin:center; }
+    .cart-count-badge.badge-pop { animation: cartBadgePop .38s cubic-bezier(.2,.8,.25,1.25); }
+    @keyframes cartBadgePop {
+      0% { transform:scale(1); }
+      45% { transform:scale(1.3); }
+      75% { transform:scale(.92); }
+      100% { transform:scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) { .cart-count-badge.badge-pop { animation:none; } }
     .rail-link:focus-visible,.account-link:focus-visible,button:focus-visible { outline:2px solid #7c3aed;outline-offset:3px }
     .account-link { display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;font-size:13px;color:#334155;width:100%;text-align:left }
     .account-link:hover,.account-link.active { background:#f3ebf9;color:#7c3aed }
@@ -31,7 +40,7 @@ import { CartService } from '../../../core/services/cart.service';
               <span class="material-symbols-outlined text-[22px]" aria-hidden="true">{{ item.icon }}</span>
               <span class="text-[9px] md:text-[10px] font-semibold">{{ item.label }}</span>
               @if (item.path === '/cart' && cartService.productCount() > 0) {
-                <span class="absolute top-0 right-0 min-w-[17px] px-1 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold" [attr.aria-label]="cartService.productCount() + ' sản phẩm, tổng số lượng ' + cartService.itemsCount()">{{ cartService.productCount() > 99 ? '99+' : cartService.productCount() }}</span>
+                <span class="cart-count-badge absolute top-0 right-0 min-w-[17px] px-1 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold" [class.badge-pop]="badgePulsing()" [attr.aria-label]="cartService.itemsCount() + ' sản phẩm trong giỏ, ' + cartService.productCount() + ' loại sản phẩm'">{{ cartService.itemsCount() > 99 ? '99+' : cartService.itemsCount() }}</span>
               }
             </a>
           }
@@ -78,6 +87,9 @@ export class SidebarRailComponent {
   @ViewChild('accountArea') accountArea?: ElementRef<HTMLElement>;
   @ViewChild('avatarButton') avatarButton?: ElementRef<HTMLButtonElement>;
   menuOpen = signal(false);
+  badgePulsing = signal(false);
+  private previousCartCount = this.cartService.itemsCount();
+  private badgePulseTimer?: ReturnType<typeof setTimeout>;
   primaryLinks = [
     { path: '/', icon: 'home', label: 'Trang chủ', title: 'Trang chủ Giftory' },
     { path: '/products', icon: 'grid_view', label: 'Quà tặng', title: 'Khám phá sản phẩm' },
@@ -93,6 +105,17 @@ export class SidebarRailComponent {
     { path: '/shopping-guide', icon: 'menu_book', label: 'Hướng dẫn mua hàng' },
   ];
   constructor() {
+    effect(() => {
+      const count = this.cartService.itemsCount();
+      if (count === this.previousCartCount) return;
+      this.previousCartCount = count;
+      this.badgePulsing.set(false);
+      clearTimeout(this.badgePulseTimer);
+      requestAnimationFrame(() => {
+        this.badgePulsing.set(true);
+        this.badgePulseTimer = setTimeout(() => this.badgePulsing.set(false), 400);
+      });
+    });
     this.router.events.pipe(takeUntilDestroyed()).subscribe(event => {
       if (event instanceof NavigationEnd) this.closeMenu();
     });

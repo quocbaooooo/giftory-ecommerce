@@ -1,5 +1,5 @@
 import { CartVouchersComponent } from '../../shared/components/cart-vouchers.component';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -10,6 +10,13 @@ import { AuthService } from '../../core/services/auth.service';
   selector: 'app-cart',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, CartVouchersComponent],
+  styles: [`
+    .cart-item-exit { animation: cartItemExit .22s ease-in forwards; pointer-events:none; }
+    @keyframes cartItemExit {
+      to { opacity:0; transform:translateX(20px); }
+    }
+    @media (prefers-reduced-motion: reduce) { .cart-item-exit { animation-duration:1ms; } }
+  `],
   template: `
     <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       
@@ -98,7 +105,7 @@ import { AuthService } from '../../core/services/auth.service';
               @else if (cartService.quantitySyncPending()) { <span class="text-purple-700">Đang lưu số lượng…</span> }
             </div>
             @for (item of cartService.items(); track item._id || $index) {
-              <article class="bg-white rounded-2xl p-5 sm:p-6 shadow-shop-card border border-[#DDD6FE] relative overflow-hidden group">
+              <article class="bg-white rounded-2xl p-5 sm:p-6 shadow-shop-card border border-[#DDD6FE] relative overflow-hidden group" [class.cart-item-exit]="isRemoving(item, $index)">
                 <!-- Color edge indicator -->
                 <div 
                   class="absolute top-0 left-0 bottom-0 w-1.5"
@@ -337,11 +344,16 @@ import { AuthService } from '../../core/services/auth.service';
               <!-- Checkout Submit Button -->
               <button 
                 (click)="proceedToCheckout()"
-                [disabled]="cartService.quantitySyncPending() || shippingBusy || cartService.voucherSyncPending()"
+                [disabled]="checkoutNavigating() || cartService.quantitySyncPending() || shippingBusy || cartService.voucherSyncPending()"
                 class="w-full py-3.5 px-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-wait"
               >
-                <span class="material-symbols-outlined text-[18px]">verified</span>
-                <span>Tiến Hành Đặt Hàng</span>
+                @if (checkoutNavigating()) {
+                  <span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true"></span>
+                  <span>Đang mở thanh toán…</span>
+                } @else {
+                  <span class="material-symbols-outlined text-[18px]">verified</span>
+                  <span>Tiến Hành Đặt Hàng</span>
+                }
               </button>
 
               <div class="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
@@ -363,6 +375,9 @@ export class CartComponent {
 
 
   shippingBusy = false;
+  checkoutNavigating = signal(false);
+  private removingItems = signal(new Set<string>());
+  private removalTimers = new Map<string, ReturnType<typeof setTimeout>>();
   changeShipping(method: 'STANDARD' | 'EXPRESS') {
     this.shippingBusy = true;
     this.cartService.setShippingMethod(method).subscribe({
@@ -377,7 +392,45 @@ export class CartComponent {
 
   removeItem(index: number): void {
     if (this.cartService.quantitySyncPending()) return;
-    this.cartService.removeItem(index).subscribe({ error: () => this.cartService.notify('Không xóa được sản phẩm. Vui lòng thử lại.') });
+    const item = this.cartService.items()[index];
+    if (!item) return;
+    const key = this.getRemovalKey(item, index);
+    if (this.removingItems().has(key)) return;
+    this.removingItems.update(items => new Set(items).add(key));
+    this.removalTimers.set(key, setTimeout(() => {
+      this.removalTimers.delete(key);
+      this.cartService.removeCartItem(item).subscribe({
+        next: () => {
+          this.removingItems.update(items => { const next = new Set(items); next.delete(key); return next; });
+          this.cartService.notify('Đã xóa sản phẩm', {
+            label: 'Hoàn tác',
+            run: () => this.cartService.addItem({
+              productId: item.productId,
+              quantity: item.quantity,
+              variantName: item.variantName,
+              variantSku: item.variantSku,
+              customDesignId: item.customDesignId,
+              customDetails: item.customDetails,
+            }).subscribe({
+              next: () => this.cartService.notify('Đã hoàn tác xóa sản phẩm'),
+              error: () => this.cartService.notify('Không thể khôi phục sản phẩm. Vui lòng thử lại.'),
+            }),
+          }, 5000);
+        },
+        error: () => {
+          this.removingItems.update(items => { const next = new Set(items); next.delete(key); return next; });
+          this.cartService.notify('Không xóa được sản phẩm. Vui lòng thử lại.');
+        },
+      });
+    }, 220));
+  }
+
+  isRemoving(item: any, index: number): boolean {
+    return this.removingItems().has(this.getRemovalKey(item, index));
+  }
+
+  private getRemovalKey(item: any, index: number): string {
+    return item._id || `${item.productId?._id || item.productId}:${item.variantSku || item.variantName || ''}:${item.customDesignId || ''}:${index}`;
   }
 
   clearCart(): void {
@@ -392,7 +445,10 @@ export class CartComponent {
   }
 
   proceedToCheckout(): void {
-    if (this.cartService.quantitySyncPending() || this.shippingBusy || this.cartService.voucherSyncPending()) return;
-    this.router.navigate(['/checkout']);
+    if (this.checkoutNavigating() || this.cartService.quantitySyncPending() || this.shippingBusy || this.cartService.voucherSyncPending()) return;
+    this.checkoutNavigating.set(true);
+    this.router.navigate(['/checkout']).then(navigated => {
+      if (!navigated) this.checkoutNavigating.set(false);
+    }).catch(() => this.checkoutNavigating.set(false));
   }
 }

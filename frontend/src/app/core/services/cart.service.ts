@@ -14,8 +14,37 @@ export class CartService {
   openQuick: (product: Product) => void = () => {};
   miniCartOpen = signal(false);
   toast = signal('');
+  toastLeaving = signal(false);
+  toastAction = signal<{ label: string; run: () => void } | null>(null);
   private toastTimer?: ReturnType<typeof setTimeout>;
-  notify(message: string) { this.toast.set(message); clearTimeout(this.toastTimer); this.toastTimer = setTimeout(() => this.toast.set(''), 4000); }
+  private toastExitTimer?: ReturnType<typeof setTimeout>;
+  notify(message: string, action: { label: string; run: () => void } | null = null, durationMs = 4000) {
+    clearTimeout(this.toastTimer);
+    clearTimeout(this.toastExitTimer);
+    this.toastLeaving.set(false);
+    this.toast.set(message);
+    this.toastAction.set(action);
+    this.toastTimer = setTimeout(() => {
+      this.toastLeaving.set(true);
+      this.toastExitTimer = setTimeout(() => {
+        this.toast.set('');
+        this.toastLeaving.set(false);
+        this.toastAction.set(null);
+      }, 220);
+    }, durationMs);
+  }
+  runToastAction() {
+    const action = this.toastAction();
+    if (!action) return;
+    this.toastAction.set(null);
+    clearTimeout(this.toastTimer);
+    this.toastLeaving.set(true);
+    this.toastExitTimer = setTimeout(() => {
+      this.toast.set('');
+      this.toastLeaving.set(false);
+    }, 220);
+    action.run();
+  }
   added() { this.notify('Đã thêm vào giỏ'); }
   cart = signal<Cart | null>(null);
   buyNowItem = signal<any | null>(this.getStoredBuyNowItem());
@@ -228,8 +257,12 @@ export class CartService {
   }
 
   removeItem(index: number) {
-    const sessionId = this.getSessionId();
     const item = this.items()[index];
+    return item ? this.removeCartItem(item) : of(this.cart()!);
+  }
+
+  removeCartItem(item: CartItem) {
+    const sessionId = this.getSessionId();
     const key = item && this.itemKey(item);
     return this.mutate(() => {
       const currentIndex = this.confirmedCart?.items.findIndex(candidate => this.itemKey(candidate) === key) ?? -1;

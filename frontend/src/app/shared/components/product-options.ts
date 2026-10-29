@@ -13,6 +13,15 @@ export class ProductOptions {
   quantity = signal(1);
   activeImage = signal('');
   variants() { return (this.product()?.variants || []).filter(v => v.status !== 'HIDDEN'); }
+  hasVariants() { return this.variants().length > 0; }
+  hasAvailableVariants() { return this.variants().some(available); }
+  canPurchase() { return this.hasVariants() ? this.hasAvailableVariants() : this.stock() > 0; }
+  selectionHint() {
+    if (this.variants().length && !this.color()) return 'Chọn màu sắc để tiếp tục';
+    if (this.sizes().length && !this.size()) return 'Chọn kích thước để tiếp tục';
+    return '';
+  }
+  availableVariantCount() { return this.variants().filter(available).length; }
   colors() { return [...new Set(this.variants().map(colorName))]; }
   sizes() { return [...new Set(this.variants().map(v => v.size || '').filter(Boolean))]; }
   selected() {
@@ -33,7 +42,11 @@ export class ProductOptions {
   load(p: Product) {
     this.product.set(p); this.color.set(''); this.size.set(''); this.quantity.set(1); this.attempted.set(false);
     const choices = this.variants().filter(available);
-    if (choices.length === 1) { this.color.set(colorName(choices[0])); this.size.set(choices[0].size || ''); }
+    // Keep the admin's variant order and preselect its first purchasable option.
+    if (choices.length) {
+      this.color.set(colorName(choices[0]));
+      this.size.set(choices[0].size || '');
+    }
     this.changed();
   }
   colorAvailable(color: string) { return this.variants().some(v => colorName(v) === color && available(v)); }
@@ -58,7 +71,8 @@ export class ProductOptions {
     this.attempted.set(true);
     if (this.variants().length && !this.color()) return 'Vui lòng chọn màu sắc';
     if (this.sizes().length && !this.size()) return 'Vui lòng chọn kích thước';
-    if ((this.product()?.variants?.length && !this.selected()) || this.stock() <= 0) return 'Sản phẩm đã hết hàng';
+    if (!this.canPurchase()) return 'Sản phẩm đã hết hàng';
+    if ((this.product()?.variants?.length && !this.selected())) return 'Vui lòng chọn phân loại sản phẩm';
     if (!Number.isInteger(this.quantity()) || this.quantity() < 1 || this.quantity() > this.stock()) return 'Số lượng vượt quá tồn kho';
     return '';
   }

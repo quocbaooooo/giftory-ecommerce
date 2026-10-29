@@ -1,6 +1,6 @@
 import { VoucherService, VoucherOffer } from '../../core/services/voucher.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
@@ -8,6 +8,7 @@ import { CartService } from '../../core/services/cart.service';
 import { WishlistService } from '../../core/services/wishlist.service';
 import { Product } from '../../core/models';
 import { calculateDiscountPercent } from '../../core/utils/product-price.util';
+import { FlashSaleCountdownService } from '../../core/services/flash-sale-countdown.service';
 
 interface FlashSaleDeal {
   _id: string;
@@ -121,7 +122,7 @@ interface VoucherItem {
               <!-- Hours -->
               <div class="flex flex-col items-center">
                 <div class="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white text-[#1E1B4B] text-2xl sm:text-3xl font-black rounded-2xl shadow-xs border border-[#DDD6FE]">
-                  {{ hours() }}
+                  {{ countdown.hours() }}
                 </div>
                 <span class="text-[11px] text-[#6B7280] mt-1.5 uppercase tracking-wider font-semibold">Giờ</span>
               </div>
@@ -131,7 +132,7 @@ interface VoucherItem {
               <!-- Minutes -->
               <div class="flex flex-col items-center">
                 <div class="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white text-[#1E1B4B] text-2xl sm:text-3xl font-black rounded-2xl shadow-xs border border-[#DDD6FE]">
-                  {{ minutes() }}
+                  {{ countdown.minutes() }}
                 </div>
                 <span class="text-[11px] text-[#6B7280] mt-1.5 uppercase tracking-wider font-semibold">Phút</span>
               </div>
@@ -144,7 +145,7 @@ interface VoucherItem {
                   class="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-white text-2xl sm:text-3xl font-black rounded-2xl shadow-md bg-[#F43F5E]"
                   style="box-shadow: 0 4px 16px rgba(244, 63, 94, 0.35);"
                 >
-                  {{ seconds() }}
+                  {{ countdown.seconds() }}
                 </div>
                 <span class="text-[11px] text-[#6B7280] mt-1.5 uppercase tracking-wider font-semibold">Giây</span>
               </div>
@@ -388,11 +389,12 @@ interface VoucherItem {
                 <button
                   (click)="quickBuyDeal(deal)"
                   type="button"
-                  class="relative z-10 w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 text-white bg-[#7C3AED] hover:bg-[#6D28D9]"
+                  [disabled]="isAddingDeal(deal._id)"
+                  class="relative z-10 w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 text-white bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-60 disabled:cursor-wait"
                   style="box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);"
                 >
-                  <span class="material-symbols-outlined text-base">view_in_ar</span>
-                  <span>Săn Deal &amp; Tùy Biến 3D</span>
+                  @if (isAddingDeal(deal._id)) { <span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true"></span><span>Đang thêm…</span> }
+                  @else { <span class="material-symbols-outlined text-base">view_in_ar</span><span>Săn Deal &amp; Tùy Biến 3D</span> }
                 </button>
               </div>
             </div>
@@ -470,17 +472,16 @@ interface VoucherItem {
     </div>
   `
 })
-export class FlashSaleComponent implements OnInit, OnDestroy {
+export class FlashSaleComponent implements OnInit {
   discountPercent(deal: FlashSaleDeal): number {
     return calculateDiscountPercent(deal.price, deal.salePrice);
   }
   private productService = inject(ProductService);
   private cartService = inject(CartService);
+  private addingDealIds = signal(new Set<string>());
   private wishlistService = inject(WishlistService);
 
-  hours = signal<string>('08');
-  minutes = signal<string>('38');
-  seconds = signal<string>('56');
+  readonly countdown = inject(FlashSaleCountdownService);
   toastMessage = signal<string | null>(null);
 
   selectedTab = signal<string>('all');
@@ -623,16 +624,9 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
 
   displayDeals = signal<FlashSaleDeal[]>(this.mockDeals);
 
-  private timerInterval: any;
-
   ngOnInit() {
     this.loadVouchers();
-    this.startCountdown();
     this.loadBackendProducts();
-  }
-
-  ngOnDestroy() {
-    if (this.timerInterval) clearInterval(this.timerInterval);
   }
 
   loadBackendProducts() {
@@ -669,22 +663,6 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
         // Fallback giữ nguyên mockDeals
       }
     });
-  }
-
-  startCountdown() {
-    let totalSec = 8 * 3600 + 38 * 60 + 56;
-    this.timerInterval = setInterval(() => {
-      if (totalSec <= 0) {
-        totalSec = 8 * 3600;
-      }
-      totalSec--;
-      const h = Math.floor(totalSec / 3600);
-      const m = Math.floor((totalSec % 3600) / 60);
-      const s = totalSec % 60;
-      this.hours.set(h < 10 ? '0' + h : '' + h);
-      this.minutes.set(m < 10 ? '0' + m : '' + m);
-      this.seconds.set(s < 10 ? '0' + s : '' + s);
-    }, 1000);
   }
 
   claimVoucher(v: VoucherItem) {
@@ -726,6 +704,8 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
   }
 
   quickBuyDeal(deal: FlashSaleDeal) {
+    if (this.isAddingDeal(deal._id)) return;
+    this.setAddingDeal(deal._id, true);
     this.cartService.addItem({
       productId: deal._id,
       name: deal.name,
@@ -735,11 +715,22 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
       isCustom: false
     }).subscribe({
       next: () => {
+        this.setAddingDeal(deal._id, false);
         this.showToast(`Đã thêm "${deal.name}" vào giỏ hàng!`);
       },
       error: () => {
-        this.showToast(`Đã thêm món quà vào giỏ hàng!`);
+        this.setAddingDeal(deal._id, false);
+        this.showToast('Không thể thêm sản phẩm vào giỏ. Vui lòng thử lại.');
       }
+    });
+  }
+
+  isAddingDeal(id: string): boolean { return this.addingDealIds().has(id); }
+  private setAddingDeal(id: string, adding: boolean): void {
+    this.addingDealIds.update(ids => {
+      const next = new Set(ids);
+      if (adding) next.add(id); else next.delete(id);
+      return next;
     });
   }
 }

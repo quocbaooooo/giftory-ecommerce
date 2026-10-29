@@ -74,10 +74,11 @@ import { Product, CustomDesign } from '../../core/models';
             <div class="pt-4">
               <button
                 (click)="addToCart(item)"
-                class="relative z-10 w-full py-2 bg-giftory-primary hover:bg-giftory-primary-dark text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center justify-center gap-2"
+                [disabled]="isAddingToCart(item._id)"
+                class="relative z-10 w-full py-2 bg-giftory-primary hover:bg-giftory-primary-dark text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-wait"
               >
-                <span class="material-symbols-outlined text-sm">shopping_cart</span>
-                Thêm Vào Giỏ
+                @if (isAddingToCart(item._id)) { <span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true"></span><span>Đang thêm…</span> }
+                @else { <span class="material-symbols-outlined text-sm">shopping_cart</span><span>Thêm Vào Giỏ</span> }
               </button>
             </div>
           </div>
@@ -131,10 +132,11 @@ import { Product, CustomDesign } from '../../core/models';
               </a>
               <button
                 (click)="orderDesign(design)"
-                class="flex-1 py-2 bg-giftory-primary hover:bg-giftory-primary-dark text-white text-xs font-bold rounded-xl transition shadow flex items-center justify-center gap-1.5"
+                [disabled]="isAddingToCart(getDesignLoadingKey(design))"
+                class="flex-1 py-2 bg-giftory-primary hover:bg-giftory-primary-dark text-white text-xs font-bold rounded-xl transition shadow flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-wait"
               >
-                <span class="material-symbols-outlined text-sm">shopping_bag</span>
-                Đặt Hàng
+                @if (isAddingToCart(getDesignLoadingKey(design))) { <span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true"></span><span>Đang thêm…</span> }
+                @else { <span class="material-symbols-outlined text-sm">shopping_bag</span><span>Đặt Hàng</span> }
               </button>
             </div>
           </div>
@@ -158,6 +160,7 @@ export class WishlistComponent implements OnInit {
   private wishlistService = inject(WishlistService);
   private customStudioService = inject(CustomStudioService);
   private cartService = inject(CartService);
+  private addingToCartIds = signal(new Set<string>());
 
   activeTab = signal<'wishlist' | 'designs'>('wishlist');
   wishlistItems = signal<Product[]>([]);
@@ -195,6 +198,8 @@ export class WishlistComponent implements OnInit {
   }
 
   addToCart(product: Product) {
+    if (this.isAddingToCart(product._id)) return;
+    this.setAddingToCart(product._id, true);
     this.cartService.addItem({
       productId: product._id,
       name: product.name,
@@ -204,12 +209,17 @@ export class WishlistComponent implements OnInit {
       isCustom: false
     }).subscribe({
       next: () => {
+        this.setAddingToCart(product._id, false);
         alert('Đã thêm sản phẩm vào giỏ hàng!');
-      }
+      },
+      error: () => this.setAddingToCart(product._id, false),
     });
   }
 
   orderDesign(design: CustomDesign) {
+    const loadingKey = this.getDesignLoadingKey(design);
+    if (this.isAddingToCart(loadingKey)) return;
+    this.setAddingToCart(loadingKey, true);
     this.cartService.addItem({
       productId: typeof design.productId === 'object' ? design.productId._id : (design.productId || design.baseProductId || ''),
       name: design.designName || design.title || 'Hộp Quà Bespoke Cá Nhân Hóa',
@@ -240,8 +250,25 @@ export class WishlistComponent implements OnInit {
       depositRequired: ((design as any).price || 450000) * 0.5
     }).subscribe({
       next: () => {
+        this.setAddingToCart(loadingKey, false);
         alert('Đã thêm mẫu thiết kế độc bản vào giỏ hàng (Áp dụng cọc 50%)!');
-      }
+      },
+      error: () => this.setAddingToCart(loadingKey, false),
+    });
+  }
+
+  getDesignLoadingKey(design: CustomDesign): string {
+    if (design._id) return design._id;
+    const productId = typeof design.productId === 'object' ? design.productId?._id : design.productId;
+    return ['design', productId || design.baseProductId || '', design.designName || design.title || '', design.previewImage || ''].join(':');
+  }
+
+  isAddingToCart(id: string): boolean { return this.addingToCartIds().has(id); }
+  private setAddingToCart(id: string, adding: boolean): void {
+    this.addingToCartIds.update(ids => {
+      const next = new Set(ids);
+      if (adding) next.add(id); else next.delete(id);
+      return next;
     });
   }
 }

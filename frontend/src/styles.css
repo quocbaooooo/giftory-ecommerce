@@ -76,7 +76,11 @@ body {
 .g-body-text { font-size: var(--type-body); line-height: 1.55; }
 .g-meta-text { font-size: var(--type-meta); line-height: 1.4; }
 .g-card { border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
-.g-card-hover:hover { box-shadow: var(--shadow-card-hover); }
+.g-card-hover { transition: transform 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out; }
+.g-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(30, 27, 75, 0.16);
+}
 .g-button, .g-field { border-radius: var(--radius-control); }
 .g-section-space { margin-bottom: var(--space-3); }
 
