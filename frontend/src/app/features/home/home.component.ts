@@ -15,74 +15,35 @@ import { Product, Category } from '../../core/models';
       <!-- BEGIN: HeroDiscoverySection -->
       <section class="relative pt-4 pb-8 px-4 md:px-8 max-w-7xl mx-auto flex flex-col items-center text-center overflow-visible">
         
-        <!-- 1 DÒNG DUY NHẤT CHẠY NGANG, KHÔNG VIỀN TRẮNG, NHẤP NHÔ LƯỢN SÓNG LỆCH NHỊP -->
-        <div class="relative w-full max-w-5xl mb-6 select-none overflow-hidden py-2">
-          <div class="absolute left-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-[#F3EBF9] to-transparent z-20 pointer-events-none"></div>
-          <div class="absolute right-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-[#F3EBF9] to-transparent z-20 pointer-events-none"></div>
-          
-          <div class="overflow-hidden w-full py-1">
-            <div class="animate-single-marquee flex items-center gap-4">
-              <!-- Item 1: Bình giữ nhiệt -->
-              <div class="flex-shrink-0 wave-item-1">
-                <img alt="Bình giữ nhiệt Elmich cao cấp" class="w-[85px] h-[92px] object-cover rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnbFnr2bFrmqaeDLx_elgUmNO1zsXditnQ03OwaUohpSw85hopV7UoMrufnrskIYaA7OoLwB8lq9fG6wZK51zDXAaalVUGhlcwmAjVemlLNow5PANugfRdvlyzkw-y7S17vl8CJXw9_rJLZxiicLlqMA84C4TWLpIFwcV8iks14JnTvN9lSyb8HfnF3GT49kfeuybrcNJCRzQDKQj0pdZuwULSz7u-PuDs-xUYJLIWebl-2RaYdJc1ECqMjNKEsjuGH8Q">
-              </div>
-              <!-- Item 2: Cốc thìa vàng -->
-              <div class="flex-shrink-0 wave-item-2">
-                <img alt="Hộp quà cốc thìa vàng gốm sứ" class="w-[90px] h-[90px] object-cover rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmi8pqctrGS6fEmb1AhbMuAdk_5AdA8tLPUU7Q5KY9j62dMoJncBMWhzstbXhVD-u4m80ETkD1nfYx3ThZDxXGrjA0GvhL2sW7-3SkQkb4Qs2bPj5p07B1EgFzwxCCEkAdqtus1AvMf4ofg6ZCmF3Dj8EGjQQIYVbLpab2KZjv_HROvhj9nB2IpBYTcCfkbA5dYDhuX7ir9W-9wtC8pmw4eX8AE5r0WNQxqFYpgpRstoCaL8f1UD2rW0IKNQUT9aE1y9s">
-              </div>
-              <!-- Item 3: Sổ da & bút ký -->
-              <div class="flex-shrink-0 wave-item-3">
-                <img alt="Sổ tay da và bút máy khắc laser" class="w-[85px] h-[92px] object-cover rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTiUcc1K16mRQtadu3yEAnXGoIohAuCMoAY1yVBoAMwvyfjPIJFirLHWov_uxVpgQ5-GykkXfJ9UexjI-MS_WgHGcD7W0aG0F9yHAziycn8URpqVpTqCFiptz3t_UzpIAFu4ICjGwbBHrbKlGDyRzFQ9HDiLH48zvQjwFtMgMn0XwySjnxnKBc8fnFy38rvx0ufp9BHsnvb3zwHmgmei_s5P1fJU-ZbURE8_qWkyjKo-ZV3j0Ik87ZxHOQPbBdB0vQnpE">
-              </div>
-              <!-- Item 4: Ốp điện thoại -->
-              <div class="flex-shrink-0 wave-item-4">
-                <img alt="Ốp điện thoại custom in tên E.M." class="w-[90px] h-[90px] object-cover rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-bRbWBhv_zezdlBaL0rLu9Plt7vm0VuTJnqygcImvTlLiugv2etis2o4XIwkp35Q-9iBQJ4QgUAPjVyLVk5O4mTf93VT_lAslrS36cC4DTVYEiJOOYOm-RtpRmuaJQ0zjoan3nIg4F9OIGJjvGOs5UgjkrlyX9aD4_ino2r1bPMh8NA57AC2dt0ZnWFo_Pir3cXLrm6ytxc6azoDlqrq6tfdUVaoeoS_A5tLDImqU0eEXAz96BWRaVA">
-              </div>
-              <!-- Item 5: Áo thun thêu -->
-              <div class="flex-shrink-0 wave-item-1">
-                <img alt="Áo thun cotton thêu tên nghệ thuật" class="w-[88px] h-[88px] object-cover rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5C_BuC6873TScG4V8tj6GF6BOc7sPhdDrpa9wu7VLUcXlpKM8NoJBlY_9lYrl1IdRAa9WwlwGO7AEeIPbNjvTh3na33-nodInHZkRzA0TzoNPRLcWCITN6DkPlwvTriwZwIy3eNfOlIULrMjsDgmdVYRmZO-byKa6I9evbnNhSpDxDmwJzJgRPilIlQ8qd50ywk89bB1Fl2swu3qpQGw-p16cSmWz2TNbspfGMc-R81sIl2MWPtVS-Q">
-              </div>
-              <!-- Item 6: Nến thơm Citta -->
-              <div class="flex-shrink-0 wave-item-2">
-                <img alt="Nến thơm tinh dầu hoa khô handmade" class="w-[85px] h-[92px] object-cover rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0AgXNm0dmGk3HNBCmrk9OS5ijfKIE41QmngNG9OA54P11IRzvZjBHDcnlHGdNH76JJ3MlrDWSaEoi43vB0EaXYWjGQZQssWH6s8x6ON9tG6pStpFPDyyDNUu1ShvSVTPwE4VuAuQxvHMiDIqZg2P-k3E3VkhW5uKwMOZog3IsAgRGhyih7Yre6YJW4iI5wm1wzz1t20wpq46St21-fX5c4sV3b8qxEKzrLqNb3OgV9s1z2yLbLv0x-SL_R11fIxBbJSU">
-              </div>
-              <!-- Item 7: Móc khóa thỏ gỗ -->
-              <div class="flex-shrink-0 wave-item-3">
-                <img alt="Móc khóa thỏ gỗ đôi cá nhân hóa" class="w-[95px] h-[85px] object-cover rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB13Z7iIbjVRr60YvfNMx5FpccEhDWukJEVwqvUzgts1c_hPNfuQ1RLJyKiLkZ5Gx10SldKrbGQQI8cE9Uwt_lIlt555_Q6spEluVtPZLYEGOi_-_7nC9BiK6PuhyAWV0GtGZ9I1BUdYluPy0EqTTztUGbsLYcATRZimlk4TEROEZ5CGFVlZF50CSrY8nvps95-Ir05bA-GVu5eR2P2n28_W0sjvorJ-8A46PWH8ySYo7W1l7NvhkFYjSO-cKcSp7XZwFA">
-              </div>
-
-              <!-- Duplicate ALL 7 items for 100% seamless infinite loop without any white gaps -->
-              <!-- Item 1: Bình giữ nhiệt -->
-              <div class="flex-shrink-0 wave-item-1">
-                <img alt="Bình giữ nhiệt Elmich cao cấp" class="w-[85px] h-[92px] object-cover rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnbFnr2bFrmqaeDLx_elgUmNO1zsXditnQ03OwaUohpSw85hopV7UoMrufnrskIYaA7OoLwB8lq9fG6wZK51zDXAaalVUGhlcwmAjVemlLNow5PANugfRdvlyzkw-y7S17vl8CJXw9_rJLZxiicLlqMA84C4TWLpIFwcV8iks14JnTvN9lSyb8HfnF3GT49kfeuybrcNJCRzQDKQj0pdZuwULSz7u-PuDs-xUYJLIWebl-2RaYdJc1ECqMjNKEsjuGH8Q">
-              </div>
-              <!-- Item 2: Cốc thìa vàng -->
-              <div class="flex-shrink-0 wave-item-2">
-                <img alt="Hộp quà cốc thìa vàng gốm sứ" class="w-[90px] h-[90px] object-cover rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmi8pqctrGS6fEmb1AhbMuAdk_5AdA8tLPUU7Q5KY9j62dMoJncBMWhzstbXhVD-u4m80ETkD1nfYx3ThZDxXGrjA0GvhL2sW7-3SkQkb4Qs2bPj5p07B1EgFzwxCCEkAdqtus1AvMf4ofg6ZCmF3Dj8EGjQQIYVbLpab2KZjv_HROvhj9nB2IpBYTcCfkbA5dYDhuX7ir9W-9wtC8pmw4eX8AE5r0WNQxqFYpgpRstoCaL8f1UD2rW0IKNQUT9aE1y9s">
-              </div>
-              <!-- Item 3: Sổ da & bút ký -->
-              <div class="flex-shrink-0 wave-item-3">
-                <img alt="Sổ tay da và bút máy khắc laser" class="w-[85px] h-[92px] object-cover rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTiUcc1K16mRQtadu3yEAnXGoIohAuCMoAY1yVBoAMwvyfjPIJFirLHWov_uxVpgQ5-GykkXfJ9UexjI-MS_WgHGcD7W0aG0F9yHAziycn8URpqVpTqCFiptz3t_UzpIAFu4ICjGwbBHrbKlGDyRzFQ9HDiLH48zvQjwFtMgMn0XwySjnxnKBc8fnFy38rvx0ufp9BHsnvb3zwHmgmei_s5P1fJU-ZbURE8_qWkyjKo-ZV3j0Ik87ZxHOQPbBdB0vQnpE">
-              </div>
-              <!-- Item 4: Ốp điện thoại -->
-              <div class="flex-shrink-0 wave-item-4">
-                <img alt="Ốp điện thoại custom in tên E.M." class="w-[90px] h-[90px] object-cover rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-bRbWBhv_zezdlBaL0rLu9Plt7vm0VuTJnqygcImvTlLiugv2etis2o4XIwkp35Q-9iBQJ4QgUAPjVyLVk5O4mTf93VT_lAslrS36cC4DTVYEiJOOYOm-RtpRmuaJQ0zjoan3nIg4F9OIGJjvGOs5UgjkrlyX9aD4_ino2r1bPMh8NA57AC2dt0ZnWFo_Pir3cXLrm6ytxc6azoDlqrq6tfdUVaoeoS_A5tLDImqU0eEXAz96BWRaVA">
-              </div>
-              <!-- Item 5: Áo thun thêu -->
-              <div class="flex-shrink-0 wave-item-1">
-                <img alt="Áo thun cotton thêu tên nghệ thuật" class="w-[88px] h-[88px] object-cover rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5C_BuC6873TScG4V8tj6GF6BOc7sPhdDrpa9wu7VLUcXlpKM8NoJBlY_9lYrl1IdRAa9WwlwGO7AEeIPbNjvTh3na33-nodInHZkRzA0TzoNPRLcWCITN6DkPlwvTriwZwIy3eNfOlIULrMjsDgmdVYRmZO-byKa6I9evbnNhSpDxDmwJzJgRPilIlQ8qd50ywk89bB1Fl2swu3qpQGw-p16cSmWz2TNbspfGMc-R81sIl2MWPtVS-Q">
-              </div>
-              <!-- Item 6: Nến thơm Citta -->
-              <div class="flex-shrink-0 wave-item-2">
-                <img alt="Nến thơm tinh dầu hoa khô handmade" class="w-[85px] h-[92px] object-cover rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0AgXNm0dmGk3HNBCmrk9OS5ijfKIE41QmngNG9OA54P11IRzvZjBHDcnlHGdNH76JJ3MlrDWSaEoi43vB0EaXYWjGQZQssWH6s8x6ON9tG6pStpFPDyyDNUu1ShvSVTPwE4VuAuQxvHMiDIqZg2P-k3E3VkhW5uKwMOZog3IsAgRGhyih7Yre6YJW4iI5wm1wzz1t20wpq46St21-fX5c4sV3b8qxEKzrLqNb3OgV9s1z2yLbLv0x-SL_R11fIxBbJSU">
-              </div>
-              <!-- Item 7: Móc khóa thỏ gỗ -->
-              <div class="flex-shrink-0 wave-item-3">
-                <img alt="Móc khóa thỏ gỗ đôi cá nhân hóa" class="w-[95px] h-[85px] object-cover rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB13Z7iIbjVRr60YvfNMx5FpccEhDWukJEVwqvUzgts1c_hPNfuQ1RLJyKiLkZ5Gx10SldKrbGQQI8cE9Uwt_lIlt555_Q6spEluVtPZLYEGOi_-_7nC9BiK6PuhyAWV0GtGZ9I1BUdYluPy0EqTTztUGbsLYcATRZimlk4TEROEZ5CGFVlZF50CSrY8nvps95-Ir05bA-GVu5eR2P2n28_W0sjvorJ-8A46PWH8ySYo7W1l7NvhkFYjSO-cKcSp7XZwFA">
+        <!-- Sản phẩm thật từ catalog, chạy liên tục và có thể mở chi tiết -->
+        @if (marqueeProducts().length > 0) {
+          <div class="relative w-full max-w-5xl mb-6 overflow-hidden px-2 py-2">
+            <div class="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-[#F3EBF9] via-[#F3EBF9]/80 to-transparent sm:w-20"></div>
+            <div class="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-[#F3EBF9] via-[#F3EBF9]/80 to-transparent sm:w-20"></div>
+            <div class="overflow-hidden py-1">
+              <div class="animate-single-marquee flex w-max items-center gap-5 pr-5 sm:gap-7 sm:pr-7">
+                @for (prod of marqueeProducts(); track prod._id) {
+                  <a [routerLink]="['/products', prod.slug]" [attr.aria-label]="'Xem ' + prod.name" class="group block h-[76px] w-[76px] shrink-0 overflow-hidden rounded-[22px] bg-white shadow-[0_5px_18px_rgba(30,27,75,0.12)] ring-1 ring-white transition duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-[0_10px_24px_rgba(124,58,237,0.2)] sm:h-[88px] sm:w-[88px]">
+                    @if (prod.images[0]) {
+                      <img [src]="prod.images[0]" [alt]="prod.name" loading="lazy" class="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
+                    } @else {
+                      <span class="material-symbols-outlined flex h-full items-center justify-center text-3xl text-purple-300">card_giftcard</span>
+                    }
+                  </a>
+                }
+                @for (prod of marqueeProducts(); track 'repeat-' + prod._id) {
+                  <a [routerLink]="['/products', prod.slug]" tabindex="-1" aria-hidden="true" class="group block h-[76px] w-[76px] shrink-0 overflow-hidden rounded-[22px] bg-white shadow-[0_5px_18px_rgba(30,27,75,0.12)] ring-1 ring-white transition duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-[0_10px_24px_rgba(124,58,237,0.2)] sm:h-[88px] sm:w-[88px]">
+                    @if (prod.images[0]) {
+                      <img [src]="prod.images[0]" [alt]="prod.name" loading="lazy" class="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
+                    } @else {
+                      <span class="material-symbols-outlined flex h-full items-center justify-center text-3xl text-purple-300">card_giftcard</span>
+                    }
+                  </a>
+                }
               </div>
             </div>
           </div>
-        </div>
+        }
 
         <!-- Logo Giftory nhận diện thương hiệu (Cân đối tỉ lệ nổi bật) -->
         <div class="relative z-10 my-3 flex flex-col items-center">
@@ -244,6 +205,7 @@ export class HomeComponent implements OnInit {
 
   categories = signal<Category[]>([]);
   allProducts = signal<Product[]>([]);
+  marqueeProducts = signal<Product[]>([]);
   bespokeProducts = signal<Product[]>([]);
   flashSaleProducts = signal<Product[]>([]);
 
@@ -254,6 +216,10 @@ export class HomeComponent implements OnInit {
 
     this.productService.getCatalogProducts({ limit: 8 }).subscribe({
       next: res => { this.allProducts.set(res.items); this.productService.prefetchProductList(); }
+    });
+
+    this.productService.getCatalogProducts({ sort: 'popular', page: 1, limit: 12 }).subscribe({
+      next: res => this.marqueeProducts.set(res.items)
     });
 
     this.productService.getCatalogProducts({ isCustomizable: 'true', limit: 4 }).subscribe({

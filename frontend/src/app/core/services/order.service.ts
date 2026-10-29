@@ -17,6 +17,18 @@ export class OrderService {
     return this.api.post<Order>('orders', orderData);
   }
 
+  sendGuestCodOtp(phone: string, sessionId: string): Observable<any> {
+    return this.api.post<any>('orders/guest-cod-otp/send', { phone, sessionId });
+  }
+
+  resendGuestCodOtp(challengeId: string, phone: string, sessionId: string): Observable<any> {
+    return this.api.post<any>('orders/guest-cod-otp/resend', { challengeId, phone, sessionId });
+  }
+
+  verifyGuestCodOtp(challengeId: string, phone: string, sessionId: string, code: string): Observable<any> {
+    return this.api.post<any>('orders/guest-cod-otp/verify', { challengeId, phone, sessionId, code });
+  }
+
   getOrderByCode(orderCode: string, phone?: string): Observable<Order> {
     return this.api.get<Order>(`orders/${encodeURIComponent(orderCode)}`, { phone });
   }

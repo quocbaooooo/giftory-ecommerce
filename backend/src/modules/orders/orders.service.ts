@@ -4,7 +4,9 @@ import { CareService } from '../care/care.service';
 import { normalizeAddress } from '../recipients/address.rules';
 import { normalizeGreetingCard } from './greeting-card.rules';
 import { studioUnitPrice } from '../../common/utils/studio-pricing';
-import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger, ServiceUnavailableException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { createHmac, randomInt, randomUUID, timingSafeEqual } from 'crypto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Order, OrderDocument } from '../../database/schemas/order.schema';
@@ -12,7 +14,9 @@ import { Cart, CartDocument } from '../../database/schemas/cart.schema';
 import { User, UserDocument } from '../../database/schemas/user.schema';
 import { Product, ProductDocument } from '../../database/schemas/product.schema';
 import { LoyaltyTransaction, LoyaltyTransactionDocument } from '../../database/schemas/loyalty-transaction.schema';
+import { GuestCodOtpChallenge, GuestCodOtpChallengeDocument } from '../../database/schemas/guest-cod-otp-challenge.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { GuestCodOtpRequestDto, GuestCodOtpResendDto, GuestCodOtpVerifyDto } from './dto/guest-cod-otp.dto';
 import {
   OrderStatus,
   PaymentStatus,
@@ -31,10 +35,129 @@ export class OrdersService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel(Product.name) private readonly productModel: Model<ProductDocument>,
     @InjectModel(LoyaltyTransaction.name) private readonly loyaltyModel: Model<LoyaltyTransactionDocument>,
+    @InjectModel(GuestCodOtpChallenge.name) private readonly guestCodOtpModel: Model<GuestCodOtpChallengeDocument>,
     private readonly vouchers?: VouchersService,
+    private readonly configService?: ConfigService,
   ) {}
 
+  async sendGuestCodOtp(dto: GuestCodOtpRequestDto, userId?: string) {
+    if (userId) throw new BadRequestException('Thành viên không cần xác minh OTP khi đặt COD.');
+    const phone = normalizeVietnamPhone(dto.phone);
+    if (!/^0[35789]\d{8}$/.test(phone)) throw new BadRequestException('Số điện thoại không hợp lệ.');
+    const existing = await this.guestCodOtpModel.findOne({ phone, sessionId: dto.sessionId, status: { $in: ['PENDING', 'VERIFIED', 'LOCKED'] } }).sort({ createdAt: -1 });
+    if (existing?.status === 'LOCKED' || (existing && existing.attemptsUsed >= 5)) {
+      throw new BadRequestException('Bạn đã hết 5 lượt xác minh OTP cho đơn hàng này.');
+    }
+    if (existing?.status === 'VERIFIED' && existing.expiresAt.getTime() > Date.now()) {
+      return { challengeId: existing.challengeId, expiresInSeconds: Math.ceil((existing.expiresAt.getTime() - Date.now()) / 1000), attemptsRemaining: 5 - existing.attemptsUsed, resendsRemaining: Math.max(0, 5 - existing.sendCount), verified: true };
+    }
+    if (existing?.status === 'VERIFIED') {
+      const attemptsUsed = existing.attemptsUsed + 1;
+      await this.guestCodOtpModel.updateOne(
+        { _id: existing._id, status: 'VERIFIED' },
+        { $set: { status: attemptsUsed >= 5 ? 'LOCKED' : 'PENDING' }, $inc: { attemptsUsed: 1 }, $unset: { verifiedAt: 1 } },
+      );
+      if (attemptsUsed >= 5) throw new BadRequestException('Mã xác minh đã hết hạn và bạn đã hết 5 lượt thử.');
+      return this.resendGuestCodOtp({ challengeId: existing.challengeId, phone, sessionId: dto.sessionId }, userId);
+    }
+    if (existing?.status === 'PENDING') {
+      return this.resendGuestCodOtp({ challengeId: existing.challengeId, phone, sessionId: dto.sessionId }, userId);
+    }
+    const code = randomInt(0, 1_000_000).toString().padStart(6, '0');
+    await this.deliverGuestCodOtp(phone, code);
+    const challenge = await this.guestCodOtpModel.create({
+      challengeId: randomUUID(), phone, sessionId: dto.sessionId,
+      codeHash: this.guestCodOtpHash(code), attemptsUsed: 0, sendCount: 1,
+      status: 'PENDING', expiresAt: new Date(Date.now() + 60_000),
+    });
+    return { challengeId: challenge.challengeId, expiresInSeconds: 60, attemptsRemaining: 5, resendsRemaining: 4, verified: false };
+  }
+
+  async resendGuestCodOtp(dto: GuestCodOtpResendDto, userId?: string) {
+    if (userId) throw new BadRequestException('Thành viên không cần xác minh OTP khi đặt COD.');
+    const phone = normalizeVietnamPhone(dto.phone);
+    const challenge = await this.guestCodOtpModel.findOne({ challengeId: dto.challengeId, phone, sessionId: dto.sessionId, status: 'PENDING' });
+    if (!challenge || challenge.attemptsUsed >= 5 || challenge.sendCount >= 5) {
+      throw new BadRequestException('Không thể gửi thêm mã OTP. Vui lòng bắt đầu lại quy trình đặt hàng.');
+    }
+    const code = randomInt(0, 1_000_000).toString().padStart(6, '0');
+    await this.deliverGuestCodOtp(phone, code);
+    await this.guestCodOtpModel.updateOne(
+      { _id: challenge._id, status: 'PENDING', attemptsUsed: challenge.attemptsUsed, sendCount: challenge.sendCount },
+      { $set: { codeHash: this.guestCodOtpHash(code), expiresAt: new Date(Date.now() + 60_000) }, $inc: { sendCount: 1 } },
+    );
+    return { challengeId: challenge.challengeId, expiresInSeconds: 60, attemptsRemaining: Math.max(0, 5 - challenge.attemptsUsed), resendsRemaining: Math.max(0, 5 - challenge.sendCount - 1), verified: false };
+  }
+
+  async verifyGuestCodOtp(dto: GuestCodOtpVerifyDto, userId?: string) {
+    if (userId) throw new BadRequestException('Thành viên không cần xác minh OTP khi đặt COD.');
+    const phone = normalizeVietnamPhone(dto.phone);
+    const challenge = await this.guestCodOtpModel.findOne({ challengeId: dto.challengeId, phone, sessionId: dto.sessionId, status: 'PENDING' }).select('+codeHash');
+    if (!challenge) throw new BadRequestException('Phiên xác minh OTP không hợp lệ hoặc đã kết thúc.');
+    if (challenge.attemptsUsed >= 5) return { verified: false, attemptsRemaining: 0, canResend: false, message: 'Bạn đã hết 5 lượt xác minh OTP.' };
+
+    const expired = challenge.expiresAt.getTime() <= Date.now();
+    const submittedHash = this.guestCodOtpHash(dto.code);
+    const expected = Buffer.from(challenge.codeHash, 'hex');
+    const submitted = Buffer.from(submittedHash, 'hex');
+    const isCorrect = !expired && expected.length === submitted.length && timingSafeEqual(expected, submitted);
+    if (isCorrect) {
+      const verified = await this.guestCodOtpModel.findOneAndUpdate(
+        { _id: challenge._id, status: 'PENDING', attemptsUsed: challenge.attemptsUsed, expiresAt: { $gt: new Date() } },
+        { $set: { status: 'VERIFIED', verifiedAt: new Date() } },
+        { new: true },
+      );
+      if (verified) return { verified: true, attemptsRemaining: 5 - verified.attemptsUsed, canResend: false, message: 'Xác minh số điện thoại thành công.' };
+    }
+
+    const attemptsUsed = challenge.attemptsUsed + 1;
+    const locked = attemptsUsed >= 5;
+    const updated = await this.guestCodOtpModel.findOneAndUpdate(
+      { _id: challenge._id, status: 'PENDING', attemptsUsed: challenge.attemptsUsed },
+      { $inc: { attemptsUsed: 1 }, ...(locked ? { $set: { status: 'LOCKED' } } : {}) },
+      { new: true },
+    );
+    const remaining = updated ? Math.max(0, 5 - updated.attemptsUsed) : 0;
+    return {
+      verified: false,
+      attemptsRemaining: remaining,
+      canResend: remaining > 0 && !locked,
+      message: expired ? 'Mã OTP đã hết hạn.' : 'Mã OTP không chính xác.',
+    };
+  }
+
+  private guestCodOtpHash(code: string): string {
+    const secret = this.configService?.get<string>('ORDER_OTP_HASH_SECRET')
+      || this.configService?.get<string>('JWT_ACCESS_SECRET')
+      || 'giftory-cod-otp-development-secret';
+    return createHmac('sha256', secret).update(code).digest('hex');
+  }
+
+  private async deliverGuestCodOtp(phone: string, code: string): Promise<void> {
+    const endpoint = this.configService?.get<string>('ORDER_OTP_SMS_URL');
+    const token = this.configService?.get<string>('ORDER_OTP_SMS_TOKEN');
+    if (!endpoint?.startsWith('https://') || !token) {
+      throw new ServiceUnavailableException('Dịch vụ gửi OTP chưa sẵn sàng. Đơn hàng chưa được tạo.');
+    }
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: phone, message: `Ma xac minh Giftory: ${code}. Ma co hieu luc trong 1 phut.` }),
+        signal: AbortSignal.timeout(10_000),
+        redirect: 'error',
+      });
+      if (!response.ok) throw new Error('SMS provider rejected delivery');
+    } catch {
+      throw new ServiceUnavailableException('Không gửi được OTP đến số điện thoại này. Đơn hàng chưa được tạo.');
+    }
+  }
+
   async createOrder(dto: CreateOrderDto, userId?: string) {
+    const requiresGuestCodOtp = !userId && dto.paymentMethod === PaymentMethod.COD;
+    if (requiresGuestCodOtp && !dto.guestCodOtpChallengeId) {
+      throw new BadRequestException('Khách đặt COD cần xác minh OTP trước khi tạo đơn hàng.');
+    }
     const greetingCard = normalizeGreetingCard(dto.greetingCard);
     const info = dto.customerInfo;
     if (info?.provinceCode !== undefined || info?.wardCode !== undefined || info?.street !== undefined) {
@@ -208,7 +331,24 @@ export class OrdersService {
       }
     }
     let order;
+    let claimedOtpChallengeId: string | undefined;
     try {
+      if (requiresGuestCodOtp) {
+        const verifiedOtp = await this.guestCodOtpModel.findOneAndUpdate(
+          {
+            challengeId: dto.guestCodOtpChallengeId,
+            phone: normalizeVietnamPhone(dto.customerInfo.phone),
+            sessionId: dto.sessionId,
+            status: 'VERIFIED',
+            expiresAt: { $gt: new Date() },
+            consumedAt: { $exists: false },
+          },
+          { $set: { status: 'CONSUMED', consumedAt: new Date() } },
+          { new: true },
+        );
+        if (!verifiedOtp) throw new BadRequestException('Xác minh OTP chưa hoàn tất hoặc đã hết hạn. Vui lòng xác minh lại.');
+        claimedOtpChallengeId = verifiedOtp.challengeId;
+      }
       order = await this.orderModel.create({
         voucherCode: voucher?.code || '',
         voucherType: voucher?.discountType || '',
@@ -255,6 +395,12 @@ export class OrdersService {
 
     } catch (error) {
       if (voucher) await this.vouchers.release(voucher.code, orderCode);
+      if (claimedOtpChallengeId) {
+        await this.guestCodOtpModel.updateOne(
+          { challengeId: claimedOtpChallengeId, status: 'CONSUMED' },
+          { $set: { status: 'VERIFIED' }, $unset: { consumedAt: 1 } },
+        );
+      }
       throw error;
     }
 
@@ -843,6 +989,10 @@ export class OrdersService {
     await this.care.transfer(order);
     return order;
   }
+}
+
+function normalizeVietnamPhone(value: string): string {
+  return String(value || '').replace(/[\s().-]/g, '').replace(/^\+?84/, '0');
 }
 
 function hasDesignContent(details: any): boolean {

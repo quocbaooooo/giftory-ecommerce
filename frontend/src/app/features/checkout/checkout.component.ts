@@ -491,6 +491,35 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
         </div>
       }
 
+      @if (showGuestOtpModal()) {
+        <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" role="presentation">
+          <section role="dialog" aria-modal="true" aria-labelledby="guest-cod-otp-title" class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-purple-100 space-y-5">
+            <div class="text-center space-y-2">
+              <div class="w-12 h-12 rounded-2xl bg-purple-100 text-[#7C3AED] flex items-center justify-center mx-auto"><span class="material-symbols-outlined text-2xl">phonelink_lock</span></div>
+              <h2 id="guest-cod-otp-title" class="text-lg font-extrabold text-slate-900">Xác minh số điện thoại</h2>
+              <p class="text-xs text-slate-600">Giftory đã gửi OTP đến <b>{{ normalizedCustomerPhone() }}</b>. Mã có hiệu lực 1 phút. Đơn hàng chỉ được tạo sau khi xác minh thành công.</p>
+            </div>
+            <label class="block text-xs font-bold text-slate-700">Mã OTP 6 chữ số
+              <input [(ngModel)]="guestOtpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3 text-center text-xl tracking-[0.5em] font-bold focus:border-purple-500 focus:outline-none" [disabled]="guestOtpBusy() || guestOtpSeconds() === 0" />
+            </label>
+            @if (guestOtpError()) { <p role="alert" class="text-xs text-rose-700">{{ guestOtpError() }}</p> }
+            <div class="flex items-center justify-between text-[11px] text-slate-500">
+              <span>{{ guestOtpSeconds() > 0 ? 'Mã còn hiệu lực: ' + guestOtpSeconds() + ' giây' : 'Mã OTP đã hết hạn' }}</span>
+              <span>Còn {{ guestOtpAttemptsRemaining() }}/5 lượt xác minh</span>
+            </div>
+            <div class="flex flex-col gap-2">
+              <button type="button" (click)="verifyGuestCodOtp()" [disabled]="guestOtpBusy() || guestOtpSeconds() === 0 || !guestOtpCodeValid()" class="w-full rounded-xl bg-[#7C3AED] px-4 py-3 text-sm font-bold text-white disabled:opacity-50">
+                {{ guestOtpBusy() ? 'Đang xác minh…' : 'Xác minh và đặt hàng COD' }}
+              </button>
+              <button type="button" (click)="resendGuestCodOtp()" [disabled]="guestOtpBusy() || guestOtpAttemptsRemaining() <= 0 || guestOtpResendsRemaining() <= 0" class="w-full rounded-xl border border-purple-200 px-4 py-2.5 text-xs font-bold text-purple-700 disabled:opacity-40">
+                Gửi mã mới @if (guestOtpResendsRemaining() >= 0) { (còn {{ guestOtpResendsRemaining() }} lượt gửi) }
+              </button>
+              <button type="button" (click)="cancelGuestCodOtp()" [disabled]="guestOtpBusy()" class="w-full rounded-xl px-4 py-2 text-xs font-semibold text-slate-500">Dừng xác minh</button>
+            </div>
+          </section>
+        </div>
+      }
+
       <!-- PAYMENT GATEWAY VIETQR MODAL (BR-05, BR-06, AF2, AF4, EF1) -->
       @if (showPaymentModal() && pendingOrder()) {
         <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
@@ -640,10 +669,20 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   
   isSubmitting = signal<boolean>(false);
   orderError = signal('');
+  showGuestOtpModal = signal(false);
+  guestOtpChallengeId = signal('');
+  guestOtpVerified = signal(false);
+  guestOtpAttemptsRemaining = signal(5);
+  guestOtpResendsRemaining = signal(4);
+  guestOtpSeconds = signal(60);
+  guestOtpError = signal('');
+  guestOtpBusy = signal(false);
+  guestOtpCode = '';
   showPaymentModal = signal<boolean>(false);
   pendingOrder = signal<any>(null);
   paymentError = signal<string | null>(null);
   private paymentPolling?: Subscription;
+  private guestOtpCountdown?: Subscription;
   private paymentWaitStarted = 0;
   qrImageFailed = signal(false);
   qrVersion = signal(0);
@@ -910,6 +949,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     }
     this.recipientFormError.set(null);
 
+    if (!this.authService.isAuthenticated() && this.selectedPaymentMethod() === 'COD' && !this.guestOtpVerified()) {
+      this.requestGuestCodOtp();
+      return;
+    }
+
     this.orderError.set('');
     this.isSubmitting.set(true);
     this.paymentError.set(null);
@@ -929,7 +973,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       paymentMode: this.calculatedDepositAmount() < this.calculatedTotalAmount() ? 'DEPOSIT_50' : 'FULL_PAYMENT',
       paymentMethod: this.selectedPaymentMethod(),
       shippingMethod: this.selectedShippingMethod(),
-      sessionId: this.cartService.getSessionId()
+      sessionId: this.cartService.getSessionId(),
+      ...(!this.authService.isAuthenticated() && this.selectedPaymentMethod() === 'COD'
+        ? { guestCodOtpChallengeId: this.guestOtpChallengeId() } : {})
     };
 
     if (this.isBuyNowMode()) {
@@ -946,6 +992,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.orderService.createOrder(orderPayload).subscribe({
       next: (order: any) => {
         this.isSubmitting.set(false);
+        this.guestOtpCountdown?.unsubscribe();
+        this.guestOtpVerified.set(false);
+        this.guestOtpChallengeId.set('');
+        this.guestOtpCode = '';
         if (this.isBuyNowMode()) {
           this.cartService.clearBuyNowItem(); // Clear buy-now item, keep regular cart safe!
         } else {
@@ -964,14 +1014,126 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        this.orderError.set(err.error?.message || 'Có lỗi xảy ra khi khởi tạo đơn hàng');
+        const message = err.error?.message || 'Có lỗi xảy ra khi khởi tạo đơn hàng';
+        this.orderError.set(message);
+        if (!this.authService.isAuthenticated() && this.selectedPaymentMethod() === 'COD' && /otp|xác minh/i.test(message)) {
+          this.guestOtpVerified.set(false);
+          this.guestOtpChallengeId.set('');
+        }
         if (!this.isBuyNowMode()) this.cartService.loadCart();
       }
     });
   }
 
+  normalizedCustomerPhone(): string {
+    return this.customerPhone.replace(/[\s().-]/g, '').replace(/^\+?84/, '0');
+  }
+
+  guestOtpCodeValid(): boolean { return /^\d{6}$/.test(this.guestOtpCode); }
+
+  private startGuestOtpCountdown(seconds: number): void {
+    this.guestOtpCountdown?.unsubscribe();
+    this.guestOtpSeconds.set(Math.max(0, seconds));
+    this.guestOtpCountdown = timer(1000, 1000).subscribe(() => {
+      const remaining = this.guestOtpSeconds();
+      if (remaining <= 1) {
+        this.guestOtpSeconds.set(0);
+        this.guestOtpCountdown?.unsubscribe();
+      } else this.guestOtpSeconds.set(remaining - 1);
+    });
+  }
+
+  private requestGuestCodOtp(): void {
+    if (this.guestOtpBusy()) return;
+    this.guestOtpBusy.set(true);
+    this.guestOtpError.set('');
+    this.orderError.set('');
+    this.isSubmitting.set(true);
+    this.orderService.sendGuestCodOtp(this.normalizedCustomerPhone(), this.cartService.getSessionId()).subscribe({
+      next: response => {
+        this.isSubmitting.set(false);
+        this.guestOtpBusy.set(false);
+        this.guestOtpChallengeId.set(response.challengeId);
+        this.guestOtpAttemptsRemaining.set(response.attemptsRemaining ?? 5);
+        this.guestOtpResendsRemaining.set(response.resendsRemaining ?? 4);
+        this.guestOtpCode = '';
+        if (response.verified) {
+          this.guestOtpVerified.set(true);
+          this.submitOrder();
+        } else this.guestOtpModalSet(true, response.expiresInSeconds ?? 60);
+      },
+      error: error => {
+        this.isSubmitting.set(false);
+        this.guestOtpBusy.set(false);
+        this.orderError.set(error.error?.message || 'Không gửi được OTP. Đơn hàng chưa được tạo.');
+      }
+    });
+  }
+
+  private guestOtpModalSet(open: boolean, seconds = 60): void {
+    this.showGuestOtpModal.set(open);
+    if (open) this.startGuestOtpCountdown(seconds);
+    else this.guestOtpCountdown?.unsubscribe();
+  }
+
+  verifyGuestCodOtp(): void {
+    if (this.guestOtpBusy() || !this.guestOtpChallengeId() || !this.guestOtpCodeValid() || this.guestOtpSeconds() === 0) return;
+    this.guestOtpBusy.set(true);
+    this.guestOtpError.set('');
+    this.orderService.verifyGuestCodOtp(
+      this.guestOtpChallengeId(), this.normalizedCustomerPhone(), this.cartService.getSessionId(), this.guestOtpCode,
+    ).subscribe({
+      next: response => {
+        this.guestOtpBusy.set(false);
+        this.guestOtpAttemptsRemaining.set(response.attemptsRemaining ?? 0);
+        if (response.verified) {
+          this.guestOtpVerified.set(true);
+          this.guestOtpCode = '';
+          this.guestOtpModalSet(false);
+          this.submitOrder();
+        } else {
+          this.guestOtpCode = '';
+          this.guestOtpError.set(response.message || 'Mã OTP chưa hợp lệ.');
+          if (response.attemptsRemaining <= 0) this.cancelGuestCodOtp();
+        }
+      },
+      error: error => {
+        this.guestOtpBusy.set(false);
+        this.guestOtpError.set(error.error?.message || 'Không xác minh được OTP. Vui lòng thử lại.');
+      }
+    });
+  }
+
+  resendGuestCodOtp(): void {
+    if (this.guestOtpBusy() || this.guestOtpAttemptsRemaining() <= 0 || this.guestOtpResendsRemaining() <= 0) return;
+    this.guestOtpBusy.set(true);
+    this.guestOtpError.set('');
+    this.orderService.resendGuestCodOtp(this.guestOtpChallengeId(), this.normalizedCustomerPhone(), this.cartService.getSessionId()).subscribe({
+      next: response => {
+        this.guestOtpBusy.set(false);
+        this.guestOtpAttemptsRemaining.set(response.attemptsRemaining ?? this.guestOtpAttemptsRemaining());
+        this.guestOtpResendsRemaining.set(response.resendsRemaining ?? Math.max(0, this.guestOtpResendsRemaining() - 1));
+        this.guestOtpCode = '';
+        this.startGuestOtpCountdown(response.expiresInSeconds ?? 60);
+      },
+      error: error => {
+        this.guestOtpBusy.set(false);
+        this.guestOtpError.set(error.error?.message || 'Không gửi lại được OTP.');
+      }
+    });
+  }
+
+  cancelGuestCodOtp(): void {
+    this.guestOtpModalSet(false);
+    this.guestOtpCode = '';
+    this.guestOtpError.set('');
+    this.guestOtpVerified.set(false);
+    this.guestOtpChallengeId.set('');
+  }
+
   ngOnDestroy(): void {
     this.paymentPolling?.unsubscribe();
+    this.guestOtpCountdown?.unsubscribe();
     this.pageSubscriptions.unsubscribe();
     this.wardsSubscription?.unsubscribe();
   }

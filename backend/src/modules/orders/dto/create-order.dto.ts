@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, ValidateNested, IsIn, MaxLength, Matches } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, ValidateNested, IsIn, IsUUID, MaxLength, Matches } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { GREETING_CARD_TEMPLATES } from '../greeting-card.rules';
 import { PaymentMethod, PaymentMode } from '../../../common/enums/role.enum';
@@ -124,6 +124,11 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   sessionId?: string;
+
+  @ApiProperty({ required: false, description: 'Required for guest COD orders after successful phone OTP verification' })
+  @IsOptional()
+  @IsUUID()
+  guestCodOtpChallengeId?: string;
 
   @ApiProperty({ required: false, type: BuyNowItemDto })
   @IsOptional()

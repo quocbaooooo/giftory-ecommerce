@@ -12,6 +12,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { GREETING_CARD_TEMPLATES } from './greeting-card.rules';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { GuestCodOtpRequestDto, GuestCodOtpResendDto, GuestCodOtpVerifyDto } from './dto/guest-cod-otp.dto';
 import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -37,6 +38,27 @@ export class OrdersController {
     @CurrentUser('sub') userId?: string
   ) {
     return this.ordersService.createOrder(dto, userId);
+  }
+
+  @Post('guest-cod-otp/send')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Gửi OTP xác minh số điện thoại cho Guest đặt COD' })
+  async sendGuestCodOtp(@Body() dto: GuestCodOtpRequestDto, @CurrentUser('sub') userId?: string) {
+    return this.ordersService.sendGuestCodOtp(dto, userId);
+  }
+
+  @Post('guest-cod-otp/resend')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Gửi lại OTP Guest đặt COD trong giới hạn lượt thử' })
+  async resendGuestCodOtp(@Body() dto: GuestCodOtpResendDto, @CurrentUser('sub') userId?: string) {
+    return this.ordersService.resendGuestCodOtp(dto, userId);
+  }
+
+  @Post('guest-cod-otp/verify')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Xác minh OTP Guest đặt COD' })
+  async verifyGuestCodOtp(@Body() dto: GuestCodOtpVerifyDto, @CurrentUser('sub') userId?: string) {
+    return this.ordersService.verifyGuestCodOtp(dto, userId);
   }
 
   @Get()
