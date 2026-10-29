@@ -13,6 +13,7 @@ import { LoyaltyTransaction, LoyaltyTransactionSchema } from './schemas/loyalty-
 import { Wishlist, WishlistSchema } from './schemas/wishlist.schema';
 import { StudioAsset, StudioAssetSchema } from './schemas/studio-asset.schema';
 import { GuestCodOtpChallenge, GuestCodOtpChallengeSchema } from './schemas/guest-cod-otp-challenge.schema';
+import { MarketingCampaign, MarketingCampaignSchema } from './schemas/marketing-campaign.schema';
 
 const MODELS = [
   { name: User.name, schema: UserSchema },
@@ -28,6 +29,7 @@ const MODELS = [
   { name: Wishlist.name, schema: WishlistSchema },
   { name: StudioAsset.name, schema: StudioAssetSchema },
   { name: GuestCodOtpChallenge.name, schema: GuestCodOtpChallengeSchema },
+  { name: MarketingCampaign.name, schema: MarketingCampaignSchema },
 ];
 
 @Global()

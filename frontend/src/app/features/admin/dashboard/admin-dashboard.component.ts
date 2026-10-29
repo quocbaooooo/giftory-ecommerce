@@ -126,7 +126,7 @@ import { AdminService } from '../../../core/services/admin.service';
             <tbody class="divide-y divide-giftory-border/40">
               <tr *ngFor="let ord of recentOrders()" class="hover:bg-giftory-canvas/60 transition">
                 <td class="py-3 px-4 font-mono font-bold text-giftory-primary">#{{ ord.orderCode }}</td>
-                <td class="py-3 px-4 font-semibold text-giftory-ink">{{ ord.shippingAddress.fullName }}</td>
+                <td class="py-3 px-4 font-semibold text-giftory-ink">{{ ord.customerInfo?.name || ord.shippingAddress?.fullName || 'Khách hàng' }}</td>
                 <td class="py-3 px-4 text-giftory-ink/70">
                   <span class="line-clamp-1">{{ ord.items[0]?.name }}</span>
                 </td>

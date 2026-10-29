@@ -16,6 +16,7 @@ import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AiChatbotModule } from './modules/ai-chatbot/ai-chatbot.module';
+import { MarketingModule } from './modules/marketing/marketing.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { AiChatbotModule } from './modules/ai-chatbot/ai-chatbot.module';
     CloudinaryModule,
     AdminModule,
     AiChatbotModule,
+    MarketingModule,
   ],
 })
 export class AppModule {}

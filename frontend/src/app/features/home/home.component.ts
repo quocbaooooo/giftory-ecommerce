@@ -1,10 +1,11 @@
 import { PillSearchComponent } from '../../shared/components/pill-search/pill-search.component';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 import { ProductService } from '../../core/services/product.service';
 import { Product, Category } from '../../core/models';
+import { MarketingCampaign, MarketingService } from '../../core/services/marketing.service';
 
 @Component({
   selector: 'app-home',
@@ -15,8 +16,8 @@ import { Product, Category } from '../../core/models';
       <!-- BEGIN: HeroDiscoverySection -->
       <section class="relative pt-4 pb-8 px-4 md:px-8 max-w-7xl mx-auto flex flex-col items-center text-center overflow-visible">
         
-        <!-- Sản phẩm thật từ catalog, chạy liên tục và có thể mở chi tiết -->
-        @if (marqueeProducts().length > 0) {
+        <!-- Giữ phong cách mặc định khi không có campaign hoạt động -->
+        @if (campaignsLoaded() && campaigns().length === 0 && marqueeProducts().length > 0) {
           <div class="relative w-full max-w-5xl mb-6 overflow-hidden px-2 py-2">
             <div class="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-[#F3EBF9] via-[#F3EBF9]/80 to-transparent sm:w-20"></div>
             <div class="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-[#F3EBF9] via-[#F3EBF9]/80 to-transparent sm:w-20"></div>
@@ -46,10 +47,64 @@ import { Product, Category } from '../../core/models';
         }
 
         <!-- Logo Giftory nhận diện thương hiệu (Cân đối tỉ lệ nổi bật) -->
-        <div class="relative z-10 my-3 flex flex-col items-center">
-          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAREDp7FnIhC43TVVvZX8CAhyxh7GsZiVJXWmPlVDoQO8HxUf04y-8r4E4j75mE4xh9BLWTO3LJnuW1opufuY41WZOoXvO7Yf9-lzQvlV0gEsD_WzGzwY1NG_hOpsy6daNo7l0AE_9HAoY_6d2wKyh4oyRiwhzX26em4NyrRpBfMAwJIkYMmuvNoOM9rx1Lw0_gYEWx31mNC_GRXoDApK-BNOQNYxq15X0LdvM5VgL2IXRBuCNS6Trpn6T0FgF0_ZLT8kI" alt="Giftory" class="w-auto h-24 md:h-32 object-contain mx-auto transition-transform hover:scale-105 duration-300 drop-shadow-md">
-        </div>
+        @if (campaignsLoaded() && campaigns().length === 0) {
+          <div class="relative z-10 my-3 flex flex-col items-center">
+            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAREDp7FnIhC43TVVvZX8CAhyxh7GsZiVJXWmPlVDoQO8HxUf04y-8r4E4j75mE4xh9BLWTO3LJnuW1opufuY41WZOoXvO7Yf9-lzQvlV0gEsD_WzGzwY1NG_hOpsy6daNo7l0AE_9HAoY_6d2wKyh4oyRiwhzX26em4NyrRpBfMAwJIkYMmuvNoOM9rx1Lw0_gYEWx31mNC_GRXoDApK-BNOQNYxq15X0LdvM5VgL2IXRBuCNS6Trpn6T0FgF0_ZLT8kI" alt="Giftory" class="w-auto h-24 md:h-32 object-contain mx-auto transition-transform hover:scale-105 duration-300 drop-shadow-md">
+          </div>
+        }
 
+        <!-- Always-on evergreen campaign carousel; product ticker remains below it. -->
+        @if (campaigns().length > 0 && campaignImage()) {
+          <section class="w-full max-w-7xl mb-7 text-left" aria-label="Chiến dịch quà tặng Giftory" (mouseenter)="pauseAutoplay()" (mouseleave)="resumeAutoplay()" (focusin)="pauseAutoplay()" (focusout)="resumeAutoplay()">
+            <div class="relative isolate overflow-hidden rounded-3xl bg-white shadow-[0_18px_55px_rgba(72,39,122,0.14)] ring-1 ring-white/80">
+              <div class="grid min-h-[390px] grid-cols-1 md:min-h-[390px] md:grid-cols-[1.04fr_0.96fr]">
+                <div class="relative order-2 flex flex-col justify-center overflow-hidden bg-gradient-to-br from-white via-white to-[#F2E9FF] px-6 py-8 sm:px-10 sm:py-10 md:order-1 md:px-12 lg:px-16">
+                  <div class="pointer-events-none absolute -left-20 -top-24 h-64 w-64 rounded-full bg-purple-200/30 blur-3xl"></div>
+                  <div class="relative z-10 max-w-xl">
+                    <span class="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white/80 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-purple-700 shadow-sm sm:text-xs">
+                      <span class="material-symbols-outlined text-base">{{ activeCampaign()!.icon || 'campaign' }}</span>
+                      {{ activeCampaign()!.eyebrow }}
+                    </span>
+                    <h2 class="mt-5 text-3xl font-extrabold leading-[1.08] tracking-tight text-[#24134D] sm:text-4xl lg:text-[2.8rem]">{{ activeCampaign()!.title }}</h2>
+                    <p class="mt-4 max-w-lg text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">{{ activeCampaign()!.description }}</p>
+                    <div class="mt-7 flex flex-wrap items-center gap-3">
+                      <a [routerLink]="activeCampaign()!.primaryLink" class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#9333EA] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-purple-300/50 transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-700 sm:px-6">
+                        {{ activeCampaign()!.primaryLabel }}
+                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                      </a>
+                      @if (activeCampaign()!.secondaryLink && activeCampaign()!.secondaryLabel) {
+                        <a [routerLink]="activeCampaign()!.secondaryLink" class="inline-flex min-h-12 items-center justify-center rounded-xl px-4 py-3 text-sm font-bold text-[#5B3A91] transition hover:bg-white/80 hover:text-purple-800">{{ activeCampaign()!.secondaryLabel }}</a>
+                      }
+                    </div>
+                    <div class="mt-8 flex items-center gap-2" role="group" aria-label="Chọn chiến dịch">
+                      @for (campaign of campaigns(); track campaign._id; let i = $index) {
+                        <button type="button" (click)="selectCampaign(i)" [attr.aria-label]="'Hiển thị chiến dịch ' + (i + 1)" [attr.aria-pressed]="activeCampaignIndex() === i" class="h-2.5 rounded-full transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-700" [class.w-8]="activeCampaignIndex() === i" [class.w-2.5]="activeCampaignIndex() !== i" [class.bg-purple-700]="activeCampaignIndex() === i" [class.bg-purple-200]="activeCampaignIndex() !== i"></button>
+                      }
+                      <span class="ml-2 text-xs font-semibold text-slate-400">{{ activeCampaignIndex() + 1 }} / {{ campaigns().length }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="group relative order-1 min-h-[220px] overflow-hidden bg-[#E7D8F8] md:order-2 md:min-h-full">
+                  <img [src]="campaignImage()" [alt]="activeCampaign()!.imageAlt || activeCampaign()!.title" fetchpriority="high" class="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]" />
+                  <div class="absolute inset-0 bg-gradient-to-t from-[#21113E]/40 via-transparent to-white/10 md:bg-gradient-to-l md:from-transparent md:via-transparent md:to-white/10"></div>
+                  <div class="absolute bottom-4 left-4 inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/80 px-3 py-2 text-xs font-bold text-[#3B2463] shadow-lg backdrop-blur-md sm:bottom-6 sm:left-6">
+                    <span class="material-symbols-outlined text-base text-purple-700">verified</span>
+                    Quà tặng từ catalog Giftory
+                  </div>
+                  <div class="absolute right-4 top-4 flex gap-2 sm:right-6 sm:top-6">
+                    <button type="button" (click)="previousCampaign()" aria-label="Chiến dịch trước" class="flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/80 text-purple-800 shadow-lg backdrop-blur-md transition hover:scale-105 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-700">
+                      <span class="material-symbols-outlined">arrow_back</span>
+                    </button>
+                    <button type="button" (click)="nextCampaign()" aria-label="Chiến dịch tiếp theo" class="flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/80 text-purple-800 shadow-lg backdrop-blur-md transition hover:scale-105 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-700">
+                      <span class="material-symbols-outlined">arrow_forward</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        }
 
         <app-pill-search></app-pill-search>
 
@@ -200,16 +255,77 @@ import { Product, Category } from '../../core/models';
     </div>
   `
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   private productService = inject(ProductService);
+  private autoplayId?: number;
+
+  private marketingService = inject(MarketingService);
 
   categories = signal<Category[]>([]);
   allProducts = signal<Product[]>([]);
   marqueeProducts = signal<Product[]>([]);
   bespokeProducts = signal<Product[]>([]);
   flashSaleProducts = signal<Product[]>([]);
+  campaigns = signal<MarketingCampaign[]>([]);
+  campaignsLoaded = signal(false);
+  activeCampaignIndex = signal(0);
+
+  activeCampaign(): MarketingCampaign | undefined {
+    return this.campaigns()[this.activeCampaignIndex()];
+  }
+
+  campaignImage(): string | undefined {
+    return this.activeCampaign()?.imageUrl
+      || this.bespokeProducts().find(product => product.images?.[0])?.images[0]
+      || this.allProducts().find(product => product.images?.[0])?.images[0]
+      || this.marqueeProducts().find(product => product.images?.[0])?.images[0];
+  }
+
+  selectCampaign(index: number): void {
+    const total = this.campaigns().length;
+    if (!total) return;
+    this.activeCampaignIndex.set((index + total) % total);
+  }
+
+  previousCampaign(): void {
+    this.selectCampaign(this.activeCampaignIndex() - 1);
+  }
+
+  nextCampaign(): void {
+    this.selectCampaign(this.activeCampaignIndex() + 1);
+  }
+
+  private restartAutoplay(): void {
+    if (this.autoplayId) window.clearInterval(this.autoplayId);
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    this.autoplayId = window.setInterval(() => {
+      const total = this.campaigns().length;
+      if (total > 1) this.activeCampaignIndex.update(index => (index + 1) % total);
+    }, 7000);
+  }
+
+  pauseAutoplay(): void {
+    if (this.autoplayId) window.clearInterval(this.autoplayId);
+    this.autoplayId = undefined;
+  }
+
+  resumeAutoplay(): void {
+    if (!this.autoplayId) this.restartAutoplay();
+  }
 
   ngOnInit(): void {
+    this.marketingService.getActiveCampaigns().subscribe({
+      next: items => {
+        this.campaigns.set(items || []);
+        this.activeCampaignIndex.set(0);
+        this.campaignsLoaded.set(true);
+        this.restartAutoplay();
+      },
+      error: () => {
+        this.campaigns.set([]);
+        this.campaignsLoaded.set(true);
+      },
+    });
     this.productService.getCategories().subscribe({
       next: cats => this.categories.set(cats)
     });
@@ -229,5 +345,9 @@ export class HomeComponent implements OnInit {
     this.productService.getFlashSaleProducts().subscribe({
       next: prods => this.flashSaleProducts.set(prods)
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.autoplayId) window.clearInterval(this.autoplayId);
   }
 }

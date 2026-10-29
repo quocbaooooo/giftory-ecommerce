@@ -15,7 +15,7 @@ import { calculateDiscountPercent } from '../../../core/utils/product-price.util
     class: 'flex flex-col h-full w-full'
   },
   template: `
-    <article class="w-full h-full bg-white rounded-2xl p-4 sm:p-5 shadow-shop-card border border-[#DDD6FE]/60 hover:shadow-floating hover:border-purple-300 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
+    <article class="g-card g-card-hover w-full h-full bg-white rounded-2xl p-4 sm:p-5 shadow-shop-card border border-[#DDD6FE]/60 hover:shadow-floating hover:border-purple-300 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
       <!-- Top Image with Floating Badges -->
       <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-slate-50 mb-3.5 flex items-center justify-center shrink-0">
         <img 
@@ -86,7 +86,7 @@ import { calculateDiscountPercent } from '../../../core/utils/product-price.util
           <!-- Title: Standardized fixed 2-line height so 1-line and 2-line titles align perfectly -->
           <div class="h-10 sm:h-11 mb-1 flex items-start">
             <a [routerLink]="['/products', product.slug]" 
-               class="product-detail-link font-bold text-sm sm:text-base text-[#1E1B4B] hover:text-[#7C3AED] transition-colors leading-snug"
+               class="product-detail-link g-product-title font-bold text-sm sm:text-base text-[#1E1B4B] hover:text-[#7C3AED] transition-colors leading-snug"
                [title]="product.name">
               <span class="line-clamp-2">{{ product.name }}</span>
             </a>
@@ -97,7 +97,7 @@ import { calculateDiscountPercent } from '../../../core/utils/product-price.util
         <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
           <div class="min-w-0 flex-1">
             <div class="flex items-baseline gap-1.5 flex-wrap">
-              <span class="text-base sm:text-lg font-bold text-[#7C3AED] leading-none">
+              <span class="g-price text-base sm:text-lg font-bold text-[#7C3AED] leading-none">
                 {{ (product.salePrice && product.salePrice > 0 ? product.salePrice : product.price) | number:'1.0-0' }}đ
               </span>
               @if (product.salePrice && product.salePrice > 0 && product.salePrice < product.price) {

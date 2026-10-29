@@ -117,6 +117,13 @@ export class AdminService {
     return this.api.post('upload/image', formData);
   }
 
+  uploadCampaignBanner(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.api.post('upload/campaign-banner', formData);
+  }
+
+
   // Category Management
   getAdminCategories(): Observable<any[]> {
     return this.api.get<any[]>('categories/admin/all');

@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Voucher, VoucherDocument } from '../../database/schemas/voucher.schema';
@@ -16,6 +16,49 @@ export class VouchersService {
   normalize(code: unknown): string {
     if (typeof code !== 'string' || code.length > 80) throw new BadRequestException('Mã ưu đãi không hợp lệ');
     return code.trim().toUpperCase();
+  }
+
+  async listForAdmin() { return this.vouchers.find().sort({ createdAt: -1 }).lean(); }
+
+  private validatePromotion(input: any, partial = false) {
+    if (!input || typeof input !== 'object') throw new BadRequestException('Thông tin khuyến mãi không hợp lệ');
+    if (!partial || input.code !== undefined) input.code = this.normalize(input.code);
+    if (!partial || input.title !== undefined) {
+      if (typeof input.title !== 'string' || !input.title.trim()) throw new BadRequestException('Vui lòng nhập tên khuyến mãi');
+    }
+    if (!partial || input.discountValue !== undefined) {
+      if (!Number.isFinite(Number(input.discountValue)) || Number(input.discountValue) < 0) throw new BadRequestException('Giá trị ưu đãi không hợp lệ');
+    }
+    if (input.discountType && !['FIXED', 'PERCENT', 'FREESHIP'].includes(input.discountType)) throw new BadRequestException('Loại ưu đãi không hợp lệ');
+    if (input.discountType === 'PERCENT' && Number(input.discountValue) > 100) throw new BadRequestException('Ưu đãi phần trăm không thể vượt quá 100%');
+    if (input.expiresAt && Number.isNaN(new Date(input.expiresAt).getTime())) throw new BadRequestException('Ngày hết hạn không hợp lệ');
+  }
+
+  async createPromotion(input: any) {
+    this.validatePromotion(input);
+    try { return await this.vouchers.create(input); }
+    catch (error: any) {
+      if (error?.code === 11000) throw new BadRequestException('Mã khuyến mãi đã tồn tại');
+      throw error;
+    }
+  }
+
+  async updatePromotion(id: string, input: any) {
+    this.validatePromotion(input, true);
+    try {
+      const updated = await this.vouchers.findByIdAndUpdate(id, input, { new: true, runValidators: true });
+      if (!updated) throw new NotFoundException('Không tìm thấy khuyến mãi');
+      return updated;
+    } catch (error: any) {
+      if (error?.code === 11000) throw new BadRequestException('Mã khuyến mãi đã tồn tại');
+      throw error;
+    }
+  }
+
+  async removePromotion(id: string) {
+    const deleted = await this.vouchers.findByIdAndDelete(id);
+    if (!deleted) throw new NotFoundException('Không tìm thấy khuyến mãi');
+    return { deleted: true };
   }
   private async unlocked(v: any, userId?: string) {
     return !v.requiredPoints || !!(userId && await this.transactions.exists({ userId: new Types.ObjectId(userId), type: 'REDEEM', referenceId: v.code,

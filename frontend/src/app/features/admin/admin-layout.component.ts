@@ -65,6 +65,15 @@ import { AuthService } from '../../core/services/auth.service';
               <span class="material-symbols-outlined text-lg">group</span>
               Quản Trị Người Dùng
             </a>
+
+            <a
+              routerLink="/admin/marketing"
+              routerLinkActive="bg-giftory-primary/10 text-giftory-primary font-bold"
+              class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold text-giftory-ink/70 hover:bg-giftory-canvas transition"
+            >
+              <span class="material-symbols-outlined text-lg">campaign</span>
+              Chiến dịch & Khuyến mãi
+            </a>
           </nav>
         </div>
 
@@ -102,7 +111,7 @@ import { AuthService } from '../../core/services/auth.service';
             <a routerLink="/admin/dashboard">KPI</a>
             <a routerLink="/admin/products">Sản phẩm</a>
             <a [routerLink]="['/admin/products']" [queryParams]="{ tab: 'cliparts' }">Clipart</a>
-            <a routerLink="/admin/orders">Đơn hàng</a><a routerLink="/admin/care">CSKH</a>
+            <a routerLink="/admin/orders">Đơn hàng</a><a routerLink="/admin/marketing">Marketing</a><a routerLink="/admin/care">CSKH</a>
             <a routerLink="/">Cửa hàng</a>
           </div>
         </header>

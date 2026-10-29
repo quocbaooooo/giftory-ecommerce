@@ -7,9 +7,9 @@ module.exports = {
     extend: {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
-        serif: ['"Playfair Display"', 'Georgia', 'serif'],
-        inter: ['Inter', 'sans-serif'],
-        display: ['"Playfair Display"', 'Georgia', 'serif']
+        serif: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+        inter: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif']
       },
       colors: {
         brand: {
@@ -60,10 +60,24 @@ module.exports = {
         }
       },
       boxShadow: {
-        'shop-card': '0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 10px -2px rgba(0, 0, 0, 0.02)',
-        'floating': '0 20px 40px -10px rgba(15, 23, 42, 0.12)',
-        'pill': '0 4px 20px -2px rgba(0, 0, 0, 0.06)',
-        'admin-card': '0 10px 25px -5px rgba(124, 58, 237, 0.08)'
+        DEFAULT: '0 4px 16px rgba(30, 27, 75, 0.06)',
+        sm: '0 4px 16px rgba(30, 27, 75, 0.06)',
+        md: '0 4px 16px rgba(30, 27, 75, 0.06)',
+        lg: '0 4px 16px rgba(30, 27, 75, 0.06)',
+        xl: '0 4px 16px rgba(30, 27, 75, 0.06)',
+        'shop-card': '0 4px 16px rgba(30, 27, 75, 0.06)',
+        'floating': '0 8px 24px rgba(30, 27, 75, 0.10)',
+        'pill': '0 4px 16px rgba(30, 27, 75, 0.06)',
+        'admin-card': '0 4px 16px rgba(30, 27, 75, 0.06)'
+      },
+      borderRadius: {
+        DEFAULT: '0.75rem',
+        sm: '0.5rem',
+        md: '0.75rem',
+        lg: '0.75rem',
+        xl: '0.75rem',
+        '2xl': '1rem',
+        '3xl': '1rem'
       }
     },
   },

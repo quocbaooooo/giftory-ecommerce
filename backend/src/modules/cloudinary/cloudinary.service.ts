@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -18,13 +18,17 @@ export class CloudinaryService {
     });
   }
 
-  async uploadImage(fileBuffer: Buffer, folder: string = 'giftory/products', mimetype: string = 'image/png'): Promise<string> {
+  async uploadImage(fileBuffer: Buffer, folder: string = 'giftory/products', mimetype: string = 'image/png', deliveryOptions: Record<string, any> = {}, fallbackToDataUrl = true, timeoutMs = 4000): Promise<string> {
     this.configure();
+    const config = cloudinary.config();
+    if (!fallbackToDataUrl && (!config.cloud_name || !config.api_key || !config.api_secret)) {
+      throw new ServiceUnavailableException('Cloudinary chưa được cấu hình đầy đủ trên backend');
+    }
     try {
       return await new Promise<string>((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('Cloudinary upload timeout'));
-        }, 4000);
+        }, timeoutMs);
 
         cloudinary.uploader.upload_stream(
           { folder, resource_type: 'image' },
@@ -36,12 +40,16 @@ export class CloudinaryService {
             if (!result || !result.secure_url) {
               return reject(new Error('No secure URL from Cloudinary'));
             }
-            resolve(result.secure_url);
+            const optimizedUrl = Object.keys(deliveryOptions).length
+              ? cloudinary.url(result.public_id, { secure: true, resource_type: 'image', ...deliveryOptions })
+              : result.secure_url;
+            resolve(optimizedUrl);
           }
         ).end(fileBuffer);
       });
     } catch (err: any) {
-      this.logger.warn(`Cloudinary upload fallback activated: ${err.message}`);
+      this.logger.warn(`Cloudinary upload failed: ${err.message}`);
+      if (!fallbackToDataUrl) throw err;
       const safeMime = mimetype && mimetype.startsWith('image/') ? mimetype : 'image/png';
       return `data:${safeMime};base64,${fileBuffer.toString('base64')}`;
     }
