@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const colors = require('tailwindcss/colors');
+
 module.exports = {
   content: [
     "./src/**/*.{html,ts}",
@@ -13,27 +15,28 @@ module.exports = {
       },
       colors: {
         brand: {
-          50: '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#8b5cf6',
-          600: '#7c3aed',
-          700: '#6d28d9',
-          800: '#5b21b6',
-          900: '#4c1d95',
-          purple: '#7C3AED'
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
+          purple: '#2563eb',
+          blue: '#2563eb'
         },
         surface: {
-          page: '#E9DCF8',
+          page: '#EFF6FF',
           card: '#FFFFFF',
-          ink: '#1E1B4B',
-          muted: '#5B587E',
-          slate: '#6B7280',
-          border: '#DDD6FE',
-          light: '#F5EEFD',
-          container: '#EFE7FA'
+          ink: '#0F172A',
+          muted: '#475569',
+          slate: '#64748B',
+          border: '#BFDBFE',
+          light: '#F8FAFC',
+          container: '#E0F2FE'
         },
         jade: {
           DEFAULT: '#10B981',
@@ -43,9 +46,9 @@ module.exports = {
         },
         giftory: {
           primary: {
-            DEFAULT: '#7C3AED',
-            dark: '#6D28D9',
-            light: '#DDD6FE'
+            DEFAULT: '#2563EB',
+            dark: '#1D4ED8',
+            light: '#BFDBFE'
           },
           sale: {
             DEFAULT: '#E11D48',
@@ -53,22 +56,23 @@ module.exports = {
           },
           amber: '#F59E0B',
           emerald: '#10B981',
-          ink: '#1E1B4B',
-          canvas: '#F5EEFD',
-          surface: '#F5EEFD',
-          border: '#DDD6FE'
-        }
+          ink: '#0F172A',
+          canvas: '#EFF6FF',
+          surface: '#EFF6FF',
+          border: '#BFDBFE'
+        },
+        purple: colors.blue
       },
       boxShadow: {
-        DEFAULT: '0 4px 16px rgba(30, 27, 75, 0.06)',
-        sm: '0 4px 16px rgba(30, 27, 75, 0.06)',
-        md: '0 4px 16px rgba(30, 27, 75, 0.06)',
-        lg: '0 4px 16px rgba(30, 27, 75, 0.06)',
-        xl: '0 4px 16px rgba(30, 27, 75, 0.06)',
-        'shop-card': '0 4px 16px rgba(30, 27, 75, 0.06)',
-        'floating': '0 8px 24px rgba(30, 27, 75, 0.10)',
-        'pill': '0 4px 16px rgba(30, 27, 75, 0.06)',
-        'admin-card': '0 4px 16px rgba(30, 27, 75, 0.06)'
+        DEFAULT: '0 4px 16px rgba(15, 23, 42, 0.06)',
+        sm: '0 4px 16px rgba(15, 23, 42, 0.06)',
+        md: '0 4px 16px rgba(15, 23, 42, 0.06)',
+        lg: '0 4px 16px rgba(15, 23, 42, 0.06)',
+        xl: '0 4px 16px rgba(15, 23, 42, 0.06)',
+        'shop-card': '0 4px 16px rgba(15, 23, 42, 0.06)',
+        'floating': '0 8px 24px rgba(15, 23, 42, 0.10)',
+        'pill': '0 4px 16px rgba(15, 23, 42, 0.06)',
+        'admin-card': '0 4px 16px rgba(15, 23, 42, 0.06)'
       },
       borderRadius: {
         DEFAULT: '0.75rem',

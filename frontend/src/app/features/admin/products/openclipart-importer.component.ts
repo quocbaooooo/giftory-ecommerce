@@ -15,23 +15,23 @@ import { DialogFocusDirective } from '../../../shared/components/dialog-focus.di
       <div>
         <h2 id="clipart-import-title" class="text-lg font-bold text-[#1E1B4B]">Nhập clipart từ OpenClipart</h2>
         <p class="text-xs text-slate-500 mt-1">Tìm hình, xem preview và tick chọn để thêm vào thư viện Đồ họa của Design Studio.</p>
-        <a href="https://openclipart.org/share" target="_blank" rel="noopener noreferrer" class="text-[11px] text-purple-600 underline">Nguồn OpenClipart · CC0</a>
+        <a href="https://openclipart.org/share" target="_blank" rel="noopener noreferrer" class="text-[11px] text-blue-600 underline">Nguồn OpenClipart · CC0</a>
       </div>
 
       <form (ngSubmit)="search(1, true)" class="flex flex-col sm:flex-row gap-2">
         <label class="flex-1">
           <span class="sr-only">Từ khóa clipart</span>
           <input name="clipartQuery" [(ngModel)]="query" maxlength="100" [disabled]="importing()" placeholder="birthday, hoa, trái tim…"
-            class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-purple-500">
+            class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-blue-500">
         </label>
         <button type="submit" [disabled]="!query.trim() || searching() || importing()"
-          class="px-5 py-2.5 rounded-xl bg-purple-600 text-white font-bold text-sm disabled:opacity-40 cursor-pointer">
+          class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm disabled:opacity-40 cursor-pointer">
           {{ searching() ? 'Đang tìm…' : 'Tìm clipart' }}
         </button>
       </form>
       <div class="flex flex-wrap gap-2">
         @for (term of suggestions; track term) {
-          <button (click)="useSuggestion(term)" [disabled]="importing()" class="text-xs px-3 py-1.5 rounded-full bg-purple-50 text-purple-700 hover:bg-purple-100 disabled:opacity-40 cursor-pointer">{{ term }}</button>
+          <button (click)="useSuggestion(term)" [disabled]="importing()" class="text-xs px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-40 cursor-pointer">{{ term }}</button>
         }
       </div>
 
@@ -43,7 +43,7 @@ import { DialogFocusDirective } from '../../../shared/components/dialog-focus.di
         </ul>
       }
 
-      <div class="sticky top-16 md:top-0 z-20 rounded-2xl border border-purple-200 bg-purple-50 p-3 sm:p-4 space-y-3 shadow-sm">
+      <div class="sticky top-16 md:top-0 z-20 rounded-2xl border border-blue-200 bg-blue-50 p-3 sm:p-4 space-y-3 shadow-sm">
         <div class="flex flex-wrap items-end gap-3">
           <label class="flex-1 min-w-[160px] text-xs font-bold text-slate-700">Chủ đề lưu vào thư viện
             <input [(ngModel)]="category" maxlength="60" [disabled]="importing()" placeholder="Ví dụ: Sinh nhật" list="clipart-categories"
@@ -51,23 +51,23 @@ import { DialogFocusDirective } from '../../../shared/components/dialog-focus.di
             <datalist id="clipart-categories"><option value="Phổ biến"></option><option value="Sinh nhật"></option><option value="Hoa cỏ"></option><option value="Tình yêu"></option><option value="Động vật"></option><option value="Khung trang trí"></option></datalist>
           </label>
           <button (click)="importSelected()" [disabled]="!selectedCount() || importing() || searching()"
-            class="px-5 py-2.5 rounded-xl bg-purple-600 text-white font-bold text-sm disabled:opacity-40 cursor-pointer">
+            class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm disabled:opacity-40 cursor-pointer">
             {{ importing() ? 'Đang import…' : 'Import (' + selectedCount() + ')' }}
           </button>
         </div>
         <div class="flex flex-wrap items-center gap-3 text-xs">
-          <span class="font-bold text-purple-800">Đã chọn {{ selectedCount() }}/20 hình</span>
-          <button (click)="selectPage()" [disabled]="importing() || searching() || !items().length" class="text-purple-700 underline disabled:opacity-40 cursor-pointer">Chọn trang này</button>
+          <span class="font-bold text-blue-800">Đã chọn {{ selectedCount() }}/20 hình</span>
+          <button (click)="selectPage()" [disabled]="importing() || searching() || !items().length" class="text-blue-700 underline disabled:opacity-40 cursor-pointer">Chọn trang này</button>
           <button (click)="clearSelection()" [disabled]="importing() || !selectedCount()" class="text-slate-500 underline disabled:opacity-40 cursor-pointer">Bỏ chọn tất cả</button>
         </div>
         @if (selectedCount()) {
           <div class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto" aria-label="Clipart đã chọn">
             @for (item of selectedItems(); track item.id) {
-              <button (click)="toggle(item)" [disabled]="importing()" [attr.aria-label]="'Bỏ chọn ' + item.name" class="max-w-[180px] truncate bg-white rounded-lg border border-purple-200 px-2 py-1 text-[11px] text-purple-700 cursor-pointer">{{ item.name }} ×</button>
+              <button (click)="toggle(item)" [disabled]="importing()" [attr.aria-label]="'Bỏ chọn ' + item.name" class="max-w-[180px] truncate bg-white rounded-lg border border-blue-200 px-2 py-1 text-[11px] text-blue-700 cursor-pointer">{{ item.name }} ×</button>
             }
           </div>
         }
-        @if (importing()) { <p role="status" class="text-xs text-purple-700">Đang tải và lưu ảnh đã chọn. Vui lòng chờ hoàn tất.</p> }
+        @if (importing()) { <p role="status" class="text-xs text-blue-700">Đang tải và lưu ảnh đã chọn. Vui lòng chờ hoàn tất.</p> }
       </div>
 
       @if (searching()) {
@@ -79,11 +79,11 @@ import { DialogFocusDirective } from '../../../shared/components/dialog-focus.di
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3">
           @for (item of items(); track item.id) {
-            <article class="border rounded-2xl overflow-hidden" [ngClass]="selected().has(item.id) ? 'border-purple-500 ring-2 ring-purple-100' : 'border-slate-200'">
+            <article class="border rounded-2xl overflow-hidden" [ngClass]="selected().has(item.id) ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-200'">
               <label class="block cursor-pointer p-2">
                 <div class="flex justify-between items-center mb-2 gap-2">
                   <input type="checkbox" [checked]="selected().has(item.id)" (change)="toggle(item)" [attr.aria-label]="'Chọn ' + item.name"
-                    [disabled]="importing() || item.imported || brokenPreviews().has(item.id) || (!selected().has(item.id) && selectedCount() >= 20)" class="rounded text-purple-600">
+                    [disabled]="importing() || item.imported || brokenPreviews().has(item.id) || (!selected().has(item.id) && selectedCount() >= 20)" class="rounded text-blue-600">
                   @if (item.imported) { <span class="text-[10px] text-emerald-700 font-bold">Đã nhập</span> }
                 </div>
                 <div class="h-32 sm:h-36 flex items-center justify-center rounded-xl bg-slate-50">
@@ -93,7 +93,7 @@ import { DialogFocusDirective } from '../../../shared/components/dialog-focus.di
                 <p class="text-xs font-semibold text-slate-700 mt-2 truncate" [title]="item.name">{{ item.name }}</p>
               </label>
               <div class="flex justify-between px-2 pb-3 gap-2 text-[11px]">
-                <button (click)="preview.set(item)" class="text-purple-700 underline cursor-pointer">Xem lớn</button>
+                <button (click)="preview.set(item)" class="text-blue-700 underline cursor-pointer">Xem lớn</button>
                 <a [href]="item.sourceUrl" target="_blank" rel="noopener noreferrer" class="text-slate-500 underline">Nguồn ↗</a>
               </div>
             </article>
@@ -115,8 +115,8 @@ import { DialogFocusDirective } from '../../../shared/components/dialog-focus.di
           <div class="flex items-center justify-between gap-3"><h3 class="font-bold text-sm">{{ item.name }}</h3><button (click)="preview.set(null)" aria-label="Đóng preview" class="text-xl px-2 cursor-pointer">×</button></div>
           <img [src]="item.previewUrl.replace('/400px/', '/800px/')" [alt]="item.name" referrerpolicy="no-referrer" class="w-full max-h-[60vh] object-contain bg-slate-50 rounded-xl">
           <div class="flex justify-between items-center gap-3 text-xs">
-            <a [href]="item.sourceUrl" target="_blank" rel="noopener noreferrer" class="text-purple-600 underline">Xem trên OpenClipart ↗</a>
-            <button (click)="toggle(item)" [disabled]="item.imported || importing() || (!selected().has(item.id) && selectedCount() >= 20)" class="px-4 py-2 bg-purple-600 text-white rounded-xl disabled:opacity-40 cursor-pointer">{{ item.imported ? 'Đã nhập' : selected().has(item.id) ? 'Bỏ chọn' : 'Chọn hình này' }}</button>
+            <a [href]="item.sourceUrl" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">Xem trên OpenClipart ↗</a>
+            <button (click)="toggle(item)" [disabled]="item.imported || importing() || (!selected().has(item.id) && selectedCount() >= 20)" class="px-4 py-2 bg-blue-600 text-white rounded-xl disabled:opacity-40 cursor-pointer">{{ item.imported ? 'Đã nhập' : selected().has(item.id) ? 'Bỏ chọn' : 'Chọn hình này' }}</button>
           </div>
         </section>
       </div>

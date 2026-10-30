@@ -40,17 +40,20 @@
   --type-meta: 0.75rem;
   --radius-card: 1rem;
   --radius-control: 0.75rem;
-  --shadow-card: 0 4px 16px rgba(30, 27, 75, 0.06);
-  --shadow-card-hover: 0 8px 24px rgba(30, 27, 75, 0.10);
+  --shadow-card: 0 4px 16px rgba(15, 23, 42, 0.06);
+  --shadow-card-hover: 0 8px 24px rgba(15, 23, 42, 0.10);
   --space-1: 0.5rem;
   --space-2: 1rem;
   --space-3: 1.5rem;
-  --bg-page: #E9DCF8;
-  --apple-ink: #1E1B4B;
-  --regal-purple: #7C3AED;
-  --purple-hover: #6D28D9;
-  --purple-light: #DDD6FE;
-  --border-subtle: #DDD6FE;
+  --bg-page: #EFF6FF;
+  --apple-ink: #0F172A;
+  --regal-blue: #2563EB;
+  --blue-hover: #1D4ED8;
+  --blue-light: #BFDBFE;
+  --regal-purple: #2563EB;
+  --purple-hover: #1D4ED8;
+  --purple-light: #BFDBFE;
+  --border-subtle: #BFDBFE;
   --pure-white: #ffffff;
   --success-jade: #10B981;
 }
@@ -60,8 +63,8 @@ html, body {
 }
 
 body {
-  background-color: #E9DCF8;
-  color: #1E1B4B;
+  background-color: #EFF6FF;
+  color: #0F172A;
   font-family: var(--font-site);
   margin: 0;
   padding: 0;
@@ -79,7 +82,7 @@ body {
 .g-card-hover { transition: transform 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out; }
 .g-card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(30, 27, 75, 0.16);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
 }
 .g-button, .g-field { border-radius: var(--radius-control); }
 .g-section-space { margin-bottom: var(--space-3); }
@@ -107,7 +110,7 @@ h1:not(.sr-only):not(app-custom-studio h1) {
 }
 .product-detail-link:focus-visible { outline: none; }
 .product-detail-link:focus-visible::after {
-  outline: 2px solid #7C3AED;
+  outline: 2px solid #2563EB;
   outline-offset: -3px;
 }
 
@@ -124,13 +127,13 @@ app-custom-studio {
 
 /* Global High-Contrast Text Highlight Selection */
 *::selection {
-  background-color: #DDD6FE !important;
-  color: #1E1B4B !important;
+  background-color: #BFDBFE !important;
+  color: #0F172A !important;
 }
 
 *::-moz-selection {
-  background-color: #DDD6FE !important;
-  color: #1E1B4B !important;
+  background-color: #BFDBFE !important;
+  color: #0F172A !important;
 }
 
 /* Material Symbols Outlined Icon variations */
@@ -173,11 +176,11 @@ app-custom-studio {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #DDD6FE;
+  background: #BFDBFE;
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #A78BFA;
+  background: #60A5FA;
 }
 
 /* Single Row Infinite Wave Marquee */

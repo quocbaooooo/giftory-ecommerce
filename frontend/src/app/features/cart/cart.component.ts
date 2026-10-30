@@ -23,7 +23,7 @@ import { AuthService } from '../../core/services/auth.service';
       <!-- Breadcrumb & Header Title Area -->
       <section class="flex flex-col gap-2 mb-6">
         <div class="flex items-center gap-2 text-xs text-slate-500">
-          <a routerLink="/" class="hover:text-[#7C3AED]">Trang chủ</a>
+          <a routerLink="/" class="hover:text-[#2563EB]">Trang chủ</a>
           <span>/</span>
           <span class="text-[#1E1B4B] font-semibold">Giỏ hàng & Đặt cọc</span>
         </div>
@@ -32,7 +32,7 @@ import { AuthService } from '../../core/services/auth.service';
           <div>
             <div class="flex flex-wrap items-center gap-3">
               <h1 class="text-2xl sm:text-3xl font-bold text-[#1E1B4B]">Giỏ Hàng Của Bạn</h1>
-              <span class="px-3 py-1 rounded-full bg-purple-100 text-[#7C3AED] text-xs font-bold flex items-center gap-1 shadow-sm">
+              <span class="px-3 py-1 rounded-full bg-blue-100 text-[#2563EB] text-xs font-bold flex items-center gap-1 shadow-sm">
                 <span class="material-symbols-outlined text-[15px]">redeem</span>
                 <span>{{ cartService.productCount() }} sản phẩm · Tổng số lượng: {{ cartService.itemsCount() }}</span>
               </span>
@@ -41,29 +41,29 @@ import { AuthService } from '../../core/services/auth.service';
               Kiểm tra kỹ thông tin sản phẩm và chính sách cọc 50% cho quà tặng thiết kế theo yêu cầu.
             </p>
           </div>
-          <div class="flex items-center gap-2 text-xs text-slate-500 bg-white px-4 py-2 rounded-full border border-[#DDD6FE] shadow-sm">
-            <span class="material-symbols-outlined text-[#7C3AED] text-[18px]">verified_user</span>
+          <div class="flex items-center gap-2 text-xs text-slate-500 bg-white px-4 py-2 rounded-full border border-[#BFDBFE] shadow-sm">
+            <span class="material-symbols-outlined text-[#2563EB] text-[18px]">verified_user</span>
             <span>Đảm bảo quyền lợi khách hàng 100%</span>
           </div>
         </div>
 
         <!-- Guest Cart Persistence Banner -->
         @if (!authService.isAuthenticated()) {
-          <div class="mt-4 p-4 rounded-2xl bg-white border border-[#DDD6FE] shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="mt-4 p-4 rounded-2xl bg-white border border-[#BFDBFE] shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div class="flex items-start gap-3.5">
               <div class="w-9 h-9 rounded-full bg-[#1E1B4B] text-white flex items-center justify-center shrink-0 mt-0.5 md:mt-0">
                 <span class="material-symbols-outlined text-[20px]">bolt</span>
               </div>
               <div>
                 <p class="text-xs font-bold text-[#1E1B4B]">
-                  Bạn đang thao tác với tư cách <span class="text-[#7C3AED]">Khách vãng lai</span>
+                  Bạn đang thao tác với tư cách <span class="text-[#2563EB]">Khách vãng lai</span>
                 </p>
                 <p class="text-xs text-slate-500 mt-0.5">
-                  Giỏ hàng và bản thiết kế custom đã được tự động lưu tạm trên thiết bị này. Đăng nhập 1-Click để đồng bộ đa nền tảng và nhận ngay <strong class="text-[#7C3AED]">+35 điểm tích lũy Giftory!</strong>
+                  Giỏ hàng và bản thiết kế custom đã được tự động lưu tạm trên thiết bị này. Đăng nhập 1-Click để đồng bộ đa nền tảng và nhận ngay <strong class="text-[#2563EB]">+35 điểm tích lũy Giftory!</strong>
                 </p>
               </div>
             </div>
-            <a routerLink="/login" class="shrink-0 px-4 py-2 rounded-full bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#7C3AED] font-bold text-xs shadow-sm transition-all flex items-center gap-1.5">
+            <a routerLink="/login" class="shrink-0 px-4 py-2 rounded-full bg-[#DBEAFE] hover:bg-[#BFDBFE] text-[#2563EB] font-bold text-xs shadow-sm transition-all flex items-center gap-1.5">
               <span>Đăng nhập 1-Click</span>
               <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
             </a>
@@ -72,13 +72,13 @@ import { AuthService } from '../../core/services/auth.service';
       </section>
 
       @if (cartService.items().length === 0) {
-        <div class="py-20 bg-white rounded-3xl p-8 text-center border border-[#DDD6FE] shadow-shop-card">
+        <div class="py-20 bg-white rounded-3xl p-8 text-center border border-[#BFDBFE] shadow-shop-card">
           <span class="material-symbols-outlined text-6xl text-slate-300 mb-3">shopping_bag</span>
           <h2 class="text-xl font-bold text-[#1E1B4B]">Giỏ hàng của bạn đang trống</h2>
           <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-sm mx-auto">Hãy khám phá bộ sưu tập quà tặng ý nghĩa hoặc tạo một bản thiết kế khắc laser riêng biệt!</p>
           <div class="mt-6 flex items-center justify-center gap-3">
             <a routerLink="/products" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl">Khám phá sản phẩm</a>
-            <a routerLink="/custom-studio" class="px-5 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl shadow-md">Đến Custom Studio</a>
+            <a routerLink="/custom-studio" class="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold rounded-xl shadow-md">Đến Custom Studio</a>
           </div>
         </div>
       } @else {
@@ -88,9 +88,9 @@ import { AuthService } from '../../core/services/auth.service';
           <!-- LEFT COLUMN: CART ITEMS LIST -->
           <div class="lg:col-span-7 flex flex-col gap-5">
             <!-- Select All Utility Header -->
-            <div class="bg-white rounded-2xl p-4 shadow-sm border border-[#DDD6FE] flex items-center justify-between">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-[#BFDBFE] flex items-center justify-between">
               <label class="flex items-center gap-2.5 cursor-pointer select-none text-xs font-bold text-[#1E1B4B]">
-                <input type="checkbox" checked class="w-4 h-4 rounded accent-[#7C3AED]">
+                <input type="checkbox" checked class="w-4 h-4 rounded accent-[#2563EB]">
                 <span>Chọn tất cả ({{ cartService.productCount() }} sản phẩm)</span>
               </label>
               <button (click)="clearCart()" [disabled]="cartService.quantitySyncPending()" class="text-xs text-slate-500 hover:text-red-500 flex items-center gap-1 transition-colors disabled:opacity-50">
@@ -102,26 +102,26 @@ import { AuthService } from '../../core/services/auth.service';
             <!-- Items Loop -->
             <div role="status" aria-live="polite" class="min-h-4 text-xs">
               @if (cartService.quantityError()) { <span class="text-rose-700">{{ cartService.quantityError() }}</span> }
-              @else if (cartService.quantitySyncPending()) { <span class="text-purple-700">Đang lưu số lượng…</span> }
+              @else if (cartService.quantitySyncPending()) { <span class="text-blue-700">Đang lưu số lượng…</span> }
             </div>
             @for (item of cartService.items(); track item._id || $index) {
-              <article class="bg-white rounded-2xl p-5 sm:p-6 shadow-shop-card border border-[#DDD6FE] relative overflow-hidden group" [class.cart-item-exit]="isRemoving(item, $index)">
+              <article class="bg-white rounded-2xl p-5 sm:p-6 shadow-shop-card border border-[#BFDBFE] relative overflow-hidden group" [class.cart-item-exit]="isRemoving(item, $index)">
                 <!-- Color edge indicator -->
                 <div 
                   class="absolute top-0 left-0 bottom-0 w-1.5"
-                  [ngClass]="item.isCustom ? 'bg-[#10B981]' : 'bg-[#DDD6FE]'"
+                  [ngClass]="item.isCustom ? 'bg-[#10B981]' : 'bg-[#BFDBFE]'"
                 ></div>
 
                 <div class="flex items-start gap-4">
                   <!-- Checkbox -->
-                  <input type="checkbox" checked class="w-4 h-4 mt-2 rounded accent-[#7C3AED] cursor-pointer shrink-0">
+                  <input type="checkbox" checked class="w-4 h-4 mt-2 rounded accent-[#2563EB] cursor-pointer shrink-0">
 
                   <!-- Thumbnail -->
                   <div class="relative w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 shrink-0">
                     <img [src]="item.customDetails?.previewImage || (item.productId?.images && item.productId.images[0]) || 'https://placehold.co/400'" [alt]="item.productId?.name" class="w-full h-full object-cover">
                     @if (item.isCustom) {
                       <div class="absolute bottom-1 left-1 right-1 py-0.5 px-1 rounded bg-white/90 backdrop-blur-sm text-center">
-                        <span class="text-[9px] text-[#7C3AED] font-bold flex items-center justify-center gap-0.5">
+                        <span class="text-[9px] text-[#2563EB] font-bold flex items-center justify-center gap-0.5">
                           <span class="material-symbols-outlined text-[10px]">view_in_ar</span>
                           Mô phỏng 3D
                         </span>
@@ -156,21 +156,21 @@ import { AuthService } from '../../core/services/auth.service';
 
                     <!-- Custom details callout if custom (AC14 & BR-CUS06) -->
                     @if (item.isCustom && item.customDetails) {
-                      <div class="my-2 p-3 rounded-xl bg-purple-50/80 border border-purple-100 text-xs text-slate-700 flex flex-col gap-1.5">
+                      <div class="my-2 p-3 rounded-xl bg-blue-50/80 border border-blue-100 text-xs text-slate-700 flex flex-col gap-1.5">
                         @if (item.customDetails.frontMessage) {
                           <div class="flex items-center gap-1.5">
                             <span class="text-slate-400 font-medium shrink-0">Mặt trước:</span>
-                            <span class="font-bold text-[#7C3AED] truncate">“{{ item.customDetails.frontMessage }}”</span>
+                            <span class="font-bold text-[#2563EB] truncate">“{{ item.customDetails.frontMessage }}”</span>
                           </div>
                         }
                         @if (item.customDetails.backMessage) {
                           <div class="flex items-center gap-1.5">
                             <span class="text-slate-400 font-medium shrink-0">Mặt sau:</span>
-                            <span class="font-bold text-[#7C3AED] truncate">“{{ item.customDetails.backMessage }}”</span>
+                            <span class="font-bold text-[#2563EB] truncate">“{{ item.customDetails.backMessage }}”</span>
                           </div>
                         }
 
-                        <div class="flex items-center gap-2 flex-wrap text-[11px] text-slate-500 pt-1 border-t border-purple-200/50">
+                        <div class="flex items-center gap-2 flex-wrap text-[11px] text-slate-500 pt-1 border-t border-blue-200/50">
                           <span>Màu phôi: <strong class="text-slate-700">{{ item.customDetails.selectedColor || item.variantName || 'Chuẩn' }}</strong></span>
                           <span>•</span>
                           <span>Font: <strong class="text-slate-700">{{ item.customDetails.fontFamily || 'Signature' }}</strong></span>
@@ -181,7 +181,7 @@ import { AuthService } from '../../core/services/auth.service';
                           }
                           @if (item.customDetails.pattern && item.customDetails.pattern !== 'none') {
                             <span>•</span>
-                            <span>Họa tiết: <strong class="text-[#7C3AED]">{{ item.customDetails.pattern }}</strong></span>
+                            <span>Họa tiết: <strong class="text-[#2563EB]">{{ item.customDetails.pattern }}</strong></span>
                           }
                           @if (item.customDetails.uploadedImage) {
                             <span>•</span>
@@ -194,7 +194,7 @@ import { AuthService } from '../../core/services/auth.service';
 
                         <!-- Surcharges breakdown pill -->
                         @if (item.customDetails.customFee && item.customDetails.customFee > 0) {
-                          <div class="text-[10px] text-[#7C3AED] font-semibold bg-white/70 px-2 py-0.5 rounded-md border border-purple-100 w-fit">
+                          <div class="text-[10px] text-[#2563EB] font-semibold bg-white/70 px-2 py-0.5 rounded-md border border-blue-100 w-fit">
                             Phụ phí tùy biến: +{{ item.customDetails.customFee | number:'1.0-0' }}đ
                           </div>
                         }
@@ -205,7 +205,7 @@ import { AuthService } from '../../core/services/auth.service';
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
                       <div>
                         <div class="flex items-baseline gap-1.5">
-                          <span class="font-extrabold text-base text-[#7C3AED]">
+                          <span class="font-extrabold text-base text-[#2563EB]">
                             {{ item.price | number:'1.0-0' }}đ
                           </span>
                         </div>
@@ -248,9 +248,9 @@ import { AuthService } from '../../core/services/auth.service';
             }
 
             <!-- Premium Packaging Card -->
-            <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#DDD6FE] flex items-center justify-between gap-4">
+            <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#BFDBFE] flex items-center justify-between gap-4">
               <div class="flex items-center gap-3">
-                <input type="checkbox" checked class="w-5 h-5 rounded accent-[#7C3AED] cursor-pointer shrink-0">
+                <input type="checkbox" checked class="w-5 h-5 rounded accent-[#2563EB] cursor-pointer shrink-0">
                 <div>
                   <div class="flex items-center gap-2">
                     <span class="text-xs sm:text-sm font-bold text-[#1E1B4B]">Gói quà nghệ thuật lụa Satin & xịt hương hoa khô</span>
@@ -264,7 +264,7 @@ import { AuthService } from '../../core/services/auth.service';
 
             <!-- Action Link -->
             <div class="pt-2 flex items-center justify-between">
-              <a routerLink="/products" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-[#7C3AED]">
+              <a routerLink="/products" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-[#2563EB]">
                 <span class="material-symbols-outlined text-[16px]">west</span>
                 <span>Tiếp tục chọn thêm quà tặng</span>
               </a>
@@ -273,7 +273,7 @@ import { AuthService } from '../../core/services/auth.service';
 
           <!-- RIGHT COLUMN: PRICE BREAKDOWN & 50% DEPOSIT CHECKOUT PANEL -->
           <div class="lg:col-span-5 flex flex-col gap-6">
-            <div class="bg-white rounded-3xl p-6 shadow-shop-card border border-[#DDD6FE] flex flex-col gap-5">
+            <div class="bg-white rounded-3xl p-6 shadow-shop-card border border-[#BFDBFE] flex flex-col gap-5">
               
               <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                 <h3 class="font-bold text-base text-[#1E1B4B]">Tóm tắt đơn hàng</h3>
@@ -281,7 +281,7 @@ import { AuthService } from '../../core/services/auth.service';
               </div>
 
               <label class="text-xs text-slate-600">Giao hàng dự kiến
-                <select aria-label="Giao hàng dự kiến" [ngModel]="cartService.cart()?.shippingMethod || 'STANDARD'" (ngModelChange)="changeShipping($event)" [disabled]="cartService.quantitySyncPending() || shippingBusy" class="w-full mt-2 border border-purple-200 rounded-xl p-2">
+                <select aria-label="Giao hàng dự kiến" [ngModel]="cartService.cart()?.shippingMethod || 'STANDARD'" (ngModelChange)="changeShipping($event)" [disabled]="cartService.quantitySyncPending() || shippingBusy" class="w-full mt-2 border border-blue-200 rounded-xl p-2">
                   <option value="STANDARD">Tiêu chuẩn · Miễn phí từ 250.000đ</option>
                   <option value="EXPRESS">Hỏa tốc · 50.000đ</option>
                 </select>
@@ -299,7 +299,7 @@ import { AuthService } from '../../core/services/auth.service';
                   <span class="text-emerald-600 font-bold">Miễn phí</span>
                 </div>
                 @if (cartService.pricing().voucherDiscount > 0) {
-                  <div class="flex items-center justify-between text-[#7C3AED]">
+                  <div class="flex items-center justify-between text-[#2563EB]">
                     <span>Ưu đãi Voucher {{ cartService.cart()?.voucherCode }}:</span>
                     <span class="font-bold">-{{ cartService.pricing().voucherDiscount | number:'1.0-0' }}đ</span>
                   </div>
@@ -312,7 +312,7 @@ import { AuthService } from '../../core/services/auth.service';
                 </div>
 
                 @if ((cartService.pricing().shippingDiscount || 0) > 0) {
-                  <div class="flex items-center justify-between text-purple-700"><span>Ưu đãi vận chuyển:</span><strong>-{{ cartService.pricing().shippingDiscount | number:'1.0-0' }}đ</strong></div>
+                  <div class="flex items-center justify-between text-blue-700"><span>Ưu đãi vận chuyển:</span><strong>-{{ cartService.pricing().shippingDiscount | number:'1.0-0' }}đ</strong></div>
                 }
                 <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-sm font-bold text-[#1E1B4B]">
                   <span>Tổng giá trị đơn hàng:</span>
@@ -322,19 +322,19 @@ import { AuthService } from '../../core/services/auth.service';
 
               @if (cartService.pricing().totalCustomItems > 0) {
                 <!-- 50% Deposit Summary Card for Custom Items -->
-                <div class="p-4 rounded-2xl bg-[#F5EEFD] border border-[#DDD6FE] flex flex-col gap-2">
+                <div class="p-4 rounded-2xl bg-[#F8FAFC] border border-[#BFDBFE] flex flex-col gap-2">
                   <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-[#7C3AED] uppercase tracking-wide">
+                    <span class="text-xs font-bold text-[#2563EB] uppercase tracking-wide">
                       Tiền cọc 50% thiết kế:
                     </span>
-                    <span class="text-xl font-extrabold text-[#7C3AED]">
+                    <span class="text-xl font-extrabold text-[#2563EB]">
                       {{ cartService.pricing().depositAmount | number:'1.0-0' }}đ
                     </span>
                   </div>
                   <p class="text-[11px] text-slate-500">
                     Cọc trước 50% cho {{ cartService.pricing().totalCustomItems }} sản phẩm custom theo quy định xưởng
                   </p>
-                  <div class="flex items-center justify-between pt-2 border-t border-purple-200/50 text-xs font-semibold text-slate-700">
+                  <div class="flex items-center justify-between pt-2 border-t border-blue-200/50 text-xs font-semibold text-slate-700">
                     <span>Còn lại thanh toán COD:</span>
                     <strong class="text-[#1E1B4B] font-bold text-sm">{{ cartService.pricing().remainingCodAmount | number:'1.0-0' }}đ</strong>
                   </div>
@@ -345,7 +345,7 @@ import { AuthService } from '../../core/services/auth.service';
               <button 
                 (click)="proceedToCheckout()"
                 [disabled]="checkoutNavigating() || cartService.quantitySyncPending() || shippingBusy || cartService.voucherSyncPending()"
-                class="w-full py-3.5 px-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+                class="w-full py-3.5 px-4 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-300 transition-all active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-wait"
               >
                 @if (checkoutNavigating()) {
                   <span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true"></span>

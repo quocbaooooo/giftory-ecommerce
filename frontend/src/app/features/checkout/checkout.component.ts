@@ -21,9 +21,9 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
       
       <!-- Breadcrumb -->
       <div class="flex items-center gap-2 text-xs text-slate-500 mb-6">
-        <a routerLink="/" class="hover:text-[#7C3AED]">Trang chủ</a>
+        <a routerLink="/" class="hover:text-[#2563EB]">Trang chủ</a>
         <span>/</span>
-        <a routerLink="/cart" class="hover:text-[#7C3AED]">Giỏ hàng</a>
+        <a routerLink="/cart" class="hover:text-[#2563EB]">Giỏ hàng</a>
         <span>/</span>
         <span class="text-[#1E1B4B] font-semibold">Thanh toán & Xác nhận đơn</span>
       </div>
@@ -42,7 +42,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
             <a routerLink="/cart" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
               ← Cập Nhật Giỏ Hàng
             </a>
-            <a routerLink="/products" class="px-5 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-xs rounded-xl shadow-md transition">
+            <a routerLink="/products" class="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs rounded-xl shadow-md transition">
               Khám Phá Sản Phẩm →
             </a>
           </div>
@@ -54,18 +54,18 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
           <div class="lg:col-span-7 flex flex-col gap-6">
             
             <!-- Section 1: Customer & Delivery Address -->
-            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#DDD6FE]">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#BFDBFE]">
               <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
-                <span class="w-7 h-7 rounded-xl bg-[#7C3AED] text-white flex items-center justify-center font-bold text-xs">1</span>
+                <span class="w-7 h-7 rounded-xl bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs">1</span>
                 <h2 class="text-base sm:text-lg font-bold text-[#1E1B4B]">Thông Tin Người Nhận Quà</h2>
               </div>
 
               <div class="space-y-4 text-xs">
                 @if (authService.isAuthenticated()) {
-                  <div class="p-4 rounded-2xl bg-purple-50/70 border border-purple-100 space-y-2">
+                  <div class="p-4 rounded-2xl bg-blue-50/70 border border-blue-100 space-y-2">
                     <label for="saved-recipient" class="font-bold text-[#1E1B4B] block">Danh bạ người nhận</label>
                     <div class="flex gap-2 items-center">
-                      <select id="saved-recipient" [ngModel]="selectedRecipientId" (ngModelChange)="selectRecipient($event)" [disabled]="!!pendingOrder() || recipientsLoading() || recipientSaving()" class="min-w-0 flex-1 px-3 py-2.5 rounded-xl border border-purple-200 bg-white text-sm text-slate-800 disabled:bg-slate-50">
+                      <select id="saved-recipient" [ngModel]="selectedRecipientId" (ngModelChange)="selectRecipient($event)" [disabled]="!!pendingOrder() || recipientsLoading() || recipientSaving()" class="min-w-0 flex-1 px-3 py-2.5 rounded-xl border border-blue-200 bg-white text-sm text-slate-800 disabled:bg-slate-50">
                         <option value="">{{ recipientsLoading() ? 'Đang tải danh bạ…' : '+ Nhập người nhận mới' }}</option>
                         @for (recipient of recipients(); track recipient.id) {
                           <option [value]="recipient.id">{{ recipient.name }} · {{ recipient.phone }} · {{ recipient.address }}</option>
@@ -88,7 +88,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                       id="recipient-name" maxlength="100" autocomplete="name"
                       [(ngModel)]="customerName"
                       [disabled]="!!pendingOrder() || recipientSaving()"
-                      class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#7C3AED] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
+                      class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#2563EB] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
                       placeholder="Nguyễn Minh Anh"
                     >
                   </div>
@@ -98,7 +98,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                       id="recipient-phone" type="tel" maxlength="20" autocomplete="tel"
                       [(ngModel)]="customerPhone"
                       [disabled]="!!pendingOrder() || recipientSaving()"
-                      class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#7C3AED] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
+                      class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#2563EB] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
                       placeholder="0912 345 678"
                     >
                   </div>
@@ -110,7 +110,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                     [(ngModel)]="customerEmail"
                     [disabled]="!!pendingOrder()"
                     type="email"
-                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#7C3AED] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#2563EB] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
                     placeholder="minhanh@gmail.com"
                   >
                 </div>
@@ -119,14 +119,14 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label for="recipient-province" class="font-bold text-slate-700 block mb-1">Tỉnh/Thành phố *</label>
-                      <select id="recipient-province" [ngModel]="provinceCode" (ngModelChange)="changeProvince($event)" [disabled]="!!pendingOrder() || recipientSaving() || provincesLoading()" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-[#7C3AED] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50">
+                      <select id="recipient-province" [ngModel]="provinceCode" (ngModelChange)="changeProvince($event)" [disabled]="!!pendingOrder() || recipientSaving() || provincesLoading()" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-[#2563EB] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50">
                         <option value="">{{ provincesLoading() ? 'Đang tải tỉnh/thành…' : 'Chọn tỉnh/thành phố' }}</option>
                         @for (province of provinces(); track province.code) { <option [value]="province.code">{{ province.name }}</option> }
                       </select>
                     </div>
                     <div>
                       <label for="recipient-ward" class="font-bold text-slate-700 block mb-1">Phường/Xã *</label>
-                      <select id="recipient-ward" [(ngModel)]="wardCode" [disabled]="!!pendingOrder() || recipientSaving() || !provinceCode || wardsLoading()" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-[#7C3AED] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50">
+                      <select id="recipient-ward" [(ngModel)]="wardCode" [disabled]="!!pendingOrder() || recipientSaving() || !provinceCode || wardsLoading()" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-[#2563EB] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50">
                         <option value="">{{ wardsLoading() ? 'Đang tải phường/xã…' : 'Chọn phường/xã' }}</option>
                         @for (ward of wards(); track ward.code) { <option [value]="ward.code">{{ ward.name }}</option> }
                       </select>
@@ -137,13 +137,13 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   }
                   <div>
                     <label for="recipient-street" class="font-bold text-slate-700 block mb-1">Số nhà, tên đường *</label>
-                    <input id="recipient-street" [(ngModel)]="street" [disabled]="!!pendingOrder() || recipientSaving()" maxlength="200" autocomplete="address-line1" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#7C3AED] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50" placeholder="Ví dụ: 128 Đường Số 7, căn hộ A12">
+                    <input id="recipient-street" [(ngModel)]="street" [disabled]="!!pendingOrder() || recipientSaving()" maxlength="200" autocomplete="address-line1" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#2563EB] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50" placeholder="Ví dụ: 128 Đường Số 7, căn hộ A12">
                   </div>
                   @if (customerAddress) { <p class="text-slate-500"><strong>Địa chỉ giao quà:</strong> {{ customerAddress }}</p> }
                   @if (legacyAddress && !customerAddress) { <p class="text-slate-500">Địa chỉ hồ sơ: {{ legacyAddress }}. Vui lòng chọn tỉnh/thành và phường/xã để chuẩn hóa địa chỉ giao quà.</p> }
                   @if (authService.isAuthenticated()) {
                     <div class="flex flex-wrap items-center gap-3">
-                      <button type="button" (click)="saveRecipient()" [disabled]="!!pendingOrder() || recipientSaving() || recipientsLoading() || !recipientValid()" class="px-4 py-2.5 rounded-xl border border-purple-200 text-[#7C3AED] bg-purple-50 hover:bg-purple-100 font-bold disabled:opacity-50 disabled:cursor-not-allowed">{{ recipientSaving() ? 'Đang lưu…' : 'Lưu người nhận vào danh bạ' }}</button>
+                      <button type="button" (click)="saveRecipient()" [disabled]="!!pendingOrder() || recipientSaving() || recipientsLoading() || !recipientValid()" class="px-4 py-2.5 rounded-xl border border-blue-200 text-[#2563EB] bg-blue-50 hover:bg-blue-100 font-bold disabled:opacity-50 disabled:cursor-not-allowed">{{ recipientSaving() ? 'Đang lưu…' : 'Lưu người nhận vào danh bạ' }}</button>
                       @if (recipientNotice()) { <span role="status" class="text-emerald-700">{{ recipientNotice() }}</span> }
                     </div>
                   }
@@ -156,16 +156,16 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                     [(ngModel)]="customerNote"
                     [disabled]="!!pendingOrder()"
                     rows="2"
-                    class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-[#7C3AED] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
+                    class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-[#2563EB] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
                     placeholder="Ví dụ: Gọi trước khi giao 15 phút, quà tặng sinh nhật nên giao đúng ngày..."
                   ></textarea>
                 </div>
               </div>
             </div>
 
-            <section class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#DDD6FE] space-y-4" aria-labelledby="greeting-card-title">
+            <section class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#BFDBFE] space-y-4" aria-labelledby="greeting-card-title">
               <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" [ngModel]="includeGreetingCard()" (ngModelChange)="includeGreetingCard.set($event)" [disabled]="!!pendingOrder() || isSubmitting()" class="w-4 h-4 accent-[#7C3AED]">
+                <input type="checkbox" [ngModel]="includeGreetingCard()" (ngModelChange)="includeGreetingCard.set($event)" [disabled]="!!pendingOrder() || isSubmitting()" class="w-4 h-4 accent-[#2563EB]">
                 <span>
                   <span id="greeting-card-title" class="block text-base font-bold text-[#1E1B4B]">Thêm thiệp chúc mừng</span>
                   <span class="text-xs text-slate-500">Chọn phong cách, viết tiêu đề và lời chúc để xưởng in kèm trong gói quà.</span>
@@ -182,8 +182,8 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   <legend class="text-xs font-bold text-slate-700 mb-2">Chọn phong cách thiệp</legend>
                   <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     @for (template of greetingCardTemplates(); track template.id) {
-                      <label class="flex items-center gap-2 px-3 py-3 rounded-xl border cursor-pointer text-sm font-semibold" [ngClass]="greetingCardTemplateId() === template.id ? 'border-purple-500 bg-purple-50 text-purple-800' : 'border-slate-200 text-slate-600'">
-                        <input type="radio" name="greeting-card-template" [value]="template.id" [ngModel]="greetingCardTemplateId()" (ngModelChange)="greetingCardTemplateId.set($event)" class="accent-[#7C3AED]">
+                      <label class="flex items-center gap-2 px-3 py-3 rounded-xl border cursor-pointer text-sm font-semibold" [ngClass]="greetingCardTemplateId() === template.id ? 'border-blue-500 bg-blue-50 text-blue-800' : 'border-slate-200 text-slate-600'">
+                        <input type="radio" name="greeting-card-template" [value]="template.id" [ngModel]="greetingCardTemplateId()" (ngModelChange)="greetingCardTemplateId.set($event)" class="accent-[#2563EB]">
                         {{ template.name }}
                       </label>
                     }
@@ -191,12 +191,12 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   <p class="text-xs text-slate-500">Phong cách chỉ thay đổi màu sắc và họa tiết, giữ nguyên tiêu đề và lời chúc của bạn.</p>
                   <div>
                     <label for="greeting-heading" class="block text-xs font-bold text-slate-700 mb-1">Tiêu đề thiệp *</label>
-                    <input id="greeting-heading" [(ngModel)]="greetingCardHeading" maxlength="80" aria-describedby="greeting-heading-help" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:border-[#7C3AED] focus:outline-none text-sm" placeholder="Ví dụ: Gửi người bạn đặc biệt của mình">
+                    <input id="greeting-heading" [(ngModel)]="greetingCardHeading" maxlength="80" aria-describedby="greeting-heading-help" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:border-[#2563EB] focus:outline-none text-sm" placeholder="Ví dụ: Gửi người bạn đặc biệt của mình">
                     <p id="greeting-heading-help" class="text-xs text-slate-500 mt-1">{{ greetingCardHeading.length }}/80 ký tự · Bạn có thể thay đổi dòng mở đầu trên thiệp.</p>
                   </div>
                   <div>
                     <label for="greeting-message" class="block text-xs font-bold text-slate-700 mb-1">Lời chúc trên thiệp *</label>
-                    <textarea id="greeting-message" [(ngModel)]="greetingCardMessage" rows="4" maxlength="300" aria-describedby="greeting-message-help" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:border-[#7C3AED] focus:outline-none text-sm" placeholder="Viết điều bạn muốn gửi gắm đến người nhận…"></textarea>
+                    <textarea id="greeting-message" [(ngModel)]="greetingCardMessage" rows="4" maxlength="300" aria-describedby="greeting-message-help" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:border-[#2563EB] focus:outline-none text-sm" placeholder="Viết điều bạn muốn gửi gắm đến người nhận…"></textarea>
                     <p id="greeting-message-help" class="text-xs text-slate-500 mt-1">{{ greetingCardMessage.length }}/300 ký tự · Tối đa 6 dòng. Nội dung được in đúng như bạn nhập.</p>
                     @if (greetingCardError()) { <p role="alert" class="text-xs text-rose-700 mt-2">{{ greetingCardError() }}</p> }
                   </div>
@@ -209,9 +209,9 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
             </section>
 
             <!-- Section 2: Shipping Method Selector (AC 4, PF Step 5-6) -->
-            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#DDD6FE]">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#BFDBFE]">
               <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
-                <span class="w-7 h-7 rounded-xl bg-[#7C3AED] text-white flex items-center justify-center font-bold text-xs">2</span>
+                <span class="w-7 h-7 rounded-xl bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs">2</span>
                 <h2 class="text-base sm:text-lg font-bold text-[#1E1B4B]">Lựa Chọn Phương Thức Giao Hàng</h2>
               </div>
 
@@ -220,13 +220,13 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 <label 
                   (click)="!pendingOrder() && changeShipping('STANDARD')"
                   class="flex items-start gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all"
-                  [ngClass]="selectedShippingMethod() === 'STANDARD' ? 'border-[#7C3AED] bg-purple-50/70 shadow-sm' : 'border-slate-200 hover:border-purple-200 bg-white'"
+                  [ngClass]="selectedShippingMethod() === 'STANDARD' ? 'border-[#2563EB] bg-blue-50/70 shadow-sm' : 'border-slate-200 hover:border-blue-200 bg-white'"
                 >
-                  <input type="radio" name="shippingMethod" [checked]="selectedShippingMethod() === 'STANDARD'" [disabled]="!!pendingOrder()" class="mt-1 accent-[#7C3AED]">
+                  <input type="radio" name="shippingMethod" [checked]="selectedShippingMethod() === 'STANDARD'" [disabled]="!!pendingOrder()" class="mt-1 accent-[#2563EB]">
                   <div>
                     <div class="font-bold text-sm text-[#1E1B4B]">Giao Tiêu Chuẩn</div>
                     <p class="text-xs text-slate-500 mt-0.5">3 - 5 ngày làm việc</p>
-                    <span class="text-xs font-bold text-[#7C3AED] mt-1 block">
+                    <span class="text-xs font-bold text-[#2563EB] mt-1 block">
                       {{ cartService.pricing().itemsTotal >= 250000 ? 'Miễn phí vận chuyển' : '30.000đ' }}
                     </span>
                   </div>
@@ -236,9 +236,9 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 <label 
                   (click)="!pendingOrder() && changeShipping('EXPRESS')"
                   class="flex items-start gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all"
-                  [ngClass]="selectedShippingMethod() === 'EXPRESS' ? 'border-[#7C3AED] bg-purple-50/70 shadow-sm' : 'border-slate-200 hover:border-purple-200 bg-white'"
+                  [ngClass]="selectedShippingMethod() === 'EXPRESS' ? 'border-[#2563EB] bg-blue-50/70 shadow-sm' : 'border-slate-200 hover:border-blue-200 bg-white'"
                 >
-                  <input type="radio" name="shippingMethod" [checked]="selectedShippingMethod() === 'EXPRESS'" [disabled]="!!pendingOrder()" class="mt-1 accent-[#7C3AED]">
+                  <input type="radio" name="shippingMethod" [checked]="selectedShippingMethod() === 'EXPRESS'" [disabled]="!!pendingOrder()" class="mt-1 accent-[#2563EB]">
                   <div>
                     <div class="flex items-center gap-1.5 font-bold text-sm text-[#1E1B4B]">
                       <span>Giao Hỏa Tốc</span>
@@ -252,9 +252,9 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
             </div>
 
             <!-- Section 3: Payment Method Selector (BR-02, BR-03, BR-04, BR-07) -->
-            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#DDD6FE]">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#BFDBFE]">
               <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
-                <span class="w-7 h-7 rounded-xl bg-[#7C3AED] text-white flex items-center justify-center font-bold text-xs">3</span>
+                <span class="w-7 h-7 rounded-xl bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs">3</span>
                 <h2 class="text-base sm:text-lg font-bold text-[#1E1B4B]">Phương Thức Thanh Toán</h2>
               </div>
 
@@ -282,10 +282,10 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 <div 
                   (click)="!pendingOrder() && (selectedPaymentMethod() === 'COD' ? selectedPaymentMethod.set('VIETQR') : null)"
                   class="p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-3.5"
-                  [ngClass]="selectedPaymentMethod() !== 'COD' ? 'border-[#7C3AED] bg-purple-50/50 shadow-sm' : 'border-slate-200 hover:border-purple-200 bg-white'"
+                  [ngClass]="selectedPaymentMethod() !== 'COD' ? 'border-[#2563EB] bg-blue-50/50 shadow-sm' : 'border-slate-200 hover:border-blue-200 bg-white'"
                 >
                   <div class="flex items-start gap-3">
-                    <input type="radio" name="payGroup" [checked]="selectedPaymentMethod() !== 'COD'" [disabled]="!!pendingOrder()" class="mt-1 accent-[#7C3AED] shrink-0">
+                    <input type="radio" name="payGroup" [checked]="selectedPaymentMethod() !== 'COD'" [disabled]="!!pendingOrder()" class="mt-1 accent-[#2563EB] shrink-0">
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center justify-between gap-2">
                         <span class="font-bold text-sm text-[#1E1B4B]">Thanh Toán Trực Tuyến 100%</span>
@@ -299,7 +299,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
 
                   <!-- Sub-chips: Grid layout 3 equal columns, clean design -->
                   @if (selectedPaymentMethod() !== 'COD') {
-                    <div class="pt-3 border-t border-purple-200/60">
+                    <div class="pt-3 border-t border-blue-200/60">
                       <p class="text-[11px] font-bold text-slate-500 mb-2">Chọn kênh thanh toán:</p>
                       <div class="grid grid-cols-3 gap-2">
                         
@@ -308,7 +308,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                           type="button"
                           (click)="!pendingOrder() && selectedPaymentMethod.set('VIETQR'); $event.stopPropagation()"
                           class="py-2.5 px-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
-                          [ngClass]="selectedPaymentMethod() === 'VIETQR' ? 'bg-[#7C3AED] text-white border-[#7C3AED]' : 'bg-white text-slate-700 border-slate-200 hover:border-purple-300'"
+                          [ngClass]="selectedPaymentMethod() === 'VIETQR' ? 'bg-[#2563EB] text-white border-[#2563EB]' : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300'"
                         >
                           <span class="material-symbols-outlined text-[16px]">qr_code_2</span>
                           <span class="truncate">VietQR</span>
@@ -345,9 +345,9 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 <div 
                   (click)="!pendingOrder() && selectedPaymentMethod.set('COD')"
                   class="p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3"
-                  [ngClass]="selectedPaymentMethod() === 'COD' ? 'border-[#7C3AED] bg-purple-50/50 shadow-sm' : 'border-slate-200 hover:border-purple-200 bg-white'"
+                  [ngClass]="selectedPaymentMethod() === 'COD' ? 'border-[#2563EB] bg-blue-50/50 shadow-sm' : 'border-slate-200 hover:border-blue-200 bg-white'"
                 >
-                  <input type="radio" name="payGroup" [checked]="selectedPaymentMethod() === 'COD'" [disabled]="!!pendingOrder()" class="mt-1 accent-[#7C3AED] shrink-0">
+                  <input type="radio" name="payGroup" [checked]="selectedPaymentMethod() === 'COD'" [disabled]="!!pendingOrder()" class="mt-1 accent-[#2563EB] shrink-0">
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between gap-2">
                       <span class="font-bold text-sm text-[#1E1B4B]">COD - Thanh toán khi nhận hàng</span>
@@ -366,19 +366,19 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
 
           <!-- RIGHT COLUMN: ORDER SUMMARY & SUBMIT -->
           <div class="lg:col-span-5 flex flex-col gap-6">
-            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#DDD6FE] flex flex-col gap-5 sticky top-6">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#BFDBFE] flex flex-col gap-5 sticky top-6">
               <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
                   <h3 class="font-bold text-lg text-[#1E1B4B]">Tóm Tắt Đơn Hàng ({{ displayItems().length }} món)</h3>
                   @if (isBuyNowMode()) {
-                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-[#7C3AED] mt-0.5">
+                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-[#2563EB] mt-0.5">
                       <span class="material-symbols-outlined text-[14px]">bolt</span>
                       Mua ngay độc lập • Không gộp giỏ hàng
                     </span>
                   }
                 </div>
                 @if (pendingOrder()) {
-                  <span class="px-2.5 py-0.5 rounded-full bg-purple-100 text-[#7C3AED] text-xs font-mono font-bold">
+                  <span class="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#2563EB] text-xs font-mono font-bold">
                     #{{ pendingOrder().orderCode }}
                   </span>
                 }
@@ -394,7 +394,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                     >
                     <div class="flex-1 min-w-0">
                       <div class="font-semibold text-slate-800 truncate">{{ item.productId?.name || item.productName }}</div>
-                      <div class="text-[11px] text-slate-400 flex items-center gap-1.5">SL: {{ item.quantity }} <span *ngIf="item.isCustom" class="px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 font-bold">Thiết kế riêng</span><span *ngIf="!item.isCustom" class="text-slate-400">• Có sẵn</span></div>
+                      <div class="text-[11px] text-slate-400 flex items-center gap-1.5">SL: {{ item.quantity }} <span *ngIf="item.isCustom" class="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">Thiết kế riêng</span><span *ngIf="!item.isCustom" class="text-slate-400">• Có sẵn</span></div>
                     </div>
                     <span class="font-bold text-[#1E1B4B]">{{ ((item.price || item.unitPrice) * item.quantity) | number:'1.0-0' }}đ</span>
                   </div>
@@ -402,7 +402,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
               </div>
 
               @if (!pendingOrder() && !isBuyNowMode()) { <app-cart-vouchers /> }
-              @if (shippingSyncPending()) { <p role="status" class="text-xs text-purple-700">Đang cập nhật giao hàng…</p> }
+              @if (shippingSyncPending()) { <p role="status" class="text-xs text-blue-700">Đang cập nhật giao hàng…</p> }
               <!-- Dynamic Calculated Pricing Breakdown -->
               <div class="flex flex-col gap-2 pt-3 border-t border-slate-100 text-xs text-slate-600">
                 <div class="flex items-center justify-between">
@@ -416,10 +416,10 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 </div>
 
                 @if ((displayPricing().shippingDiscount || 0) > 0) {
-                  <div class="flex items-center justify-between text-purple-700"><span>Ưu đãi vận chuyển:</span><strong>-{{ displayPricing().shippingDiscount | number:'1.0-0' }}đ</strong></div>
+                  <div class="flex items-center justify-between text-blue-700"><span>Ưu đãi vận chuyển:</span><strong>-{{ displayPricing().shippingDiscount | number:'1.0-0' }}đ</strong></div>
                 }
                 @if (displayPricing().voucherDiscount > 0) {
-                  <div class="flex items-center justify-between text-[#7C3AED]">
+                  <div class="flex items-center justify-between text-[#2563EB]">
                     <span>Voucher giảm giá:</span>
                     <span class="font-bold">-{{ displayPricing().voucherDiscount | number:'1.0-0' }}đ</span>
                   </div>
@@ -433,23 +433,23 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
 
               @if (orderError()) { <p role="alert" class="text-sm text-rose-700">{{ orderError() }}</p> }
               <!-- Deposit / Payment Box -->
-              <div class="p-4 rounded-2xl bg-[#F5EEFD] border border-[#DDD6FE] flex flex-col gap-1.5">
+              <div class="p-4 rounded-2xl bg-[#F8FAFC] border border-[#BFDBFE] flex flex-col gap-1.5">
                 <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold text-[#7C3AED]">
+                  <span class="text-xs font-bold text-[#2563EB]">
                     {{ displayPricing().depositAmount === 0 ? 'THANH TOÁN TRƯỚC:' : (displayPricing().depositAmount < displayPricing().totalAmount ? 'TIỀN CỌC (50% TIỀN CUSTOM):' : 'THANH TOÁN TRỰC TUYẾN (100%):') }}
                   </span>
-                  <span class="text-xl font-extrabold text-[#7C3AED]">
+                  <span class="text-xl font-extrabold text-[#2563EB]">
                     {{ displayPricing().depositAmount | number:'1.0-0' }}đ
                   </span>
                 </div>
 
                 @if (displayPricing().depositAmount === 0) {
-                  <div class="text-xs text-emerald-700 font-bold pt-1 border-t border-purple-200/50 flex items-center gap-1">
+                  <div class="text-xs text-emerald-700 font-bold pt-1 border-t border-blue-200/50 flex items-center gap-1">
                     <span class="material-symbols-outlined text-sm">check_circle</span>
                     <span>Không yêu cầu cọc trước. Thanh toán 100% COD khi nhận hàng.</span>
                   </div>
                 } @else if (displayPricing().depositAmount < displayPricing().totalAmount) {
-                  <div class="flex items-center justify-between text-xs text-slate-600 pt-1 border-t border-purple-200/50">
+                  <div class="flex items-center justify-between text-xs text-slate-600 pt-1 border-t border-blue-200/50">
                     <span>Còn lại thanh toán COD khi nhận hàng:</span>
                     <span class="font-bold text-[#1E1B4B]">{{ (displayPricing().totalAmount - displayPricing().depositAmount) | number:'1.0-0' }}đ</span>
                   </div>
@@ -461,7 +461,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 <button 
                   (click)="submitOrder()"
                   [disabled]="isSubmitting() || shippingSyncPending() || cartService.quantitySyncPending() || cartService.voucherSyncPending()"
-                  class="w-full py-4 px-4 bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-50 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95 cursor-pointer"
+                  class="w-full py-4 px-4 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-300 transition-all active:scale-95 cursor-pointer"
                 >
                   @if (isSubmitting()) {
                     <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -474,7 +474,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
               } @else {
                 <button 
                   (click)="showPaymentModal.set(true)"
-                  class="w-full py-4 px-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-300 transition-all active:scale-95 cursor-pointer"
+                  class="w-full py-4 px-4 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-300 transition-all active:scale-95 cursor-pointer"
                 >
                   <span class="material-symbols-outlined text-[20px]">qr_code_2</span>
                   <span>Mở Lại Mã QR Thanh Toán VietQR</span>
@@ -493,14 +493,14 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
 
       @if (showGuestOtpModal()) {
         <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" role="presentation">
-          <section role="dialog" aria-modal="true" aria-labelledby="guest-cod-otp-title" class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-purple-100 space-y-5">
+          <section role="dialog" aria-modal="true" aria-labelledby="guest-cod-otp-title" class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-blue-100 space-y-5">
             <div class="text-center space-y-2">
-              <div class="w-12 h-12 rounded-2xl bg-purple-100 text-[#7C3AED] flex items-center justify-center mx-auto"><span class="material-symbols-outlined text-2xl">phonelink_lock</span></div>
+              <div class="w-12 h-12 rounded-2xl bg-blue-100 text-[#2563EB] flex items-center justify-center mx-auto"><span class="material-symbols-outlined text-2xl">phonelink_lock</span></div>
               <h2 id="guest-cod-otp-title" class="text-lg font-extrabold text-slate-900">Xác minh số điện thoại</h2>
               <p class="text-xs text-slate-600">Giftory đã gửi OTP đến <b>{{ normalizedCustomerPhone() }}</b>. Mã có hiệu lực 1 phút. Đơn hàng chỉ được tạo sau khi xác minh thành công.</p>
             </div>
             <label class="block text-xs font-bold text-slate-700">Mã OTP 6 chữ số
-              <input [(ngModel)]="guestOtpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3 text-center text-xl tracking-[0.5em] font-bold focus:border-purple-500 focus:outline-none" [disabled]="guestOtpBusy() || guestOtpSeconds() === 0" />
+              <input [(ngModel)]="guestOtpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3 text-center text-xl tracking-[0.5em] font-bold focus:border-blue-500 focus:outline-none" [disabled]="guestOtpBusy() || guestOtpSeconds() === 0" />
             </label>
             @if (guestOtpError()) { <p role="alert" class="text-xs text-rose-700">{{ guestOtpError() }}</p> }
             <div class="flex items-center justify-between text-[11px] text-slate-500">
@@ -508,10 +508,10 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
               <span>Còn {{ guestOtpAttemptsRemaining() }}/5 lượt xác minh</span>
             </div>
             <div class="flex flex-col gap-2">
-              <button type="button" (click)="verifyGuestCodOtp()" [disabled]="guestOtpBusy() || guestOtpSeconds() === 0 || !guestOtpCodeValid()" class="w-full rounded-xl bg-[#7C3AED] px-4 py-3 text-sm font-bold text-white disabled:opacity-50">
+              <button type="button" (click)="verifyGuestCodOtp()" [disabled]="guestOtpBusy() || guestOtpSeconds() === 0 || !guestOtpCodeValid()" class="w-full rounded-xl bg-[#2563EB] px-4 py-3 text-sm font-bold text-white disabled:opacity-50">
                 {{ guestOtpBusy() ? 'Đang xác minh…' : 'Xác minh và đặt hàng COD' }}
               </button>
-              <button type="button" (click)="resendGuestCodOtp()" [disabled]="guestOtpBusy() || guestOtpAttemptsRemaining() <= 0 || guestOtpResendsRemaining() <= 0" class="w-full rounded-xl border border-purple-200 px-4 py-2.5 text-xs font-bold text-purple-700 disabled:opacity-40">
+              <button type="button" (click)="resendGuestCodOtp()" [disabled]="guestOtpBusy() || guestOtpAttemptsRemaining() <= 0 || guestOtpResendsRemaining() <= 0" class="w-full rounded-xl border border-blue-200 px-4 py-2.5 text-xs font-bold text-blue-700 disabled:opacity-40">
                 Gửi mã mới @if (guestOtpResendsRemaining() >= 0) { (còn {{ guestOtpResendsRemaining() }} lượt gửi) }
               </button>
               <button type="button" (click)="cancelGuestCodOtp()" [disabled]="guestOtpBusy()" class="w-full rounded-xl px-4 py-2 text-xs font-semibold text-slate-500">Dừng xác minh</button>
@@ -523,11 +523,11 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
       <!-- PAYMENT GATEWAY VIETQR MODAL (BR-05, BR-06, AF2, AF4, EF1) -->
       @if (showPaymentModal() && pendingOrder()) {
         <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-          <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-purple-100 space-y-6 relative overflow-hidden">
+          <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-blue-100 space-y-6 relative overflow-hidden">
             
             <!-- Top Header -->
             <div class="text-center space-y-2">
-              <div class="w-12 h-12 rounded-2xl bg-purple-100 text-[#7C3AED] flex items-center justify-center mx-auto shadow-inner">
+              <div class="w-12 h-12 rounded-2xl bg-blue-100 text-[#2563EB] flex items-center justify-center mx-auto shadow-inner">
                 <span class="material-symbols-outlined text-2xl">qr_code_2</span>
               </div>
               <h3 class="text-xl font-bold text-slate-900">Cổng Thanh Toán Trực Tuyến VietQR</h3>
@@ -554,7 +554,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
               <p role="alert" class="text-xs text-rose-700">Không tải được mã QR. Bạn có thể chuyển khoản theo thông tin bên dưới hoặc thử lại.</p>
             }
             <!-- QR Code Section -->
-            <div class="bg-[#F5EEFD] rounded-2xl p-5 border border-[#DDD6FE] text-center space-y-4">
+            <div class="bg-[#F8FAFC] rounded-2xl p-5 border border-[#BFDBFE] text-center space-y-4">
               <div class="bg-white p-3 rounded-2xl inline-block shadow-md">
                 <img 
                   [hidden]="qrImageFailed()"
@@ -566,7 +566,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
               </div>
 
               <div class="text-xs space-y-1">
-                <p class="font-bold text-[#7C3AED] text-base">
+                <p class="font-bold text-[#2563EB] text-base">
                   {{ pendingOrder().pricing.depositAmount | number:'1.0-0' }}đ
                 </p>
                 @if (demoPayment) {
@@ -581,14 +581,14 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
 
             <div class="space-y-3 text-center" role="status" aria-live="polite">
               @if (!paymentError()) {
-              <div class="flex items-center justify-center gap-2 text-sm font-semibold text-[#7C3AED]">
-                <span class="w-4 h-4 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin" aria-hidden="true"></span>
+              <div class="flex items-center justify-center gap-2 text-sm font-semibold text-[#2563EB]">
+                <span class="w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" aria-hidden="true"></span>
                 <span>Đang chờ hệ thống xác nhận thanh toán</span>
               </div>
               <p class="text-xs text-slate-500">{{ demoPayment ? 'Đang mô phỏng phản hồi từ cổng thanh toán…' : 'Quét mã QR bằng ứng dụng ngân hàng. Trang sẽ tự chuyển sang kết quả khi Giftory xác nhận đã nhận tiền.' }}</p>
               }
               @if (paymentError()) {
-                <button type="button" (click)="retryPayment()" class="w-full py-3 px-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-sm rounded-xl">
+                <button type="button" (click)="retryPayment()" class="w-full py-3 px-4 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-sm rounded-xl">
                   Thử thanh toán lại
                 </button>
                 <p class="text-xs text-slate-500">{{ demoPayment ? 'Thử lại giao dịch mô phỏng trên cùng đơn hàng.' : 'Nếu đã chuyển tiền, vui lòng không chuyển thêm. Hệ thống vẫn tiếp tục kiểm tra giao dịch cho đơn hàng này.' }}</p>

@@ -16,8 +16,8 @@ import { Order, OrderItemDetail } from '../../../core/models';
       <!-- Header -->
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-giftory-border/60 pb-6">
         <div>
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100 text-[#7C3AED] text-xs font-bold mb-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-[#7C3AED] animate-ping"></span>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-[#2563EB] text-xs font-bold mb-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#2563EB] animate-ping"></span>
             BP-04 • Quy Trình Thực Thi Đơn Hàng & Giao Hàng Live
           </div>
           <h1 class="text-2xl md:text-3xl font-display font-black text-giftory-ink">
@@ -31,7 +31,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
         <div class="flex items-center gap-3 self-start lg:self-center">
           <!-- Toggle Bypass 12h for testing -->
           <label class="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl text-xs font-semibold text-amber-800 cursor-pointer shadow-xs hover:bg-amber-100/60 transition">
-            <input type="checkbox" [(ngModel)]="bypassWaitTime" class="rounded text-[#7C3AED] focus:ring-[#7C3AED]" />
+            <input type="checkbox" [(ngModel)]="bypassWaitTime" class="rounded text-[#2563EB] focus:ring-[#2563EB]" />
             <span>Bỏ qua 12h chờ (Chế độ Dev/Test)</span>
           </label>
 
@@ -57,7 +57,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
         </div>
         <button
           (click)="reloginAdmin()"
-          class="px-5 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-2xl text-xs font-bold whitespace-nowrap shadow-md hover:shadow-lg transition cursor-pointer flex items-center justify-center gap-2 self-start md:self-auto shrink-0"
+          class="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-2xl text-xs font-bold whitespace-nowrap shadow-md hover:shadow-lg transition cursor-pointer flex items-center justify-center gap-2 self-start md:self-auto shrink-0"
         >
           <span class="material-symbols-outlined text-sm">verified_user</span>
           Đăng nhập lại
@@ -78,8 +78,8 @@ import { Order, OrderItemDetail } from '../../../core/models';
           <span class="text-[10px] text-slate-400 block mt-0.5">Chuẩn bị & Xưởng</span>
         </div>
 
-        <div (click)="selectFilter('PACKAGED')" class="p-3.5 bg-white rounded-2xl border border-giftory-border hover:border-purple-400 cursor-pointer transition shadow-xs">
-          <span class="text-[10px] font-bold text-purple-600 block uppercase tracking-wider">3. Đã Đóng Gói</span>
+        <div (click)="selectFilter('PACKAGED')" class="p-3.5 bg-white rounded-2xl border border-giftory-border hover:border-blue-400 cursor-pointer transition shadow-xs">
+          <span class="text-[10px] font-bold text-blue-600 block uppercase tracking-wider">3. Đã Đóng Gói</span>
           <span class="text-xl font-display font-black text-slate-800">{{ countStage('PACKAGED') }}</span>
           <span class="text-[10px] text-slate-400 block mt-0.5">Sẵn sàng giao Shipper</span>
         </div>
@@ -110,7 +110,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
           <button
             *ngFor="let filter of statusFilters"
             (click)="selectFilter(filter.key)"
-            [ngClass]="activeFilter() === filter.key ? 'bg-[#7C3AED] text-white font-bold shadow-xs' : 'bg-giftory-canvas text-giftory-ink/70 hover:text-giftory-ink'"
+            [ngClass]="activeFilter() === filter.key ? 'bg-[#2563EB] text-white font-bold shadow-xs' : 'bg-giftory-canvas text-giftory-ink/70 hover:text-giftory-ink'"
             class="px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition cursor-pointer"
           >
             {{ filter.label }}
@@ -123,7 +123,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
             type="text"
             [(ngModel)]="searchQuery"
             placeholder="Tìm theo mã đơn, SĐT hoặc tên..."
-            class="w-full pl-9 pr-4 py-2 bg-giftory-canvas rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-xs"
+            class="w-full pl-9 pr-4 py-2 bg-giftory-canvas rounded-xl border border-giftory-border focus:outline-none focus:border-[#2563EB] text-xs"
           />
         </div>
       </div>
@@ -148,7 +148,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
               <tr *ngIf="loading()">
                 <td colspan="7" class="py-12 text-center text-giftory-ink/50">
                   <div class="flex flex-col items-center justify-center gap-2">
-                    <span class="material-symbols-outlined text-3xl animate-spin text-[#7C3AED]">progress_activity</span>
+                    <span class="material-symbols-outlined text-3xl animate-spin text-[#2563EB]">progress_activity</span>
                     <span class="text-xs font-semibold">Đang đồng bộ dữ liệu đơn hàng & quy trình BP-04...</span>
                   </div>
                 </td>
@@ -168,7 +168,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
                     <button
                       *ngIf="activeFilter() !== 'ALL' || searchQuery"
                       (click)="activeFilter.set('ALL'); searchQuery=''"
-                      class="mt-2 px-3.5 py-1.5 rounded-xl bg-purple-50 text-[#7C3AED] hover:bg-purple-100 font-bold text-xs transition cursor-pointer"
+                      class="mt-2 px-3.5 py-1.5 rounded-xl bg-blue-50 text-[#2563EB] hover:bg-blue-100 font-bold text-xs transition cursor-pointer"
                     >
                       Hiển thị tất cả đơn hàng
                     </button>
@@ -179,7 +179,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
               <tr *ngFor="let ord of filteredOrders()" class="hover:bg-giftory-canvas/60 transition">
                 <!-- Mã Đơn & Thời gian chờ xác nhận -->
                 <td class="py-3.5 px-3">
-                  <span class="font-mono font-bold text-[#7C3AED] block text-sm">#{{ ord.orderCode }}</span>
+                  <span class="font-mono font-bold text-[#2563EB] block text-sm">#{{ ord.orderCode }}</span>
                   <span class="text-[10px] text-giftory-ink/50 block">{{ ord.createdAt | date:'HH:mm dd/MM/yyyy' }}</span>
 
                   <!-- Wait timer badge if awaiting confirmation -->
@@ -203,7 +203,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
                   <div class="space-y-1 max-w-xs">
                     <div *ngFor="let item of ord.items" class="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-slate-50 border border-slate-100 text-[11px]">
                       <div class="flex items-center gap-1.5 truncate">
-                        <span *ngIf="item.isCustom" class="px-1.5 py-0.2 rounded bg-purple-100 text-[#7C3AED] font-bold text-[9px] shrink-0">Custom</span>
+                        <span *ngIf="item.isCustom" class="px-1.5 py-0.2 rounded bg-blue-100 text-[#2563EB] font-bold text-[9px] shrink-0">Custom</span>
                         <span *ngIf="!item.isCustom" class="px-1.5 py-0.2 rounded bg-blue-100 text-blue-700 font-bold text-[9px] shrink-0">Ready-made</span>
                         <span class="truncate font-medium text-slate-800">{{ item.productName || item.name }} (x{{ item.quantity }})</span>
                       </div>
@@ -230,7 +230,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
                   <span [ngClass]="getOrderStatusBadge(ord.orderStatus)" class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase inline-block">
                     {{ getOrderStatusText(ord.orderStatus) }}
                   </span>
-                  <span *ngIf="ord.isPackaged" class="text-[9px] font-bold text-purple-600 block mt-1">
+                  <span *ngIf="ord.isPackaged" class="text-[9px] font-bold text-blue-600 block mt-1">
                     ✓ Đã đóng gói (BR-09)
                   </span>
                 </td>
@@ -246,7 +246,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
 
                 <!-- Nút thao tác -->
                 <td class="py-3.5 px-3 text-right">
-                  <button (click)="openProcessModal(ord)" class="px-3.5 py-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1 ml-auto cursor-pointer">
+                  <button (click)="openProcessModal(ord)" class="px-3.5 py-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1 ml-auto cursor-pointer">
                     <span class="material-symbols-outlined text-sm">tune</span>
                     Xử Lý BP-04
                   </button>
@@ -266,11 +266,11 @@ import { Order, OrderItemDetail } from '../../../core/models';
           <!-- Top Modal Bar -->
           <div class="flex items-center justify-between border-b border-giftory-border/50 pb-4">
             <div class="flex items-center gap-3">
-              <span class="font-mono font-black text-xl text-[#7C3AED]">#{{ ord.orderCode }}</span>
+              <span class="font-mono font-black text-xl text-[#2563EB]">#{{ ord.orderCode }}</span>
               <span [ngClass]="getOrderStatusBadge(ord.orderStatus)" class="px-3 py-1 rounded-full text-xs font-bold uppercase">
                 {{ getOrderStatusText(ord.orderStatus) }}
               </span>
-              <span *ngIf="ord.isPackaged" class="px-2.5 py-0.5 rounded-full bg-purple-100 text-[#7C3AED] text-xs font-bold">
+              <span *ngIf="ord.isPackaged" class="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#2563EB] text-xs font-bold">
                 Đã Đóng Hộp Quà
               </span>
             </div>
@@ -303,10 +303,10 @@ import { Order, OrderItemDetail } from '../../../core/models';
 
           <!-- ========================================================== -->
           @if (ord.greetingCard; as card) {
-            <section class="p-5 rounded-2xl border border-purple-200 bg-purple-50/40 space-y-3">
+            <section class="p-5 rounded-2xl border border-blue-200 bg-blue-50/40 space-y-3">
               <div class="flex flex-wrap items-center justify-between gap-3">
-                <div><h3 class="font-bold text-sm text-purple-900">Thiệp in kèm gói quà · {{ card.templateName }}</h3><p class="text-xs text-slate-500 mt-1">Kiểm tra lời chúc, in thiệp và cho vào hộp trước khi đóng gói.</p></div>
-                <a [routerLink]="['/admin/orders', ord.orderCode, 'greeting-card']" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-700 text-white font-bold text-xs"><span class="material-symbols-outlined text-base" aria-hidden="true">print</span>Mở bản in thiệp</a>
+                <div><h3 class="font-bold text-sm text-blue-900">Thiệp in kèm gói quà · {{ card.templateName }}</h3><p class="text-xs text-slate-500 mt-1">Kiểm tra lời chúc, in thiệp và cho vào hộp trước khi đóng gói.</p></div>
+                <a [routerLink]="['/admin/orders', ord.orderCode, 'greeting-card']" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-700 text-white font-bold text-xs"><span class="material-symbols-outlined text-base" aria-hidden="true">print</span>Mở bản in thiệp</a>
               </div>
               <app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" />
             </section>
@@ -348,7 +348,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
               <div *ngIf="ord.orderStatus === 'AWAITING_CONFIRMATION' || ord.orderStatus === 'PENDING'" class="flex items-center gap-2 shrink-0">
                 <button
                   (click)="handleConfirmOrder(ord)"
-                  class="px-5 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl text-xs font-bold transition shadow flex items-center gap-1.5 cursor-pointer"
+                  class="px-5 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs font-bold transition shadow flex items-center gap-1.5 cursor-pointer"
                 >
                   <span class="material-symbols-outlined text-sm">task_alt</span>
                   Xác Nhận Đơn Hàng (US-04.01)
@@ -360,10 +360,10 @@ import { Order, OrderItemDetail } from '../../../core/models';
           <!-- ========================================================== -->
           <!-- STEP 2: CHUẨN BỊ SẢN PHẨM: READY-MADE & CUSTOM GIFT (US-04.02, US-04.03, BR-05, BR-06, BR-07, BR-08) -->
           <!-- ========================================================== -->
-          <div class="p-5 rounded-2xl border transition" [ngClass]="ord.orderStatus === 'CONFIRMED' && !ord.isPackaged ? 'bg-purple-50/40 border-purple-300 ring-2 ring-purple-100' : 'bg-slate-50/50 border-slate-200'">
+          <div class="p-5 rounded-2xl border transition" [ngClass]="ord.orderStatus === 'CONFIRMED' && !ord.isPackaged ? 'bg-blue-50/40 border-blue-300 ring-2 ring-blue-100' : 'bg-slate-50/50 border-slate-200'">
             <div class="flex items-center justify-between pb-3 border-b border-slate-200/60">
               <div class="flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs" [ngClass]="isAllItemsReady(ord) ? 'bg-emerald-500 text-white' : 'bg-[#7C3AED] text-white'">
+                <span class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs" [ngClass]="isAllItemsReady(ord) ? 'bg-emerald-500 text-white' : 'bg-[#2563EB] text-white'">
                   2
                 </span>
                 <div>
@@ -387,7 +387,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
                   <img [src]="item.productImage || item.image || 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=200'" class="w-12 h-12 rounded-xl object-cover border border-slate-100 shrink-0" />
                   <div>
                     <div class="flex items-center gap-2">
-                      <span *ngIf="item.isCustom" class="px-2 py-0.5 rounded bg-purple-100 text-[#7C3AED] font-extrabold text-[10px] uppercase">Custom Gift (Xưởng)</span>
+                      <span *ngIf="item.isCustom" class="px-2 py-0.5 rounded bg-blue-100 text-[#2563EB] font-extrabold text-[10px] uppercase">Custom Gift (Xưởng)</span>
                       <span *ngIf="!item.isCustom" class="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-extrabold text-[10px] uppercase">Ready-made Gift (Có sẵn)</span>
                       <span class="font-bold text-slate-900 text-xs">{{ item.productName || item.name }}</span>
                     </div>
@@ -395,7 +395,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
                     <span class="text-[11px] text-slate-500 block mt-0.5">Phân loại: {{ item.variantName || 'Tiêu chuẩn' }} • SL: {{ item.quantity }}</span>
 
                     <!-- Custom details highlight if bespoke -->
-                    <div *ngIf="item.isCustom && item.customDetails" class="mt-1 flex items-center gap-2 text-[11px] text-[#7C3AED] bg-purple-50/80 px-2 py-0.5 rounded-md border border-purple-100">
+                    <div *ngIf="item.isCustom && item.customDetails" class="mt-1 flex items-center gap-2 text-[11px] text-[#2563EB] bg-blue-50/80 px-2 py-0.5 rounded-md border border-blue-100">
                       <span class="material-symbols-outlined text-xs">palette</span>
                       <span class="truncate">Nội dung khắc: "{{ item.customDetails.frontMessage || item.customDetails.customText || 'Theo cấu hình' }}" (Font: {{ item.customDetails.fontFamily || 'Serif' }})</span>
                     </div>
@@ -446,7 +446,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
                       *ngIf="item.status === 'PENDING' || item.status === 'QC_FAILED'"
                       [disabled]="ord.orderStatus === 'AWAITING_CONFIRMATION' || ord.orderStatus === 'PENDING'"
                       (click)="handleStartProduction(ord, item)"
-                      class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                      class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
                     >
                       <span class="material-symbols-outlined text-xs">handyman</span>
                       {{ item.status === 'QC_FAILED' ? 'Gia Công Lại (EF1)' : 'Bắt Đầu Sản Xuất' }}
@@ -498,7 +498,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
                   <button
                     [disabled]="!isAllItemsReady(ord) || ord.orderStatus === 'AWAITING_CONFIRMATION' || ord.orderStatus === 'PENDING'"
                     (click)="handlePackageOrder(ord)"
-                    class="w-full mt-2 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-40 text-white font-bold rounded-xl text-xs transition shadow flex items-center justify-center gap-1 cursor-pointer"
+                    class="w-full mt-2 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-40 text-white font-bold rounded-xl text-xs transition shadow flex items-center justify-center gap-1 cursor-pointer"
                   >
                     <span class="material-symbols-outlined text-sm">inventory_2</span>
                     Đóng Gói Đơn Hàng (US-04.04, BR-09)
@@ -568,7 +568,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
           <!-- ========================================================== -->
           <!-- STEP 5 & 6: DELIVERY SERVICE & KẾT QUẢ GIAO HÀNG (US-04.05, US-04.06, US-04.07, BR-11 -> BR-16) -->
           <!-- ========================================================== -->
-          <div *ngIf="ord.orderStatus === 'IN_TRANSIT' || ord.orderStatus === 'DELIVERED' || ord.fulfillmentStatus === 'RETURNING' || ord.fulfillmentStatus === 'RETURNED_RECEIVED' || ord.orderStatus === 'RETURNED_BP06'" class="p-5 bg-gradient-to-br from-slate-50 to-purple-50/30 rounded-2xl border border-slate-200 space-y-4">
+          <div *ngIf="ord.orderStatus === 'IN_TRANSIT' || ord.orderStatus === 'DELIVERED' || ord.fulfillmentStatus === 'RETURNING' || ord.fulfillmentStatus === 'RETURNED_RECEIVED' || ord.orderStatus === 'RETURNED_BP06'" class="p-5 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-2xl border border-slate-200 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-200">
               <div class="flex items-center gap-2">
                 <span class="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs">
@@ -649,13 +649,13 @@ import { Order, OrderItemDetail } from '../../../core/models';
                 <button
                   *ngIf="ord.fulfillmentStatus === 'RETURNED_RECEIVED'"
                   (click)="openTransferBp06Modal(ord)"
-                  class="px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs transition shadow flex items-center gap-1 cursor-pointer"
+                  class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl text-xs transition shadow flex items-center gap-1 cursor-pointer"
                 >
                   <span class="material-symbols-outlined text-sm">forward</span>
                   Chuyển Thông Tin Sang BP-06 & Kết Thúc BP-04 (BR-16)
                 </button>
 
-                <div *ngIf="ord.orderStatus === 'RETURNED_BP06'" class="text-xs font-bold text-purple-700 flex items-center gap-1">
+                <div *ngIf="ord.orderStatus === 'RETURNED_BP06'" class="text-xs font-bold text-blue-700 flex items-center gap-1">
                   <span class="material-symbols-outlined text-sm">verified</span>
                   Đã chuyển giao hồ sơ sang quy trình BP-06. Quy trình BP-04 kết thúc!
                 </div>
@@ -717,7 +717,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
         <div class="bg-white rounded-3xl p-6 max-w-lg w-full border border-giftory-border shadow-2xl space-y-4 animate-fade-in">
           <div class="flex items-center justify-between border-b pb-3">
             <div>
-              <span class="text-[10px] font-bold text-[#7C3AED] uppercase">US-04.03 • BR-07</span>
+              <span class="text-[10px] font-bold text-[#2563EB] uppercase">US-04.03 • BR-07</span>
               <h3 class="text-sm font-bold text-slate-900">Truy Xuất Cấu Hình Sản Phẩm Custom</h3>
             </div>
             <button (click)="selectedCustomItem.set(null)" class="text-slate-400 hover:text-slate-700">
@@ -726,7 +726,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
           </div>
 
           <div class="space-y-3 text-xs">
-            <div class="flex items-center gap-3 p-3 bg-purple-50 rounded-xl border border-purple-100">
+            <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
               <img [src]="cItem.productImage || cItem.image || 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=200'" class="w-14 h-14 rounded-lg object-cover" />
               <div>
                 <span class="font-bold text-slate-900 block text-sm">{{ cItem.productName || cItem.name }}</span>
@@ -739,7 +739,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
               <div class="grid grid-cols-2 gap-2 text-[11px]">
                 <div>
                   <span class="text-slate-400 block">Nội dung khắc mặt trước:</span>
-                  <span class="font-bold text-[#7C3AED] block">{{ cItem.customDetails?.frontMessage || cItem.customDetails?.customText || 'Theo mẫu thiết kế' }}</span>
+                  <span class="font-bold text-[#2563EB] block">{{ cItem.customDetails?.frontMessage || cItem.customDetails?.customText || 'Theo mẫu thiết kế' }}</span>
                 </div>
                 <div>
                   <span class="text-slate-400 block">Nội dung khắc mặt sau:</span>
@@ -758,7 +758,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
           </div>
 
           <div class="flex justify-end pt-2 border-t">
-            <button (click)="selectedCustomItem.set(null)" class="px-5 py-2 bg-[#7C3AED] text-white rounded-xl text-xs font-bold">
+            <button (click)="selectedCustomItem.set(null)" class="px-5 py-2 bg-[#2563EB] text-white rounded-xl text-xs font-bold">
               Đã Xem Xong
             </button>
           </div>
@@ -824,7 +824,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
             <button (click)="qcModalItem.set(null)" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">
               Hủy
             </button>
-            <button (click)="submitQcResult()" class="px-5 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl text-xs font-bold">
+            <button (click)="submitQcResult()" class="px-5 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs font-bold">
               Lưu Kết Quả QC
             </button>
           </div>
@@ -867,11 +867,11 @@ import { Order, OrderItemDetail } from '../../../core/models';
             <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
               <label class="font-bold text-slate-700 block">Quyết định xử lý tiếp theo:</label>
               <label class="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="allowRetry" [value]="true" [(ngModel)]="deliveryAllowRetry" class="text-[#7C3AED]" />
+                <input type="radio" name="allowRetry" [value]="true" [(ngModel)]="deliveryAllowRetry" class="text-[#2563EB]" />
                 <span class="text-slate-800 font-semibold">Được phép giao lại (BR-14) - Giữ đơn "In transit"</span>
               </label>
               <label class="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="allowRetry" [value]="false" [(ngModel)]="deliveryAllowRetry" class="text-[#7C3AED]" />
+                <input type="radio" name="allowRetry" [value]="false" [(ngModel)]="deliveryAllowRetry" class="text-[#2563EB]" />
                 <span class="text-rose-700 font-semibold">Không được phép giao lại (BR-15) - Trả hàng về Giftory</span>
               </label>
             </div>
@@ -895,7 +895,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
         <div class="bg-white rounded-3xl p-6 max-w-md w-full border border-giftory-border shadow-2xl space-y-4 animate-fade-in">
           <div class="flex items-center justify-between border-b pb-3">
             <div>
-              <span class="text-[10px] font-bold text-purple-700 uppercase">US-04.07 • BR-16</span>
+              <span class="text-[10px] font-bold text-blue-700 uppercase">US-04.07 • BR-16</span>
               <h3 class="text-sm font-bold text-slate-900">Chuyển Hồ Sơ Đơn Hàng Sang BP-06</h3>
             </div>
             <button (click)="transferBp06ModalOpen.set(false)" class="text-slate-400 hover:text-slate-700">
@@ -923,7 +923,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
             <button (click)="transferBp06ModalOpen.set(false)" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">
               Hủy
             </button>
-            <button (click)="submitTransferBp06()" class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold">
+            <button (click)="submitTransferBp06()" class="px-5 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold">
               Chuyển Sang BP-06 (Kết thúc BP-04)
             </button>
           </div>
@@ -1318,7 +1318,7 @@ export class AdminOrdersComponent implements OnInit {
       case 'PENDING': return 'bg-amber-100 text-amber-800';
       case 'RETURNED_BP06': return 'bg-rose-100 text-rose-800';
       case 'CANCELLED': return 'bg-slate-200 text-slate-700';
-      default: return 'bg-purple-100 text-purple-800';
+      default: return 'bg-blue-100 text-blue-800';
     }
   }
 
@@ -1340,7 +1340,7 @@ export class AdminOrdersComponent implements OnInit {
     switch (item.status) {
       case 'PREPARED':
       case 'QC_PASSED': return 'bg-emerald-100 text-emerald-800';
-      case 'IN_PRODUCTION': return 'bg-purple-100 text-purple-800';
+      case 'IN_PRODUCTION': return 'bg-blue-100 text-blue-800';
       case 'QC_FAILED': return 'bg-rose-100 text-rose-800';
       default: return 'bg-slate-100 text-slate-700';
     }

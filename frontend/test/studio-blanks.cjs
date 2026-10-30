@@ -84,11 +84,16 @@ pricing.selectTemplate({ _id: 'laser-bottle', price: 250000, salePrice: 220000, 
 assert.equal(pricing.isFormInvalid(), false);
 assert.equal(pricing.finalProductPrice(), 220000);
 assert.equal(pricing.depositPrice(), 110000);
-pricing.cartService = { addItem(id, quantity, variant, details) {
+pricing.cartService = { addItem(productOrId, quantity, variant, details) {
+  const isObject = typeof productOrId === 'object' && productOrId !== null;
+  const id = isObject ? productOrId.productId : productOrId;
+  const q = isObject ? productOrId.quantity : quantity;
+  const v = isObject ? productOrId.variant : variant;
+  const d = isObject ? productOrId.customDetails : details;
   assert.equal(id, 'laser-bottle');
-  assert.equal(quantity, 1);
-  assert.equal(variant, undefined, 'Studio must not select a sales variant');
-  assert.equal(details.customFee, 0, 'explicit free customization must survive the cart payload');
+  assert.equal(q, 1);
+  assert.equal(v, undefined, 'Studio must not select a sales variant');
+  assert.equal(d.customFee, 0, 'explicit free customization must survive the cart payload');
   return { subscribe() {} };
 } };
 pricing.onPrimaryActionClick();

@@ -11,7 +11,7 @@ import { environment } from '../../../environments/environment';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="max-w-xl mx-auto my-12 p-6 sm:p-10 bg-white border border-purple-100 rounded-3xl text-center space-y-5">
+    <div class="max-w-xl mx-auto my-12 p-6 sm:p-10 bg-white border border-blue-100 rounded-3xl text-center space-y-5">
       @if (loading()) {
         <p role="status" class="text-slate-500">Đang kiểm tra kết quả thanh toán…</p>
       } @else if (paid()) {
@@ -21,17 +21,17 @@ import { environment } from '../../../environments/environment';
           <p class="text-xs font-semibold text-amber-800 bg-amber-50 rounded-xl p-3">Kết quả mô phỏng cho đồ án • Không có giao dịch ngân hàng thực</p>
         }
         <p class="text-slate-600">{{ order()?.paymentStatus === 'PARTIALLY_PAID_DEPOSIT_50' ? 'Đã ghi nhận khoản cọc cho sản phẩm Custom. Phần còn lại thanh toán khi nhận hàng.' : 'Đã ghi nhận thanh toán 100% cho đơn hàng.' }}</p>
-        <p class="font-mono font-bold text-purple-700">#{{ order()?.orderCode }}</p>
+        <p class="font-mono font-bold text-blue-700">#{{ order()?.orderCode }}</p>
         <p class="text-xl font-bold">{{ order()?.pricing?.depositAmount | number:'1.0-0' }}đ</p>
         @if (order()?.paymentStatus === 'PARTIALLY_PAID_DEPOSIT_50') {
           <p class="text-sm text-slate-500">Còn lại thanh toán khi nhận hàng: {{ order()?.pricing?.remainingCodAmount | number:'1.0-0' }}đ</p>
         }
-        <a [routerLink]="['/orders', order()?.orderCode]" [state]="{ lookupPhone: lookupPhone }" class="inline-block px-6 py-3 rounded-xl bg-purple-700 text-white font-semibold">Xem lộ trình đơn hàng</a>
+        <a [routerLink]="['/orders', order()?.orderCode]" [state]="{ lookupPhone: lookupPhone }" class="inline-block px-6 py-3 rounded-xl bg-blue-700 text-white font-semibold">Xem lộ trình đơn hàng</a>
       } @else {
         <h1 class="text-xl font-bold text-slate-900">Chưa xác nhận thanh toán</h1>
         <p role="alert" class="text-sm text-slate-600">{{ error() || 'Đơn hàng chưa có xác nhận thanh toán thành công từ hệ thống.' }}</p>
-        <button type="button" (click)="loadResult()" class="px-5 py-3 rounded-xl bg-purple-700 text-white font-semibold">Kiểm tra lại</button>
-        <a routerLink="/orders" class="block text-sm text-purple-700 underline">Tra cứu đơn hàng</a>
+        <button type="button" (click)="loadResult()" class="px-5 py-3 rounded-xl bg-blue-700 text-white font-semibold">Kiểm tra lại</button>
+        <a routerLink="/orders" class="block text-sm text-blue-700 underline">Tra cứu đơn hàng</a>
       }
     </div>
   `,

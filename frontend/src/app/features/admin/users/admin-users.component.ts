@@ -67,7 +67,7 @@ import { User } from '../../../core/models';
                   <span class="text-[10px] text-giftory-ink/60 font-mono">{{ u.phone || 'Chưa cập nhật SĐT' }}</span>
                 </td>
                 <td class="py-3 px-4">
-                  <span [ngClass]="u.role === 'ADMIN' ? 'bg-purple-100 text-giftory-primary font-bold' : 'bg-gray-100 text-gray-700'" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono">
+                  <span [ngClass]="u.role === 'ADMIN' ? 'bg-blue-100 text-giftory-primary font-bold' : 'bg-gray-100 text-gray-700'" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono">
                     {{ u.role }}
                   </span>
                 </td>

@@ -24,7 +24,7 @@ import { User, Order } from '../../core/models';
         <!-- Left: Member Card & Loyalty Badge -->
         <div class="space-y-6">
           <!-- Member VIP Card (Stitch Screen 8972624848182978481) -->
-          <div class="bg-gradient-to-br from-[#2D1B69] via-giftory-primary to-[#7C3AED] rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+          <div class="bg-gradient-to-br from-[#2D1B69] via-giftory-primary to-[#2563EB] rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
             <!-- Decorative circle -->
             <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
             

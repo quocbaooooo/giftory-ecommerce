@@ -26,7 +26,7 @@ import { Category } from '../../../core/models';
       <!-- Page Header -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-giftory-border/60 pb-6">
         <div>
-          <span class="text-xs font-bold tracking-widest text-[#7C3AED] uppercase">Cấu Trúc Cửa Hàng & Phân Loại Quà</span>
+          <span class="text-xs font-bold tracking-widest text-[#2563EB] uppercase">Cấu Trúc Cửa Hàng & Phân Loại Quà</span>
           <h1 class="text-2xl md:text-3xl font-display font-black text-giftory-ink mt-1">Quản Lý Danh Mục Sản Phẩm</h1>
           <p class="text-xs text-giftory-ink/60 mt-1">
             Thiết lập biểu tượng, emoji/ảnh icon, thứ tự ưu tiên và trạng thái hiển thị cho từng nhóm quà tặng
@@ -36,7 +36,7 @@ import { Category } from '../../../core/models';
         <div class="flex items-center gap-3">
           <button
             (click)="openCreateModal()"
-            class="px-5 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer active:scale-95"
+            class="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer active:scale-95"
           >
             <span class="material-symbols-outlined text-base">add_circle</span>
             Thêm Danh Mục Mới
@@ -44,25 +44,25 @@ import { Category } from '../../../core/models';
         </div>
       </div>
 
-      <section class="rounded-3xl border border-purple-200 bg-white p-5 space-y-4" aria-labelledby="all-categories-icon-title">
+      <section class="rounded-3xl border border-blue-200 bg-white p-5 space-y-4" aria-labelledby="all-categories-icon-title">
         <div>
           <h2 id="all-categories-icon-title" class="font-bold text-sm text-giftory-ink">Biểu tượng “Tất cả danh mục”</h2>
           <p class="text-xs text-slate-500 mt-1">Đổi icon của nút xem toàn bộ sản phẩm trên cửa hàng. Nhập emoji, URL ảnh hoặc tải ảnh từ máy tính.</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
-          <span class="inline-flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-xs font-semibold text-white shrink-0">
+          <span class="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white shrink-0">
             @if (isAllCategoriesIconImage(allCategoriesIcon)) {
               <img [src]="allCategoriesIcon" alt="Xem trước biểu tượng" class="w-5 h-5 object-contain" />
             } @else { <span aria-hidden="true">{{ allCategoriesIcon || '🎁' }}</span> }
             Tất cả danh mục
           </span>
-          <input aria-label="Biểu tượng Tất cả danh mục" type="text" [(ngModel)]="allCategoriesIcon" placeholder="🎁 hoặc URL ảnh" [disabled]="!displaySettingsReady() || displaySettingsSaving() || displayIconUploading()" class="min-w-0 flex-1 basis-48 rounded-xl border border-purple-200 px-3 py-2 text-xs" />
-          <label class="text-xs font-bold text-purple-600 cursor-pointer">
+          <input aria-label="Biểu tượng Tất cả danh mục" type="text" [(ngModel)]="allCategoriesIcon" placeholder="🎁 hoặc URL ảnh" [disabled]="!displaySettingsReady() || displaySettingsSaving() || displayIconUploading()" class="min-w-0 flex-1 basis-48 rounded-xl border border-blue-200 px-3 py-2 text-xs" />
+          <label class="text-xs font-bold text-blue-600 cursor-pointer">
             {{ displayIconUploading() ? 'Đang tải ảnh…' : 'Tải ảnh icon' }}
             <input type="file" accept="image/*" (change)="uploadAllCategoriesIcon($event)" [disabled]="!displaySettingsReady() || displaySettingsSaving() || displayIconUploading()" class="hidden" />
           </label>
           <button type="button" (click)="allCategoriesIcon = '🎁'" [disabled]="!displaySettingsReady() || displaySettingsSaving() || displayIconUploading()" class="text-xs text-slate-500 disabled:opacity-50">Mặc định</button>
-          <button type="button" (click)="saveDisplaySettings()" [disabled]="!displaySettingsReady() || displaySettingsSaving() || displayIconUploading() || !allCategoriesIcon.trim()" class="rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">
+          <button type="button" (click)="saveDisplaySettings()" [disabled]="!displaySettingsReady() || displaySettingsSaving() || displayIconUploading() || !allCategoriesIcon.trim()" class="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">
             {{ displaySettingsSaving() ? 'Đang lưu…' : 'Lưu biểu tượng' }}
           </button>
         </div>
@@ -76,7 +76,7 @@ import { Category } from '../../../core/models';
         <div class="bg-white p-5 rounded-3xl border border-giftory-border shadow-xs">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-giftory-ink/60">Tổng Danh Mục</span>
-            <div class="w-8 h-8 rounded-xl bg-purple-100 text-[#7C3AED] flex items-center justify-center">
+            <div class="w-8 h-8 rounded-xl bg-blue-100 text-[#2563EB] flex items-center justify-center">
               <span class="material-symbols-outlined text-base">category</span>
             </div>
           </div>
@@ -126,7 +126,7 @@ import { Category } from '../../../core/models';
             <button
               (click)="filterStatus.set('ALL')"
               class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
-              [ngClass]="filterStatus() === 'ALL' ? 'bg-[#7C3AED] text-white shadow-xs' : 'bg-[#F4F0FA] text-giftory-ink/70 hover:bg-[#E9E3F5]'"
+              [ngClass]="filterStatus() === 'ALL' ? 'bg-[#2563EB] text-white shadow-xs' : 'bg-[#F4F0FA] text-giftory-ink/70 hover:bg-[#E9E3F5]'"
             >
               Tất cả ({{ categories().length }})
             </button>
@@ -153,14 +153,14 @@ import { Category } from '../../../core/models';
                 type="text"
                 [(ngModel)]="searchQuery"
                 placeholder="Tìm danh mục, slug, mô tả..."
-                class="w-full pl-9 pr-4 py-1.5 bg-[#F4F0FA]/60 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-xs font-medium"
+                class="w-full pl-9 pr-4 py-1.5 bg-[#F4F0FA]/60 rounded-xl border border-giftory-border focus:outline-none focus:border-[#2563EB] text-xs font-medium"
               />
             </div>
 
             <button
               (click)="loadCategories()"
               title="Tải lại danh sách"
-              class="w-8 h-8 rounded-xl border border-giftory-border bg-white flex items-center justify-center text-giftory-ink/70 hover:text-[#7C3AED] hover:border-[#7C3AED] transition cursor-pointer"
+              class="w-8 h-8 rounded-xl border border-giftory-border bg-white flex items-center justify-center text-giftory-ink/70 hover:text-[#2563EB] hover:border-[#2563EB] transition cursor-pointer"
             >
               <span class="material-symbols-outlined text-base" [class.animate-spin]="isLoading()">refresh</span>
             </button>
@@ -186,7 +186,7 @@ import { Category } from '../../../core/models';
                 <tr>
                   <td colspan="7" class="py-12 text-center text-giftory-ink/50">
                     <div class="flex flex-col items-center justify-center gap-2">
-                      <span class="material-symbols-outlined animate-spin text-2xl text-[#7C3AED]">progress_activity</span>
+                      <span class="material-symbols-outlined animate-spin text-2xl text-[#2563EB]">progress_activity</span>
                       <span>Đang tải danh mục sản phẩm...</span>
                     </div>
                   </td>
@@ -256,7 +256,7 @@ import { Category } from '../../../core/models';
                     <td class="py-3 px-3 text-center">
                       <span
                         class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold"
-                        [ngClass]="(cat.productCount ?? 0) > 0 ? 'bg-purple-100 text-[#7C3AED]' : 'bg-slate-100 text-slate-400'"
+                        [ngClass]="(cat.productCount ?? 0) > 0 ? 'bg-blue-100 text-[#2563EB]' : 'bg-slate-100 text-slate-400'"
                       >
                         <span class="material-symbols-outlined text-[13px]">inventory_2</span>
                         {{ cat.productCount ?? 0 }} món
@@ -283,7 +283,7 @@ import { Category } from '../../../core/models';
                         <button
                           (click)="openEditModal(cat)"
                           title="Chỉnh sửa danh mục"
-                          class="p-1.5 rounded-lg text-slate-600 hover:text-[#7C3AED] hover:bg-[#F4F0FA] transition cursor-pointer"
+                          class="p-1.5 rounded-lg text-slate-600 hover:text-[#2563EB] hover:bg-[#F4F0FA] transition cursor-pointer"
                         >
                           <span class="material-symbols-outlined text-base">edit</span>
                         </button>
@@ -311,7 +311,7 @@ import { Category } from '../../../core/models';
             <!-- Modal Header -->
             <div class="px-6 py-4 border-b border-giftory-border flex items-center justify-between bg-[#FAF7FC]">
               <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-[#7C3AED] text-xl">
+                <span class="material-symbols-outlined text-[#2563EB] text-xl">
                   {{ isEditMode() ? 'edit_note' : 'add_circle' }}
                 </span>
                 <h3 class="font-display font-black text-giftory-ink text-base">
@@ -339,7 +339,7 @@ import { Category } from '../../../core/models';
                     formControlName="name"
                     (input)="onNameChange()"
                     placeholder="VD: Bình Giữ Nhiệt & Cốc Sứ"
-                    class="w-full px-3.5 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-xs font-semibold"
+                    class="w-full px-3.5 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#2563EB] text-xs font-semibold"
                   />
                   @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
                     <span class="text-[10px] text-rose-500 font-medium">Vui lòng nhập tên danh mục</span>
@@ -354,7 +354,7 @@ import { Category } from '../../../core/models';
                     <button
                       type="button"
                       (click)="autoGenerateSlug = !autoGenerateSlug"
-                      class="text-[10px] text-[#7C3AED] font-bold hover:underline cursor-pointer"
+                      class="text-[10px] text-[#2563EB] font-bold hover:underline cursor-pointer"
                     >
                       {{ autoGenerateSlug ? 'Khóa tự động' : 'Tự động theo tên' }}
                     </button>
@@ -364,7 +364,7 @@ import { Category } from '../../../core/models';
                     formControlName="slug"
                     [readonly]="autoGenerateSlug"
                     placeholder="VD: binh-giu-nhiet-coc-su"
-                    class="w-full px-3.5 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-xs font-mono"
+                    class="w-full px-3.5 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#2563EB] text-xs font-mono"
                     [ngClass]="autoGenerateSlug ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'"
                   />
                 </div>
@@ -378,7 +378,7 @@ import { Category } from '../../../core/models';
                     <label class="text-[11px] font-bold text-giftory-ink uppercase tracking-wider block">
                       Biểu tượng (emoji/ảnh)
                     </label>
-                    <label for="emojiFileInput" class="text-[10px] text-[#7C3AED] font-bold hover:underline cursor-pointer flex items-center gap-0.5">
+                    <label for="emojiFileInput" class="text-[10px] text-[#2563EB] font-bold hover:underline cursor-pointer flex items-center gap-0.5">
                       <span class="material-symbols-outlined text-[13px]">upload_file</span>
                       <span>{{ isUploadingEmoji() ? 'Đang tải...' : 'Tải từ máy' }}</span>
                     </label>
@@ -400,7 +400,7 @@ import { Category } from '../../../core/models';
                       </div>
                       <label
                         for="emojiFileInput"
-                        class="p-1 rounded-lg text-[#7C3AED] hover:bg-purple-50 cursor-pointer shrink-0"
+                        class="p-1 rounded-lg text-[#2563EB] hover:bg-blue-50 cursor-pointer shrink-0"
                         title="Đổi ảnh khác"
                       >
                         <span class="material-symbols-outlined text-sm">cached</span>
@@ -420,11 +420,11 @@ import { Category } from '../../../core/models';
                         type="text"
                         formControlName="emoji"
                         placeholder="🎁"
-                        class="w-full text-center py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-lg h-[38px]"
+                        class="w-full text-center py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#2563EB] text-lg h-[38px]"
                       />
                       <label
                         for="emojiFileInput"
-                        class="absolute right-2 p-1 rounded-lg text-slate-400 hover:text-[#7C3AED] hover:bg-purple-50 transition cursor-pointer"
+                        class="absolute right-2 p-1 rounded-lg text-slate-400 hover:text-[#2563EB] hover:bg-blue-50 transition cursor-pointer"
                         title="Tải ảnh emoji/icon từ máy tính"
                       >
                         <span class="material-symbols-outlined text-base">image</span>
@@ -432,7 +432,7 @@ import { Category } from '../../../core/models';
                     </div>
                   }
                   @if (isUploadingEmoji()) {
-                    <div class="flex items-center gap-1 text-[10px] text-[#7C3AED] font-medium">
+                    <div class="flex items-center gap-1 text-[10px] text-[#2563EB] font-medium">
                       <span class="material-symbols-outlined animate-spin text-[12px]">progress_activity</span>
                       <span>Đang tải ảnh icon...</span>
                     </div>
@@ -449,7 +449,7 @@ import { Category } from '../../../core/models';
                     formControlName="order"
                     min="0"
                     placeholder="0"
-                    class="w-full px-3 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-xs font-bold text-center h-[38px]"
+                    class="w-full px-3 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#2563EB] text-xs font-bold text-center h-[38px]"
                   />
                 </div>
               </div>
@@ -463,7 +463,7 @@ import { Category } from '../../../core/models';
                   formControlName="description"
                   rows="2"
                   placeholder="Mô tả phong cách quà tặng và thông điệp gửi gắm..."
-                  class="w-full px-3.5 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-xs resize-none"
+                  class="w-full px-3.5 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#2563EB] text-xs resize-none"
                 ></textarea>
               </div>
 
@@ -477,7 +477,7 @@ import { Category } from '../../../core/models';
                     type="text"
                     formControlName="imageUrl"
                     placeholder="https://... hoặc tải ảnh từ máy tính"
-                    class="flex-1 px-3.5 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#7C3AED] text-xs"
+                    class="flex-1 px-3.5 py-2 rounded-xl border border-giftory-border focus:outline-none focus:border-[#2563EB] text-xs"
                   />
                   <label for="catImageFileInput" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0">
                     <span class="material-symbols-outlined text-sm">upload</span>
@@ -486,7 +486,7 @@ import { Category } from '../../../core/models';
                   <input id="catImageFileInput" type="file" (change)="onUploadImage($event)" accept="image/*" class="hidden" />
                 </div>
                 @if (isUploadingImage()) {
-                  <div class="flex items-center gap-2 text-[10px] text-[#7C3AED] font-bold mt-1">
+                  <div class="flex items-center gap-2 text-[10px] text-[#2563EB] font-bold mt-1">
                     <span class="material-symbols-outlined animate-spin text-xs">progress_activity</span>
                     <span>Đang tải ảnh lên Cloudinary...</span>
                   </div>
@@ -501,13 +501,13 @@ import { Category } from '../../../core/models';
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" formControlName="isActive" class="sr-only peer" />
-                  <div class="w-10 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#7C3AED]"></div>
+                  <div class="w-10 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2563EB]"></div>
                 </label>
               </div>
 
               <!-- Live Preview Card -->
-              <div class="border border-dashed border-[#7C3AED]/40 rounded-2xl p-3 bg-purple-50/40">
-                <span class="text-[10px] font-bold text-[#7C3AED] uppercase tracking-wider block mb-2">
+              <div class="border border-dashed border-[#2563EB]/40 rounded-2xl p-3 bg-blue-50/40">
+                <span class="text-[10px] font-bold text-[#2563EB] uppercase tracking-wider block mb-2">
                   Xem Trước (Live Preview):
                 </span>
                 <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-white border border-giftory-border shadow-xs">
@@ -543,7 +543,7 @@ import { Category } from '../../../core/models';
                 <button
                   type="submit"
                   [disabled]="categoryForm.invalid || isSaving()"
-                  class="px-5 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-50 text-white text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
+                  class="px-5 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
                 >
                   @if (isSaving()) {
                     <span class="material-symbols-outlined animate-spin text-sm">progress_activity</span>

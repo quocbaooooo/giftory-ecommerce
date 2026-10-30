@@ -86,7 +86,7 @@ import { AdminService } from '../../../core/services/admin.service';
         <div class="bg-white rounded-3xl p-6 border border-giftory-border shadow-xs space-y-4">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-giftory-ink/60 uppercase">Mẫu Quà Đang Bán</span>
-            <div class="w-10 h-10 rounded-2xl bg-purple-50 text-giftory-primary flex items-center justify-center">
+            <div class="w-10 h-10 rounded-2xl bg-blue-50 text-giftory-primary flex items-center justify-center">
               <span class="material-symbols-outlined text-xl">inventory_2</span>
             </div>
           </div>

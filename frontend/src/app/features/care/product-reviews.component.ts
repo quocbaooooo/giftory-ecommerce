@@ -7,9 +7,9 @@ import { environment } from '../../../environments/environment';
   standalone: true,
   selector: 'app-product-reviews',
   imports: [CommonModule, RouterModule],
-  template: ` <section class="bg-white border border-purple-100 rounded-3xl p-6 my-8">
+  template: ` <section class="bg-white border border-blue-100 rounded-3xl p-6 my-8">
     <h2 class="text-xl font-bold">Đánh giá từ khách đã mua</h2>
-    <a routerLink="/care" class="text-purple-700">Viết đánh giá sau khi nhận hàng</a>
+    <a routerLink="/care" class="text-blue-700">Viết đánh giá sau khi nhận hàng</a>
     <p role="alert">{{ error() }}</p>
     @for (r of reviews(); track r._id) {
       <article class="border-t py-4 mt-3">
@@ -18,7 +18,7 @@ import { environment } from '../../../environments/environment';
         <small>{{ r.publishedAt | date: 'dd/MM/yyyy' }}</small>
         @for (file of r.attachments; track file) {
           <a
-            class="block text-purple-700"
+            class="block text-blue-700"
             [href]="attachmentUrl(file)"
             target="_blank"
             rel="noopener"
