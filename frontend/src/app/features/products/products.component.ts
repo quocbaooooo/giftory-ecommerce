@@ -93,8 +93,8 @@ import { Product, Category } from '../../core/models';
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         <!-- SIDEBAR MULTI-FACET FILTER (US-PD-02) -->
-        <aside class="lg:col-span-1 space-y-6">
-          <div class="bg-white rounded-3xl p-5 border border-[#BFDBFE]/80 shadow-xs space-y-6">
+        <aside class="lg:col-span-1 space-y-6 lg:sticky lg:top-4 lg:self-start">
+          <div class="bg-white rounded-3xl p-5 border border-[#BFDBFE]/80 shadow-xs space-y-6 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div class="flex items-center justify-between border-b border-blue-50 pb-3">
               <h2 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-2">
                 <span class="material-symbols-outlined text-[18px] text-[#2563EB]">tune</span>

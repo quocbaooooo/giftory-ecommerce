@@ -110,9 +110,10 @@ import { FlashSaleCountdownService } from '../../core/services/flash-sale-countd
         <app-pill-search></app-pill-search>
 
         <!-- Quick Category Pills -->
-        <div class="relative z-10 flex items-center justify-center gap-2.5 mt-6 flex-wrap max-w-5xl px-2">
+        <nav aria-label="Danh mục quà tặng" class="relative z-10 mt-6 w-full max-w-5xl overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div class="flex w-max min-w-full items-center justify-start gap-2.5 whitespace-nowrap">
           @for (cat of categories(); track cat._id) {
-            <a [routerLink]="['/products']" [queryParams]="{ category: cat.slug }" class="group relative hover:z-20 focus-visible:z-20 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#BFDBFE] shadow-sm hover:bg-[#BFDBFE] hover:text-[#2563EB] transition-all text-xs font-semibold text-[#1E1B4B]">
+            <a [routerLink]="['/products']" [queryParams]="{ category: cat.slug }" class="group relative hover:z-20 focus-visible:z-20 inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#BFDBFE] shadow-sm hover:bg-[#BFDBFE] hover:text-[#2563EB] transition-all text-xs font-semibold text-[#1E1B4B]">
               <span class="w-5 h-5 shrink-0 rounded-full bg-[#DBEAFE] text-[#2563EB] flex items-center justify-center text-[11px] overflow-hidden origin-center transition-transform duration-200 ease-out group-hover:scale-150 group-focus-visible:scale-150 motion-reduce:transition-none">
                 @if (cat.emoji && (cat.emoji.startsWith('http') || cat.emoji.startsWith('/') || cat.emoji.startsWith('data:') || cat.emoji.length > 10)) {
                   <img [src]="cat.emoji" [alt]="cat.name" class="w-full h-full object-contain" />
@@ -123,7 +124,9 @@ import { FlashSaleCountdownService } from '../../core/services/flash-sale-countd
               <span>{{ cat.name }}</span>
             </a>
           }
-        </div>
+            <a routerLink="/products" class="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#2563EB] bg-[#2563EB] px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#1D4ED8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">Xem tất cả <span aria-hidden="true">→</span></a>
+          </div>
+        </nav>
       </section>
 
       <!-- BEGIN: Flash Sale Banner & Countdown -->
