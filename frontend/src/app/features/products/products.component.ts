@@ -17,14 +17,14 @@ import { Product, Category } from '../../core/models';
       <!-- Breadcrumb & Header -->
       <div class="mb-6">
         <div class="flex items-center gap-2 text-xs text-slate-500 mb-2">
-          <a routerLink="/" class="hover:text-[#2563EB] transition-colors">Trang chủ</a>
+          <a routerLink="/" class="hover:text-[#800020] transition-colors">Trang chủ</a>
           <span>/</span>
-          <span class="text-[#1E1B4B] font-semibold">Tất cả sản phẩm quà tặng</span>
+          <span class="text-[#2B1A1A] font-semibold">Tất cả sản phẩm quà tặng</span>
         </div>
         
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 class="text-2xl md:text-3xl font-extrabold text-[#1E1B4B] tracking-tight">
+            <h1 class="text-2xl md:text-3xl font-extrabold text-[#2B1A1A] tracking-tight">
               Bộ Sưu Tập Quà Tặng Giftory
             </h1>
             <p class="text-xs md:text-sm text-slate-500 mt-1">
@@ -35,14 +35,14 @@ import { Product, Category } from '../../core/models';
           <!-- Total count & Sort Dropdown -->
           <div class="flex items-center gap-3 self-end md:self-auto flex-wrap">
             <span class="text-xs font-medium text-slate-500">
-              Tìm thấy <strong class="text-[#2563EB]">{{ total() }}</strong> sản phẩm
+              Tìm thấy <strong class="text-[#800020]">{{ total() }}</strong> sản phẩm
             </span>
-            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-[#BFDBFE] shadow-2xs">
-              <span class="material-symbols-outlined text-[16px] text-[#2563EB]">sort</span>
+            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-[#EBD3AE] shadow-2xs">
+              <span class="material-symbols-outlined text-[16px] text-[#800020]">sort</span>
               <select 
                 [(ngModel)]="selectedSort" 
                 (change)="onFilterChange(true)"
-                class="bg-transparent border-none text-xs font-semibold text-[#1E1B4B] focus:outline-none cursor-pointer"
+                class="bg-transparent border-none text-xs font-semibold text-[#2B1A1A] focus:outline-none cursor-pointer"
               >
                 <option value="popular">Bán chạy nhất</option>
                 <option value="newest">Mới nhất</option>
@@ -60,7 +60,7 @@ import { Product, Category } from '../../core/models';
         <button 
           (click)="selectCategory('')"
           class="group relative hover:z-10 focus-visible:z-10 px-4 py-2 rounded-full text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
-          [ngClass]="!selectedCategory ? 'bg-[#2563EB] text-white shadow-md shadow-blue-300' : 'bg-white text-slate-700 border border-[#BFDBFE] hover:bg-blue-50'"
+          [ngClass]="!selectedCategory ? 'bg-[#800020] text-[#FFF5E1] shadow-md shadow-[#800020]/20' : 'bg-white text-slate-700 border border-[#EBD3AE] hover:bg-[#FFF5E1]'"
         >
           <span aria-hidden="true" class="w-4 h-4 shrink-0 inline-flex items-center justify-center origin-center transition-transform duration-200 ease-out group-hover:scale-150 group-focus-visible:scale-150 motion-reduce:transition-none">
             @if (isCategoryIconImage(allCategoriesIcon())) {
@@ -75,7 +75,7 @@ import { Product, Category } from '../../core/models';
           <button 
             (click)="selectCategory(cat.slug)"
             class="group relative hover:z-10 focus-visible:z-10 px-4 py-2 rounded-full text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
-            [ngClass]="selectedCategory === cat.slug ? 'bg-[#2563EB] text-white shadow-md shadow-blue-300' : 'bg-white text-slate-700 border border-[#BFDBFE] hover:bg-blue-50'"
+            [ngClass]="selectedCategory === cat.slug ? 'bg-[#800020] text-[#FFF5E1] shadow-md shadow-[#800020]/20' : 'bg-white text-slate-700 border border-[#EBD3AE] hover:bg-[#FFF5E1]'"
           >
             <span aria-hidden="true" class="w-4 h-4 shrink-0 inline-flex items-center justify-center origin-center transition-transform duration-200 ease-out group-hover:scale-150 group-focus-visible:scale-150 motion-reduce:transition-none">
               @if (cat.emoji && (cat.emoji.startsWith('http') || cat.emoji.startsWith('/') || cat.emoji.startsWith('data:') || cat.emoji.length > 10)) {
@@ -94,10 +94,10 @@ import { Product, Category } from '../../core/models';
         
         <!-- SIDEBAR MULTI-FACET FILTER (US-PD-02) -->
         <aside class="lg:col-span-1 space-y-6 lg:sticky lg:top-4 lg:self-start">
-          <div class="bg-white rounded-3xl p-5 border border-[#BFDBFE]/80 shadow-xs space-y-6 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div class="flex items-center justify-between border-b border-blue-50 pb-3">
-              <h2 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-2">
-                <span class="material-symbols-outlined text-[18px] text-[#2563EB]">tune</span>
+          <div class="bg-white rounded-3xl p-5 border border-[#EBD3AE]/80 shadow-xs space-y-6 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div class="flex items-center justify-between border-b border-[#EBD3AE] pb-3">
+              <h2 class="font-bold text-sm text-[#2B1A1A] flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px] text-[#800020]">tune</span>
                 Bộ Lọc Đa Tiêu Chí
               </h2>
               @if (hasActiveFilters()) {
@@ -115,13 +115,13 @@ import { Product, Category } from '../../core/models';
               <label class="text-xs font-bold text-slate-700 uppercase tracking-wider block">Khoảng Ngân Sách</label>
               <div class="space-y-1.5 text-xs">
                 @for (range of priceRanges; track range.label) {
-                  <label class="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-blue-50/60 cursor-pointer select-none">
+                  <label class="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-[#FFF5E1] cursor-pointer select-none">
                     <input 
                       type="radio" 
                       name="priceRange" 
                       [checked]="isPriceRangeSelected(range.min, range.max)"
                       (change)="selectPriceRange(range.min, range.max)"
-                      class="text-[#2563EB] focus:ring-[#2563EB] accent-[#2563EB]"
+                      class="text-[#800020] focus:ring-[#800020] accent-[#800020]"
                     >
                     <span class="text-slate-700">{{ range.label }}</span>
                   </label>
@@ -138,7 +138,7 @@ import { Product, Category } from '../../core/models';
                     type="button"
                     (click)="toggleOccasion(occ)"
                     class="px-2.5 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer"
-                    [ngClass]="selectedOccasion === occ ? 'bg-[#2563EB] text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-blue-100 hover:text-[#2563EB]'"
+                    [ngClass]="selectedOccasion === occ ? 'bg-[#800020] text-[#FFF5E1] shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-[#FDF0D5] hover:text-[#800020]'"
                   >
                     {{ occ }}
                   </button>
@@ -155,7 +155,7 @@ import { Product, Category } from '../../core/models';
                     type="button"
                     (click)="toggleRecipient(rec)"
                     class="px-2.5 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer"
-                    [ngClass]="selectedRecipient === rec ? 'bg-[#2563EB] text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-blue-100 hover:text-[#2563EB]'"
+                    [ngClass]="selectedRecipient === rec ? 'bg-[#800020] text-[#FFF5E1] shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-[#FDF0D5] hover:text-[#800020]'"
                   >
                     {{ rec }}
                   </button>
@@ -167,12 +167,12 @@ import { Product, Category } from '../../core/models';
             <div class="space-y-2.5">
               <label class="text-xs font-bold text-slate-700 uppercase tracking-wider block">Loại Hình Quà Tặng</label>
               <div class="space-y-2 text-xs">
-                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-blue-50/60 cursor-pointer select-none">
+                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[#FFF5E1] cursor-pointer select-none">
                   <input 
                     type="checkbox" 
                     [(ngModel)]="filterBespoke" 
                     (change)="onFilterChange(true)"
-                    class="w-4 h-4 rounded text-[#2563EB] focus:ring-[#2563EB] accent-[#2563EB]"
+                    class="w-4 h-4 rounded text-[#800020] focus:ring-[#800020] accent-[#800020]"
                   >
                   <span class="text-emerald-700 font-bold flex items-center gap-1">
                     <span class="material-symbols-outlined text-[15px]">palette</span>
@@ -180,12 +180,12 @@ import { Product, Category } from '../../core/models';
                   </span>
                 </label>
 
-                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-blue-50/60 cursor-pointer select-none">
+                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[#FFF5E1] cursor-pointer select-none">
                   <input 
                     type="checkbox" 
                     [(ngModel)]="filterFlashSale" 
                     (change)="onFilterChange(true)"
-                    class="w-4 h-4 rounded text-[#2563EB] focus:ring-[#2563EB] accent-[#2563EB]"
+                    class="w-4 h-4 rounded text-[#800020] focus:ring-[#800020] accent-[#800020]"
                   >
                   <span class="text-rose-600 font-bold flex items-center gap-1">
                     <span class="material-symbols-outlined text-[15px]">bolt</span>
@@ -199,35 +199,35 @@ import { Product, Category } from '../../core/models';
             <div class="space-y-2.5">
               <label class="text-xs font-bold text-slate-700 uppercase tracking-wider block">Đánh Giá</label>
               <div class="space-y-1.5 text-xs">
-                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-blue-50/60 cursor-pointer select-none">
+                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[#FFF5E1] cursor-pointer select-none">
                   <input 
                     type="radio" 
                     name="minRating" 
                     [checked]="!minRating" 
                     (change)="setMinRating(undefined)"
-                    class="text-[#2563EB] focus:ring-[#2563EB] accent-[#2563EB]"
+                    class="text-[#800020] focus:ring-[#800020] accent-[#800020]"
                   >
                   <span class="text-slate-700">Tất cả đánh giá</span>
                 </label>
-                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-blue-50/60 cursor-pointer select-none">
+                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[#FFF5E1] cursor-pointer select-none">
                   <input 
                     type="radio" 
                     name="minRating" 
                     [checked]="minRating === 4" 
                     (change)="setMinRating(4)"
-                    class="text-[#2563EB] focus:ring-[#2563EB] accent-[#2563EB]"
+                    class="text-[#800020] focus:ring-[#800020] accent-[#800020]"
                   >
                   <span class="text-amber-500 font-bold flex items-center gap-1">
                     ★★★★☆ <span class="text-slate-700 font-normal">Từ 4 sao trở lên</span>
                   </span>
                 </label>
-                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-blue-50/60 cursor-pointer select-none">
+                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[#FFF5E1] cursor-pointer select-none">
                   <input 
                     type="radio" 
                     name="minRating" 
                     [checked]="minRating === 5" 
                     (change)="setMinRating(5)"
-                    class="text-[#2563EB] focus:ring-[#2563EB] accent-[#2563EB]"
+                    class="text-[#800020] focus:ring-[#800020] accent-[#800020]"
                   >
                   <span class="text-amber-500 font-bold flex items-center gap-1">
                     ★★★★★ <span class="text-slate-700 font-normal">5 sao tuyệt đối</span>
@@ -243,44 +243,44 @@ import { Product, Category } from '../../core/models';
           
           <!-- Active Filter Tags Bar (US-PD-02.3) -->
           @if (hasActiveFilters()) {
-            <div class="flex items-center gap-2 flex-wrap bg-white/70 backdrop-blur-sm p-3 rounded-2xl border border-blue-100 text-xs">
+            <div class="flex items-center gap-2 flex-wrap bg-white/70 backdrop-blur-sm p-3 rounded-2xl border border-[#EBD3AE] text-xs">
               <span class="text-slate-500 font-medium flex items-center gap-1">
-                <span class="material-symbols-outlined text-[15px] text-[#2563EB]">filter_alt</span>
+                <span class="material-symbols-outlined text-[15px] text-[#800020]">filter_alt</span>
                 Đang lọc:
               </span>
 
               @if (searchKeyword) {
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-100 text-[#2563EB] font-semibold">
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FFF5E1] text-[#800020] border border-[#EBD3AE] font-semibold">
                   Từ khóa: "{{ searchKeyword }}"
-                  <button (click)="removeSearch()" class="hover:text-blue-900 cursor-pointer text-sm">×</button>
+                  <button (click)="removeSearch()" class="hover:text-[#800020] cursor-pointer text-sm">×</button>
                 </span>
               }
 
               @if (selectedCategory) {
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-100 text-[#2563EB] font-semibold">
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FFF5E1] text-[#800020] border border-[#EBD3AE] font-semibold">
                   Danh mục: {{ getCategoryName(selectedCategory) }}
-                  <button (click)="selectCategory('')" class="hover:text-blue-900 cursor-pointer text-sm">×</button>
+                  <button (click)="selectCategory('')" class="hover:text-[#800020] cursor-pointer text-sm">×</button>
                 </span>
               }
 
               @if (selectedPriceLabel) {
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-100 text-[#2563EB] font-semibold">
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FFF5E1] text-[#800020] border border-[#EBD3AE] font-semibold">
                   Giá: {{ selectedPriceLabel }}
-                  <button (click)="selectPriceRange(undefined, undefined)" class="hover:text-blue-900 cursor-pointer text-sm">×</button>
+                  <button (click)="selectPriceRange(undefined, undefined)" class="hover:text-[#800020] cursor-pointer text-sm">×</button>
                 </span>
               }
 
               @if (selectedOccasion) {
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-100 text-[#2563EB] font-semibold">
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FFF5E1] text-[#800020] border border-[#EBD3AE] font-semibold">
                   Dịp: {{ selectedOccasion }}
-                  <button (click)="selectedOccasion = ''; onFilterChange(true)" class="hover:text-blue-900 cursor-pointer text-sm">×</button>
+                  <button (click)="selectedOccasion = ''; onFilterChange(true)" class="hover:text-[#800020] cursor-pointer text-sm">×</button>
                 </span>
               }
 
               @if (selectedRecipient) {
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-100 text-[#2563EB] font-semibold">
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FFF5E1] text-[#800020] border border-[#EBD3AE] font-semibold">
                   Người nhận: {{ selectedRecipient }}
-                  <button (click)="selectedRecipient = ''; onFilterChange(true)" class="hover:text-blue-900 cursor-pointer text-sm">×</button>
+                  <button (click)="selectedRecipient = ''; onFilterChange(true)" class="hover:text-[#800020] cursor-pointer text-sm">×</button>
                 </span>
               }
 
@@ -307,7 +307,7 @@ import { Product, Category } from '../../core/models';
 
               <button 
                 (click)="resetFilters()" 
-                class="ml-auto text-[11px] font-bold text-[#2563EB] hover:underline cursor-pointer"
+                class="ml-auto text-[11px] font-bold text-[#800020] hover:underline cursor-pointer"
               >
                 Xóa tất cả bộ lọc
               </button>
@@ -317,19 +317,19 @@ import { Product, Category } from '../../core/models';
           <!-- Products Content Area -->
           @if (loading()) {
             <div class="py-24 flex flex-col items-center justify-center gap-3">
-              <div class="w-10 h-10 border-4 border-blue-200 border-t-[#2563EB] rounded-full animate-spin"></div>
+              <div class="w-10 h-10 border-4 border-[#EBD3AE] border-t-[#800020] rounded-full animate-spin"></div>
               <span class="text-xs text-slate-500">Đang tìm kiếm quà tặng phù hợp...</span>
             </div>
           } @else if (products().length === 0) {
             
             <!-- ZERO RESULTS WITH BEST-SELLERS FALLBACK (US-PD-01.3 & US-PD-02 Edge Cases) -->
             <div class="space-y-8">
-              <div class="py-12 px-6 bg-white rounded-3xl text-center border border-[#BFDBFE] shadow-xs space-y-4">
-                <div class="w-16 h-16 rounded-full bg-blue-50 text-[#2563EB] flex items-center justify-center mx-auto">
+              <div class="py-12 px-6 bg-white rounded-3xl text-center border border-[#EBD3AE] shadow-xs space-y-4">
+                <div class="w-16 h-16 rounded-full bg-[#FDF0D5] text-[#800020] flex items-center justify-center mx-auto">
                   <span class="material-symbols-outlined text-3xl">search_off</span>
                 </div>
                 <div class="space-y-1">
-                  <h3 class="font-bold text-lg text-[#1E1B4B]">Không tìm thấy món quà phù hợp</h3>
+                  <h3 class="font-bold text-lg text-[#2B1A1A]">Không tìm thấy món quà phù hợp</h3>
                   <p class="text-xs text-slate-500 max-w-md mx-auto">
                     Rất tiếc, không có sản phẩm nào khớp với tiêu chí bạn chọn. Bạn có thể xóa bộ lọc hoặc nhờ Trợ lý AI tư vấn món quà độc bản phù hợp nhất!
                   </p>
@@ -346,7 +346,7 @@ import { Product, Category } from '../../core/models';
                   <!-- CTA AI Chatbot (US-PD-01.3) -->
                   <button 
                     (click)="askAiAssistant()" 
-                    class="px-5 py-2.5 bg-gradient-to-r from-[#2563EB] to-[#EC4899] text-white text-xs font-bold rounded-xl shadow-md shadow-blue-300 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
+                    class="px-5 py-2.5 bg-gradient-to-r from-[#800020] to-[#EC4899] text-[#FFF5E1] text-xs font-bold rounded-xl shadow-md shadow-[#800020]/20 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
                   >
                     <span class="material-symbols-outlined text-[17px] animate-spin">auto_awesome</span>
                     Nhờ AI Chatbot tư vấn ngay
@@ -359,8 +359,8 @@ import { Product, Category } from '../../core/models';
                 <div class="space-y-4">
                   <div class="flex items-center justify-between">
                     <div>
-                      <h4 class="font-bold text-base text-[#1E1B4B] flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[#2563EB]">stars</span>
+                      <h4 class="font-bold text-base text-[#2B1A1A] flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[#800020]">stars</span>
                         Gợi ý 4 Quà Tặng Bán Chạy Nhất (Best-sellers)
                       </h4>
                       <p class="text-xs text-slate-500">Các món quà độc bản được hàng nghìn khách hàng lựa chọn</p>
@@ -391,7 +391,7 @@ import { Product, Category } from '../../core/models';
                 <button 
                   [disabled]="currentPage === 1"
                   (click)="changePage(currentPage - 1)"
-                  class="w-9 h-9 rounded-xl border border-[#BFDBFE] bg-white text-slate-700 disabled:opacity-40 hover:bg-blue-50 flex items-center justify-center text-sm font-bold transition-colors cursor-pointer disabled:cursor-not-allowed"
+                  class="w-9 h-9 rounded-xl border border-[#EBD3AE] bg-white text-slate-700 disabled:opacity-40 hover:bg-[#FFF5E1] flex items-center justify-center text-sm font-bold transition-colors cursor-pointer disabled:cursor-not-allowed"
                 >
                   <span class="material-symbols-outlined text-sm">chevron_left</span>
                 </button>
@@ -400,7 +400,7 @@ import { Product, Category } from '../../core/models';
                   <button 
                     (click)="changePage(p)"
                     class="w-9 h-9 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                    [ngClass]="currentPage === p ? 'bg-[#2563EB] text-white shadow-md shadow-blue-300' : 'bg-white border border-[#BFDBFE] text-slate-700 hover:bg-blue-50'"
+                    [ngClass]="currentPage === p ? 'bg-[#800020] text-[#FFF5E1] shadow-md shadow-[#800020]/20' : 'bg-white border border-[#EBD3AE] text-slate-700 hover:bg-[#FFF5E1]'"
                   >
                     {{ p }}
                   </button>
@@ -409,7 +409,7 @@ import { Product, Category } from '../../core/models';
                 <button 
                   [disabled]="currentPage === totalPages()"
                   (click)="changePage(currentPage + 1)"
-                  class="w-9 h-9 rounded-xl border border-[#BFDBFE] bg-white text-slate-700 disabled:opacity-40 hover:bg-blue-50 flex items-center justify-center text-sm font-bold transition-colors cursor-pointer disabled:cursor-not-allowed"
+                  class="w-9 h-9 rounded-xl border border-[#EBD3AE] bg-white text-slate-700 disabled:opacity-40 hover:bg-[#FFF5E1] flex items-center justify-center text-sm font-bold transition-colors cursor-pointer disabled:cursor-not-allowed"
                 >
                   <span class="material-symbols-outlined text-sm">chevron_right</span>
                 </button>

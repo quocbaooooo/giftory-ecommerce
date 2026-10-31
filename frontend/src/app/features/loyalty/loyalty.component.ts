@@ -13,7 +13,7 @@ import { Voucher } from '../../core/models';
   template: `
     <div class="max-w-6xl mx-auto px-4 py-8 space-y-8 animate-fade-in">
       <!-- Loyalty Header & Points Banner (Stitch Screen 6413733887367827405) -->
-      <div class="bg-gradient-to-r from-[#2A0845] via-[#6441A5] to-giftory-primary rounded-3xl p-8 text-white relative overflow-hidden shadow-xl">
+      <div class="bg-gradient-to-r from-[#4D0013] via-[#660019] to-[#800020] rounded-3xl p-8 text-[#FFF5E1] relative overflow-hidden shadow-xl">
         <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div class="space-y-2 max-w-xl">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider backdrop-blur">

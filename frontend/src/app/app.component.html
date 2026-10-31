@@ -7,14 +7,14 @@
 
 <!-- CUSTOMER STOREFRONT LAYOUT -->
 <ng-container *ngIf="!isAdminRoute() && !isAuthRoute()">
-  <div class="bg-[#F0F7FF] font-sans text-giftory-ink relative" [ngClass]="isCustomStudioRoute() ? 'h-screen overflow-hidden' : 'min-h-screen'">
+  <div class="storefront-page-bg font-sans text-giftory-ink relative" [ngClass]="isCustomStudioRoute() ? 'h-screen overflow-hidden' : 'min-h-screen'">
     <!-- Primary navigation rail -->
     <app-sidebar-rail></app-sidebar-rail>
 
     <!-- Main Content Canvas (Offset by pl-16 md:pl-20 to clear sidebar rail) -->
     <div class="pl-16 md:pl-20 flex flex-col" [ngClass]="isCustomStudioRoute() ? 'h-full lg:h-screen lg:overflow-hidden min-h-0' : 'min-h-screen'">
       <!-- Auto-Rotating Top Announcement Bar Ticker (Hidden in Custom Studio) -->
-      <div *ngIf="!isCustomStudioRoute()" class="bg-gradient-to-r from-[#1D4ED8] via-[#2563EB] to-[#0284C7] text-white py-1.5 px-3 md:px-6 tracking-wide flex items-center justify-between shadow-xs border-b border-blue-800/20 relative overflow-hidden h-9 select-none">
+      <div *ngIf="!isCustomStudioRoute()" class="bg-gradient-to-r from-[#660019] via-[#800020] to-[#991B33] text-[#FFF5E1] py-1.5 px-3 md:px-6 tracking-wide flex items-center justify-between shadow-xs border-b border-[#540015]/30 relative overflow-hidden h-9 select-none">
         <!-- Prev Button -->
         <button (click)="prevAnnouncement()" class="text-white/70 hover:text-white transition-colors p-0.5 flex items-center justify-center cursor-pointer" title="Thông điệp trước">
           <span class="material-symbols-outlined text-[18px]">chevron_left</span>
@@ -68,7 +68,7 @@
       </main>
 
       <!-- Stitch Storefront Footer (Hidden in Custom Studio Tool Viewport) -->
-      <footer *ngIf="!isCustomStudioRoute()" class="bg-white/80 backdrop-blur-md border-t border-[#BFDBFE] mt-16 pt-12 pb-8">
+      <footer *ngIf="!isCustomStudioRoute()" class="bg-white/80 backdrop-blur-md border-t border-[#EBD3AE] mt-16 pt-12 pb-8">
         <div class="max-w-7xl mx-auto px-6 space-y-12">
           <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
             <!-- Col 1: Brand Info -->
@@ -81,7 +81,7 @@
                 Hệ sinh thái thương mại điện tử quà tặng cá nhân hóa cao cấp. Tự tay thiết kế, khắc laser độc bản và đóng gói nơ lụa trao gửi yêu thương.
               </p>
               <div class="flex items-center gap-3 text-giftory-ink/50 text-xs">
-                <span class="material-symbols-outlined text-sm text-[#2563EB]">pin_drop</span>
+                <span class="material-symbols-outlined text-sm text-[#800020]">pin_drop</span>
                 <span>Quận 1, TP. Hồ Chí Minh & Hoàn Kiếm, Hà Nội</span>
               </div>
             </div>
@@ -90,10 +90,10 @@
             <div class="space-y-3">
               <h4 class="text-xs font-bold text-giftory-ink uppercase tracking-wider">Khám Phá & Trải Nghiệm</h4>
               <ul class="space-y-2 text-xs text-giftory-ink/70">
-                <li><a routerLink="/products" class="hover:text-[#2563EB] transition">Tất Cả Sản Phẩm</a></li>
-                <li><a routerLink="/custom-studio" class="hover:text-[#2563EB] transition">Custom Studio Bespoke</a></li>
-                <li><a routerLink="/flash-sale" class="hover:text-[#2563EB] transition">Flash Sale Khung Giờ Vàng</a></li>
-                <li><a routerLink="/loyalty" class="hover:text-[#2563EB] transition">Giftory Rewards Club</a></li>
+                <li><a routerLink="/products" class="hover:text-[#800020] transition">Tất Cả Sản Phẩm</a></li>
+                <li><a routerLink="/custom-studio" class="hover:text-[#800020] transition">Custom Studio Bespoke</a></li>
+                <li><a routerLink="/flash-sale" class="hover:text-[#800020] transition">Flash Sale Khung Giờ Vàng</a></li>
+                <li><a routerLink="/loyalty" class="hover:text-[#800020] transition">Giftory Rewards Club</a></li>
               </ul>
             </div>
 
@@ -101,12 +101,12 @@
             <div class="space-y-3">
               <h4 class="text-xs font-bold text-giftory-ink uppercase tracking-wider">Chính Sách & Hỗ Trợ</h4>
               <ul class="space-y-2 text-xs text-giftory-ink/70">
-                <li><a routerLink="/shopping-guide" class="hover:text-[#2563EB] transition">Hướng dẫn mua hàng</a></li>
-                <li><a routerLink="/care" class="hover:text-[#2563EB] transition">Trung tâm hỗ trợ & đổi trả</a></li>
-                <li><a routerLink="/shopping-guide" class="hover:text-[#2563EB] transition">Chính sách cọc 50% Bespoke</a></li>
-                <li><a routerLink="/orders" class="hover:text-[#2563EB] transition">Tra cứu tiến độ đơn hàng</a></li>
-                <li><a routerLink="/shopping-guide" class="hover:text-[#2563EB] transition">Quy chuẩn đóng gói quà tặng</a></li>
-                <li><a routerLink="/shopping-guide" class="hover:text-[#2563EB] transition">Đổi trả & bảo hành thủ công</a></li>
+                <li><a routerLink="/shopping-guide" class="hover:text-[#800020] transition">Hướng dẫn mua hàng</a></li>
+                <li><a routerLink="/care" class="hover:text-[#800020] transition">Trung tâm hỗ trợ & đổi trả</a></li>
+                <li><a routerLink="/shopping-guide" class="hover:text-[#800020] transition">Chính sách cọc 50% Bespoke</a></li>
+                <li><a routerLink="/orders" class="hover:text-[#800020] transition">Tra cứu tiến độ đơn hàng</a></li>
+                <li><a routerLink="/shopping-guide" class="hover:text-[#800020] transition">Quy chuẩn đóng gói quà tặng</a></li>
+                <li><a routerLink="/shopping-guide" class="hover:text-[#800020] transition">Đổi trả & bảo hành thủ công</a></li>
               </ul>
             </div>
 
@@ -115,9 +115,9 @@
               <h4 class="text-xs font-bold text-giftory-ink uppercase tracking-wider">Thanh Toán An Toàn</h4>
               <p class="text-xs text-giftory-ink/60">Hỗ trợ thanh toán bảo mật chuẩn ngân hàng:</p>
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="px-2.5 py-1 rounded bg-white border border-[#BFDBFE] text-[10px] font-bold text-[#2563EB]">VietQR</span>
-                <span class="px-2.5 py-1 rounded bg-white border border-[#BFDBFE] text-[10px] font-bold text-pink-600">MoMo</span>
-                <span class="px-2.5 py-1 rounded bg-white border border-[#BFDBFE] text-[10px] font-bold text-gray-700">COD Tiền Mặt</span>
+                <span class="px-2.5 py-1 rounded bg-white border border-[#EBD3AE] text-[10px] font-bold text-[#800020]">VietQR</span>
+                <span class="px-2.5 py-1 rounded bg-white border border-[#EBD3AE] text-[10px] font-bold text-pink-600">MoMo</span>
+                <span class="px-2.5 py-1 rounded bg-white border border-[#EBD3AE] text-[10px] font-bold text-gray-700">COD Tiền Mặt</span>
               </div>
               <div class="pt-2 text-[11px] text-giftory-ink/50">
                 Hotline xưởng quà: <span class="font-bold text-giftory-ink">1900 888 999</span> (8h00 - 22h00)
@@ -125,7 +125,7 @@
             </div>
           </div>
 
-          <div class="pt-8 border-t border-[#BFDBFE]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-[11px] text-giftory-ink/50">
+          <div class="pt-8 border-t border-[#EBD3AE]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-[11px] text-giftory-ink/50">
             <p>© 2026 Giftory Inc.</p>
             <div class="flex items-center gap-4">
               <a routerLink="/shopping-guide" class="hover:underline">Điều khoản dịch vụ</a>

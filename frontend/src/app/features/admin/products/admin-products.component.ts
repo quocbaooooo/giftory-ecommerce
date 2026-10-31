@@ -19,7 +19,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-giftory-border/60 pb-6">
         <div>
-          <span class="text-xs font-bold tracking-widest text-[#2563EB] uppercase">Quản Trị Kho Quà & Custom Studio</span>
+          <span class="text-xs font-bold tracking-widest text-[#800020] uppercase">Quản Trị Kho Quà & Custom Studio</span>
           <h1 class="text-2xl md:text-3xl font-display font-black text-giftory-ink mt-1">Danh Mục & Phôi Chế Tác Quà Tặng</h1>
           <p class="text-xs text-giftory-ink/60 mt-1">Cấu hình phôi quà 2 mặt, quản lý thư viện clipart và chính sách cọc 50%</p>
         </div>
@@ -28,7 +28,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
           @if (activeTab() === 'PRODUCTS') {
             <button
               (click)="openCreateModal()"
-              class="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
+              class="px-5 py-2.5 bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
             >
               <span class="material-symbols-outlined text-base">add</span>
               Thêm Mẫu Quà Mới
@@ -36,7 +36,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
           } @else if (activeTab() === 'CATEGORIES') {
             <button
               (click)="categoryComp?.openCreateModal()"
-              class="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
+              class="px-5 py-2.5 bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
             >
               <span class="material-symbols-outlined text-base">add_circle</span>
               Thêm Danh Mục Mới
@@ -44,7 +44,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
           } @else if (activeTab() === 'STUDIO_ASSETS') {
             <button
               (click)="openAddAssetModal()"
-              class="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
+              class="px-5 py-2.5 bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
             >
               <span class="material-symbols-outlined text-base">add_reaction</span>
               Thêm Clipart
@@ -58,7 +58,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
         <button
           (click)="activeTab.set('PRODUCTS')"
           class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer shrink-0"
-          [ngClass]="activeTab() === 'PRODUCTS' ? 'bg-[#2563EB] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+          [ngClass]="activeTab() === 'PRODUCTS' ? 'bg-[#800020] text-[#FFF5E1] shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
         >
           <span class="material-symbols-outlined text-[18px]">inventory_2</span>
           <span>Sản Phẩm & Phôi Quà Tặng ({{ products().length }})</span>
@@ -67,7 +67,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
         <button
           (click)="activeTab.set('CATEGORIES')"
           class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer shrink-0"
-          [ngClass]="activeTab() === 'CATEGORIES' ? 'bg-[#2563EB] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+          [ngClass]="activeTab() === 'CATEGORIES' ? 'bg-[#800020] text-[#FFF5E1] shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
         >
           <span class="material-symbols-outlined text-[18px]">category</span>
           <span>Danh Mục Quà Tặng ({{ categories().length }})</span>
@@ -76,14 +76,14 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
         <button
           (click)="activeTab.set('STUDIO_ASSETS')"
           class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer shrink-0"
-          [ngClass]="activeTab() === 'STUDIO_ASSETS' ? 'bg-[#2563EB] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+          [ngClass]="activeTab() === 'STUDIO_ASSETS' ? 'bg-[#800020] text-[#FFF5E1] shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
         >
           <span class="material-symbols-outlined text-[18px]">palette</span>
           <span>Thư Viện Clipart Studio ({{ studioAssets().length }})</span>
         </button>
         <button (click)="activeTab.set('CLIPART_IMPORT')"
           class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer shrink-0"
-          [ngClass]="activeTab() === 'CLIPART_IMPORT' ? 'bg-[#2563EB] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'">
+          [ngClass]="activeTab() === 'CLIPART_IMPORT' ? 'bg-[#800020] text-[#FFF5E1] shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'">
           <span class="material-symbols-outlined text-[18px]">download</span><span>Nhập clipart</span>
         </button>
       </div>
@@ -97,7 +97,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
         <div class="bg-white rounded-3xl p-6 border border-giftory-border shadow-xs space-y-4">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div class="text-xs font-bold text-giftory-ink">
-              Tổng cộng: <span class="text-[#2563EB] font-black">{{ products().length }} món quà trong Database</span>
+              Tổng cộng: <span class="text-[#800020] font-black">{{ products().length }} món quà trong Database</span>
             </div>
 
             <div class="relative max-w-xs w-full">
@@ -106,7 +106,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                 type="text"
                 [(ngModel)]="searchQuery"
                 placeholder="Tìm theo tên hoặc SKU..."
-                class="w-full pl-9 pr-4 py-1.5 bg-[#F0F7FF]/50 rounded-xl border border-giftory-border focus:outline-none focus:border-[#2563EB] text-xs font-medium"
+                class="w-full pl-9 pr-4 py-1.5 bg-[#FFF5E1]/50 rounded-xl border border-giftory-border focus:outline-none focus:border-[#800020] text-xs font-medium"
               />
             </div>
           </div>
@@ -125,7 +125,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                 </tr>
               </thead>
               <tbody class="divide-y divide-giftory-border/40">
-                <tr *ngFor="let p of filteredProducts()" class="hover:bg-[#F0F7FF]/40 transition">
+                <tr *ngFor="let p of filteredProducts()" class="hover:bg-[#FFF5E1]/40 transition">
                   <td class="py-3 px-4">
                     <div class="flex items-center gap-3">
                       <img [src]="p.images[0] || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=100'" [alt]="p.name" class="w-12 h-12 rounded-xl object-cover border border-giftory-border shrink-0" />
@@ -133,7 +133,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                         <span class="font-bold text-giftory-ink block line-clamp-1 max-w-[260px]">{{ p.name }}</span>
                         <div class="flex items-center gap-2 mt-0.5">
                           <span class="text-[10px] text-giftory-ink/50 font-mono">SKU: {{ p.sku || 'N/A' }}</span>
-                          <span class="text-[10px] text-[#2563EB] font-semibold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                          <span class="text-[10px] text-[#800020] font-semibold bg-[#FFF5E1] px-1.5 py-0.5 rounded border border-[#EBD3AE]">
                             {{ p.variants && p.variants.length > 0 ? p.variants.length + ' màu' : '1 màu' }} • Kho: {{ p.stock || 0 }}
                           </span>
                         </div>
@@ -148,7 +148,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                   <td class="py-3 px-4">
                     @if (p.isCustomizable) {
                       <div class="flex items-center gap-1.5">
-                        <span class="px-2 py-0.5 rounded-md bg-blue-50 text-[#2563EB] border border-blue-200 font-semibold text-[10px]">
+                        <span class="px-2 py-0.5 rounded-md bg-[#FFF5E1] text-[#800020] border border-[#EBD3AE] font-semibold text-[10px]">
                           {{ p.customConfig?.backBlankImage ? 'Đủ 2 mặt' : '1 mặt' }}
                         </span>
                         <span class="text-[10px] text-slate-400">Phí: +{{ (p.customBaseFee || 30000) | number }}đ</span>
@@ -172,7 +172,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                     </span>
                   </td>
                   <td class="py-3 px-4 text-right space-x-2">
-                    <button (click)="openEditModal(p)" class="text-[#2563EB] hover:underline font-bold text-xs cursor-pointer">Sửa phôi</button>
+                    <button (click)="openEditModal(p)" class="text-[#800020] hover:underline font-bold text-xs cursor-pointer">Sửa phôi</button>
                     <button (click)="deleteProduct(p._id)" class="text-rose-500 hover:underline font-bold text-xs cursor-pointer">Xóa</button>
                   </td>
                 </tr>
@@ -187,14 +187,14 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
         <div class="bg-white rounded-3xl p-6 border border-giftory-border shadow-xs space-y-6">
           <div class="flex items-center justify-between pb-2 border-b border-giftory-border/50">
             <div>
-              <h3 class="font-bold text-base text-[#1E1B4B]">Thư Viện Clipart Studio</h3>
+              <h3 class="font-bold text-base text-[#2B1A1A]">Thư Viện Clipart Studio</h3>
               <p class="text-xs text-slate-500 mt-0.5">Các clipart này hiển thị trực tiếp cho khách hàng lựa chọn để trang trí lên quà tặng tại Studio</p>
             </div>
             <div class="flex gap-2 flex-wrap">
-            <button (click)="activeTab.set('CLIPART_IMPORT')" class="px-4 py-2 bg-blue-50 text-blue-700 text-xs font-bold rounded-xl cursor-pointer">Nhập clipart</button>
+            <button (click)="activeTab.set('CLIPART_IMPORT')" class="px-4 py-2 bg-[#FFF5E1] text-[#800020] text-xs font-bold rounded-xl cursor-pointer">Nhập clipart</button>
             <button
               (click)="openAddAssetModal()"
-              class="px-4 py-2 bg-[#2563EB] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm hover:bg-[#1D4ED8] cursor-pointer"
+              class="px-4 py-2 bg-[#800020] text-[#FFF5E1] text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm hover:bg-[#660019] cursor-pointer"
             >
               <span class="material-symbols-outlined text-[16px]">add</span>
               <span>Thêm Clipart</span>
@@ -205,7 +205,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
           <!-- Icons Grid -->
           <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
             @for (asset of studioAssets(); track asset._id) {
-              <div class="p-3 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-[#2563EB] hover:shadow-sm transition-all flex flex-col items-center text-center relative group">
+              <div class="p-3 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-[#800020] hover:shadow-sm transition-all flex flex-col items-center text-center relative group">
                 <button
                   (click)="deleteAsset(asset._id)"
                   class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
@@ -218,7 +218,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                 <span class="text-xs font-bold text-slate-800 truncate w-full mt-1">{{ asset.name }}</span>
                 <span class="text-[10px] text-slate-400 truncate w-full">{{ asset.category || 'Phổ biến' }}</span>
                 @if (asset.sourceProvider === 'OPENCLIPART') {
-                  <a [href]="asset.sourceUrl" target="_blank" rel="noopener noreferrer" class="text-[10px] text-blue-600 underline">OpenClipart · CC0</a>
+                  <a [href]="asset.sourceUrl" target="_blank" rel="noopener noreferrer" class="text-[10px] text-[#800020] underline">OpenClipart · CC0</a>
                 }
               </div>
             }
@@ -250,7 +250,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                 type="button"
                 (click)="modalTab.set('GENERAL')"
                 class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
-                [ngClass]="modalTab() === 'GENERAL' ? 'bg-[#2563EB] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                [ngClass]="modalTab() === 'GENERAL' ? 'bg-[#800020] text-[#FFF5E1] shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
               >
                 <span class="material-symbols-outlined text-[16px]">info</span>
                 <span>1. Thông Tin Chung (SPU)</span>
@@ -259,11 +259,11 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                 type="button"
                 (click)="modalTab.set('VARIANTS')"
                 class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer relative"
-                [ngClass]="modalTab() === 'VARIANTS' ? 'bg-[#2563EB] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                [ngClass]="modalTab() === 'VARIANTS' ? 'bg-[#800020] text-[#FFF5E1] shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
               >
                 <span class="material-symbols-outlined text-[16px]">palette</span>
                 <span>2. Biến Thể & Tồn Kho (SKU)</span>
-                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold" [ngClass]="modalTab() === 'VARIANTS' ? 'bg-white text-[#2563EB]' : 'bg-blue-100 text-[#2563EB]'">
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold" [ngClass]="modalTab() === 'VARIANTS' ? 'bg-white text-[#800020]' : 'bg-[#FFF5E1] text-[#800020]'">
                   {{ variants().length }}
                 </span>
                 @if (hasVariantMissingImage()) {
@@ -274,7 +274,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                 type="button"
                 (click)="modalTab.set('STUDIO')"
                 class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
-                [ngClass]="modalTab() === 'STUDIO' ? 'bg-[#2563EB] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                [ngClass]="modalTab() === 'STUDIO' ? 'bg-[#800020] text-[#FFF5E1] shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
               >
                 <span class="material-symbols-outlined text-[16px]">auto_fix_high</span>
                 <span>3. Studio / Phôi Bespoke</span>
@@ -293,11 +293,11 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-1.5">
                       <label class="text-xs font-bold text-giftory-ink">Tên món quà *</label>
-                      <input type="text" formControlName="name" placeholder="VD: Bình Giữ Nhiệt Nordic Bọc Da..." class="w-full px-4 py-2 bg-[#F0F7FF]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#2563EB]" />
+                      <input type="text" formControlName="name" placeholder="VD: Bình Giữ Nhiệt Nordic Bọc Da..." class="w-full px-4 py-2 bg-[#FFF5E1]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#800020]" />
                     </div>
                     <div class="space-y-1.5">
                       <label class="text-xs font-bold text-giftory-ink">Danh mục quà tặng *</label>
-                      <select formControlName="category" class="w-full px-4 py-2 bg-[#F0F7FF]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#2563EB]">
+                      <select formControlName="category" class="w-full px-4 py-2 bg-[#FFF5E1]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#800020]">
                         <option value="">-- Chọn danh mục quà --</option>
                         <option *ngFor="let cat of categories()" [value]="cat._id">{{ cat.name }}</option>
                       </select>
@@ -307,27 +307,27 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                   <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1.5">
                       <label class="text-xs font-bold text-giftory-ink">Giá gốc (đ) *</label>
-                      <input type="number" formControlName="price" placeholder="250000" class="w-full px-4 py-2 bg-[#F0F7FF]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#2563EB]" />
+                      <input type="number" formControlName="price" placeholder="250000" class="w-full px-4 py-2 bg-[#FFF5E1]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#800020]" />
                     </div>
                     <div class="space-y-1.5">
                       <label class="text-xs font-bold text-giftory-ink">Giá khuyến mãi (đ)</label>
-                      <input type="number" formControlName="salePrice" placeholder="220000" class="w-full px-4 py-2 bg-[#F0F7FF]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#2563EB]" />
+                      <input type="number" formControlName="salePrice" placeholder="220000" class="w-full px-4 py-2 bg-[#FFF5E1]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#800020]" />
                     </div>
                   </div>
 
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-1.5">
                       <label class="text-xs font-bold text-giftory-ink">Mã SKU Gốc (SPU)</label>
-                      <input type="text" formControlName="sku" placeholder="GF-BESPOKE-01" class="w-full px-4 py-2 bg-[#F0F7FF]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#2563EB]" />
+                      <input type="text" formControlName="sku" placeholder="GF-BESPOKE-01" class="w-full px-4 py-2 bg-[#FFF5E1]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#800020]" />
                     </div>
                     <div class="space-y-1.5">
                       <div class="flex items-center justify-between">
                         <label class="text-xs font-bold text-giftory-ink">Tổng tồn kho (Toàn bộ biến thể)</label>
-                        <span class="text-[10px] text-blue-700 font-medium">Chỉ xem • Tự động tính</span>
+                        <span class="text-[10px] text-[#800020] font-medium">Chỉ xem • Tự động tính</span>
                       </div>
                       <div class="px-4 py-2 bg-slate-100 rounded-xl border border-giftory-border text-sm font-bold text-slate-800 flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                          <span class="material-symbols-outlined text-[#2563EB] text-base">inventory_2</span>
+                          <span class="material-symbols-outlined text-[#800020] text-base">inventory_2</span>
                           <span>{{ totalVariantStock() }} sản phẩm</span>
                         </div>
                         <span class="text-[11px] font-normal text-slate-500">Tự cộng từ {{ variants().length }} màu</span>
@@ -339,14 +339,14 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                   <div class="space-y-1.5">
                     <div class="flex items-center justify-between">
                       <label class="text-xs font-bold text-giftory-ink">Ảnh đại diện sản phẩm</label>
-                      <label class="cursor-pointer text-[11px] font-bold text-[#2563EB] hover:underline flex items-center gap-1 bg-[#2563EB]/10 px-2 py-0.5 rounded-lg transition-all">
+                      <label class="cursor-pointer text-[11px] font-bold text-[#800020] hover:underline flex items-center gap-1 bg-[#800020]/10 px-2 py-0.5 rounded-lg transition-all">
                         <span class="material-symbols-outlined text-[14px]">cloud_upload</span>
                         <span>{{ isUploading() ? 'Đang tải...' : 'Tải ảnh đại diện' }}</span>
                         <input type="file" accept="image/*" (change)="onFileSelected($event, 'imageUrl')" class="hidden" [disabled]="isUploading()" />
                       </label>
                     </div>
                     <div class="flex gap-2 items-center">
-                      <input type="text" formControlName="imageUrl" placeholder="https://... URL ảnh chính" class="flex-1 px-4 py-2 bg-[#F0F7FF]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#2563EB]" />
+                      <input type="text" formControlName="imageUrl" placeholder="https://... URL ảnh chính" class="flex-1 px-4 py-2 bg-[#FFF5E1]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#800020]" />
                       @if (productForm.get('imageUrl')?.value) {
                         <img [src]="productForm.get('imageUrl')?.value" alt="Preview" class="w-10 h-10 rounded-xl object-cover border border-giftory-border shadow-sm shrink-0" />
                       }
@@ -355,7 +355,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
 
                   <div class="space-y-1.5">
                     <label class="text-xs font-bold text-giftory-ink">Mô tả sản phẩm</label>
-                    <textarea rows="3" formControlName="description" placeholder="Mô tả chất liệu, quy cách quà tặng..." class="w-full px-4 py-2 bg-[#F0F7FF]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#2563EB]"></textarea>
+                    <textarea rows="3" formControlName="description" placeholder="Mô tả chất liệu, quy cách quà tặng..." class="w-full px-4 py-2 bg-[#FFF5E1]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#800020]"></textarea>
                   </div>
 
                   <div class="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/60 p-4">
@@ -386,10 +386,10 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                   }
 
                   <!-- Variants Action Header -->
-                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#F0F7FF]/40 p-4 rounded-2xl border border-giftory-border/60">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FFF5E1]/40 p-4 rounded-2xl border border-giftory-border/60">
                     <div>
-                      <h4 class="font-bold text-xs text-[#1E1B4B] uppercase tracking-wide flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-[#2563EB] text-[18px]">view_list</span>
+                      <h4 class="font-bold text-xs text-[#2B1A1A] uppercase tracking-wide flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[#800020] text-[18px]">view_list</span>
                         Bảng Quản Lý Biến Thể Màu & Tồn Kho (SKU)
                       </h4>
                       <p class="text-[11px] text-slate-500 mt-0.5">
@@ -399,7 +399,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                     <button
                       type="button"
                       (click)="openAddVariantDrawer()"
-                      class="px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                      class="px-4 py-2 bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
                     >
                       <span class="material-symbols-outlined text-base">add</span>
                       Thêm Màu Mới
@@ -408,15 +408,15 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
 
                   <!-- Bulk Actions Toolbar (when selected) -->
                   @if (selectedVariantIndexes().length > 0) {
-                    <div class="p-3 bg-blue-100/70 border border-blue-200 rounded-xl flex items-center justify-between flex-wrap gap-2 text-xs">
+                    <div class="p-3 bg-[#FFF5E1]/70 border border-[#EBD3AE] rounded-xl flex items-center justify-between flex-wrap gap-2 text-xs">
                       <div class="flex items-center gap-2">
-                        <span class="font-bold text-[#2563EB]">Đã chọn {{ selectedVariantIndexes().length }} màu:</span>
+                        <span class="font-bold text-[#800020]">Đã chọn {{ selectedVariantIndexes().length }} màu:</span>
                       </div>
                       <div class="flex items-center gap-1.5 flex-wrap">
-                        <button type="button" (click)="bulkUpdatePrice()" class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-blue-200 rounded-lg font-bold text-slate-700 cursor-pointer">
+                        <button type="button" (click)="bulkUpdatePrice()" class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-[#EBD3AE] rounded-lg font-bold text-slate-700 cursor-pointer">
                           Đổi Giá
                         </button>
-                        <button type="button" (click)="bulkUpdateStock()" class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-blue-200 rounded-lg font-bold text-slate-700 cursor-pointer">
+                        <button type="button" (click)="bulkUpdateStock()" class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-[#EBD3AE] rounded-lg font-bold text-slate-700 cursor-pointer">
                           Đổi Tồn Kho
                         </button>
                         <button type="button" (click)="bulkUpdateStatus('ACTIVE')" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-lg font-bold cursor-pointer">
@@ -438,7 +438,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                       <thead class="bg-slate-100 text-slate-600 font-bold border-b border-giftory-border">
                         <tr>
                           <th class="p-3 w-10 text-center">
-                            <input type="checkbox" [checked]="isAllVariantsSelected()" (change)="toggleAllVariants($any($event.target).checked)" class="w-4 h-4 rounded accent-[#2563EB] cursor-pointer" />
+                            <input type="checkbox" [checked]="isAllVariantsSelected()" (change)="toggleAllVariants($any($event.target).checked)" class="w-4 h-4 rounded accent-[#800020] cursor-pointer" />
                           </th>
                           <th class="p-3">Màu (Swatch + Tên)</th>
                           <th class="p-3">Mã SKU</th>
@@ -451,16 +451,16 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                       </thead>
                       <tbody class="divide-y divide-giftory-border/40 bg-white font-medium text-slate-700">
                         @for (v of variants(); track v.sku; let idx = $index) {
-                          <tr class="hover:bg-blue-50/30 transition-colors" [ngClass]="{'bg-blue-50/50': isVariantSelected(idx)}">
+                          <tr class="hover:bg-[#FFF5E1]/30 transition-colors" [ngClass]="{'bg-[#FFF5E1]/50': isVariantSelected(idx)}">
                             <td class="p-3 text-center">
-                              <input type="checkbox" [checked]="isVariantSelected(idx)" (change)="toggleVariantSelect(idx)" class="w-4 h-4 rounded accent-[#2563EB] cursor-pointer" />
+                              <input type="checkbox" [checked]="isVariantSelected(idx)" (change)="toggleVariantSelect(idx)" class="w-4 h-4 rounded accent-[#800020] cursor-pointer" />
                             </td>
                             <td class="p-3">
                               <div class="flex items-center gap-2">
-                                <span class="w-5 h-5 rounded-full border border-slate-300 shadow-2xs shrink-0" [style.backgroundColor]="v.colorHex || '#1E1B4B'"></span>
+                                <span class="w-5 h-5 rounded-full border border-slate-300 shadow-2xs shrink-0" [style.backgroundColor]="v.colorHex || '#2B1A1A'"></span>
                                 <div>
                                   <span class="font-bold text-slate-800 block">{{ v.name }}</span>
-                                  <span class="text-[10px] text-slate-400 font-mono">{{ v.colorHex || '#1E1B4B' }}</span>
+                                  <span class="text-[10px] text-slate-400 font-mono">{{ v.colorHex || '#2B1A1A' }}</span>
                                 </div>
                               </div>
                             </td>
@@ -504,7 +504,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                             </td>
                             <td class="p-3 text-right">
                               <div class="flex items-center justify-end gap-1">
-                                <button type="button" (click)="openEditVariantDrawer(idx)" class="p-1 rounded-lg hover:bg-blue-100 text-[#2563EB] cursor-pointer" title="Sửa màu này">
+                                <button type="button" (click)="openEditVariantDrawer(idx)" class="p-1 rounded-lg hover:bg-[#FDF0D5] text-[#800020] cursor-pointer" title="Sửa màu này">
                                   <span class="material-symbols-outlined text-[18px]">edit</span>
                                 </button>
                                 <button type="button" (click)="deleteVariant(idx)" class="p-1 rounded-lg hover:bg-red-100 text-red-600 cursor-pointer" title="Xóa màu này">
@@ -532,12 +532,12 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                 <div class="space-y-4 animate-fade-in">
 
               <!-- Bespoke Toggle Switch -->
-              <div class="p-4 bg-blue-50/70 rounded-2xl border border-blue-200 flex items-center justify-between">
+              <div class="p-4 bg-[#FFF5E1]/70 rounded-2xl border border-[#EBD3AE] flex items-center justify-between">
                 <div>
-                  <span class="text-xs font-bold text-[#2563EB] block">Hỗ Trợ Tùy Biến Bespoke (Custom Studio)</span>
+                  <span class="text-xs font-bold text-[#800020] block">Hỗ Trợ Tùy Biến Bespoke (Custom Studio)</span>
                   <span class="text-[11px] text-slate-500">Kích hoạt để sản phẩm xuất hiện trong Studio Chế Tác và áp dụng chính sách cọc 50%</span>
                 </div>
-                <input type="checkbox" formControlName="isCustomizable" class="w-5 h-5 accent-[#2563EB] rounded cursor-pointer" />
+                <input type="checkbox" formControlName="isCustomizable" class="w-5 h-5 accent-[#800020] rounded cursor-pointer" />
               </div>
 
               <label class="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs">
@@ -547,10 +547,10 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
 
               <!-- BESPOKE BLANK CONFIGURATION BOX (BP-02) -->
               @if (productForm.get('isCustomizable')?.value) {
-                <div class="p-5 rounded-2xl bg-gradient-to-br from-blue-50/90 to-white border-2 border-[#2563EB]/30 space-y-4">
+                <div class="p-5 rounded-2xl bg-gradient-to-br from-blue-50/90 to-white border-2 border-[#800020]/30 space-y-4">
                   <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[#2563EB]">palette</span>
-                    <h4 class="font-bold text-xs text-[#1E1B4B] uppercase tracking-wide">Cấu Hình Phôi Chế Tác Studio (Blank Config)</h4>
+                    <span class="material-symbols-outlined text-[#800020]">palette</span>
+                    <h4 class="font-bold text-xs text-[#2B1A1A] uppercase tracking-wide">Cấu Hình Phôi Chế Tác Studio (Blank Config)</h4>
                   </div>
 
                   <div class="space-y-3">
@@ -559,10 +559,10 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                         <h5 class="text-xs font-bold">Các màu phôi riêng cho Studio</h5>
                         <p class="text-[11px] text-slate-500">Phôi dùng để thiết kế, không phải biến thể và không hiển thị ở trang chi tiết sản phẩm.</p>
                       </div>
-                      <button type="button" (click)="addStudioBlank()" class="px-3 py-2 rounded-xl bg-blue-600 text-white text-xs">Thêm phôi</button>
+                      <button type="button" (click)="addStudioBlank()" class="px-3 py-2 rounded-xl bg-[#800020] text-[#FFF5E1] text-xs">Thêm phôi</button>
                     </div>
                     @for (blank of studioBlanks(); track $index; let idx = $index) {
-                      <div class="p-3 rounded-xl border border-blue-200 bg-white space-y-2">
+                      <div class="p-3 rounded-xl border border-[#EBD3AE] bg-white space-y-2">
                         <div class="flex items-center gap-2">
                           <input type="color" aria-label="Màu phôi" [ngModel]="blank.colorHex" (ngModelChange)="updateStudioBlank(idx, 'colorHex', $event)" [ngModelOptions]="{standalone: true}" />
                           <input type="text" placeholder="Tên màu phôi" aria-label="Tên màu phôi" [ngModel]="blank.name" (ngModelChange)="updateStudioBlank(idx, 'name', $event)" [ngModelOptions]="{standalone: true}" class="flex-1 border rounded-lg p-2 text-xs" />
@@ -572,7 +572,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                           <div class="flex items-center gap-2">
                             <span class="text-xs w-16">{{ face.label }}</span>
                             <input type="url" [attr.aria-label]="'Ảnh phôi ' + face.label" placeholder="URL ảnh phôi" [ngModel]="blank[face.key]" (ngModelChange)="updateStudioBlank(idx, face.key, $event)" [ngModelOptions]="{standalone: true}" class="flex-1 min-w-0 border rounded-lg p-2 text-xs" />
-                            <label class="text-xs text-blue-600 cursor-pointer">Tải ảnh<input type="file" accept="image/*" (change)="onStudioBlankFileSelected($event, blank, face.key)" class="hidden" /></label>
+                            <label class="text-xs text-[#800020] cursor-pointer">Tải ảnh<input type="file" accept="image/*" (change)="onStudioBlankFileSelected($event, blank, face.key)" class="hidden" /></label>
                             @if (blank[face.key]) { <img [src]="blank[face.key]" alt="Ảnh phôi" class="w-12 h-12 object-contain rounded border" /> }
                           </div>
                         }
@@ -589,14 +589,14 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                     <div class="space-y-1.5">
                       <div class="flex items-center justify-between">
                         <label class="text-[11px] font-bold text-slate-700">Phôi gốc — Mặt trước:</label>
-                        <label class="cursor-pointer text-[10px] font-bold text-[#2563EB] hover:underline flex items-center gap-0.5">
+                        <label class="cursor-pointer text-[10px] font-bold text-[#800020] hover:underline flex items-center gap-0.5">
                           <span class="material-symbols-outlined text-[13px]">upload</span>
                           <span>Tải ảnh mặt trước</span>
                           <input type="file" accept="image/*" (change)="onFileSelected($event, 'frontBlankImage')" class="hidden" />
                         </label>
                       </div>
                       <div class="flex gap-2 items-center">
-                        <input type="text" formControlName="frontBlankImage" placeholder="URL ảnh phôi mặc định mặt trước" class="flex-1 px-3 py-1.5 bg-white rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#2563EB]" />
+                        <input type="text" formControlName="frontBlankImage" placeholder="URL ảnh phôi mặc định mặt trước" class="flex-1 px-3 py-1.5 bg-white rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#800020]" />
                         @if (productForm.get('frontBlankImage')?.value) {
                           <img [src]="productForm.get('frontBlankImage')?.value" alt="Front" class="w-8 h-8 rounded-lg object-contain border bg-white shrink-0" />
                         }
@@ -607,14 +607,14 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                     <div class="space-y-1.5">
                       <div class="flex items-center justify-between">
                         <label class="text-[11px] font-bold text-slate-700">Phôi gốc — Mặt sau:</label>
-                        <label class="cursor-pointer text-[10px] font-bold text-[#2563EB] hover:underline flex items-center gap-0.5">
+                        <label class="cursor-pointer text-[10px] font-bold text-[#800020] hover:underline flex items-center gap-0.5">
                           <span class="material-symbols-outlined text-[13px]">upload</span>
                           <span>Tải ảnh mặt sau</span>
                           <input type="file" accept="image/*" (change)="onFileSelected($event, 'backBlankImage')" class="hidden" />
                         </label>
                       </div>
                       <div class="flex gap-2 items-center">
-                        <input type="text" formControlName="backBlankImage" placeholder="URL ảnh phôi mặt sau" class="flex-1 px-3 py-1.5 bg-white rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#2563EB]" />
+                        <input type="text" formControlName="backBlankImage" placeholder="URL ảnh phôi mặt sau" class="flex-1 px-3 py-1.5 bg-white rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#800020]" />
                         @if (productForm.get('backBlankImage')?.value) {
                           <img [src]="productForm.get('backBlankImage')?.value" alt="Back" class="w-8 h-8 rounded-lg object-contain border bg-white shrink-0" />
                         }
@@ -626,19 +626,19 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                   <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div class="space-y-1">
                       <label class="text-[11px] font-bold text-slate-700">Phí chế tác gốc (đ):</label>
-                      <input type="number" formControlName="customBaseFee" class="w-full px-3 py-1.5 bg-white rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#2563EB]" />
+                      <input type="number" formControlName="customBaseFee" class="w-full px-3 py-1.5 bg-white rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#800020]" />
                     </div>
                     <div class="space-y-1">
                       <label class="text-[11px] font-bold text-slate-700">Giới hạn ký tự chữ:</label>
-                      <input type="number" formControlName="maxTextLength" class="w-full px-3 py-1.5 bg-white rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#2563EB]" />
+                      <input type="number" formControlName="maxTextLength" class="w-full px-3 py-1.5 bg-white rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#800020]" />
                     </div>
                   </div>
 
                   <!-- PRINT AREA & SAFE AREA (% MOCKUP) -->
-                  <div class="pt-4 border-t border-blue-200/60 space-y-3">
+                  <div class="pt-4 border-t border-[#EBD3AE]/60 space-y-3">
                     <div class="flex items-center justify-between flex-wrap gap-2">
                       <div>
-                        <span class="text-xs font-bold text-[#2563EB] uppercase tracking-wide flex items-center gap-1.5">
+                        <span class="text-xs font-bold text-[#800020] uppercase tracking-wide flex items-center gap-1.5">
                           <span class="material-symbols-outlined text-base">crop_free</span>
                           Trình Chỉnh Vùng In & An Toàn Trực Tiếp Trên Phôi
                         </span>
@@ -659,13 +659,13 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                             Gọn Trong Vùng In
                           </button>
                         }
-                        <button type="button" (click)="applyAreaPreset('tumbler')" class="px-2.5 py-1 rounded-lg border border-blue-200 bg-white hover:bg-blue-50 text-[10px] font-bold text-blue-700 cursor-pointer" title="Phôi bình trụ tròn tránh 2 mép cong bên">
+                        <button type="button" (click)="applyAreaPreset('tumbler')" class="px-2.5 py-1 rounded-lg border border-[#EBD3AE] bg-white hover:bg-[#FFF5E1] text-[10px] font-bold text-[#800020] cursor-pointer" title="Phôi bình trụ tròn tránh 2 mép cong bên">
                           Bình Trụ Tròn
                         </button>
-                        <button type="button" (click)="applyAreaPreset('mug')" class="px-2.5 py-1 rounded-lg border border-blue-200 bg-white hover:bg-blue-50 text-[10px] font-bold text-blue-700 cursor-pointer">
+                        <button type="button" (click)="applyAreaPreset('mug')" class="px-2.5 py-1 rounded-lg border border-[#EBD3AE] bg-white hover:bg-[#FFF5E1] text-[10px] font-bold text-[#800020] cursor-pointer">
                           Ly Sứ / Cốc
                         </button>
-                        <button type="button" (click)="applyAreaPreset('flat')" class="px-2.5 py-1 rounded-lg border border-blue-200 bg-white hover:bg-blue-50 text-[10px] font-bold text-blue-700 cursor-pointer">
+                        <button type="button" (click)="applyAreaPreset('flat')" class="px-2.5 py-1 rounded-lg border border-[#EBD3AE] bg-white hover:bg-[#FFF5E1] text-[10px] font-bold text-[#800020] cursor-pointer">
                           Mặt Phẳng / Ví
                         </button>
                       </div>
@@ -680,9 +680,9 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                             type="button"
                             (click)="setAreaMode('PRINT')"
                             class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                            [ngClass]="activeAreaMode() === 'PRINT' ? 'bg-[#2563EB] text-white shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'"
+                            [ngClass]="activeAreaMode() === 'PRINT' ? 'bg-[#800020] text-[#FFF5E1] shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'"
                           >
-                            <span class="w-2.5 h-2.5 rounded-xs bg-blue-300 inline-block border border-white"></span>
+                            <span class="w-2.5 h-2.5 rounded-xs bg-[#800020] inline-block border border-white"></span>
                             🟣 Chỉnh Vùng In (Print Area)
                           </button>
                           <button
@@ -720,26 +720,26 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                             <!-- Print Area Box -->
                             <div
                               class="absolute border-2 border-dashed transition-all box-border"
-                              [ngClass]="activeAreaMode() === 'PRINT' ? 'border-[#2563EB] bg-blue-500/25 ring-2 ring-[#2563EB]/60 z-20 cursor-move' : 'border-blue-400/80 bg-blue-500/10 z-10 cursor-pointer'"
+                              [ngClass]="activeAreaMode() === 'PRINT' ? 'border-[#800020] bg-[#FFF5E1]0/25 ring-2 ring-[#800020]/60 z-20 cursor-move' : 'border-[#800020]/80 bg-[#FFF5E1]0/10 z-10 cursor-pointer'"
                               [style.left.%]="productForm.get('printAreaX')?.value"
                               [style.top.%]="productForm.get('printAreaY')?.value"
                               [style.width.%]="productForm.get('printAreaWidth')?.value"
                               [style.height.%]="productForm.get('printAreaHeight')?.value"
                               (pointerdown)="onBoxPointerDown($event, 'PRINT')"
                             >
-                              <span class="absolute top-1 left-1.5 bg-[#2563EB] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow pointer-events-none select-none whitespace-nowrap">
+                              <span class="absolute top-1 left-1.5 bg-[#800020] text-[#FFF5E1] text-[9px] font-bold px-1.5 py-0.5 rounded shadow pointer-events-none select-none whitespace-nowrap">
                                 VÙNG IN: {{ productForm.get('printAreaWidth')?.value }}% × {{ productForm.get('printAreaHeight')?.value }}%
                               </span>
 
                               @if (activeAreaMode() === 'PRINT') {
-                                <div class="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-white border-2 border-[#2563EB] rounded-full shadow-md cursor-nwse-resize z-30" (pointerdown)="onHandlePointerDown($event, 'nw', 'PRINT')"></div>
-                                <div class="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-white border-2 border-[#2563EB] rounded-full shadow-md cursor-nesw-resize z-30" (pointerdown)="onHandlePointerDown($event, 'ne', 'PRINT')"></div>
-                                <div class="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-white border-2 border-[#2563EB] rounded-full shadow-md cursor-nesw-resize z-30" (pointerdown)="onHandlePointerDown($event, 'sw', 'PRINT')"></div>
-                                <div class="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-white border-2 border-[#2563EB] rounded-full shadow-md cursor-nwse-resize z-30" (pointerdown)="onHandlePointerDown($event, 'se', 'PRINT')"></div>
-                                <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-white border-2 border-[#2563EB] rounded-full shadow-md cursor-ns-resize z-30" (pointerdown)="onHandlePointerDown($event, 'n', 'PRINT')"></div>
-                                <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-white border-2 border-[#2563EB] rounded-full shadow-md cursor-ns-resize z-30" (pointerdown)="onHandlePointerDown($event, 's', 'PRINT')"></div>
-                                <div class="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3.5 h-3.5 bg-white border-2 border-[#2563EB] rounded-full shadow-md cursor-ew-resize z-30" (pointerdown)="onHandlePointerDown($event, 'w', 'PRINT')"></div>
-                                <div class="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3.5 h-3.5 bg-white border-2 border-[#2563EB] rounded-full shadow-md cursor-ew-resize z-30" (pointerdown)="onHandlePointerDown($event, 'e', 'PRINT')"></div>
+                                <div class="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-white border-2 border-[#800020] rounded-full shadow-md cursor-nwse-resize z-30" (pointerdown)="onHandlePointerDown($event, 'nw', 'PRINT')"></div>
+                                <div class="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-white border-2 border-[#800020] rounded-full shadow-md cursor-nesw-resize z-30" (pointerdown)="onHandlePointerDown($event, 'ne', 'PRINT')"></div>
+                                <div class="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-white border-2 border-[#800020] rounded-full shadow-md cursor-nesw-resize z-30" (pointerdown)="onHandlePointerDown($event, 'sw', 'PRINT')"></div>
+                                <div class="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-white border-2 border-[#800020] rounded-full shadow-md cursor-nwse-resize z-30" (pointerdown)="onHandlePointerDown($event, 'se', 'PRINT')"></div>
+                                <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-white border-2 border-[#800020] rounded-full shadow-md cursor-ns-resize z-30" (pointerdown)="onHandlePointerDown($event, 'n', 'PRINT')"></div>
+                                <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-white border-2 border-[#800020] rounded-full shadow-md cursor-ns-resize z-30" (pointerdown)="onHandlePointerDown($event, 's', 'PRINT')"></div>
+                                <div class="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3.5 h-3.5 bg-white border-2 border-[#800020] rounded-full shadow-md cursor-ew-resize z-30" (pointerdown)="onHandlePointerDown($event, 'w', 'PRINT')"></div>
+                                <div class="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3.5 h-3.5 bg-white border-2 border-[#800020] rounded-full shadow-md cursor-ew-resize z-30" (pointerdown)="onHandlePointerDown($event, 'e', 'PRINT')"></div>
                               }
                             </div>
 
@@ -774,34 +774,34 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                     </div>
 
                     <!-- Synchronized Numeric Controls -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-3.5 rounded-xl border border-blue-100">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-3.5 rounded-xl border border-[#EBD3AE]">
                       <!-- Print Area (% Mockup) -->
-                      <div class="space-y-2 p-2.5 rounded-lg bg-blue-50/50 border border-blue-200">
+                      <div class="space-y-2 p-2.5 rounded-lg bg-[#FFF5E1]/50 border border-[#EBD3AE]">
                         <div class="flex items-center justify-between">
-                          <span class="text-[11px] font-bold text-[#2563EB] flex items-center gap-1">
-                            <span class="w-2.5 h-2.5 rounded-xs bg-[#2563EB] inline-block"></span>
+                          <span class="text-[11px] font-bold text-[#800020] flex items-center gap-1">
+                            <span class="w-2.5 h-2.5 rounded-xs bg-[#800020] inline-block"></span>
                             Tọa độ Vùng In (Print Area %)
                           </span>
-                          <span class="text-[10px] text-blue-700 font-mono font-bold">
+                          <span class="text-[10px] text-[#800020] font-mono font-bold">
                             {{ productForm.get('printAreaWidth')?.value }}% × {{ productForm.get('printAreaHeight')?.value }}%
                           </span>
                         </div>
                         <div class="grid grid-cols-4 gap-1.5 text-[10px]">
                           <div>
                             <label class="text-slate-600 font-medium block">X (%)</label>
-                            <input type="number" formControlName="printAreaX" min="0" max="100" class="w-full px-2 py-1 border rounded bg-white font-mono text-center font-bold text-blue-700" />
+                            <input type="number" formControlName="printAreaX" min="0" max="100" class="w-full px-2 py-1 border rounded bg-white font-mono text-center font-bold text-[#800020]" />
                           </div>
                           <div>
                             <label class="text-slate-600 font-medium block">Y (%)</label>
-                            <input type="number" formControlName="printAreaY" min="0" max="100" class="w-full px-2 py-1 border rounded bg-white font-mono text-center font-bold text-blue-700" />
+                            <input type="number" formControlName="printAreaY" min="0" max="100" class="w-full px-2 py-1 border rounded bg-white font-mono text-center font-bold text-[#800020]" />
                           </div>
                           <div>
                             <label class="text-slate-600 font-medium block">Rộng (%)</label>
-                            <input type="number" formControlName="printAreaWidth" min="10" max="100" class="w-full px-2 py-1 border rounded bg-white font-mono text-center font-bold text-blue-700" />
+                            <input type="number" formControlName="printAreaWidth" min="10" max="100" class="w-full px-2 py-1 border rounded bg-white font-mono text-center font-bold text-[#800020]" />
                           </div>
                           <div>
                             <label class="text-slate-600 font-medium block">Cao (%)</label>
-                            <input type="number" formControlName="printAreaHeight" min="10" max="100" class="w-full px-2 py-1 border rounded bg-white font-mono text-center font-bold text-blue-700" />
+                            <input type="number" formControlName="printAreaHeight" min="10" max="100" class="w-full px-2 py-1 border rounded bg-white font-mono text-center font-bold text-[#800020]" />
                           </div>
                         </div>
                       </div>
@@ -845,13 +845,13 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
 
               <!-- Buttons -->
               <div class="flex justify-end gap-3 pt-4 border-t border-giftory-border/40">
-                <button type="button" (click)="isModalOpen.set(false)" class="px-5 py-2 rounded-xl text-xs font-bold text-giftory-ink/60 hover:bg-[#F0F7FF] cursor-pointer">
+                <button type="button" (click)="isModalOpen.set(false)" class="px-5 py-2 rounded-xl text-xs font-bold text-giftory-ink/60 hover:bg-[#FFF5E1] cursor-pointer">
                   Hủy Bỏ
                 </button>
                 <button
                   type="submit"
                   [disabled]="productForm.invalid || isSaving() || pendingStudioUploads() > 0"
-                  class="px-6 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-gray-300 text-white text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
+                  class="px-6 py-2.5 bg-[#800020] hover:bg-[#660019] disabled:bg-gray-300 text-[#FFF5E1] text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
                 >
                   <span *ngIf="isSaving()" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                   {{ isSaving() ? 'Đang Đẩy Vào Database...' : (editingProduct() ? 'Cập Nhật Phôi & Quà Tặng' : 'Đẩy Sản Phẩm Vào Database') }}
@@ -862,10 +862,10 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
             <!-- ================= SUB-DRAWER: ADD / EDIT COLOR VARIANT ================= -->
             @if (isVariantDrawerOpen()) {
               <div class="fixed inset-0 z-60 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-                <div class="bg-white rounded-3xl p-6 max-w-lg w-full border border-blue-200 shadow-2xl space-y-4 animate-fade-in max-h-[90vh] overflow-y-auto">
+                <div class="bg-white rounded-3xl p-6 max-w-lg w-full border border-[#EBD3AE] shadow-2xl space-y-4 animate-fade-in max-h-[90vh] overflow-y-auto">
                   <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <h4 class="font-bold text-sm text-[#1E1B4B] flex items-center gap-2">
-                      <span class="material-symbols-outlined text-[#2563EB]">palette</span>
+                    <h4 class="font-bold text-sm text-[#2B1A1A] flex items-center gap-2">
+                      <span class="material-symbols-outlined text-[#800020]">palette</span>
                       {{ editingVariantIndex() !== null ? 'Chỉnh Sửa Biến Thể Màu' : 'Thêm Biến Thể Màu Mới' }}
                     </h4>
                     <button type="button" (click)="isVariantDrawerOpen.set(false)" class="text-slate-400 hover:text-slate-600 cursor-pointer">
@@ -885,7 +885,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                         formControlName="name"
                         (input)="onVariantColorNameInput($any($event.target).value)"
                         placeholder="VD: Navy Blue, Deep Slate, Pure White..."
-                        class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#2563EB]"
+                        class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#800020]"
                       />
                     </div>
 
@@ -894,18 +894,18 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                         <label class="text-xs font-bold text-giftory-ink">Mã màu Swatch (Hex) *</label>
                         <div class="flex items-center gap-2">
                           <input type="color" formControlName="colorHex" class="w-9 h-9 p-0.5 rounded-lg border border-slate-300 cursor-pointer shrink-0" />
-                          <input type="text" formControlName="colorHex" placeholder="#1E1B4B" class="flex-1 px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 font-mono text-xs font-bold text-slate-800" />
+                          <input type="text" formControlName="colorHex" placeholder="#2B1A1A" class="flex-1 px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 font-mono text-xs font-bold text-slate-800" />
                         </div>
                       </div>
 
                       <div class="space-y-1.5">
                         <div class="flex items-center justify-between">
                           <label class="text-xs font-bold text-giftory-ink">Mã SKU riêng *</label>
-                          <button type="button" (click)="onVariantColorNameInput(variantForm.get('name')?.value)" class="text-[10px] text-[#2563EB] font-bold hover:underline cursor-pointer">
+                          <button type="button" (click)="onVariantColorNameInput(variantForm.get('name')?.value)" class="text-[10px] text-[#800020] font-bold hover:underline cursor-pointer">
                             Gợi ý lại
                           </button>
                         </div>
-                        <input type="text" formControlName="sku" placeholder="GF-BESPOKE-01-NVY" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 font-mono text-xs font-bold text-blue-700 uppercase" />
+                        <input type="text" formControlName="sku" placeholder="GF-BESPOKE-01-NVY" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 font-mono text-xs font-bold text-[#800020] uppercase" />
                       </div>
                     </div>
 
@@ -917,12 +917,12 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                             Lấy giá gốc
                           </button>
                         </div>
-                        <input type="number" formControlName="price" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#2563EB]" />
+                        <input type="number" formControlName="price" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#800020]" />
                       </div>
 
                       <div class="space-y-1.5">
                         <label class="text-xs font-bold text-giftory-ink">Số lượng tồn kho riêng *</label>
-                        <input type="number" formControlName="stock" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#2563EB]" />
+                        <input type="number" formControlName="stock" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#800020]" />
                         <span class="text-[10px] text-slate-400 block">Nếu tồn kho = 0 sẽ tự chuyển "Hết hàng"</span>
                       </div>
                     </div>
@@ -934,14 +934,14 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                           <span>Ảnh Mockup Riêng Của Màu Này *</span>
                           <span class="text-[10px] text-red-500 font-bold">(Ảnh biến thể sản phẩm)</span>
                         </label>
-                        <label class="cursor-pointer text-[11px] font-bold text-[#2563EB] hover:underline flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded-lg">
+                        <label class="cursor-pointer text-[11px] font-bold text-[#800020] hover:underline flex items-center gap-1 bg-[#FFF5E1] px-2 py-0.5 rounded-lg">
                           <span class="material-symbols-outlined text-[13px]">upload</span>
                           <span>{{ isVariantUploading() ? 'Đang tải...' : 'Tải ảnh mockup' }}</span>
                           <input type="file" accept="image/*" (change)="onVariantFileSelected($event)" class="hidden" [disabled]="isVariantUploading()" />
                         </label>
                       </div>
                       <div class="flex gap-2 items-center">
-                        <input type="text" formControlName="image" placeholder="URL ảnh mockup riêng cho màu này..." class="flex-1 px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#2563EB]" />
+                        <input type="text" formControlName="image" placeholder="URL ảnh mockup riêng cho màu này..." class="flex-1 px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#800020]" />
                         @if (variantForm.get('image')?.value) {
                           <img [src]="variantForm.get('image')?.value" alt="Variant Preview" class="w-10 h-10 rounded-xl object-cover border border-slate-300 shadow-2xs shrink-0" />
                         }
@@ -951,7 +951,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
 
                     <div class="space-y-1.5">
                       <label class="text-xs font-bold text-giftory-ink">Trạng thái biến thể</label>
-                      <select formControlName="status" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#2563EB]">
+                      <select formControlName="status" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#800020]">
                         <option value="ACTIVE">Đang bán (Hiển thị đầy đủ)</option>
                         <option value="HIDDEN">Ẩn (Không hiện trên cửa hàng)</option>
                         <option value="OUT_OF_STOCK">Hết hàng (Hiển thị nhãn hết hàng, vô hiệu hóa)</option>
@@ -962,7 +962,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                       <button type="button" (click)="isVariantDrawerOpen.set(false)" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer">
                         Đóng
                       </button>
-                      <button type="submit" [disabled]="variantForm.invalid" class="px-5 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-gray-300 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer">
+                      <button type="submit" [disabled]="variantForm.invalid" class="px-5 py-2 bg-[#800020] hover:bg-[#660019] disabled:bg-gray-300 text-[#FFF5E1] text-xs font-bold rounded-xl transition shadow-xs cursor-pointer">
                         {{ editingVariantIndex() !== null ? 'Cập Nhật Màu' : 'Lưu Màu Mới' }}
                       </button>
                     </div>
@@ -977,9 +977,9 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
       <!-- ================= MODAL: ADD STUDIO ASSET / ICON ================= -->
       @if (isAssetModalOpen()) {
         <div class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div class="bg-white rounded-3xl p-6 max-w-md w-full border border-blue-200 shadow-2xl space-y-4 animate-fade-in">
+          <div class="bg-white rounded-3xl p-6 max-w-md w-full border border-[#EBD3AE] shadow-2xl space-y-4 animate-fade-in">
             <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-              <h3 class="font-bold text-base text-[#1E1B4B]">Thêm Clipart Vào Studio</h3>
+              <h3 class="font-bold text-base text-[#2B1A1A]">Thêm Clipart Vào Studio</h3>
               <button (click)="isAssetModalOpen.set(false)" class="text-slate-400 hover:text-slate-600 cursor-pointer">
                 <span class="material-symbols-outlined">close</span>
               </button>
@@ -999,7 +999,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                   type="text"
                   [(ngModel)]="newAssetName"
                   placeholder="VD: Gấu bông kỷ niệm"
-                  class="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#2563EB]"
+                  class="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#800020]"
                 />
               </div>
 
@@ -1007,7 +1007,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                 <label class="text-xs font-bold text-slate-700 block mb-1">Danh mục clipart</label>
                 <select
                   [(ngModel)]="newAssetCategory"
-                  class="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#2563EB]"
+                  class="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-[#800020]"
                 >
                   <option value="Tình yêu">Tình yêu</option>
                   <option value="Sinh nhật">Sinh nhật</option>
@@ -1026,7 +1026,7 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                 <button
                   (click)="saveAsset()"
                   [disabled]="!newAssetImageUrl.trim() || !newAssetName.trim() || isAssetUploading()"
-                  class="px-5 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-slate-300 text-white rounded-xl text-xs font-bold cursor-pointer"
+                  class="px-5 py-2 bg-[#800020] hover:bg-[#660019] disabled:bg-slate-300 text-[#FFF5E1] rounded-xl text-xs font-bold cursor-pointer"
                 >
                   Lưu Clipart Vào Studio
                 </button>
@@ -1160,7 +1160,7 @@ export class AdminProductsComponent implements OnInit {
       color: [''],
       size: [''],
       images: [''],
-      colorHex: ['#1E1B4B', Validators.required],
+      colorHex: ['#2B1A1A', Validators.required],
       sku: ['', Validators.required],
       price: [0, [Validators.required, Validators.min(0)]],
       stock: [10, [Validators.required, Validators.min(0)]],
@@ -1192,7 +1192,7 @@ export class AdminProductsComponent implements OnInit {
     const count = this.variants().length + 1;
     this.variantForm.reset({
       name: `Màu mới #${count}`,
-      colorHex: '#1E3A8A',
+      colorHex: '#3D000F',
       sku: `${baseSku}-C${count}`,
       price: basePrice,
       stock: 50,
@@ -1211,7 +1211,7 @@ export class AdminProductsComponent implements OnInit {
       color: v.color || v.name,
       size: v.size || '',
       images: (v.images || []).join("\n"),
-      colorHex: v.colorHex || '#1E1B4B',
+      colorHex: v.colorHex || '#2B1A1A',
       sku: v.sku || '',
       price: v.price ?? (this.productForm?.get('price')?.value || 0),
       stock: v.stock ?? 0,
@@ -1243,7 +1243,7 @@ export class AdminProductsComponent implements OnInit {
       color: (val.color || val.name).trim(),
       size: (val.size || '').trim(),
       images: (val.images || '').split(/\r?\n/).map((url: string) => url.trim()).filter(Boolean),
-      colorHex: val.colorHex || '#1E1B4B',
+      colorHex: val.colorHex || '#2B1A1A',
       sku: val.sku.trim().toUpperCase(),
       price: Number(val.price) || 0,
       stock: stockNum,
@@ -1431,7 +1431,7 @@ export class AdminProductsComponent implements OnInit {
       this.variants.set(p.variants.map(v => ({
         ...v,
         name: v.name,
-        colorHex: v.colorHex || '#1E1B4B',
+        colorHex: v.colorHex || '#2B1A1A',
         sku: v.sku || '',
         price: v.price ?? p.price,
         stock: v.stock ?? 0,

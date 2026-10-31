@@ -15,7 +15,7 @@ import { calculateDiscountPercent } from '../../../core/utils/product-price.util
     class: 'flex flex-col h-full w-full'
   },
   template: `
-    <article class="g-card g-card-hover w-full h-full bg-white rounded-2xl p-4 sm:p-5 shadow-shop-card border border-[#BFDBFE]/60 hover:-translate-y-1 hover:border-blue-300 transition-all duration-200 ease-out flex flex-col justify-between group relative overflow-hidden">
+    <article class="g-card g-card-hover w-full h-full bg-white rounded-2xl p-4 sm:p-5 shadow-shop-card border border-[#EBD3AE]/60 hover:-translate-y-1 hover:border-[#800020] transition-all duration-200 ease-out flex flex-col justify-between group relative overflow-hidden">
       <!-- Top Image with Floating Badges -->
       <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-slate-50 mb-3.5 flex items-center justify-center shrink-0">
         <img 
@@ -61,7 +61,7 @@ import { calculateDiscountPercent } from '../../../core/utils/product-price.util
             [routerLink]="['/custom-studio']"
             [queryParams]="{ productId: product._id }"
             (click)="$event.stopPropagation()"
-            class="absolute bottom-2 left-2 right-2 py-1.5 px-2 rounded-xl bg-white/95 hover:bg-white text-[#2563EB] hover:text-[#1D4ED8] font-bold text-[11px] text-center shadow-md border border-blue-100 flex items-center justify-center gap-1 transition-all active:scale-95 z-10 cursor-pointer"
+            class="absolute bottom-2 left-2 right-2 py-1.5 px-2 rounded-xl bg-white/95 hover:bg-white text-[#800020] hover:text-[#660019] font-bold text-[11px] text-center shadow-md border border-[#EBD3AE] flex items-center justify-center gap-1 transition-all active:scale-95 z-10 cursor-pointer"
             title="Mở Custom Studio mô phỏng 3D"
           >
             <span class="material-symbols-outlined text-[14px]">view_in_ar</span>
@@ -86,7 +86,7 @@ import { calculateDiscountPercent } from '../../../core/utils/product-price.util
           <!-- Title: Standardized fixed 2-line height so 1-line and 2-line titles align perfectly -->
           <div class="h-10 sm:h-11 mb-1 flex items-start">
             <a [routerLink]="['/products', product.slug]" 
-               class="product-detail-link g-product-title font-bold text-sm sm:text-base text-[#1E1B4B] hover:text-[#2563EB] transition-colors leading-snug"
+               class="product-detail-link g-product-title font-bold text-sm sm:text-base text-[#2B1A1A] hover:text-[#800020] transition-colors leading-snug"
                [title]="product.name">
               <span class="line-clamp-2">{{ product.name }}</span>
             </a>
@@ -97,7 +97,7 @@ import { calculateDiscountPercent } from '../../../core/utils/product-price.util
         <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
           <div class="min-w-0 flex-1">
             <div class="flex items-baseline gap-1.5 flex-wrap">
-              <span class="g-price text-base sm:text-lg font-bold text-[#2563EB] leading-none">
+              <span class="g-price text-base sm:text-lg font-bold text-[#800020] leading-none">
                 {{ (product.salePrice && product.salePrice > 0 ? product.salePrice : product.price) | number:'1.0-0' }}đ
               </span>
               @if (product.salePrice && product.salePrice > 0 && product.salePrice < product.price) {
@@ -128,7 +128,7 @@ import { calculateDiscountPercent } from '../../../core/utils/product-price.util
               <a 
                 [routerLink]="['/custom-studio']"
                 [queryParams]="{ productId: product._id }"
-                class="h-9 px-3 rounded-xl bg-[#DBEAFE] hover:bg-[#BFDBFE] text-[#2563EB] font-semibold text-xs flex items-center gap-1 transition-all active:scale-95 shadow-sm"
+                class="h-9 px-3 rounded-xl bg-[#FDF0D5] hover:bg-[#EBD3AE] text-[#800020] font-semibold text-xs flex items-center gap-1 transition-all active:scale-95 shadow-sm"
                 title="Mở Studio chế tác cá nhân"
               >
                 <span class="material-symbols-outlined text-[15px]">draw</span>
@@ -137,7 +137,7 @@ import { calculateDiscountPercent } from '../../../core/utils/product-price.util
             } @else {
               <button 
                 (click)="quickAddToCart($event)"
-                class="w-9 h-9 rounded-xl bg-[#DBEAFE] hover:bg-[#2563EB] text-[#2563EB] hover:text-white flex items-center justify-center transition-all active:scale-95 shadow-sm"
+                class="w-9 h-9 rounded-xl bg-[#FDF0D5] hover:bg-[#800020] text-[#800020] hover:text-[#FFF5E1] flex items-center justify-center transition-all active:scale-95 shadow-sm"
                 title="Thêm nhanh vào giỏ"
               >
                 <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>

@@ -7,7 +7,7 @@
 ## 1. GIỚI THIỆU DỰ ÁN & NGUYÊN TẮC THIẾT KẾ
 
 **Giftory** là nền tảng thương mại điện tử chuyên sâu về quà tặng cao cấp và chế tác cá nhân hóa (Bespoke Studio). Dự án kết hợp:
-- **UI/UX 1:1 theo Stitch**: Khung màu xanh dương hoàng gia (`#2563EB`), nền canvas (`#EFF6FF`), viền tinh xảo (`#BFDBFE`), typography `Plus Jakarta Sans` & `Playfair Display`, các hiệu ứng hoạt ảnh lượn sóng (`wave-item-1..4`), thanh điều hướng 8-icon rail và các thẻ Bento KPI.
+- **UI/UX 1:1 theo Stitch**: Khung màu Burgundy sang trọng (`#800020`), nền Cream ấm áp (`#FFF5E1`), viền tinh xảo (`#EBD3AE`), typography `Plus Jakarta Sans` & `Playfair Display`, các hiệu ứng hoạt ảnh lượn sóng (`wave-item-1..4`), thanh điều hướng 8-icon rail và các thẻ Bento KPI.
 - **Nghiệp vụ cốt lõi (Business Analysis)**:
   - **Quy tắc cọc 50% (BR-PAY05)**: Các món quà cá nhân hóa (khắc tên laser, may thêu theo yêu cầu) bắt buộc đặt cọc 50% để xưởng bắt đầu sản xuất. 50% còn lại thanh toán khi nghiệm thu hoặc COD.
   - **Tách biệt trạng thái đơn hàng & tiến độ xưởng**: `orderStatus` (`PENDING` → `CONFIRMED` → `PROCESSING` → `SHIPPING` → `DELIVERED`) song song với `fulfillmentStatus` (`AWAITING_DEPOSIT` → `AT_WORKSHOP` → `QUALITY_INSPECTION` → `PACKAGED` → `SHIPPED` → `DELIVERED`).

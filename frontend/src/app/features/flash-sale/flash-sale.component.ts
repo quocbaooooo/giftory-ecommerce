@@ -47,32 +47,32 @@ interface VoucherItem {
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-10 animate-fade-in text-[#1E1B4B]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-10 animate-fade-in text-[#2B1A1A]">
       <!-- Toast Notification -->
       <div
         *ngIf="toastMessage()"
-        class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 flex items-center gap-2 px-6 py-3 bg-[#1E1B4B] text-white rounded-full shadow-2xl animate-fade-in"
+        class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 flex items-center gap-2 px-6 py-3 bg-[#2B1A1A] text-white rounded-full shadow-2xl animate-fade-in"
       >
-        <span class="material-symbols-outlined text-[#BFDBFE] text-[20px]">loyalty</span>
+        <span class="material-symbols-outlined text-[#EBD3AE] text-[20px]">loyalty</span>
         <span class="text-xs sm:text-sm font-medium">{{ toastMessage() }}</span>
       </div>
 
       <!-- 1. HEADER BANNER & FLASH SALE COUNTDOWN -->
       <section
-        class="relative overflow-hidden rounded-[28px] bg-white text-[#1E1B4B] shadow-xl p-6 sm:p-10 border border-[#BFDBFE]"
-        style="box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.08);"
+        class="relative overflow-hidden rounded-[28px] bg-white text-[#2B1A1A] shadow-xl p-6 sm:p-10 border border-[#EBD3AE]"
+        style="box-shadow: 0 10px 25px -5px rgba(128, 0, 32, 0.08);"
       >
         <!-- Ambient Glow Circles -->
-        <div class="absolute -top-24 -right-24 w-96 h-96 bg-[#BFDBFE]/40 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-[#EFF6FF]/60 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-[#EBD3AE]/40 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-[#FFF5E1]/60 rounded-full blur-2xl pointer-events-none"></div>
 
         <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
           <!-- Left: Hero Text & CTA -->
           <div class="flex-1 text-center lg:text-left space-y-4">
             <div class="flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
-              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-white border border-[#BFDBFE] shadow-xs">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-white border border-[#EBD3AE] shadow-xs">
                 <img src="/logo.png" alt="Giftory" class="w-4 h-4 object-contain" />
-                <span class="text-xs font-bold text-[#2563EB]">Giftory Official Deal Hub</span>
+                <span class="text-xs font-bold text-[#800020]">Giftory Official Deal Hub</span>
               </div>
               <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F43F5E] text-white shadow-xs text-xs font-bold uppercase tracking-wider">
                 <span class="material-symbols-outlined text-sm">bolt</span>
@@ -82,27 +82,27 @@ interface VoucherItem {
 
             <h1 class="text-3xl sm:text-4xl lg:text-5xl font-display font-black tracking-tight leading-tight">
               🔥 SĂN DEAL BẢO BỐI<br />
-              <span class="bg-gradient-to-r from-[#2563EB] via-[#A855F7] to-[#F43F5E] bg-clip-text text-transparent">
+              <span class="bg-gradient-to-r from-[#800020] via-[#991B33] to-[#C41E3A] bg-clip-text text-transparent">
                 MÓN QUÀ TẬN TÂM
               </span>
             </h1>
 
             <p class="text-sm sm:text-base text-[#4B5563] max-w-xl leading-relaxed">
-              Đồng giá quà tặng Custom chỉ từ <strong class="text-[#2563EB] font-bold">199.000đ</strong>. Áp dụng chính sách
-              <strong class="text-[#2563EB] font-bold">Đặt cọc 50%</strong> để giữ trọn vẹn giá Deal &amp; nhận hoa lụa thiệp in lời chúc miễn phí.
+              Đồng giá quà tặng Custom chỉ từ <strong class="text-[#800020] font-bold">199.000đ</strong>. Áp dụng chính sách
+              <strong class="text-[#800020] font-bold">Đặt cọc 50%</strong> để giữ trọn vẹn giá Deal &amp; nhận hoa lụa thiệp in lời chúc miễn phí.
             </p>
 
             <div class="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-3">
               <a
                 href="#deal-products"
-                class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white text-xs sm:text-sm font-bold shadow-lg transition-all active:scale-95 bg-[#2563EB] hover:bg-[#1D4ED8]"
-                style="box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);"
+                class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white text-xs sm:text-sm font-bold shadow-lg transition-all active:scale-95 bg-[#800020] hover:bg-[#660019]"
+                style="box-shadow: 0 4px 14px rgba(128, 0, 32, 0.35);"
               >
                 <span>Khám Phá Toàn Bộ Deal Ngay</span>
                 <span class="material-symbols-outlined text-base">arrow_downward</span>
               </a>
 
-              <div class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#F3E8FF] text-[#2563EB] text-xs font-semibold border border-[#BFDBFE]">
+              <div class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#FDF0D5] text-[#800020] text-xs font-semibold border border-[#EBD3AE]">
                 <span class="material-symbols-outlined text-base">verified</span>
                 <span>Bảo hiểm vỡ hỏng 100%</span>
               </div>
@@ -111,9 +111,9 @@ interface VoucherItem {
 
           <!-- Right: Countdown Timer Box -->
           <div
-            class="w-full sm:w-auto flex flex-col items-center rounded-[24px] p-6 sm:p-8 text-center shadow-md bg-[#FAF5FF] border border-[#BFDBFE]"
+            class="w-full sm:w-auto flex flex-col items-center rounded-[24px] p-6 sm:p-8 text-center shadow-md bg-[#FFFBF2] border border-[#EBD3AE]"
           >
-            <div class="flex items-center gap-2 mb-4 text-xs font-bold uppercase tracking-wider text-[#2563EB]">
+            <div class="flex items-center gap-2 mb-4 text-xs font-bold uppercase tracking-wider text-[#800020]">
               <span class="w-2.5 h-2.5 rounded-full bg-[#F43F5E] animate-ping"></span>
               <span>Flash Sale Kết Thúc Sau</span>
             </div>
@@ -121,23 +121,23 @@ interface VoucherItem {
             <div class="flex items-center gap-2 sm:gap-3">
               <!-- Hours -->
               <div class="flex flex-col items-center">
-                <div class="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white text-[#1E1B4B] text-2xl sm:text-3xl font-black rounded-2xl shadow-xs border border-[#BFDBFE]">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white text-[#2B1A1A] text-2xl sm:text-3xl font-black rounded-2xl shadow-xs border border-[#EBD3AE]">
                   {{ countdown.hours() }}
                 </div>
                 <span class="text-[11px] text-[#6B7280] mt-1.5 uppercase tracking-wider font-semibold">Giờ</span>
               </div>
 
-              <span class="text-2xl sm:text-3xl font-black text-[#2563EB] -mt-5">:</span>
+              <span class="text-2xl sm:text-3xl font-black text-[#800020] -mt-5">:</span>
 
               <!-- Minutes -->
               <div class="flex flex-col items-center">
-                <div class="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white text-[#1E1B4B] text-2xl sm:text-3xl font-black rounded-2xl shadow-xs border border-[#BFDBFE]">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white text-[#2B1A1A] text-2xl sm:text-3xl font-black rounded-2xl shadow-xs border border-[#EBD3AE]">
                   {{ countdown.minutes() }}
                 </div>
                 <span class="text-[11px] text-[#6B7280] mt-1.5 uppercase tracking-wider font-semibold">Phút</span>
               </div>
 
-              <span class="text-2xl sm:text-3xl font-black text-[#2563EB] -mt-5">:</span>
+              <span class="text-2xl sm:text-3xl font-black text-[#800020] -mt-5">:</span>
 
               <!-- Seconds (Màu đỏ neon theo đúng thiết kế) -->
               <div class="flex flex-col items-center">
@@ -151,7 +151,7 @@ interface VoucherItem {
               </div>
             </div>
 
-            <div class="mt-4 text-[#2563EB] text-xs bg-[#EFF6FF]/70 px-4 py-1.5 rounded-full font-bold">
+            <div class="mt-4 text-[#800020] text-xs bg-[#FFF5E1]/70 px-4 py-1.5 rounded-full font-bold">
               🔥 Đã có 4.280 lượt săn Deal trong hôm nay
             </div>
           </div>
@@ -163,8 +163,8 @@ interface VoucherItem {
         <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
           <div>
             <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-[#2563EB] text-2xl">confirmation_number</span>
-              <h2 class="text-xl sm:text-2xl font-bold text-[#1E1B4B] tracking-tight">
+              <span class="material-symbols-outlined text-[#800020] text-2xl">confirmation_number</span>
+              <h2 class="text-xl sm:text-2xl font-bold text-[#2B1A1A] tracking-tight">
                 Trạm Thu Thập Voucher Giftory
               </h2>
             </div>
@@ -173,7 +173,7 @@ interface VoucherItem {
             </p>
           </div>
 
-          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF5FF] border border-[#BFDBFE] text-[#2563EB] text-xs font-semibold self-start sm:self-auto">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFFBF2] border border-[#EBD3AE] text-[#800020] text-xs font-semibold self-start sm:self-auto">
             <span class="material-symbols-outlined text-sm">stars</span>
             <span>Ưu đãi độc quyền hôm nay</span>
           </div>
@@ -182,29 +182,29 @@ interface VoucherItem {
         @if (voucherLoading()) { <p role="status" class="text-sm text-slate-500">Đang tải mã ưu đãi…</p> }
         @if (voucherError()) { <p role="alert" class="text-sm text-rose-700">{{ voucherError() }} <button (click)="loadVouchers()" class="underline">Thử lại</button></p> }
         @if (!voucherLoading() && !voucherError() && !vouchers().length) { <p class="text-sm text-slate-500">Hiện chưa có mã ưu đãi. Hãy quay lại sau.</p> }
-        @if (!authService.isAuthenticated()) { <a routerLink="/login" class="inline-block text-sm text-blue-700 underline">Đăng nhập để lưu mã</a> }
+        @if (!authService.isAuthenticated()) { <a routerLink="/login" class="inline-block text-sm text-[#800020] underline">Đăng nhập để lưu mã</a> }
         <p class="text-xs text-slate-500">Lưu mã không giữ lượt. Hiệu lực và điều kiện được kiểm tra khi đặt hàng. Mã đổi điểm cần được đổi tại trang thành viên.</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div
             *ngFor="let v of vouchers()"
-            class="relative bg-white rounded-3xl p-5 shadow-xs hover:shadow-md transition flex flex-col justify-between overflow-hidden border border-[#BFDBFE]"
+            class="relative bg-white rounded-3xl p-5 shadow-xs hover:shadow-md transition flex flex-col justify-between overflow-hidden border border-[#EBD3AE]"
           >
             <!-- Background accent circle -->
-            <div class="absolute -top-3 -right-3 w-12 h-12 rounded-full bg-[#BFDBFE]/30 pointer-events-none"></div>
+            <div class="absolute -top-3 -right-3 w-12 h-12 rounded-full bg-[#EBD3AE]/30 pointer-events-none"></div>
 
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase bg-[#F3E8FF] text-[#2563EB]">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase bg-[#FDF0D5] text-[#800020]">
                   {{ v.type }}
                 </span>
                 <span class="text-[11px] text-[#6B7280]">{{ v.expiry }}</span>
               </div>
 
-              <div class="text-lg font-bold text-[#1E1B4B]">{{ v.title }}</div>
+              <div class="text-lg font-bold text-[#2B1A1A]">{{ v.title }}</div>
               <p class="text-xs text-[#4B5563] min-h-[32px] line-clamp-2">{{ v.desc }}</p>
 
-              <div class="inline-block px-2.5 py-1 rounded-full text-xs font-mono bg-[#FAF5FF] text-[#1E1B4B] border border-[#BFDBFE]">
-                Mã: <span class="font-bold text-[#2563EB]">{{ v.code }}</span>
+              <div class="inline-block px-2.5 py-1 rounded-full text-xs font-mono bg-[#FFFBF2] text-[#2B1A1A] border border-[#EBD3AE]">
+                Mã: <span class="font-bold text-[#800020]">{{ v.code }}</span>
               </div>
             </div>
 
@@ -214,11 +214,11 @@ interface VoucherItem {
                 <span class="font-bold" [ngClass]="v.statusColor">{{ v.statusLabel }}</span>
               </div>
 
-              <div class="w-full h-1.5 rounded-full bg-[#F3E8FF] overflow-hidden">
+              <div class="w-full h-1.5 rounded-full bg-[#FDF0D5] overflow-hidden">
                 <div
                   class="h-full rounded-full transition-all duration-500"
                   [style.width.%]="v.usedPercent"
-                  [ngClass]="v.usedPercent >= 90 ? 'bg-[#F43F5E]' : 'bg-[#2563EB]'"
+                  [ngClass]="v.usedPercent >= 90 ? 'bg-[#F43F5E]' : 'bg-[#800020]'"
                 ></div>
               </div>
 
@@ -229,8 +229,8 @@ interface VoucherItem {
                 class="w-full mt-1 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
                 [ngClass]="
                   v.claimed
-                    ? 'bg-[#F3E8FF] text-[#2563EB] cursor-default'
-                    : 'bg-[#2563EB] hover:bg-[#1D4ED8] text-white active:scale-98'
+                    ? 'bg-[#FDF0D5] text-[#800020] cursor-default'
+                    : 'bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] active:scale-98'
                 "
               >
                 <span class="material-symbols-outlined text-sm">{{ v.claimed ? 'check_circle' : 'bookmark_add' }}</span>
@@ -244,7 +244,7 @@ interface VoucherItem {
       <!-- 3. HẠNG MỤC SĂN DEAL HOT (FILTER TABS) -->
       <section class="space-y-3">
         <div class="flex items-center justify-between">
-          <h3 class="text-base sm:text-lg font-bold text-[#1E1B4B] tracking-tight">Hạng Mục Săn Deal Hot</h3>
+          <h3 class="text-base sm:text-lg font-bold text-[#2B1A1A] tracking-tight">Hạng Mục Săn Deal Hot</h3>
           <span class="text-xs text-[#6B7280] hidden sm:inline">Kéo ngang để xem thêm nhóm ưu đãi</span>
         </div>
 
@@ -256,8 +256,8 @@ interface VoucherItem {
             class="flex-shrink-0 font-medium rounded-xl px-4 py-2.5 text-xs transition-all shadow-xs flex items-center gap-2"
             [ngClass]="
               selectedTab() === tab.key
-                ? 'bg-[#2563EB] text-white font-bold border border-[#2563EB]'
-                : 'bg-white text-[#1E1B4B] border border-[#BFDBFE] hover:bg-[#FAF5FF]'
+                ? 'bg-[#800020] text-[#FFF5E1] font-bold border border-[#800020]'
+                : 'bg-white text-[#2B1A1A] border border-[#EBD3AE] hover:bg-[#FFFBF2]'
             "
           >
             <span>{{ tab.icon }}</span>
@@ -271,7 +271,7 @@ interface VoucherItem {
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <div class="flex items-center gap-2">
-              <h2 class="text-xl sm:text-2xl font-bold text-[#1E1B4B]">
+              <h2 class="text-xl sm:text-2xl font-bold text-[#2B1A1A]">
                 Món Quà Tinh Xảo Đang Giảm Giá Sâu
               </h2>
               <span class="px-2.5 py-0.5 rounded-full bg-[#FFE4E6] text-[#E11D48] text-[11px] font-bold">
@@ -287,7 +287,7 @@ interface VoucherItem {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div
             *ngFor="let deal of displayDeals()"
-            class="relative group bg-white rounded-[28px] overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between border border-[#BFDBFE]"
+            class="relative group bg-white rounded-[28px] overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between border border-[#EBD3AE]"
           >
             <!-- Product Image Frame -->
             <div class="relative w-full aspect-square overflow-hidden bg-slate-50">
@@ -306,7 +306,7 @@ interface VoucherItem {
                 }
                 <span
                   *ngIf="deal.featureTag"
-                  class="px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-xs text-[11px] font-semibold text-[#1E1B4B] shadow-xs"
+                  class="px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-xs text-[11px] font-semibold text-[#2B1A1A] shadow-xs"
                 >
                   {{ deal.featureTag }}
                 </span>
@@ -317,7 +317,7 @@ interface VoucherItem {
                 (click)="toggleWishlist(deal._id)"
                 type="button"
                 class="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center transition-all shadow-xs"
-                [ngClass]="isWishlisted(deal._id) ? 'text-[#F43F5E]' : 'text-[#2563EB] hover:bg-white'"
+                [ngClass]="isWishlisted(deal._id) ? 'text-[#F43F5E]' : 'text-[#800020] hover:bg-white'"
                 title="Yêu thích món quà này"
               >
                 <span
@@ -335,23 +335,23 @@ interface VoucherItem {
                 <!-- Rating & Category Tag -->
                 <div class="flex items-center gap-1.5 text-xs">
                   <span class="material-symbols-outlined text-sm text-amber-500 fill-1">star</span>
-                  <span class="font-bold text-[#1E1B4B]">{{ deal.rating }}</span>
+                  <span class="font-bold text-[#2B1A1A]">{{ deal.rating }}</span>
                   <span class="text-[#6B7280]">({{ deal.reviewCount }} đánh giá)</span>
                   <span class="text-[#D1D5DB]">•</span>
-                  <span class="font-medium text-[#2563EB]">{{ deal.categoryTag }}</span>
+                  <span class="font-medium text-[#800020]">{{ deal.categoryTag }}</span>
                 </div>
 
                 <!-- Product Name -->
                 <a
                   [routerLink]="['/products', deal.slug]"
-                  class="product-detail-link text-sm sm:text-base font-bold text-[#1E1B4B] hover:text-[#2563EB] transition-colors"
+                  class="product-detail-link text-sm sm:text-base font-bold text-[#2B1A1A] hover:text-[#800020] transition-colors"
                 >
                   <span class="line-clamp-2">{{ deal.name }}</span>
                 </a>
 
                 <!-- Price Row -->
                 <div class="flex items-baseline gap-2 pt-1">
-                  <span class="text-xl sm:text-2xl font-black font-mono text-[#2563EB]">
+                  <span class="text-xl sm:text-2xl font-black font-mono text-[#800020]">
                     {{ deal.salePrice | number }}đ
                   </span>
                   @if (discountPercent(deal) > 0) {
@@ -370,9 +370,9 @@ interface VoucherItem {
                     </span>
                     <span class="text-[#6B7280]">Đã bán {{ deal.soldPercent }}%</span>
                   </div>
-                  <div class="w-full h-1.5 rounded-full bg-[#F3E8FF] overflow-hidden">
+                  <div class="w-full h-1.5 rounded-full bg-[#FDF0D5] overflow-hidden">
                     <div
-                      class="h-full rounded-full bg-gradient-to-r from-[#2563EB] to-[#A855F7]"
+                      class="h-full rounded-full bg-gradient-to-r from-[#800020] to-[#991B33]"
                       [style.width.%]="deal.soldPercent"
                     ></div>
                   </div>
@@ -381,7 +381,7 @@ interface VoucherItem {
 
               <!-- Action & 50% Deposit Info -->
               <div class="pt-2 space-y-2.5">
-                <div class="flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full bg-[#FAF5FF] text-[#2563EB] border border-[#BFDBFE]">
+                <div class="flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full bg-[#FFFBF2] text-[#800020] border border-[#EBD3AE]">
                   <span class="material-symbols-outlined text-[14px]">payments</span>
                   <span>Chỉ cần cọc trước <strong>{{ deal.depositAmount | number }}đ (50%)</strong></span>
                 </div>
@@ -390,8 +390,8 @@ interface VoucherItem {
                   (click)="quickBuyDeal(deal)"
                   type="button"
                   [disabled]="isAddingDeal(deal._id)"
-                  class="relative z-10 w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 text-white bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 disabled:cursor-wait"
-                  style="box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);"
+                  class="relative z-10 w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 text-white bg-[#800020] hover:bg-[#660019] disabled:opacity-60 disabled:cursor-wait"
+                  style="box-shadow: 0 4px 12px rgba(128, 0, 32, 0.25);"
                 >
                   @if (isAddingDeal(deal._id)) { <span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true"></span><span>Đang thêm…</span> }
                   @else { <span class="material-symbols-outlined text-base">view_in_ar</span><span>Săn Deal &amp; Tùy Biến 3D</span> }
@@ -404,15 +404,15 @@ interface VoucherItem {
 
       <!-- 5. CHÍNH SÁCH ĐẶT CỌC GIỮ DEAL & CAM KẾT HOÀN TIỀN -->
       <section
-        class="rounded-[28px] bg-white p-6 sm:p-8 shadow-xs space-y-6 border border-[#BFDBFE]"
+        class="rounded-[28px] bg-white p-6 sm:p-8 shadow-xs space-y-6 border border-[#EBD3AE]"
       >
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <div class="w-12 h-12 rounded-full bg-[#FDF0D5] text-[#800020] flex items-center justify-center shrink-0">
               <span class="material-symbols-outlined text-2xl">lock_reset</span>
             </div>
             <div>
-              <h3 class="text-base sm:text-lg font-bold text-[#1E1B4B]">
+              <h3 class="text-base sm:text-lg font-bold text-[#2B1A1A]">
                 Yên Tâm Săn Deal: Chính Sách Đặt Cọc 50% Giữ Giá Khuyến Mãi
               </h3>
               <p class="text-xs text-[#6B7280] mt-0.5">
@@ -421,48 +421,48 @@ interface VoucherItem {
             </div>
           </div>
 
-          <div class="flex items-center gap-1.5 text-[#2563EB] text-xs font-semibold">
+          <div class="flex items-center gap-1.5 text-[#800020] text-xs font-semibold">
             <span class="material-symbols-outlined text-base">verified_user</span>
             <span>100% Cam Kết Hoàn Cọc Nếu Không Hài Lòng Bản Thiết Kế 3D</span>
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
-          <div class="p-4 rounded-2xl bg-[#FAF5FF] border border-[#BFDBFE]/60 space-y-1">
-            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#2563EB] shadow-xs mb-2">
+          <div class="p-4 rounded-2xl bg-[#FFFBF2] border border-[#EBD3AE]/60 space-y-1">
+            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#800020] shadow-xs mb-2">
               <span class="material-symbols-outlined text-base">savings</span>
             </div>
-            <div class="text-xs font-bold text-[#1E1B4B]">1. Cọc trước 50%</div>
+            <div class="text-xs font-bold text-[#2B1A1A]">1. Cọc trước 50%</div>
             <p class="text-xs text-[#6B7280] leading-relaxed">
               Giữ nguyên giá Flash Sale hời nhất hôm nay mà chưa cần trả toàn bộ ngay.
             </p>
           </div>
 
-          <div class="p-4 rounded-2xl bg-[#FAF5FF] border border-[#BFDBFE]/60 space-y-1">
-            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#2563EB] shadow-xs mb-2">
+          <div class="p-4 rounded-2xl bg-[#FFFBF2] border border-[#EBD3AE]/60 space-y-1">
+            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#800020] shadow-xs mb-2">
               <span class="material-symbols-outlined text-base">draw</span>
             </div>
-            <div class="text-xs font-bold text-[#1E1B4B]">2. Duyệt Mockup 3D</div>
+            <div class="text-xs font-bold text-[#2B1A1A]">2. Duyệt Mockup 3D</div>
             <p class="text-xs text-[#6B7280] leading-relaxed">
               Đội ngũ nghệ nhân gửi bản thảo khắc laser/in ấn 3D chuẩn xác để bạn kiểm tra.
             </p>
           </div>
 
-          <div class="p-4 rounded-2xl bg-[#FAF5FF] border border-[#BFDBFE]/60 space-y-1">
-            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#2563EB] shadow-xs mb-2">
+          <div class="p-4 rounded-2xl bg-[#FFFBF2] border border-[#EBD3AE]/60 space-y-1">
+            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#800020] shadow-xs mb-2">
               <span class="material-symbols-outlined text-base">event_available</span>
             </div>
-            <div class="text-xs font-bold text-[#1E1B4B]">3. Chọn Ngày Giao</div>
+            <div class="text-xs font-bold text-[#2B1A1A]">3. Chọn Ngày Giao</div>
             <p class="text-xs text-[#6B7280] leading-relaxed">
               Tùy chọn ngày giao chính xác vào đúng ngày kỷ niệm, sinh nhật của người thương.
             </p>
           </div>
 
-          <div class="p-4 rounded-2xl bg-[#FAF5FF] border border-[#BFDBFE]/60 space-y-1">
-            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#2563EB] shadow-xs mb-2">
+          <div class="p-4 rounded-2xl bg-[#FFFBF2] border border-[#EBD3AE]/60 space-y-1">
+            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#800020] shadow-xs mb-2">
               <span class="material-symbols-outlined text-base">handshake</span>
             </div>
-            <div class="text-xs font-bold text-[#1E1B4B]">4. Thanh Toán Khi Nhận</div>
+            <div class="text-xs font-bold text-[#2B1A1A]">4. Thanh Toán Khi Nhận</div>
             <p class="text-xs text-[#6B7280] leading-relaxed">
               Kiểm tra hộp quà nguyên vẹn lụa là trước khi thanh toán 50% số tiền còn lại.
             </p>
@@ -514,7 +514,7 @@ export class FlashSaleComponent implements OnInit {
             type: v.discountType === 'FREESHIP' ? 'Vận chuyển' : v.discountType === 'PERCENT' ? 'Giảm phần trăm' : 'Giảm tiền hàng',
             expiry: `HSD: ${new Date(v.expiresAt).toLocaleDateString('vi-VN')}`,
             usedPercent, statusLabel: v.usedCount >= v.usageLimit ? 'Hết lượt' : `Còn ${v.usageLimit - v.usedCount} lượt`,
-            statusColor: usedPercent >= 90 ? 'text-rose-600' : 'text-blue-700',
+            statusColor: usedPercent >= 90 ? 'text-rose-600' : 'text-[#800020]',
             claimed: v.saved, exhausted: v.usedCount >= v.usageLimit, offer: v };
         }));
       },

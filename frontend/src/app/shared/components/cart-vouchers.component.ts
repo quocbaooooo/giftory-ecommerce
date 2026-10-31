@@ -7,7 +7,7 @@ import { CartService } from '../../core/services/cart.service';
   selector: 'app-cart-vouchers', standalone: true, imports: [CommonModule, FormsModule],
   template: `
     <section class="space-y-2 text-xs" aria-label="Mã ưu đãi">
-      <button type="button" (click)="open()" class="w-full flex items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-3 py-3 text-left font-bold text-blue-800 hover:bg-blue-100">
+      <button type="button" (click)="open()" class="w-full flex items-center justify-between gap-3 rounded-xl border border-[#EBD3AE] bg-[#FFF5E1] px-3 py-3 text-left font-bold text-[#800020] hover:bg-[#FFF5E1]">
         <span>🎟️ Chọn mã ưu đãi — <span class="font-semibold">{{ summary() }}</span></span><span aria-hidden="true">→</span>
       </button>
       @if (cart.cart()?.voucherNotice) {
@@ -18,14 +18,14 @@ import { CartService } from '../../core/services/cart.service';
     <div #voucherOverlay class="fixed inset-0 z-[10000] flex items-end justify-center bg-slate-950/50 sm:items-center sm:p-4" [class.hidden]="!isOpen()" (click)="close()">
         <section role="dialog" aria-modal="true" aria-labelledby="voucher-dialog-title" (click)="$event.stopPropagation()" class="max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl transition-transform sm:max-w-xl sm:rounded-3xl sm:p-6" [class.translate-y-full]="draggingDown()">
           <div class="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-300 sm:hidden" (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)"></div>
-          <header class="flex items-center justify-between border-b border-blue-50 pb-3">
-            <div><h2 id="voucher-dialog-title" class="text-xl font-extrabold text-[#1E1B4B]">Chọn voucher</h2><p class="mt-1 text-xs text-slate-500">Tổng tiền hàng hiện tại: <strong class="text-slate-700">{{ cart.pricing().itemsTotal | number:'1.0-0' }}đ</strong></p></div>
+          <header class="flex items-center justify-between border-b border-[#EBD3AE] pb-3">
+            <div><h2 id="voucher-dialog-title" class="text-xl font-extrabold text-[#2B1A1A]">Chọn voucher</h2><p class="mt-1 text-xs text-slate-500">Tổng tiền hàng hiện tại: <strong class="text-slate-700">{{ cart.pricing().itemsTotal | number:'1.0-0' }}đ</strong></p></div>
             <button type="button" (click)="close()" aria-label="Đóng" class="flex h-9 w-9 items-center justify-center rounded-full bg-amber-50 text-slate-500 hover:bg-amber-100"><span class="material-symbols-outlined text-lg">close</span></button>
           </header>
 
           <form (ngSubmit)="stageCode()" class="mt-4 space-y-2">
             <h3 class="font-bold text-slate-800">Nhập mã</h3>
-            <div class="flex gap-2"><input name="voucherCode" [(ngModel)]="code" maxlength="80" aria-label="Nhập mã ưu đãi" placeholder="Nhập mã từ quảng cáo" class="min-w-0 flex-1 rounded-xl border border-blue-200 px-3 py-2.5 uppercase focus:outline-blue-500"><button type="submit" [disabled]="!code.trim()" class="rounded-xl bg-blue-100 px-4 py-2 font-bold text-blue-700 disabled:opacity-50">Áp dụng</button></div>
+            <div class="flex gap-2"><input name="voucherCode" [(ngModel)]="code" maxlength="80" aria-label="Nhập mã ưu đãi" placeholder="Nhập mã từ quảng cáo" class="min-w-0 flex-1 rounded-xl border border-[#EBD3AE] px-3 py-2.5 uppercase focus:outline-blue-500"><button type="submit" [disabled]="!code.trim()" class="rounded-xl bg-[#FFF5E1] px-4 py-2 font-bold text-[#800020] disabled:opacity-50">Áp dụng</button></div>
           </form>
 
           <div class="mt-5 space-y-3">
@@ -33,10 +33,10 @@ import { CartService } from '../../core/services/cart.service';
             @if (cart.cart()?.vouchers?.length) {
               <div class="max-h-[42dvh] space-y-2 overflow-y-auto pr-1">
                 @for (v of savedVouchers(); track v.code) {
-                  <article class="flex items-center justify-between gap-4 rounded-2xl border border-[#F0E5D8] bg-[#FFFEFC] p-4 transition" [class.border-blue-400]="draftCode() === v.code" [class.bg-blue-50]="draftCode() === v.code" [class.opacity-50]="!v.eligible">
+                  <article class="flex items-center justify-between gap-4 rounded-2xl border border-[#F0E5D8] bg-[#FFFEFC] p-4 transition" [class.border-[#800020]]="draftCode() === v.code" [class.bg-[#FFF5E1]]="draftCode() === v.code" [class.opacity-50]="!v.eligible">
                     <div class="min-w-0 space-y-1.5">
                       <p class="text-[10px] font-extrabold uppercase tracking-wide text-emerald-700">{{ v.discountType === 'FREESHIP' ? 'FREESHIP' : v.code }}</p>
-                      <p class="font-bold text-[#1E1B4B]">{{ v.title }}</p>
+                      <p class="font-bold text-[#2B1A1A]">{{ v.title }}</p>
                       @if (v.discountType === 'FREESHIP') { <p class="text-[11px] text-slate-500">Miễn phí vận chuyển</p> }
                       @else { <p class="text-[11px] text-slate-500">Giảm {{ v.savings | number:'1.0-0' }}đ@if (v.maxDiscount > 0) { · Tối đa {{ v.maxDiscount | number:'1.0-0' }}đ }</p> }
                       <p class="text-[11px] text-slate-500">{{ v.minOrderValue > 0 ? 'Đơn từ ' + (v.minOrderValue | number:'1.0-0') + 'đ' : 'Áp dụng cho mọi đơn' }} · Hạn {{ v.expiresAt | date:'dd/MM/yyyy' }}</p>
@@ -54,7 +54,7 @@ import { CartService } from '../../core/services/cart.service';
           @if (message()) { <p role="status" class="mt-3" [class.text-rose-700]="failed()" [class.text-emerald-700]="!failed()">{{ message() }}</p> }
           <footer class="sticky bottom-0 mt-4 flex gap-2 border-t border-slate-100 bg-white pt-3">
             @if (cart.cart()?.voucherCode) { <button type="button" (click)="draftCode.set('')" class="rounded-xl border border-slate-200 px-4 py-3 font-bold text-slate-600">Bỏ chọn</button> }
-            <button type="button" (click)="confirm()" [disabled]="busy() || cart.quantitySyncPending() || cart.voucherSyncPending()" class="flex-1 rounded-xl bg-blue-700 px-4 py-3 font-bold text-white disabled:opacity-50">{{ busy() ? 'Đang áp dụng…' : 'Xác nhận' }}</button>
+            <button type="button" (click)="confirm()" [disabled]="busy() || cart.quantitySyncPending() || cart.voucherSyncPending()" class="flex-1 rounded-xl bg-[#800020] hover:bg-[#660019] px-4 py-3 font-bold text-[#FFF5E1] disabled:opacity-50">{{ busy() ? 'Đang áp dụng…' : 'Xác nhận' }}</button>
           </footer>
         </section>
     </div>

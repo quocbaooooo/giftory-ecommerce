@@ -10,9 +10,9 @@ import { CartService } from '../../../core/services/cart.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   styles: [`
-    .rail-link { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:100%;min-height:54px;border-radius:14px;color:#64748b;position:relative;transition:background .15s,color .15s }
-    .rail-link:hover { background:#eff6ff;color:#2563eb }
-    .rail-link.active { background:#2563eb;color:white }
+    .rail-link { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:100%;min-height:54px;border-radius:14px;color:#6E5656;position:relative;transition:background .15s,color .15s }
+    .rail-link:hover { background:#FFF5E1;color:#800020 }
+    .rail-link.active { background:#800020;color:#FFF5E1 }
     .cart-count-badge { transform-origin:center; }
     .cart-count-badge.badge-pop { animation: cartBadgePop .38s cubic-bezier(.2,.8,.25,1.25); }
     @keyframes cartBadgePop {
@@ -22,14 +22,14 @@ import { CartService } from '../../../core/services/cart.service';
       100% { transform:scale(1); }
     }
     @media (prefers-reduced-motion: reduce) { .cart-count-badge.badge-pop { animation:none; } }
-    .rail-link:focus-visible,.account-link:focus-visible,button:focus-visible { outline:2px solid #2563eb;outline-offset:3px }
-    .account-link { display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;font-size:13px;color:#334155;width:100%;text-align:left }
-    .account-link:hover,.account-link.active { background:#eff6ff;color:#2563eb }
+    .rail-link:focus-visible,.account-link:focus-visible,button:focus-visible { outline:2px solid #800020;outline-offset:3px }
+    .account-link { display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;font-size:13px;color:#2B1A1A;width:100%;text-align:left }
+    .account-link:hover,.account-link.active { background:#FFF5E1;color:#800020 }
     .account-link .material-symbols-outlined { font-size:20px }
   `],
   template: `
-    <aside class="fixed left-0 inset-y-0 h-dvh w-16 md:w-20 bg-white/95 backdrop-blur-md border-r border-[#BFDBFE] z-50 flex flex-col items-center py-3 shadow-sm">
-      <a routerLink="/" class="shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center hover:bg-blue-50 focus-visible:outline-blue-600" title="Trang chủ Giftory" aria-label="Trang chủ Giftory">
+    <aside class="fixed left-0 inset-y-0 h-dvh w-16 md:w-20 bg-white/95 backdrop-blur-md border-r border-[#EBD3AE] z-50 flex flex-col items-center py-3 shadow-sm">
+      <a routerLink="/" class="shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center hover:bg-[#FFF5E1] focus-visible:outline-[#800020]" title="Trang chủ Giftory" aria-label="Trang chủ Giftory">
         <img src="/logo.png" alt="Giftory" class="w-10 h-10 object-contain" />
       </a>
 
@@ -40,20 +40,20 @@ import { CartService } from '../../../core/services/cart.service';
               <span class="material-symbols-outlined text-[22px]" aria-hidden="true">{{ item.icon }}</span>
               <span class="text-[9px] md:text-[10px] font-semibold">{{ item.label }}</span>
               @if (item.path === '/cart' && cartService.productCount() > 0) {
-                <span class="cart-count-badge absolute top-0 right-0 min-w-[17px] px-1 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold" [class.badge-pop]="badgePulsing()" [attr.aria-label]="cartService.itemsCount() + ' sản phẩm trong giỏ, ' + cartService.productCount() + ' loại sản phẩm'">{{ cartService.itemsCount() > 99 ? '99+' : cartService.itemsCount() }}</span>
+                <span class="cart-count-badge absolute top-0 right-0 min-w-[17px] px-1 rounded-full bg-[#800020] text-[#FFF5E1] text-[10px] font-bold" [class.badge-pop]="badgePulsing()" [attr.aria-label]="cartService.itemsCount() + ' sản phẩm trong giỏ, ' + cartService.productCount() + ' loại sản phẩm'">{{ cartService.itemsCount() > 99 ? '99+' : cartService.itemsCount() }}</span>
               }
             </a>
           }
         </div>
       </nav>
 
-      <div #accountArea class="relative shrink-0 pt-3 border-t border-blue-100" (focusout)="onFocusOut($event)">
-        <button #avatarButton type="button" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen()" aria-controls="account-navigation" aria-label="Mở menu tài khoản và tiện ích" title="Tài khoản & tiện ích" class="w-11 h-11 rounded-full border-2 border-blue-600 bg-blue-100 text-blue-700 flex items-center justify-center hover:bg-blue-200 transition-colors">
+      <div #accountArea class="relative shrink-0 pt-3 border-t border-[#EBD3AE]" (focusout)="onFocusOut($event)">
+        <button #avatarButton type="button" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen()" aria-controls="account-navigation" aria-label="Mở menu tài khoản và tiện ích" title="Tài khoản & tiện ích" class="w-11 h-11 rounded-full border-2 border-[#800020] bg-[#FFF5E1] text-[#800020] flex items-center justify-center hover:bg-[#FDF0D5] transition-colors">
           @if (authService.currentUser()) { <span class="text-xs font-bold">{{ getInitials() }}</span> }
           @else { <span class="material-symbols-outlined" aria-hidden="true">person</span> }
         </button>
         @if (menuOpen()) {
-          <div id="account-navigation" class="absolute left-[calc(100%+14px)] bottom-0 w-64 max-w-[calc(100vw-90px)] max-h-[calc(100dvh-24px)] overflow-y-auto rounded-2xl border border-blue-100 bg-white shadow-xl p-2" aria-label="Tài khoản và tiện ích">
+          <div id="account-navigation" class="absolute left-[calc(100%+14px)] bottom-0 w-64 max-w-[calc(100vw-90px)] max-h-[calc(100dvh-24px)] overflow-y-auto rounded-2xl border border-[#EBD3AE] bg-white shadow-xl p-2" aria-label="Tài khoản và tiện ích">
             <div class="px-3 py-3 border-b border-slate-100 mb-1">
               <p class="text-sm font-bold text-slate-900 truncate">{{ authService.currentUser()?.name || 'Chào bạn!' }}</p>
               <p class="text-xs text-slate-500 mt-1">{{ authService.currentUser() ? 'Tài khoản & tiện ích' : 'Đăng nhập để quản lý quà của bạn' }}</p>

@@ -37,22 +37,22 @@ import { Product, ProductVariant } from '../../../core/models';
         <!-- BREADCRUMB & METADATA OVERVIEW -->
         <div class="w-full flex flex-wrap items-center justify-between gap-4 mb-6">
           <nav class="flex items-center gap-2 text-xs text-slate-500 font-medium">
-            <a routerLink="/" class="hover:text-blue-600 transition-colors flex items-center gap-1">
+            <a routerLink="/" class="hover:text-[#800020] transition-colors flex items-center gap-1">
               <span class="material-symbols-outlined text-[16px]">home</span>
               <span>Trang chủ</span>
             </a>
             <span class="text-slate-300">/</span>
-            <a routerLink="/products" class="hover:text-blue-600 transition-colors">Sản phẩm</a>
+            <a routerLink="/products" class="hover:text-[#800020] transition-colors">Sản phẩm</a>
             @if (prod.category?.name) {
               <span class="text-slate-300">/</span>
-              <a [routerLink]="['/products']" [queryParams]="{ category: prod.category?.slug }" class="hover:text-blue-600 transition-colors">{{ prod.category?.name }}</a>
+              <a [routerLink]="['/products']" [queryParams]="{ category: prod.category?.slug }" class="hover:text-[#800020] transition-colors">{{ prod.category?.name }}</a>
             }
             <span class="text-slate-300">/</span>
             <span class="text-slate-900 font-bold truncate max-w-xs md:max-w-md">{{ prod.name }}</span>
           </nav>
 
           <div class="flex items-center gap-2.5">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF5E1] text-[#800020] border border-[#EBD3AE] text-xs font-bold">
               <span class="material-symbols-outlined text-[15px]">verified</span>
               Bespoke Signature
             </span>
@@ -64,12 +64,12 @@ import { Product, ProductVariant } from '../../../core/models';
 
         <!-- AI Recommendation Referral Banner -->
         @if (isFromAiRecommendation()) {
-          <div class="mb-6 p-4 rounded-2xl bg-gradient-to-r from-blue-50 via-pink-50 to-blue-50 border border-blue-200 text-blue-700 flex items-center justify-between shadow-xs">
+          <div class="mb-6 p-4 rounded-2xl bg-gradient-to-r from-[#FFF5E1] via-[#FFF9ED] to-[#FFF5E1] border border-[#EBD3AE] text-[#800020] flex items-center justify-between shadow-xs">
             <div class="flex items-center gap-2.5 text-xs font-semibold">
               <span class="material-symbols-outlined text-[20px] text-pink-500 animate-spin">auto_awesome</span>
               <span>Món quà này được <strong>Trợ lý Giftory AI</strong> gợi ý riêng dựa theo sở thích và dịp kỷ niệm của bạn!</span>
             </div>
-            <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-blue-200/80 font-bold uppercase tracking-wider text-blue-900">
+            <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-[#FDF0D5] font-bold uppercase tracking-wider text-[#800020]">
               AI Match
             </span>
           </div>
@@ -82,12 +82,12 @@ import { Product, ProductVariant } from '../../../core/models';
           <div class="lg:col-span-5 min-w-0 flex flex-col gap-4">
             <!-- Main Featured Image Stage -->
             <div (touchstart)="touchStart($event)" (touchend)="touchEnd($event)"
-              class="product-cover relative w-full aspect-square bg-white rounded-[28px] overflow-hidden shadow-[0_10px_25px_-5px_rgba(37, 99, 235,0.08)] border border-blue-100/70 flex items-center justify-center p-3 group">
+              class="product-cover relative w-full aspect-square bg-white rounded-[28px] overflow-hidden shadow-[0_10px_25px_-5px_rgba(128, 0, 32,0.08)] border border-[#EBD3AE] flex items-center justify-center p-3 group">
               
               <!-- Floating Status Badges -->
               <div class="absolute top-4 left-4 z-20 flex flex-col gap-2">
                 @if (prod.isCustomizable) {
-                  <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-700 text-white text-xs font-bold shadow-md">
+                  <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#800020] text-[#FFF5E1] text-xs font-bold shadow-md">
                     <span class="material-symbols-outlined text-[14px]">auto_awesome</span>
                     Sản Phẩm Custom Theo Yêu Cầu
                   </span>
@@ -101,7 +101,7 @@ import { Product, ProductVariant } from '../../../core/models';
 
               <!-- Zoom Button -->
               <button (click)="lightbox.set(true)"
-                class="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-md text-slate-700 flex items-center justify-center hover:bg-white hover:text-blue-600 transition-all shadow-sm"
+                class="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-md text-slate-700 flex items-center justify-center hover:bg-white hover:text-[#800020] transition-all shadow-sm"
                 type="button" title="Phóng to ảnh">
                 <span class="material-symbols-outlined text-[18px]">zoom_in</span>
               </button>
@@ -122,9 +122,9 @@ import { Product, ProductVariant } from '../../../core/models';
                   <button type="button"
                     (click)="activeImage.set(img)"
                     class="aspect-square rounded-2xl bg-white overflow-hidden p-1 shadow-xs transition-all border-2"
-                    [class.border-blue-600]="activeImage() === img"
+                    [class.border-[#800020]]="activeImage() === img"
                     [class.ring-2]="activeImage() === img"
-                    [class.ring-blue-100]="activeImage() === img"
+                    [class.ring-[#F5D9AF]]="activeImage() === img"
                     [class.border-transparent]="activeImage() !== img">
                     <img [src]="img" [alt]="prod.name" class="w-full h-full object-cover rounded-xl">
                   </button>
@@ -134,15 +134,15 @@ import { Product, ProductVariant } from '../../../core/models';
 
             <!-- Guarantee Highlights Panel -->
             <div class="w-full bg-white rounded-2xl p-4 shadow-xs border border-slate-100 grid grid-cols-2 gap-3 mt-1">
-              <div class="flex items-center gap-3 p-2.5 rounded-xl bg-blue-50/50 border border-blue-100/60">
-                <span class="material-symbols-outlined text-blue-700 text-[24px] shrink-0">verified_user</span>
+              <div class="flex items-center gap-3 p-2.5 rounded-xl bg-[#FFF5E1] border border-[#EBD3AE]/60">
+                <span class="material-symbols-outlined text-[#800020] text-[24px] shrink-0">verified_user</span>
                 <div class="flex flex-col min-w-0">
                   <span class="text-xs text-slate-900 font-bold">Bảo hành 1 đổi 1</span>
                   <span class="text-[11px] text-slate-500 truncate">Nếu nứt vỡ khi vận chuyển</span>
                 </div>
               </div>
-              <div class="flex items-center gap-3 p-2.5 rounded-xl bg-blue-50/50 border border-blue-100/60">
-                <span class="material-symbols-outlined text-blue-700 text-[24px] shrink-0">view_in_ar</span>
+              <div class="flex items-center gap-3 p-2.5 rounded-xl bg-[#FFF5E1] border border-[#EBD3AE]/60">
+                <span class="material-symbols-outlined text-[#800020] text-[24px] shrink-0">view_in_ar</span>
                 <div class="flex flex-col min-w-0">
                   <span class="text-xs text-slate-900 font-bold">Duyệt Demo 3D</span>
                   <span class="text-[11px] text-slate-500 truncate">Xem trước khi khắc gia công</span>
@@ -156,7 +156,7 @@ import { Product, ProductVariant } from '../../../core/models';
           <div class="lg:col-span-7 min-w-0 flex flex-col gap-5">
             
             <!-- Card 1: Main Product Header & Pricing Box -->
-            <div class="product-overview min-w-0 bg-white rounded-[26px] p-6 shadow-[0_10px_25px_-5px_rgba(37, 99, 235,0.08)] border border-blue-100/60 flex flex-col gap-4">
+            <div class="product-overview min-w-0 bg-white rounded-[26px] p-6 shadow-[0_10px_25px_-5px_rgba(128, 0, 32,0.08)] border border-[#EBD3AE]/60 flex flex-col gap-4">
               
               <!-- Badges & Ratings -->
               <div class="flex flex-wrap items-center justify-between gap-2">
@@ -190,9 +190,9 @@ import { Product, ProductVariant } from '../../../core/models';
               }
 
               <!-- Pricing & Deposit Banner -->
-              <div class="bg-gradient-to-r from-blue-50/80 via-[#fdfcff] to-blue-50/50 rounded-2xl p-4 border border-blue-100 flex flex-wrap items-center justify-between gap-3">
+              <div class="bg-gradient-to-r from-[#FFF5E1]/80 via-[#FFFDF8] to-[#FFF5E1]/50 rounded-2xl p-4 border border-[#EBD3AE] flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-baseline gap-3">
-                  <span class="text-3xl font-black text-blue-700 tracking-tight">
+                  <span class="text-3xl font-black text-[#800020] tracking-tight">
                     {{ options.price() | number:'1.0-0' }}₫
                   </span>
                   @if (prod.price && options.price() < prod.price) {
@@ -206,7 +206,7 @@ import { Product, ProductVariant } from '../../../core/models';
                 </div>
 
                 @if (prod.isCustomizable) {
-                  <div class="bg-white px-3.5 py-1.5 rounded-xl border border-blue-200/80 shadow-2xs flex items-center gap-2">
+                  <div class="bg-white px-3.5 py-1.5 rounded-xl border border-[#EBD3AE] shadow-2xs flex items-center gap-2">
                     <span class="text-[11px] text-slate-500 uppercase font-semibold">Cọc 50%:</span>
                     <span class="text-sm text-rose-600 font-extrabold">
                       {{ (options.price() * 0.5) | number:'1.0-0' }}₫
@@ -217,8 +217,8 @@ import { Product, ProductVariant } from '../../../core/models';
 
               <!-- Delivery Lead-time Badges -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                <div class="flex items-center gap-2 p-2.5 rounded-xl bg-blue-50/60 text-blue-900 font-medium">
-                  <span class="material-symbols-outlined text-blue-600 text-[18px] shrink-0">schedule</span>
+                <div class="flex items-center gap-2 p-2.5 rounded-xl bg-[#FFF5E1] text-[#2B1A1A] border border-[#EBD3AE] font-medium">
+                  <span class="material-symbols-outlined text-[#800020] text-[18px] shrink-0">schedule</span>
                   <span>Giao 3 - 5 ngày (1 - 2 ngày xưởng khắc hoàn thiện)</span>
                 </div>
                 <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 text-slate-700">
@@ -226,13 +226,13 @@ import { Product, ProductVariant } from '../../../core/models';
                     <span class="material-symbols-outlined text-amber-600 text-[18px]">bolt</span>
                     <span>Hỏa tốc 2H nội thành HN / TP.HCM</span>
                   </div>
-                  <span class="text-blue-600 font-bold text-[11px]">Đảm bảo</span>
+                  <span class="text-[#800020] font-bold text-[11px]">Đảm bảo</span>
                 </div>
               </div>
             </div>
 
             <!-- Card 2: Variant Picker, Quantity & Engrave Input -->
-            <div class="min-w-0 bg-white rounded-[26px] p-6 shadow-[0_10px_25px_-5px_rgba(37, 99, 235,0.08)] border border-blue-100/60 flex flex-col gap-5">
+            <div class="min-w-0 bg-white rounded-[26px] p-6 shadow-[0_10px_25px_-5px_rgba(128, 0, 32,0.08)] border border-[#EBD3AE]/60 flex flex-col gap-5">
               
               <!-- 1. Bộ Chọn Màu Sắc / Chất Liệu -->
               @if (options.colors().length) {
@@ -240,9 +240,9 @@ import { Product, ProductVariant } from '../../../core/models';
                   [ngClass]="options.attempted() && !options.color() ? 'border border-rose-300 bg-rose-50/50 p-2' : ''">
                   <div class="flex items-center justify-between">
                     <label class="text-xs text-slate-800 font-bold flex items-center gap-1.5 uppercase tracking-wider">
-                      <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                      <span class="w-2 h-2 rounded-full bg-[#800020]"></span>
                       1. Màu sắc / Chất liệu:
-                      <span class="font-extrabold normal-case ml-1" [class.text-blue-700]="!!options.color() || !options.attempted()" [class.text-rose-600]="!options.color() && options.attempted()">{{ options.color() || 'Vui lòng chọn màu' }}</span>
+                      <span class="font-extrabold normal-case ml-1" [class.text-[#800020]]="!!options.color() || !options.attempted()" [class.text-rose-600]="!options.color() && options.attempted()">{{ options.color() || 'Vui lòng chọn màu' }}</span>
                     </label>
                     <span class="text-xs text-slate-400 font-normal">{{ options.colors().length }} lựa chọn</span>
                   </div>
@@ -253,8 +253,8 @@ import { Product, ProductVariant } from '../../../core/models';
                         (click)="options.chooseColor(color)"
                         class="flex items-center gap-2 p-2.5 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-xs text-left"
                         [class]="options.color() === color
-                          ? 'border-2 border-blue-600 bg-blue-50/70 text-blue-900 font-bold shadow-xs'
-                          : 'border border-slate-200 bg-white hover:border-blue-300 text-slate-700 font-medium'">
+                          ? 'border-2 border-[#800020] bg-[#FFF5E1] text-[#800020] font-bold shadow-xs'
+                          : 'border border-[#EBD3AE] bg-white hover:border-[#800020] text-slate-700 font-medium'">
                         <span class="w-4 h-4 rounded-full border border-black/10 shrink-0 shadow-inner"
                           [style.backgroundColor]="options.hex(color) || '#d1d5db'"></span>
                         <span class="truncate">{{ color }}</span>
@@ -272,9 +272,9 @@ import { Product, ProductVariant } from '../../../core/models';
                 <div data-variant-picker class="flex flex-col gap-2 pt-1 border-t border-slate-100">
                   <div class="flex items-center justify-between">
                     <label class="text-xs text-slate-800 font-bold flex items-center gap-1.5 uppercase tracking-wider">
-                      <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                      <span class="w-2 h-2 rounded-full bg-[#800020]"></span>
                       2. Kích thước / Quy cách:
-                      <span class="text-blue-700 font-extrabold normal-case ml-1">{{ options.size() || 'Vui lòng chọn' }}</span>
+                      <span class="text-[#800020] font-extrabold normal-case ml-1">{{ options.size() || 'Vui lòng chọn' }}</span>
                     </label>
                   </div>
                   <div class="flex flex-wrap gap-2">
@@ -284,8 +284,8 @@ import { Product, ProductVariant } from '../../../core/models';
                         (click)="options.chooseSize(size)"
                         class="px-4 py-2.5 rounded-xl text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                         [class]="options.size() === size
-                          ? 'border-2 border-blue-600 bg-blue-50/70 text-blue-900 font-bold shadow-xs'
-                          : 'border border-slate-200 bg-white hover:border-blue-300 text-slate-700 font-medium'">
+                          ? 'border-2 border-[#800020] bg-[#FFF5E1] text-[#800020] font-bold shadow-xs'
+                          : 'border border-[#EBD3AE] bg-white hover:border-[#800020] text-slate-700 font-medium'">
                         {{ size }}
                       </button>
                     }
@@ -332,7 +332,7 @@ import { Product, ProductVariant } from '../../../core/models';
                 <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col gap-2">
                   <div class="flex items-center justify-between">
                     <span class="text-xs text-slate-800 font-bold flex items-center gap-1">
-                      <span class="material-symbols-outlined text-blue-600 text-[18px]">edit_note</span>
+                      <span class="material-symbols-outlined text-[#800020] text-[18px]">edit_note</span>
                       Nội dung khắc laser (Tùy chọn nhanh):
                     </span>
                     <span class="text-[11px] text-slate-400 font-medium">{{ engraveText().length }}/30 ký tự</span>
@@ -343,10 +343,10 @@ import { Product, ProductVariant } from '../../../core/models';
                       [value]="engraveText()"
                       (input)="engraveText.set($any($event.target).value)"
                       placeholder="Ví dụ: Hoàng An • 24.12 • Kỷ Niệm"
-                      class="flex-1 bg-white px-3.5 py-2.5 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-2xs">
+                      class="flex-1 bg-white px-3.5 py-2.5 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#800020] shadow-2xs">
                     <a [routerLink]="['/custom-studio']"
                       [queryParams]="{ productId: prod._id, text: engraveText() || undefined }"
-                      class="px-3.5 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-bold transition-colors shrink-0">
+                      class="px-3.5 py-2.5 rounded-xl bg-[#FDF0D5] hover:bg-[#F5D9AF] text-[#800020] text-xs font-bold transition-colors shrink-0">
                       Mở Studio 3D
                     </a>
                   </div>
@@ -359,7 +359,7 @@ import { Product, ProductVariant } from '../../../core/models';
                   <!-- Nút Thiết Kế 3D Nổi Bật -->
                   <a [routerLink]="['/custom-studio']"
                     [queryParams]="{ productId: prod._id, text: engraveText() || undefined }"
-                    class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 text-white font-extrabold text-sm flex items-center justify-center gap-2.5 shadow-[0_10px_25px_-5px_rgba(37, 99, 235,0.35)] hover:opacity-95 hover:scale-[1.01] active:scale-[0.99] transition-all">
+                    class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#800020] via-[#660019] to-[#540015] text-[#FFF5E1] font-extrabold text-sm flex items-center justify-center gap-2.5 shadow-[0_10px_25px_-5px_rgba(128,0,32,0.35)] hover:opacity-95 hover:scale-[1.01] active:scale-[0.99] transition-all">
                     <span class="material-symbols-outlined text-[20px]">palette</span>
                     <span>TỰ THIẾT KẾ & CUSTOM (Studio 2D/3D)</span>
                     <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
@@ -367,26 +367,26 @@ import { Product, ProductVariant } from '../../../core/models';
                   
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button type="button" (click)="buyNow()" [disabled]="pending() || !options.canPurchase()"
-                      class="w-full py-3.5 px-4 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] disabled:opacity-50">
+                      class="w-full py-3.5 px-4 rounded-xl bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] disabled:opacity-50">
                       @if (pending()) { <span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true"></span><span>Đang xử lý…</span> }
                       @else { <span class="material-symbols-outlined text-[18px]">shopping_cart_checkout</span><span>MUA NGAY</span> }
                     </button>
                     <button type="button" (click)="addToCart()" [disabled]="pending() || !options.canPurchase()"
-                      class="w-full py-3.5 px-4 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50">
-                      @if (pending()) { <span class="inline-block w-4 h-4 rounded-full border-2 border-blue-300 border-t-blue-700 animate-spin" aria-hidden="true"></span><span>Đang thêm…</span> }
+                      class="w-full py-3.5 px-4 rounded-xl bg-[#FDF0D5] hover:bg-[#F5E4C4] text-[#800020] border border-[#EBD3AE] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50">
+                      @if (pending()) { <span class="inline-block w-4 h-4 rounded-full border-2 border-[#800020] border-t-blue-700 animate-spin" aria-hidden="true"></span><span>Đang thêm…</span> }
                       @else { <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span><span>Thêm Vào Giỏ Hàng</span> }
                     </button>
                   </div>
                 } @else {
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button type="button" (click)="buyNow()" [disabled]="pending() || !options.canPurchase()"
-                      class="w-full py-3.5 px-4 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 transition-all active:scale-[0.98] disabled:opacity-50">
+                      class="w-full py-3.5 px-4 rounded-xl bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#800020]/20 transition-all active:scale-[0.98] disabled:opacity-50">
                       @if (pending()) { <span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true"></span><span>Đang xử lý…</span> }
                       @else { <span class="material-symbols-outlined text-[20px]">bolt</span><span>MUA NGAY</span> }
                     </button>
                     <button type="button" (click)="addToCart()" [disabled]="pending() || !options.canPurchase()"
-                      class="w-full py-3.5 px-4 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50">
-                      @if (pending()) { <span class="inline-block w-4 h-4 rounded-full border-2 border-blue-300 border-t-blue-700 animate-spin" aria-hidden="true"></span><span>Đang thêm…</span> }
+                      class="w-full py-3.5 px-4 rounded-xl bg-[#FDF0D5] hover:bg-[#F5E4C4] text-[#800020] border border-[#EBD3AE] font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50">
+                      @if (pending()) { <span class="inline-block w-4 h-4 rounded-full border-2 border-[#800020] border-t-blue-700 animate-spin" aria-hidden="true"></span><span>Đang thêm…</span> }
                       @else { <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span><span>Thêm Vào Giỏ</span> }
                     </button>
                   </div>
@@ -402,13 +402,13 @@ import { Product, ProductVariant } from '../../../core/models';
                   </button>
                   <div class="w-px h-3 bg-slate-200"></div>
                   <a [routerLink]="['/cart']"
-                    class="flex items-center gap-1.5 py-1 px-3 rounded-full hover:bg-slate-100 hover:text-blue-600 transition-all">
+                    class="flex items-center gap-1.5 py-1 px-3 rounded-full hover:bg-slate-100 hover:text-[#800020] transition-all">
                     <span class="material-symbols-outlined text-[18px]">card_giftcard</span>
                     <span>Tặng kèm thiệp</span>
                   </a>
                   <div class="w-px h-3 bg-slate-200"></div>
                   <button type="button" (click)="shareProduct()"
-                    class="flex items-center gap-1.5 py-1 px-3 rounded-full hover:bg-slate-100 hover:text-blue-600 transition-all">
+                    class="flex items-center gap-1.5 py-1 px-3 rounded-full hover:bg-slate-100 hover:text-[#800020] transition-all">
                     <span class="material-symbols-outlined text-[18px]">share</span>
                     <span>Chia sẻ</span>
                   </button>
@@ -419,22 +419,22 @@ import { Product, ProductVariant } from '../../../core/models';
         </div>
 
         <!-- TABBED SPECIFICATIONS & ARTISAN DETAILS -->
-        <div class="w-full bg-white rounded-[28px] p-6 sm:p-8 shadow-[0_10px_25px_-5px_rgba(37, 99, 235,0.08)] border border-blue-100/60 mb-12">
+        <div class="w-full bg-white rounded-[28px] p-6 sm:p-8 shadow-[0_10px_25px_-5px_rgba(128, 0, 32,0.08)] border border-[#EBD3AE]/60 mb-12">
           <!-- Tab Navigation -->
           <div class="flex items-center gap-2 border-b border-slate-100 pb-4 mb-6 overflow-x-auto">
             <button type="button" (click)="activeTab.set('specs')"
               class="px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all shrink-0"
-              [class]="activeTab() === 'specs' ? 'bg-blue-100 text-blue-700 font-extrabold shadow-2xs' : 'text-slate-600 hover:bg-slate-100'">
+              [class]="activeTab() === 'specs' ? 'bg-[#FFF5E1] text-[#800020] border border-[#EBD3AE] font-extrabold shadow-2xs' : 'text-slate-600 hover:bg-slate-100'">
               Chi Tiết Chất Liệu & Kích Thước
             </button>
             <button type="button" (click)="activeTab.set('custom-guide')"
               class="px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all shrink-0"
-              [class]="activeTab() === 'custom-guide' ? 'bg-blue-100 text-blue-700 font-extrabold shadow-2xs' : 'text-slate-600 hover:bg-slate-100'">
+              [class]="activeTab() === 'custom-guide' ? 'bg-[#FFF5E1] text-[#800020] border border-[#EBD3AE] font-extrabold shadow-2xs' : 'text-slate-600 hover:bg-slate-100'">
               Quy Trình Khắc Laser & Custom
             </button>
             <button type="button" (click)="activeTab.set('care')"
               class="px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all shrink-0"
-              [class]="activeTab() === 'care' ? 'bg-blue-100 text-blue-700 font-extrabold shadow-2xs' : 'text-slate-600 hover:bg-slate-100'">
+              [class]="activeTab() === 'care' ? 'bg-[#FFF5E1] text-[#800020] border border-[#EBD3AE] font-extrabold shadow-2xs' : 'text-slate-600 hover:bg-slate-100'">
               Bảo Quản & Đóng Gói Quà
             </button>
           </div>
@@ -444,8 +444,8 @@ import { Product, ProductVariant } from '../../../core/models';
             <div class="tab-content flex flex-col gap-6">
               <!-- Grid chất liệu cao cấp -->
               <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div class="p-5 rounded-2xl bg-blue-50/40 border border-blue-100/70 flex flex-col gap-2">
-                  <div class="flex items-center gap-2 text-blue-700 font-bold text-sm">
+                <div class="p-5 rounded-2xl bg-[#FFF5E1]/40 border border-[#EBD3AE] flex flex-col gap-2">
+                  <div class="flex items-center gap-2 text-[#800020] font-bold text-sm">
                     <span class="material-symbols-outlined">coffee</span>
                     <span>Chất Liệu Cao Cấp Tuyển Chọn</span>
                   </div>
@@ -454,8 +454,8 @@ import { Product, ProductVariant } from '../../../core/models';
                   </p>
                 </div>
 
-                <div class="p-5 rounded-2xl bg-blue-50/40 border border-blue-100/70 flex flex-col gap-2">
-                  <div class="flex items-center gap-2 text-blue-700 font-bold text-sm">
+                <div class="p-5 rounded-2xl bg-[#FFF5E1]/40 border border-[#EBD3AE] flex flex-col gap-2">
+                  <div class="flex items-center gap-2 text-[#800020] font-bold text-sm">
                     <span class="material-symbols-outlined">eco</span>
                     <span>Gia Công Khắc Tinh Xảo</span>
                   </div>
@@ -464,8 +464,8 @@ import { Product, ProductVariant } from '../../../core/models';
                   </p>
                 </div>
 
-                <div class="p-5 rounded-2xl bg-blue-50/40 border border-blue-100/70 flex flex-col gap-2">
-                  <div class="flex items-center gap-2 text-blue-700 font-bold text-sm">
+                <div class="p-5 rounded-2xl bg-[#FFF5E1]/40 border border-[#EBD3AE] flex flex-col gap-2">
+                  <div class="flex items-center gap-2 text-[#800020] font-bold text-sm">
                     <span class="material-symbols-outlined">stars</span>
                     <span>Phụ Kiện Đi Kèm Chuẩn Quà Tặng</span>
                   </div>
@@ -501,26 +501,26 @@ import { Product, ProductVariant } from '../../../core/models';
           <!-- Tab 2: Quy Trình Khắc Laser & Custom -->
           @if (activeTab() === 'custom-guide') {
             <div class="tab-content grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div class="p-5 rounded-2xl bg-blue-50/40 border border-blue-100 flex flex-col gap-2.5">
-                <span class="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center font-extrabold text-xs">1</span>
+              <div class="p-5 rounded-2xl bg-[#FFF5E1]/40 border border-[#EBD3AE] flex flex-col gap-2.5">
+                <span class="w-8 h-8 rounded-full bg-[#800020] text-[#FFF5E1] flex items-center justify-center font-extrabold text-xs">1</span>
                 <span class="text-sm font-bold text-slate-900">Chọn Mẫu & Nhập Lời Nhắn</span>
                 <p class="text-xs text-slate-600 leading-relaxed">Nhập tên, ngày kỷ niệm hoặc tải lên hình ảnh / chữ ký vẽ tay qua giao diện Studio.</p>
               </div>
 
-              <div class="p-5 rounded-2xl bg-blue-50/40 border border-blue-100 flex flex-col gap-2.5">
-                <span class="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center font-extrabold text-xs">2</span>
+              <div class="p-5 rounded-2xl bg-[#FFF5E1]/40 border border-[#EBD3AE] flex flex-col gap-2.5">
+                <span class="w-8 h-8 rounded-full bg-[#800020] text-[#FFF5E1] flex items-center justify-center font-extrabold text-xs">2</span>
                 <span class="text-sm font-bold text-slate-900">Xem Trước Bản Mô Phỏng 3D</span>
                 <p class="text-xs text-slate-600 leading-relaxed">Giftory tự động kết xuất ảnh 3D chân thực 360 độ góc nhìn sau khi khắc xong.</p>
               </div>
 
-              <div class="p-5 rounded-2xl bg-blue-50/40 border border-blue-100 flex flex-col gap-2.5">
-                <span class="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center font-extrabold text-xs">3</span>
+              <div class="p-5 rounded-2xl bg-[#FFF5E1]/40 border border-[#EBD3AE] flex flex-col gap-2.5">
+                <span class="w-8 h-8 rounded-full bg-[#800020] text-[#FFF5E1] flex items-center justify-center font-extrabold text-xs">3</span>
                 <span class="text-sm font-bold text-slate-900">Nghệ Nhân Khắc Laser Fiber</span>
                 <p class="text-xs text-slate-600 leading-relaxed">Sử dụng chùm tia laser fiber vi điểm với độ nét tinh vi 0.01mm, vĩnh viễn không phai màu.</p>
               </div>
 
-              <div class="p-5 rounded-2xl bg-blue-50/40 border border-blue-100 flex flex-col gap-2.5">
-                <span class="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center font-extrabold text-xs">4</span>
+              <div class="p-5 rounded-2xl bg-[#FFF5E1]/40 border border-[#EBD3AE] flex flex-col gap-2.5">
+                <span class="w-8 h-8 rounded-full bg-[#800020] text-[#FFF5E1] flex items-center justify-center font-extrabold text-xs">4</span>
                 <span class="text-sm font-bold text-slate-900">Đóng Gói Chống Sốc 3 Lớp</span>
                 <p class="text-xs text-slate-600 leading-relaxed">Lót xốp và rơm hoa khô thơm dịu, thắt nơ ruy băng lụa satin cao cấp và dán tem niêm phong.</p>
               </div>
@@ -529,7 +529,7 @@ import { Product, ProductVariant } from '../../../core/models';
 
           <!-- Tab 3: Bảo Quản & Đóng Gói Quà -->
           @if (activeTab() === 'care') {
-            <div class="tab-content p-5 rounded-2xl bg-blue-50/40 border border-blue-100 flex flex-col gap-3">
+            <div class="tab-content p-5 rounded-2xl bg-[#FFF5E1]/40 border border-[#EBD3AE] flex flex-col gap-3">
               <h4 class="text-sm font-bold text-slate-900">Hướng Dẫn Bảo Quản & Trao Tặng:</h4>
               <ul class="list-disc list-inside space-y-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
                 <li>Đối với chất liệu gỗ tự nhiên: Tránh ngâm nước quá lâu, lau khô bằng khăn mềm sau khi vệ sinh.</li>
@@ -551,10 +551,10 @@ import { Product, ProductVariant } from '../../../core/models';
           <div class="mt-12">
             <div class="flex items-center justify-between mb-6">
               <div>
-                <span class="text-xs font-bold uppercase tracking-widest text-blue-700">Gợi ý từ AI Gift Concierge</span>
+                <span class="text-xs font-bold uppercase tracking-widest text-[#800020]">Gợi ý từ AI Gift Concierge</span>
                 <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900">Các Sản Phẩm Thường Được Đặt Cùng</h3>
               </div>
-              <a routerLink="/products" class="text-xs sm:text-sm font-bold text-blue-700 hover:underline flex items-center gap-1">
+              <a routerLink="/products" class="text-xs sm:text-sm font-bold text-[#800020] hover:underline flex items-center gap-1">
                 <span>Xem tất cả quà tặng</span>
                 <span class="material-symbols-outlined text-[16px]">chevron_right</span>
               </a>

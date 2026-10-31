@@ -40,21 +40,26 @@
   --type-meta: 0.75rem;
   --radius-card: 1rem;
   --radius-control: 0.75rem;
-  --shadow-card: 0 4px 16px rgba(15, 23, 42, 0.06);
-  --shadow-card-hover: 0 8px 24px rgba(15, 23, 42, 0.10);
+  --shadow-card: 0 4px 16px rgba(43, 26, 26, 0.06);
+  --shadow-card-hover: 0 8px 24px rgba(43, 26, 26, 0.10);
   --space-1: 0.5rem;
   --space-2: 1rem;
   --space-3: 1.5rem;
-  --bg-page: #EFF6FF;
-  --apple-ink: #0F172A;
-  --regal-blue: #2563EB;
-  --blue-hover: #1D4ED8;
-  --blue-light: #BFDBFE;
-  --regal-purple: #2563EB;
-  --purple-hover: #1D4ED8;
-  --purple-light: #BFDBFE;
-  --border-subtle: #BFDBFE;
+  --bg-page: #FAF7F2;
+  --bg-page-highlight: #FDFBF7;
+  --apple-ink: #2B1A1A;
+  --regal-burgundy: #800020;
+  --burgundy-hover: #660019;
+  --burgundy-light: #F5E4C4;
+  --regal-blue: #800020;
+  --blue-hover: #660019;
+  --blue-light: #F5E4C4;
+  --regal-purple: #800020;
+  --purple-hover: #660019;
+  --purple-light: #F5E4C4;
+  --border-subtle: #EBD3AE;
   --pure-white: #ffffff;
+  --cream-bg: #FAF7F2;
   --success-jade: #10B981;
 }
 
@@ -63,11 +68,15 @@ html, body {
 }
 
 body {
-  background-color: #EFF6FF;
-  color: #0F172A;
+  background: linear-gradient(135deg, var(--bg-page) 0%, var(--bg-page-highlight) 100%);
+  color: #2B1A1A;
   font-family: var(--font-site);
   margin: 0;
   padding: 0;
+}
+
+.storefront-page-bg {
+  background: linear-gradient(135deg, var(--bg-page) 0%, var(--bg-page-highlight) 100%);
 }
 
 /* Giftory's shared storefront type and surface scale. Studio artwork may still
@@ -82,7 +91,7 @@ body {
 .g-card-hover { transition: transform 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out; }
 .g-card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 12px 28px rgba(43, 26, 26, 0.16);
 }
 .g-button, .g-field { border-radius: var(--radius-control); }
 .g-section-space { margin-bottom: var(--space-3); }
@@ -110,7 +119,7 @@ h1:not(.sr-only):not(app-custom-studio h1) {
 }
 .product-detail-link:focus-visible { outline: none; }
 .product-detail-link:focus-visible::after {
-  outline: 2px solid #2563EB;
+  outline: 2px solid #800020;
   outline-offset: -3px;
 }
 
@@ -127,13 +136,13 @@ app-custom-studio {
 
 /* Global High-Contrast Text Highlight Selection */
 *::selection {
-  background-color: #BFDBFE !important;
-  color: #0F172A !important;
+  background-color: #F5D9AF !important;
+  color: #800020 !important;
 }
 
 *::-moz-selection {
-  background-color: #BFDBFE !important;
-  color: #0F172A !important;
+  background-color: #F5D9AF !important;
+  color: #800020 !important;
 }
 
 /* Material Symbols Outlined Icon variations */
@@ -176,11 +185,11 @@ app-custom-studio {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #BFDBFE;
+  background: #EBD3AE;
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #60A5FA;
+  background: #D4B889;
 }
 
 /* Single Row Infinite Wave Marquee */

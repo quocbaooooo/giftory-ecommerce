@@ -8,7 +8,7 @@ import { AuthService } from '../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="h-screen bg-[#F4F0FA] flex text-giftory-ink overflow-hidden">
+    <div class="storefront-page-bg h-screen flex text-giftory-ink overflow-hidden">
       <!-- Admin Sidebar Navigation (Fixed Sticky Shell) -->
       <aside class="w-64 h-screen bg-white border-r border-giftory-border flex flex-col justify-between p-6 shrink-0 hidden md:flex shadow-xs sticky top-0 overflow-y-auto z-40 select-none">
         <div class="space-y-8">

@@ -13,7 +13,7 @@ import { Component, input } from '@angular/core';
   `,
   styles: [`
     :host { display: block; height: 100%; }
-    .card { box-sizing: border-box; position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; min-height: 260px; height: 100%; padding: 24px; border: 1px solid #d8c6ec; border-radius: 16px; background: #faf5ff; color: #553582; text-align: center; overflow-wrap: anywhere; }
+    .card { box-sizing: border-box; position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; min-height: 260px; height: 100%; padding: 24px; border: 1px solid #EBD3AE; border-radius: 16px; background: #FFFBF2; color: #800020; text-align: center; overflow-wrap: anywhere; }
     .card::before { content: ''; position: absolute; inset: 7px; border: 1px solid currentColor; opacity: .2; border-radius: 10px; pointer-events: none; }
     .card[data-template="LOVE"] { background: #fff5f5; color: #9b3b55; border-color: #efc3ce; }
     .card[data-template="THANK_YOU"] { background: #f4f9f5; color: #376c54; border-color: #c3dcca; }

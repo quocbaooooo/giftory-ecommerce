@@ -12,7 +12,7 @@ import { GreetingCardPreviewComponent } from '../../../shared/components/greetin
   template: `
     <section class="max-w-3xl mx-auto py-8 px-4 space-y-6">
       <div class="space-y-3">
-        <a routerLink="/admin/orders" class="text-sm text-blue-700 underline">← Quản lý đơn hàng</a>
+        <a routerLink="/admin/orders" class="text-sm text-[#800020] underline">← Quản lý đơn hàng</a>
         <h1 class="text-xl font-bold text-slate-900">In thiệp chúc mừng @if (order()) { · #{{ order()?.orderCode }} }</h1>
         <p class="text-sm text-slate-500">Khổ A6 ngang (148 × 105 mm). Chọn tỷ lệ 100%, tắt đầu/chân trang của trình duyệt. Mã đơn chỉ hiển thị trên màn hình để đối chiếu.</p>
       </div>
@@ -20,9 +20,9 @@ import { GreetingCardPreviewComponent } from '../../../shared/components/greetin
         <p role="status" class="text-slate-500">Đang tải nội dung thiệp…</p>
       } @else if (error()) {
         <p role="alert" class="text-rose-700">{{ error() }}</p>
-        <button type="button" (click)="load()" class="text-blue-700 underline">Thử lại</button>
+        <button type="button" (click)="load()" class="text-[#800020] underline">Thử lại</button>
       } @else if (order()?.greetingCard; as card) {
-        <button type="button" (click)="printCard()" class="px-5 py-3 rounded-xl bg-blue-700 text-white font-bold">In thiệp</button>
+        <button type="button" (click)="printCard()" class="px-5 py-3 rounded-xl bg-[#800020] text-[#FFF5E1] font-bold">In thiệp</button>
         <div class="overflow-x-auto pb-4">
           <div class="greeting-card-sheet">
             <app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" />

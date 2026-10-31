@@ -15,28 +15,54 @@ module.exports = {
       },
       colors: {
         brand: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          purple: '#2563eb',
-          blue: '#2563eb'
+          50: '#FFFDF7',
+          100: '#FFF5E1',
+          200: '#F5E4C4',
+          300: '#E2BD96',
+          400: '#B83D59',
+          500: '#991B33',
+          600: '#800020',
+          700: '#660019',
+          800: '#540015',
+          900: '#3D000F',
+          burgundy: '#800020',
+          cream: '#FFF5E1',
+          purple: '#800020',
+          blue: '#800020'
+        },
+        burgundy: {
+          50: '#FFFDF7',
+          100: '#FFF5E1',
+          200: '#F5E4C4',
+          300: '#E2BD96',
+          400: '#B83D59',
+          500: '#991B33',
+          600: '#800020',
+          700: '#660019',
+          800: '#540015',
+          900: '#3D000F',
+          DEFAULT: '#800020'
+        },
+        cream: {
+          DEFAULT: '#FFF5E1',
+          50: '#FFFDF8',
+          100: '#FFF9ED',
+          200: '#FFF5E1',
+          300: '#FDF0D5',
+          400: '#F5E4C4',
+          500: '#EBD3AE',
+          600: '#D4B889',
+          ink: '#2B1A1A'
         },
         surface: {
-          page: '#EFF6FF',
+          page: '#FFF5E1',
           card: '#FFFFFF',
-          ink: '#0F172A',
-          muted: '#475569',
-          slate: '#64748B',
-          border: '#BFDBFE',
-          light: '#F8FAFC',
-          container: '#E0F2FE'
+          ink: '#2B1A1A',
+          muted: '#6E5656',
+          slate: '#7A6262',
+          border: '#EBD3AE',
+          light: '#FFFBF2',
+          container: '#FDF0D5'
         },
         jade: {
           DEFAULT: '#10B981',
@@ -46,33 +72,61 @@ module.exports = {
         },
         giftory: {
           primary: {
-            DEFAULT: '#2563EB',
-            dark: '#1D4ED8',
-            light: '#BFDBFE'
+            DEFAULT: '#800020',
+            dark: '#660019',
+            light: '#F5E4C4'
           },
           sale: {
-            DEFAULT: '#E11D48',
-            hover: '#BE123C'
+            DEFAULT: '#C41E3A',
+            hover: '#9E142B'
           },
-          amber: '#F59E0B',
+          amber: '#D97706',
           emerald: '#10B981',
-          ink: '#0F172A',
-          canvas: '#EFF6FF',
-          surface: '#EFF6FF',
-          border: '#BFDBFE'
+          ink: '#2B1A1A',
+          canvas: '#FFF5E1',
+          surface: '#FFF5E1',
+          border: '#EBD3AE',
+          cream: '#FFF5E1'
         },
-        purple: colors.blue
+        blue: {
+          50: '#FFFDF7',
+          100: '#FDF0D5',
+          200: '#F5E4C4',
+          300: '#EBD3AE',
+          400: '#B83D59',
+          500: '#991B33',
+          600: '#800020',
+          700: '#660019',
+          800: '#540015',
+          900: '#3D000F',
+          950: '#26000A',
+          DEFAULT: '#800020'
+        },
+        purple: {
+          50: '#FFFDF7',
+          100: '#FDF0D5',
+          200: '#F5E4C4',
+          300: '#EBD3AE',
+          400: '#B83D59',
+          500: '#991B33',
+          600: '#800020',
+          700: '#660019',
+          800: '#540015',
+          900: '#3D000F',
+          950: '#26000A',
+          DEFAULT: '#800020'
+        }
       },
       boxShadow: {
-        DEFAULT: '0 4px 16px rgba(15, 23, 42, 0.06)',
-        sm: '0 4px 16px rgba(15, 23, 42, 0.06)',
-        md: '0 4px 16px rgba(15, 23, 42, 0.06)',
-        lg: '0 4px 16px rgba(15, 23, 42, 0.06)',
-        xl: '0 4px 16px rgba(15, 23, 42, 0.06)',
-        'shop-card': '0 4px 16px rgba(15, 23, 42, 0.06)',
-        'floating': '0 8px 24px rgba(15, 23, 42, 0.10)',
-        'pill': '0 4px 16px rgba(15, 23, 42, 0.06)',
-        'admin-card': '0 4px 16px rgba(15, 23, 42, 0.06)'
+        DEFAULT: '0 4px 16px rgba(43, 26, 26, 0.06)',
+        sm: '0 4px 16px rgba(43, 26, 26, 0.06)',
+        md: '0 4px 16px rgba(43, 26, 26, 0.06)',
+        lg: '0 4px 16px rgba(43, 26, 26, 0.06)',
+        xl: '0 4px 16px rgba(43, 26, 26, 0.06)',
+        'shop-card': '0 4px 16px rgba(43, 26, 26, 0.06)',
+        'floating': '0 8px 24px rgba(43, 26, 26, 0.10)',
+        'pill': '0 4px 16px rgba(43, 26, 26, 0.06)',
+        'admin-card': '0 4px 16px rgba(43, 26, 26, 0.06)'
       },
       borderRadius: {
         DEFAULT: '0.75rem',

@@ -27,7 +27,7 @@ export interface ChatMessage {
     @if (!isOpen()) {
       <button 
         (click)="openWidget()"
-        class="relative flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-[#2563EB] via-[#9333EA] to-[#F43F5E] text-white font-semibold text-sm shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 border-2 border-white cursor-pointer group"
+        class="relative flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-[#800020] via-[#660019] to-[#991B33] text-[#FFF5E1] font-semibold text-sm shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 border-2 border-white cursor-pointer group"
         title="Mở trợ lý AI tư vấn quà tặng và tra cứu đơn hàng"
       >
         <span class="material-symbols-outlined text-[20px] animate-bounce">auto_awesome</span>
@@ -44,13 +44,13 @@ export interface ChatMessage {
     <!-- AI Chat Window Dialog: Unified Window (US-PD-03.2) -->
     @if (isOpen()) {
       <div 
-        class="fixed bottom-6 right-6 z-50 bg-white rounded-3xl shadow-2xl border border-blue-200/90 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 transition-all"
+        class="fixed bottom-6 right-6 z-50 bg-white rounded-3xl shadow-2xl border border-[#EBD3AE]/90 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 transition-all"
         [ngClass]="isExpanded() 
           ? 'w-[94vw] sm:w-[680px] md:w-[780px] h-[88vh] max-h-[860px]' 
           : 'w-[94vw] sm:w-[480px] md:w-[500px] h-[80vh] sm:h-[730px] max-h-[calc(100vh-2.5rem)]'"
       >
         <!-- Header -->
-        <div class="px-5 py-3.5 bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#EC4899] text-white flex items-center justify-between shadow-sm shrink-0">
+        <div class="px-5 py-3.5 bg-gradient-to-r from-[#800020] via-[#660019] to-[#540015] text-[#FFF5E1] flex items-center justify-between shadow-sm shrink-0">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-md shadow-inner border border-white/20">
               <span class="material-symbols-outlined text-[22px]">psychology</span>
@@ -60,7 +60,7 @@ export interface ChatMessage {
                 <span>Giftory AI Concierge</span>
                 <span class="text-[9px] px-1.5 py-0.5 rounded-md bg-white/25 font-bold uppercase tracking-wider">Hợp Nhất</span>
               </div>
-              <div class="text-[11px] text-blue-100 flex items-center gap-1.5 mt-0.5">
+              <div class="text-[11px] text-[#FFF5E1] flex items-center gap-1.5 mt-0.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span>Tư vấn quà tặng & Tra cứu đơn hàng 24/7</span>
               </div>
@@ -98,30 +98,30 @@ export interface ChatMessage {
         </div>
 
         <!-- Guided 3-Step Flow Status Bar (US-PD-03.3) -->
-        <div class="bg-blue-50/70 border-b border-blue-100/70 px-4 py-2 flex items-center justify-between text-[11px] text-slate-600 shrink-0">
+        <div class="bg-[#FFF5E1] border-b border-[#EBD3AE] px-4 py-2 flex items-center justify-between text-[11px] text-slate-600 shrink-0">
           <div class="flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-[15px] text-[#2563EB]">assistant</span>
+            <span class="material-symbols-outlined text-[15px] text-[#800020]">assistant</span>
             <span class="font-semibold text-slate-700">Tư vấn 3 bước:</span>
-            <span class="px-1.5 py-0.5 rounded font-bold" [ngClass]="currentContext.recipient ? 'bg-blue-200 text-[#2563EB]' : 'bg-slate-200 text-slate-500'">1. Người nhận</span>
+            <span class="px-1.5 py-0.5 rounded font-bold" [ngClass]="currentContext.recipient ? 'bg-[#FDF0D5] text-[#800020]' : 'bg-slate-200 text-slate-500'">1. Người nhận</span>
             <span>→</span>
-            <span class="px-1.5 py-0.5 rounded font-bold" [ngClass]="currentContext.occasion ? 'bg-blue-200 text-[#2563EB]' : 'bg-slate-200 text-slate-500'">2. Dịp tặng</span>
+            <span class="px-1.5 py-0.5 rounded font-bold" [ngClass]="currentContext.occasion ? 'bg-[#FDF0D5] text-[#800020]' : 'bg-slate-200 text-slate-500'">2. Dịp tặng</span>
             <span>→</span>
-            <span class="px-1.5 py-0.5 rounded font-bold" [ngClass]="currentContext.budget ? 'bg-blue-200 text-[#2563EB]' : 'bg-slate-200 text-slate-500'">3. Mức giá</span>
+            <span class="px-1.5 py-0.5 rounded font-bold" [ngClass]="currentContext.budget ? 'bg-[#FDF0D5] text-[#800020]' : 'bg-slate-200 text-slate-500'">3. Mức giá</span>
           </div>
-          <button (click)="startGuidedFlow()" class="text-[#2563EB] hover:underline font-bold text-[10px] cursor-pointer">
+          <button (click)="startGuidedFlow()" class="text-[#800020] hover:underline font-bold text-[10px] cursor-pointer">
             Bắt đầu lại
           </button>
         </div>
 
         <!-- Messages Area: Auto-scroll with Rich Message Cards -->
-        <div #messagesContainer class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs sm:text-sm bg-gradient-to-b from-[#F0F7FF]/25 to-white">
+        <div #messagesContainer class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs sm:text-sm bg-gradient-to-b from-[#FFF5E1]/25 to-white">
           @for (msg of messages(); track msg.id) {
             @if (msg.sender === 'ai') {
               <div class="flex items-start gap-2.5 max-w-[96%] sm:max-w-[90%]">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#2563EB] to-[#EC4899] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm text-xs font-bold">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#800020] to-[#EC4899] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm text-xs font-bold">
                   ✨
                 </div>
-                <div class="bg-white text-slate-800 p-4 rounded-2xl rounded-tl-sm border border-blue-100 shadow-sm leading-relaxed space-y-3 w-full">
+                <div class="bg-white text-slate-800 p-4 rounded-2xl rounded-tl-sm border border-[#EBD3AE] shadow-sm leading-relaxed space-y-3 w-full">
                   <!-- Text content -->
                   <div class="whitespace-pre-line text-slate-700 font-normal leading-relaxed">{{ msg.text }}</div>
 
@@ -135,23 +135,23 @@ export interface ChatMessage {
 
                   <!-- 1. PRODUCT RECOMMENDATION CAROUSEL (US-PD-04 & US-PD-05) -->
                   @if (msg.products && msg.products.length > 0) {
-                    <div class="pt-2 border-t border-blue-50">
+                    <div class="pt-2 border-t border-[#EBD3AE]">
                       <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <span class="material-symbols-outlined text-xs text-[#2563EB]">recommend</span>
+                        <span class="material-symbols-outlined text-xs text-[#800020]">recommend</span>
                         Sản phẩm thực tế trong catalog (Còn hàng)
                       </div>
                       
                       <!-- Cards Grid/Carousel -->
                       <div class="grid grid-cols-1 gap-3" [ngClass]="isExpanded() ? 'sm:grid-cols-2' : ''">
                         @for (prod of msg.products; track prod.id) {
-                          <div class="bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-3 border border-blue-100/90 transition-all flex flex-col justify-between shadow-2xs group">
+                          <div class="bg-[#FFF5E1]/40 hover:bg-[#FFF5E1]/80 rounded-2xl p-3 border border-[#EBD3AE]/90 transition-all flex flex-col justify-between shadow-2xs group">
                             <div class="flex gap-3">
                               <!-- Thumbnail click navigates to Product Detail (US-PD-05) -->
                               <a 
                                 [routerLink]="['/products', prod.slug]" 
                                 [queryParams]="{ ref: 'ai_recommendation', session_id: sessionId }"
                                 (click)="minimizeChat()"
-                                class="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-blue-100 block group-hover:scale-105 transition-transform"
+                                class="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-[#EBD3AE] block group-hover:scale-105 transition-transform"
                               >
                                 <img [src]="prod.image" [alt]="prod.name" class="w-full h-full object-cover">
                               </a>
@@ -161,14 +161,14 @@ export interface ChatMessage {
                                   [routerLink]="['/products', prod.slug]" 
                                   [queryParams]="{ ref: 'ai_recommendation', session_id: sessionId }"
                                   (click)="minimizeChat()"
-                                  class="font-bold text-slate-800 hover:text-[#2563EB] transition-colors truncate block text-xs sm:text-sm"
+                                  class="font-bold text-slate-800 hover:text-[#800020] transition-colors truncate block text-xs sm:text-sm"
                                   [title]="prod.name"
                                 >
                                   {{ prod.name }}
                                 </a>
 
                                 <div class="flex items-center gap-2 mt-1">
-                                  <span class="text-xs font-bold text-[#2563EB]">
+                                  <span class="text-xs font-bold text-[#800020]">
                                     {{ (prod.salePrice || prod.price) | number:'1.0-0' }}đ
                                   </span>
                                   @if (prod.salePrice) {
@@ -190,12 +190,12 @@ export interface ChatMessage {
                             </div>
 
                             <!-- Action Buttons CTA (US-PD-04.2 & US-PD-05.1) -->
-                            <div class="flex items-center gap-2 mt-3 pt-2 border-t border-blue-100/60">
+                            <div class="flex items-center gap-2 mt-3 pt-2 border-t border-[#EBD3AE]">
                               <a 
                                 [routerLink]="['/products', prod.slug]"
                                 [queryParams]="{ ref: 'ai_recommendation', session_id: sessionId }"
                                 (click)="minimizeChat()"
-                                class="flex-1 py-1.5 px-2 rounded-xl bg-white border border-[#BFDBFE] text-[#2563EB] hover:bg-blue-100 font-bold text-[11px] text-center transition-colors shadow-2xs"
+                                class="flex-1 py-1.5 px-2 rounded-xl bg-white border border-[#EBD3AE] text-[#800020] hover:bg-[#FDF0D5] font-bold text-[11px] text-center transition-colors shadow-2xs"
                               >
                                 Xem chi tiết
                               </a>
@@ -204,7 +204,7 @@ export interface ChatMessage {
                                 [routerLink]="['/custom-studio']"
                                 [queryParams]="{ product: prod.slug, ref: 'ai_recommendation' }"
                                 (click)="minimizeChat()"
-                                class="flex-1 py-1.5 px-2 rounded-xl bg-[#2563EB] text-white hover:bg-[#1D4ED8] font-bold text-[11px] text-center transition-colors shadow-2xs"
+                                class="flex-1 py-1.5 px-2 rounded-xl bg-[#800020] text-[#FFF5E1] hover:bg-[#660019] font-bold text-[11px] text-center transition-colors shadow-2xs"
                               >
                                 Tùy chỉnh ngay
                               </a>
@@ -221,10 +221,10 @@ export interface ChatMessage {
                     <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
                       <div class="flex items-center justify-between">
                         <span class="font-bold text-xs text-slate-800 flex items-center gap-1.5">
-                          <span class="material-symbols-outlined text-[16px] text-[#2563EB]">local_shipping</span>
+                          <span class="material-symbols-outlined text-[16px] text-[#800020]">local_shipping</span>
                           Đơn hàng #{{ msg.orderInfo.orderCode }}
                         </span>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-[#2563EB] border border-blue-200">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FDF0D5] text-[#800020] border border-[#EBD3AE]">
                           {{ msg.orderInfo.status }}
                         </span>
                       </div>
@@ -247,7 +247,7 @@ export interface ChatMessage {
                       }
 
                       <div class="pt-2">
-                        <a routerLink="/orders" (click)="minimizeChat()" class="text-xs text-[#2563EB] font-bold hover:underline flex items-center gap-1">
+                        <a routerLink="/orders" (click)="minimizeChat()" class="text-xs text-[#800020] font-bold hover:underline flex items-center gap-1">
                           Xem chi tiết tiến trình đơn hàng
                           <span class="material-symbols-outlined text-xs">arrow_forward</span>
                         </a>
@@ -257,9 +257,9 @@ export interface ChatMessage {
 
                   <!-- 3. SEAMLESS HUMAN HANDOVER CARD (BR-REC07 & US-PD-03.4) -->
                   @if (msg.handoverInfo) {
-                    <div class="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50 to-pink-50 border border-blue-200 space-y-3">
+                    <div class="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50 to-pink-50 border border-[#EBD3AE] space-y-3">
                       <div class="flex items-center gap-3">
-                        <img [src]="msg.handoverInfo.avatar" alt="Agent" class="w-12 h-12 rounded-full object-cover border-2 border-[#2563EB]">
+                        <img [src]="msg.handoverInfo.avatar" alt="Agent" class="w-12 h-12 rounded-full object-cover border-2 border-[#800020]">
                         <div>
                           <div class="font-bold text-slate-900 text-xs sm:text-sm">{{ msg.handoverInfo.agentName }}</div>
                           <div class="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
@@ -272,7 +272,7 @@ export interface ChatMessage {
                       <div class="flex items-center gap-2">
                         <a 
                           [href]="'tel:' + msg.handoverInfo.hotline" 
-                          class="flex-1 py-2 px-3 rounded-xl bg-white border border-[#BFDBFE] text-[#2563EB] font-bold text-xs text-center flex items-center justify-center gap-1.5 hover:bg-blue-100 transition shadow-xs"
+                          class="flex-1 py-2 px-3 rounded-xl bg-white border border-[#EBD3AE] text-[#800020] font-bold text-xs text-center flex items-center justify-center gap-1.5 hover:bg-[#FDF0D5] transition shadow-xs"
                         >
                           <span class="material-symbols-outlined text-[16px]">call</span>
                           Hotline 1900 8888
@@ -280,7 +280,7 @@ export interface ChatMessage {
                         <a 
                           [href]="msg.handoverInfo.zaloUrl" 
                           target="_blank"
-                          class="flex-1 py-2 px-3 rounded-xl bg-[#0068FF] text-white font-bold text-xs text-center flex items-center justify-center gap-1.5 hover:bg-blue-600 transition shadow-xs"
+                          class="flex-1 py-2 px-3 rounded-xl bg-[#0068FF] text-white font-bold text-xs text-center flex items-center justify-center gap-1.5 hover:bg-[#0056D6] transition shadow-xs"
                         >
                           <span class="material-symbols-outlined text-[16px]">chat</span>
                           Zalo CSKH Trực Tiếp
@@ -291,11 +291,11 @@ export interface ChatMessage {
 
                   <!-- Quick Chips attached to message -->
                   @if (msg.quickChips && msg.quickChips.length > 0) {
-                    <div class="pt-2 border-t border-blue-50 flex flex-wrap gap-1.5">
+                    <div class="pt-2 border-t border-[#EBD3AE] flex flex-wrap gap-1.5">
                       @for (chip of msg.quickChips; track chip.label) {
                         <button 
                           (click)="onChipClick(chip)"
-                          class="px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-50 text-[#2563EB] hover:bg-[#2563EB] hover:text-white border border-blue-200 transition-all cursor-pointer shadow-2xs"
+                          class="px-3 py-1.5 rounded-full text-xs font-semibold bg-[#FFF5E1] text-[#800020] hover:bg-[#800020] hover:text-[#FFF5E1] border border-[#EBD3AE] transition-all cursor-pointer shadow-2xs"
                         >
                           {{ chip.label }}
                         </button>
@@ -307,7 +307,7 @@ export interface ChatMessage {
             } @else {
               <!-- User Message Bubble -->
               <div class="flex justify-end">
-                <div class="bg-gradient-to-r from-[#2563EB] to-[#9333EA] text-white p-3.5 sm:p-4 rounded-2xl rounded-tr-sm max-w-[85%] leading-relaxed font-medium shadow-sm text-xs sm:text-sm">
+                <div class="bg-gradient-to-r from-[#800020] to-[#540015] text-[#FFF5E1] p-3.5 sm:p-4 rounded-2xl rounded-tr-sm max-w-[85%] leading-relaxed font-medium shadow-sm text-xs sm:text-sm">
                   {{ msg.text }}
                 </div>
               </div>
@@ -317,7 +317,7 @@ export interface ChatMessage {
           <!-- Thinking Spinner -->
           @if (isThinking()) {
             <div class="flex items-center gap-2.5 text-slate-500 text-xs italic">
-              <div class="w-7 h-7 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center shrink-0">
+              <div class="w-7 h-7 rounded-full bg-[#FDF0D5] text-[#800020] flex items-center justify-center shrink-0">
                 <span class="material-symbols-outlined text-[16px] animate-spin">autorenew</span>
               </div>
               <span>Giftory AI đang phân tích dữ liệu và catalog thực tế...</span>
@@ -327,19 +327,19 @@ export interface ChatMessage {
 
         <!-- Sticky Quick Suggestion Chips (US-PD-03.3) -->
         <div class="px-4 py-2 bg-slate-50 border-t border-slate-100 flex items-center gap-2 overflow-x-auto text-[11px] sm:text-xs no-scrollbar shrink-0">
-          <button (click)="sendPreset('Gợi ý quà sinh nhật tặng mẹ tinh tế')" class="px-3 py-1.5 rounded-full bg-white border border-blue-200 text-[#2563EB] hover:bg-blue-50 shrink-0 font-medium transition-colors shadow-2xs cursor-pointer">
+          <button (click)="sendPreset('Gợi ý quà sinh nhật tặng mẹ tinh tế')" class="px-3 py-1.5 rounded-full bg-white border border-[#EBD3AE] text-[#800020] hover:bg-[#FFF5E1] shrink-0 font-medium transition-colors shadow-2xs cursor-pointer">
             🌸 Quà tặng mẹ
           </button>
-          <button (click)="sendPreset('Quà kỷ niệm tình yêu khắc tên dưới 500k')" class="px-3 py-1.5 rounded-full bg-white border border-blue-200 text-[#2563EB] hover:bg-blue-50 shrink-0 font-medium transition-colors shadow-2xs cursor-pointer">
+          <button (click)="sendPreset('Quà kỷ niệm tình yêu khắc tên dưới 500k')" class="px-3 py-1.5 rounded-full bg-white border border-[#EBD3AE] text-[#800020] hover:bg-[#FFF5E1] shrink-0 font-medium transition-colors shadow-2xs cursor-pointer">
             💖 Kỷ niệm tình yêu
           </button>
-          <button (click)="sendPreset('Kiểm tra trạng thái đơn hàng của tôi')" class="px-3 py-1.5 rounded-full bg-white border border-blue-200 text-[#2563EB] hover:bg-blue-50 shrink-0 font-medium transition-colors shadow-2xs cursor-pointer">
+          <button (click)="sendPreset('Kiểm tra trạng thái đơn hàng của tôi')" class="px-3 py-1.5 rounded-full bg-white border border-[#EBD3AE] text-[#800020] hover:bg-[#FFF5E1] shrink-0 font-medium transition-colors shadow-2xs cursor-pointer">
             📦 Tra cứu đơn hàng
           </button>
-          <button (click)="sendPreset('Chính sách giao hàng hỏa tốc 2 giờ')" class="px-3 py-1.5 rounded-full bg-white border border-blue-200 text-[#2563EB] hover:bg-blue-50 shrink-0 font-medium transition-colors shadow-2xs cursor-pointer">
+          <button (click)="sendPreset('Chính sách giao hàng hỏa tốc 2 giờ')" class="px-3 py-1.5 rounded-full bg-white border border-[#EBD3AE] text-[#800020] hover:bg-[#FFF5E1] shrink-0 font-medium transition-colors shadow-2xs cursor-pointer">
             ⚡ Giao hỏa tốc 2h
           </button>
-          <button (click)="sendPreset('Cho mình gặp nhân viên tư vấn')" class="px-3 py-1.5 rounded-full bg-white border border-blue-200 text-[#2563EB] hover:bg-blue-50 shrink-0 font-medium transition-colors shadow-2xs cursor-pointer">
+          <button (click)="sendPreset('Cho mình gặp nhân viên tư vấn')" class="px-3 py-1.5 rounded-full bg-white border border-[#EBD3AE] text-[#800020] hover:bg-[#FFF5E1] shrink-0 font-medium transition-colors shadow-2xs cursor-pointer">
             📞 Gặp nhân viên CSKH
           </button>
         </div>
@@ -350,12 +350,12 @@ export interface ChatMessage {
             [(ngModel)]="inputText" 
             (keyup.enter)="sendMessage()"
             placeholder="Nhập nhu cầu tìm quà, mã đơn hàng hoặc câu hỏi chính sách..." 
-            class="flex-1 px-4 py-2.5 sm:py-3 rounded-2xl border border-slate-200 focus:outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 text-xs sm:text-sm text-slate-800 placeholder-slate-400 bg-slate-50/50"
+            class="flex-1 px-4 py-2.5 sm:py-3 rounded-2xl border border-slate-200 focus:outline-none focus:border-[#800020] focus:ring-2 focus:ring-[#800020] text-xs sm:text-sm text-slate-800 placeholder-slate-400 bg-slate-50/50"
           >
           <button 
             (click)="sendMessage()"
             [disabled]="!inputText.trim() || isThinking()"
-            class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-slate-200 text-white flex items-center justify-center shrink-0 transition-all shadow-sm active:scale-95 cursor-pointer disabled:cursor-not-allowed"
+            class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#800020] hover:bg-[#660019] disabled:bg-slate-200 text-[#FFF5E1] flex items-center justify-center shrink-0 transition-all shadow-sm active:scale-95 cursor-pointer disabled:cursor-not-allowed"
             title="Gửi tin nhắn"
           >
             <span class="material-symbols-outlined text-[18px] sm:text-[20px]">send</span>

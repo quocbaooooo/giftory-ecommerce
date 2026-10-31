@@ -30,7 +30,7 @@ import { Product } from '../../core/models';
     }
     .toast-anim { animation: slideInTop .28s cubic-bezier(0.16, 1, 0.3, 1) both; }
     .toast-anim.toast-leaving { animation: slideOutTop .22s ease-in forwards; }
-    .toast-action { color:#93C5FD; font-weight:700; text-decoration:underline; text-underline-offset:3px; pointer-events:auto; }
+    .toast-action { color:#E2BD96; font-weight:700; text-decoration:underline; text-underline-offset:3px; pointer-events:auto; }
     .toast-action:hover { color:#fff; }
     @media (prefers-reduced-motion: reduce) {
       .toast-anim { animation-duration: 1ms; }
@@ -64,7 +64,7 @@ import { Product } from '../../core/models';
           <!-- Sub-header: quick add luôn thêm dòng hàng không gắn thiết kế -->
           <div class="pt-3.5 px-5 pb-3 border-b border-slate-100 bg-[#fdfcff] flex items-center justify-between pr-14">
             <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-              <span class="material-symbols-outlined text-lg text-blue-700">shopping_bag</span>
+              <span class="material-symbols-outlined text-lg text-[#800020]">shopping_bag</span>
               <span class="tracking-wide text-xs font-bold text-slate-800">Thêm nhanh vào giỏ</span>
             </div>
             <span class="text-[11px] font-medium text-slate-400">Chọn phân loại · số lượng</span>
@@ -73,7 +73,7 @@ import { Product } from '../../core/models';
           <!-- Nội dung chính -->
           @if (loading()) {
             <div class="p-12 text-center text-slate-500 space-y-3">
-              <div class="w-9 h-9 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <div class="w-9 h-9 border-3 border-[#800020] border-t-transparent rounded-full animate-spin mx-auto"></div>
               <p class="text-sm font-medium">Đang tải thông tin sản phẩm…</p>
             </div>
           } @else if (options.product(); as p) {
@@ -81,7 +81,7 @@ import { Product } from '../../core/models';
               
               <!-- 1. Header Sản phẩm gọn nhẹ -->
               <div class="flex gap-3.5 items-start">
-                <div class="relative w-20 h-20 sm:w-22 sm:h-22 rounded-2xl overflow-hidden bg-blue-50/50 shrink-0 border border-blue-100/80">
+                <div class="relative w-20 h-20 sm:w-22 sm:h-22 rounded-2xl overflow-hidden bg-[#FFF5E1] shrink-0 border border-[#EBD3AE]">
                   <img [src]="options.activeImage() || (p.images && p.images[0]) || ''" [alt]="p.name" class="w-full h-full object-cover">
                 </div>
                 <div class="flex-1 min-w-0">
@@ -102,7 +102,7 @@ import { Product } from '../../core/models';
                   </h2>
                   <!-- Giá & Discount -->
                   <div class="flex items-baseline gap-2 mt-1.5">
-                    <span class="text-xl font-extrabold text-blue-700">{{ options.price() | number }}₫</span>
+                    <span class="text-xl font-extrabold text-[#800020]">{{ options.price() | number }}₫</span>
                     @if (p.price && options.price() < p.price) {
                       <span class="text-xs text-slate-400 line-through">{{ p.price | number }}₫</span>
                       <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200/50">
@@ -118,7 +118,7 @@ import { Product } from '../../core/models';
                 <div>
                   <div class="flex justify-between items-center mb-2">
                     <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Màu sắc / Chất liệu</span>
-                    <span class="text-xs font-semibold" [class.text-blue-700]="options.color()" [class.text-amber-700]="!options.color()">{{ options.color() || 'Bắt buộc chọn' }}</span>
+                    <span class="text-xs font-semibold" [class.text-[#800020]]="options.color()" [class.text-amber-700]="!options.color()">{{ options.color() || 'Bắt buộc chọn' }}</span>
                   </div>
                   <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     @for (color of options.colors(); track color) {
@@ -127,8 +127,8 @@ import { Product } from '../../core/models';
                         (click)="options.chooseColor(color)"
                         class="flex items-center justify-center gap-2 p-2.5 rounded-xl text-left transition-all disabled:opacity-40 disabled:cursor-not-allowed text-xs"
                         [class]="options.color() === color
-                          ? 'border-2 border-blue-600 bg-blue-50/70 font-bold text-slate-900 shadow-xs'
-                          : 'border border-slate-200 bg-white hover:border-blue-300 font-medium text-slate-700'">
+                          ? 'border-2 border-[#800020] bg-[#FFF5E1] font-bold text-[#800020] shadow-xs'
+                          : 'border border-[#EBD3AE] bg-white hover:border-[#800020] font-medium text-slate-700'">
                         <span class="w-3.5 h-3.5 rounded-full border border-black/10 shrink-0" [style.backgroundColor]="options.hex(color) || '#d1d5db'"></span>
                         <span class="truncate">{{ color }}</span>
                       </button>
@@ -147,7 +147,7 @@ import { Product } from '../../core/models';
                 <div>
                   <div class="flex justify-between items-center mb-2">
                     <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Kích thước</span>
-                    <span class="text-xs font-semibold text-blue-700">{{ options.size() || 'Chưa chọn' }}</span>
+                    <span class="text-xs font-semibold text-[#800020]">{{ options.size() || 'Chưa chọn' }}</span>
                   </div>
                   <div class="flex flex-wrap gap-2">
                     @for (size of options.sizes(); track size) {
@@ -156,8 +156,8 @@ import { Product } from '../../core/models';
                         (click)="options.chooseSize(size)"
                         class="px-3.5 py-2 rounded-xl text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                         [class]="options.size() === size
-                          ? 'border-2 border-blue-600 bg-blue-50/70 font-bold text-blue-900 shadow-xs'
-                          : 'border border-slate-200 bg-white hover:border-blue-300 text-slate-700 font-medium'">
+                          ? 'border-2 border-[#800020] bg-[#FFF5E1] font-bold text-[#800020] shadow-xs'
+                          : 'border border-[#EBD3AE] bg-white hover:border-[#800020] text-slate-700 font-medium'">
                         {{ size }}
                       </button>
                     }
@@ -182,14 +182,14 @@ import { Product } from '../../core/models';
                 </div>
                 <div class="text-right">
                   <span class="text-[11px] text-slate-400 block">Tạm tính:</span>
-                  <span class="text-base font-bold text-blue-700">{{ (options.price() * options.quantity()) | number }}₫</span>
+                  <span class="text-base font-bold text-[#800020]">{{ (options.price() * options.quantity()) | number }}₫</span>
                 </div>
               </div>
 
               <!-- Quick add không gắn designId nên luôn tạo dòng hàng thường. -->
               <div class="pt-1">
                 <button type="button" (click)="add()" [disabled]="pending() || !options.canPurchase()"
-                  class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed group">
+                  class="w-full py-3.5 px-4 bg-gradient-to-r from-[#800020] via-[#660019] to-[#540015] hover:from-[#660019] hover:to-[#400010] text-[#FFF5E1] font-bold rounded-2xl shadow-lg shadow-[#800020]/25 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed group">
                   @if (pending()) {
                     <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -205,7 +205,7 @@ import { Product } from '../../core/models';
                 </button>
                 @if (isCustomizationAvailable(p)) {
                   <a [routerLink]="['/custom-studio']" [queryParams]="{ product: p.slug }" (click)="close()"
-                    class="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm font-bold text-blue-700 transition hover:border-blue-400 hover:bg-blue-50">
+                    class="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#EBD3AE] bg-[#FFF5E1] px-4 py-3 text-sm font-bold text-[#800020] transition hover:bg-[#FDF0D5] hover:border-[#800020]">
                     <span class="material-symbols-outlined text-lg">draw</span>
                     Tự thiết kế trong Studio
                   </a>
@@ -215,7 +215,7 @@ import { Product } from '../../core/models';
 
               <!-- 5. Link Điều hướng phụ -->
               <div class="text-center pt-1">
-                <a [routerLink]="['/products', p.slug]" (click)="close()" class="text-xs text-slate-400 hover:text-blue-600 underline underline-offset-4 transition-colors">
+                <a [routerLink]="['/products', p.slug]" (click)="close()" class="text-xs text-slate-400 hover:text-[#800020] underline underline-offset-4 transition-colors">
                   Xem chi tiết đầy đủ & đánh giá →
                 </a>
               </div>
@@ -249,7 +249,7 @@ import { Product } from '../../core/models';
                   <div class="flex-1 min-w-0">
                     <p class="font-semibold text-sm text-slate-900 truncate">{{ item.productId?.name || item.name }}</p>
                     <p class="text-xs text-slate-500">{{ item.variantName }} × {{ item.quantity }}</p>
-                    <p class="text-sm font-bold text-blue-700 mt-1">{{ item.price * item.quantity | number }}₫</p>
+                    <p class="text-sm font-bold text-[#800020] mt-1">{{ item.price * item.quantity | number }}₫</p>
                   </div>
                 </div>
               }
@@ -259,9 +259,9 @@ import { Product } from '../../core/models';
           <div class="pt-4 border-t border-slate-100 space-y-3">
             <div class="flex items-center justify-between text-base font-bold text-slate-900">
               <span>Tạm tính:</span>
-              <span class="text-xl text-blue-700">{{ cart.pricing().itemsTotal | number }}₫</span>
+              <span class="text-xl text-[#800020]">{{ cart.pricing().itemsTotal | number }}₫</span>
             </div>
-            <a routerLink="/cart" (click)="cart.miniCartOpen.set(false)" class="block w-full py-3.5 bg-blue-700 hover:bg-blue-800 text-white font-bold text-center rounded-2xl shadow-lg shadow-blue-600/20 transition-all active:scale-[0.98]">
+            <a routerLink="/cart" (click)="cart.miniCartOpen.set(false)" class="block w-full py-3.5 bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] font-bold text-center rounded-2xl shadow-lg shadow-[#800020]/20 transition-all active:scale-[0.98]">
               Xem Giỏ Hàng & Thanh Toán
             </a>
           </div>

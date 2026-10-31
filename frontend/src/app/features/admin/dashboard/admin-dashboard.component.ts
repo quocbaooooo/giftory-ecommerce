@@ -69,13 +69,13 @@ import { AdminService } from '../../../core/services/admin.service';
         <div class="bg-white rounded-3xl p-6 border border-giftory-border shadow-xs space-y-4">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-giftory-ink/60 uppercase">Khách Hàng Hội Viên</span>
-            <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-2xl bg-[#FFF5E1] text-[#800020] flex items-center justify-center">
               <span class="material-symbols-outlined text-xl">group</span>
             </div>
           </div>
           <div>
             <span class="text-2xl font-black font-mono text-giftory-ink">{{ kpis().totalCustomers }}</span>
-            <div class="flex items-center gap-1 mt-1 text-[11px] font-semibold text-blue-600">
+            <div class="flex items-center gap-1 mt-1 text-[11px] font-semibold text-[#800020]">
               <span class="material-symbols-outlined text-xs">person_add</span>
               Tích cực tương tác
             </div>
@@ -86,7 +86,7 @@ import { AdminService } from '../../../core/services/admin.service';
         <div class="bg-white rounded-3xl p-6 border border-giftory-border shadow-xs space-y-4">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-giftory-ink/60 uppercase">Mẫu Quà Đang Bán</span>
-            <div class="w-10 h-10 rounded-2xl bg-blue-50 text-giftory-primary flex items-center justify-center">
+            <div class="w-10 h-10 rounded-2xl bg-[#FFF5E1] text-giftory-primary flex items-center justify-center">
               <span class="material-symbols-outlined text-xl">inventory_2</span>
             </div>
           </div>
@@ -202,7 +202,7 @@ export class AdminDashboardComponent implements OnInit {
       case 'SHIPPING':
         return 'bg-giftory-primary/10 text-giftory-primary';
       case 'CONFIRMED':
-        return 'bg-blue-50 text-blue-600';
+        return 'bg-[#FFF5E1] text-[#800020]';
       default:
         return 'bg-amber-50 text-amber-600';
     }

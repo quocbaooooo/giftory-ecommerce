@@ -17,7 +17,7 @@ export class ProductVariant {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ default: '#2563EB' })
+  @Prop({ default: '#800020' })
   colorHex: string;
 
   @Prop({ required: true })

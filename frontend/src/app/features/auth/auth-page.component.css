@@ -53,9 +53,9 @@
 }
 
 .giftory-input:focus {
-  border-color: #2563EB !important;
+  border-color: #800020 !important;
   background-color: #ffffff !important;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12), 0 2px 8px rgba(37, 99, 235, 0.06) !important;
+  box-shadow: 0 0 0 4px rgba(128, 0, 32, 0.12), 0 2px 8px rgba(128, 0, 32, 0.06) !important;
   outline: none;
 }
 
@@ -80,10 +80,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(37, 99, 235, 0.15);
+  background: rgba(128, 0, 32, 0.15);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(37, 99, 235, 0.3);
+  background: rgba(128, 0, 32, 0.3);
 }
