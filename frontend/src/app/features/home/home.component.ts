@@ -1,5 +1,5 @@
 import { PillSearchComponent } from '../../shared/components/pill-search/pill-search.component';
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, ElementRef, HostListener, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
@@ -50,7 +50,7 @@ import { FlashSaleCountdownService } from '../../core/services/flash-sale-countd
         <!-- Logo Giftory nhận diện thương hiệu (Cân đối tỉ lệ nổi bật) -->
         @if (campaignsLoaded() && campaigns().length === 0) {
           <div class="relative z-10 my-3 flex flex-col items-center">
-            <img src="/logo.png" alt="Giftory" class="w-auto h-36 md:h-44 object-contain mx-auto transition-transform hover:scale-105 duration-300 drop-shadow-md">
+            <img src="/logo1.png" alt="Giftory" class="w-auto h-20 md:h-24 object-contain mx-auto transition-transform hover:scale-105 duration-300 drop-shadow-md">
           </div>
         }
 
@@ -110,23 +110,41 @@ import { FlashSaleCountdownService } from '../../core/services/flash-sale-countd
         <app-pill-search></app-pill-search>
 
         <!-- Quick Category Pills -->
-        <nav aria-label="Danh mục quà tặng" class="relative z-10 mt-6 w-full max-w-5xl overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div class="flex w-max min-w-full items-center justify-start gap-2.5 whitespace-nowrap">
+        <div class="relative z-10 mt-6 flex w-full max-w-5xl items-center gap-2">
+        <nav aria-label="Danh mục quà tặng" class="relative min-w-0 flex-1">
+          <div #homeCategoryTabs (scroll)="updateHomeCategoryScrollState()" class="flex items-center gap-2 overflow-x-auto py-2 -my-2 no-scrollbar scroll-smooth">
+          <div class="flex w-max min-w-full items-center justify-start gap-2 whitespace-nowrap">
           @for (cat of categories(); track cat._id) {
-            <a [routerLink]="['/products']" [queryParams]="{ category: cat.slug }" class="group relative hover:z-20 focus-visible:z-20 inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#EBD3AE] shadow-sm hover:bg-[#EBD3AE] hover:text-[#800020] transition-all text-xs font-semibold text-[#2B1A1A]">
-              <span class="w-5 h-5 shrink-0 rounded-full bg-[#FDF0D5] text-[#800020] flex items-center justify-center text-[11px] overflow-hidden origin-center transition-transform duration-200 ease-out group-hover:scale-150 group-focus-visible:scale-150 motion-reduce:transition-none">
+            <a [routerLink]="['/products']" [queryParams]="{ category: cat.slug }" class="group relative hover:z-20 focus-visible:z-20 inline-flex shrink-0 items-center gap-2 rounded-full border border-[#EBD3AE] bg-white px-4 py-2 text-xs font-semibold text-[#2B1A1A] shadow-sm transition-all hover:bg-[#FFF5E1] hover:text-[#800020]">
+              <span class="category-icon inline-flex h-5 w-5 shrink-0 origin-center items-center justify-center overflow-hidden text-[11px] transition-transform duration-200 ease-out group-hover:scale-[1.35] group-focus-visible:scale-[1.35] motion-reduce:transition-none">
                 @if (cat.emoji && (cat.emoji.startsWith('http') || cat.emoji.startsWith('/') || cat.emoji.startsWith('data:') || cat.emoji.length > 10)) {
-                  <img [src]="cat.emoji" [alt]="cat.name" class="w-full h-full object-contain" />
+                  <img [src]="cat.emoji" [alt]="cat.name" class="h-full w-full object-contain" />
                 } @else {
-                  {{ cat.emoji }}
+                  {{ cat.emoji || '✨' }}
                 }
               </span>
               <span>{{ cat.name }}</span>
             </a>
           }
-            <a routerLink="/products" class="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#800020] bg-[#800020] px-4 py-2 text-xs font-bold text-[#FFF5E1] shadow-sm transition hover:bg-[#660019] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800020]">Xem tất cả <span aria-hidden="true">→</span></a>
+          <a routerLink="/products" class="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#EBD3AE] bg-white px-4 py-2 text-xs font-semibold text-[#800020] shadow-sm transition-colors hover:bg-[#FFF5E1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800020]">
+            Xem tất cả <span aria-hidden="true">→</span>
+          </a>
           </div>
+          </div>
+          @if (showRightHomeCategories()) {
+            <div aria-hidden="true" class="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-[#FAF7F2] via-[#FAF7F2]/75 to-transparent"></div>
+          }
         </nav>
+        @if (showLeftHomeCategories() || showRightHomeCategories()) {
+          <div class="flex w-10 shrink-0 items-center justify-center">
+            @if (showRightHomeCategories()) {
+              <button type="button" (click)="scrollHomeCategories('right')" aria-label="Cuộn sang các danh mục tiếp theo" title="Danh mục tiếp theo" class="flex shrink-0 items-center justify-center p-1 text-[#800020] transition-transform hover:translate-x-0.5 focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800020]"><span class="material-symbols-outlined text-[28px]" aria-hidden="true">arrow_forward</span></button>
+            } @else if (showLeftHomeCategories()) {
+              <button type="button" (click)="scrollHomeCategories('left')" aria-label="Cuộn về các danh mục trước" title="Danh mục trước" class="flex shrink-0 items-center justify-center p-1 text-[#800020] transition-transform hover:-translate-x-0.5 focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800020]"><span class="material-symbols-outlined text-[28px]" aria-hidden="true">arrow_back</span></button>
+            }
+          </div>
+        }
+        </div>
       </section>
 
       <!-- BEGIN: Flash Sale Banner & Countdown -->
@@ -260,13 +278,39 @@ import { FlashSaleCountdownService } from '../../core/services/flash-sale-countd
   `
 })
 export class HomeComponent implements OnInit, OnDestroy {
+  @ViewChild('homeCategoryTabs') private homeCategoryTabs?: ElementRef<HTMLDivElement>;
   private productService = inject(ProductService);
   private autoplayId?: number;
 
   private marketingService = inject(MarketingService);
   readonly countdown = inject(FlashSaleCountdownService);
 
-  categories = signal<Category[]>([]);
+  categories = signal<Category[]>([
+    { _id: 'fallback-cups', name: 'Bình Giữ Nhiệt & Cốc Sứ', slug: 'binh-giu-nhiet-coc-su', emoji: '☕', order: 1 },
+    { _id: 'fallback-notebooks', name: 'Sổ Tay & Bút Ký Kim Loại', slug: 'so-tay-but-ky', emoji: '✒️', order: 2 },
+    { _id: 'fallback-candles', name: 'Nến Thơm & Decor Không Gian', slug: 'nen-thom-decor', emoji: '🕯️', order: 3 },
+    { _id: 'fallback-wood', name: 'Móc Khóa & Quà Gỗ', slug: 'moc-khoa-tho-go', emoji: '🐰', order: 4 },
+    { _id: 'fallback-apparel', name: 'Áo Thun & Ốp Gốm Monogram', slug: 'ao-thun-op-custom', emoji: '👕', order: 5 },
+    { _id: 'fallback-giftsets', name: 'Set Quà Sang Trọng & Tạp Dề', slug: 'set-qua-sang-trong', emoji: '🎁', order: 6 },
+  ]);
+  showLeftHomeCategories = signal(false);
+  showRightHomeCategories = signal(false);
+
+  scrollHomeCategories(direction: 'left' | 'right'): void {
+    this.homeCategoryTabs?.nativeElement.scrollBy({ left: direction === 'right' ? 280 : -280, behavior: 'smooth' });
+  }
+
+  updateHomeCategoryScrollState(): void {
+    const element = this.homeCategoryTabs?.nativeElement;
+    if (!element) return;
+    this.showLeftHomeCategories.set(element.scrollLeft > 1);
+    this.showRightHomeCategories.set(element.scrollLeft + element.clientWidth < element.scrollWidth - 1);
+  }
+
+  private refreshHomeCategoryScrollState(): void { requestAnimationFrame(() => this.updateHomeCategoryScrollState()); }
+
+  @HostListener('window:resize')
+  onWindowResize(): void { this.refreshHomeCategoryScrollState(); }
   allProducts = signal<Product[]>([]);
   marqueeProducts = signal<Product[]>([]);
   bespokeProducts = signal<Product[]>([]);
@@ -332,8 +376,12 @@ export class HomeComponent implements OnInit, OnDestroy {
       },
     });
     this.productService.getCategories().subscribe({
-      next: cats => this.categories.set(cats)
+      next: cats => {
+        this.categories.set(cats);
+        this.refreshHomeCategoryScrollState();
+      }
     });
+    this.refreshHomeCategoryScrollState();
 
     this.productService.getCatalogProducts({ limit: 8 }).subscribe({
       next: res => { this.allProducts.set(res.items); this.productService.prefetchProductList(); }

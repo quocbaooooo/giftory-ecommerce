@@ -42,6 +42,12 @@ export class CartItem {
 
   @Prop({ default: 0 })
   depositRequired: number; // 50% for custom product
+
+  @Prop({ type: String, enum: ['NONE', 'STANDARD', 'SILK', 'LUXURY'], default: 'NONE' })
+  giftBoxStyle: string;
+
+  @Prop({ default: 0, min: 0 })
+  giftBoxFee: number;
 }
 
 export const CartItemSchema = SchemaFactory.createForClass(CartItem);

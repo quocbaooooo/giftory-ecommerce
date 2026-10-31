@@ -393,6 +393,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
                     </div>
 
                     <span class="text-[11px] text-slate-500 block mt-0.5">Phân loại: {{ item.variantName || 'Tiêu chuẩn' }} • SL: {{ item.quantity }}</span>
+                    <span *ngIf="item.giftBoxStyle && item.giftBoxStyle !== 'NONE'" class="mt-1 inline-block rounded-md bg-[#FFF5E1] px-2 py-0.5 text-[10px] font-bold text-[#800020]">Hộp quà: {{ giftBoxName(item.giftBoxStyle) }} · {{ item.giftBoxFee | number:'1.0-0' }}đ × {{ item.quantity }}</span>
 
                     <!-- Custom details highlight if bespoke -->
                     <div *ngIf="item.isCustom && item.customDetails" class="mt-1 flex items-center gap-2 text-[11px] text-[#800020] bg-[#FFF5E1]/80 px-2 py-0.5 rounded-md border border-[#EBD3AE]">
@@ -938,6 +939,7 @@ export class AdminOrdersComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  giftBoxName(style?: string): string { return ({ NONE: 'Không lấy hộp', STANDARD: 'Hộp tiêu chuẩn', SILK: 'Hộp lụa cao cấp', LUXURY: 'Hộp quà sang trọng' } as Record<string, string>)[style || ''] || 'Hộp quà'; }
 
   orders = signal<Order[]>([]);
   activeFilter = signal<string>('ALL');

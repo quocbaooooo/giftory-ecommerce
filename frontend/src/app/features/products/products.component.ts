@@ -1,5 +1,5 @@
 import { Subscription } from 'rxjs';
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, HostListener, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -56,13 +56,15 @@ import { Product, Category } from '../../core/models';
       </div>
 
       <!-- Category Filter Tabs -->
-      <div class="flex items-center gap-2 overflow-x-auto pt-2 -mt-2 pb-3 mb-6 no-scrollbar">
+      <div class="mb-6 flex items-center gap-2">
+      <div class="relative min-w-0 flex-1">
+      <div #categoryTabs (scroll)="updateCategoryScrollState()" class="flex items-center gap-2 overflow-x-auto pt-2 -mt-2 pb-3 no-scrollbar scroll-smooth">
         <button 
           (click)="selectCategory('')"
           class="group relative hover:z-10 focus-visible:z-10 px-4 py-2 rounded-full text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
           [ngClass]="!selectedCategory ? 'bg-[#800020] text-[#FFF5E1] shadow-md shadow-[#800020]/20' : 'bg-white text-slate-700 border border-[#EBD3AE] hover:bg-[#FFF5E1]'"
         >
-          <span aria-hidden="true" class="w-4 h-4 shrink-0 inline-flex items-center justify-center origin-center transition-transform duration-200 ease-out group-hover:scale-150 group-focus-visible:scale-150 motion-reduce:transition-none">
+          <span aria-hidden="true" class="category-icon w-5 h-5 shrink-0 inline-flex items-center justify-center origin-center transition-transform duration-200 ease-out group-hover:scale-[1.35] group-focus-visible:scale-[1.35] motion-reduce:transition-none">
             @if (isCategoryIconImage(allCategoriesIcon())) {
               <img [src]="allCategoriesIcon()" alt="" class="w-full h-full object-contain" />
             } @else {
@@ -77,7 +79,7 @@ import { Product, Category } from '../../core/models';
             class="group relative hover:z-10 focus-visible:z-10 px-4 py-2 rounded-full text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
             [ngClass]="selectedCategory === cat.slug ? 'bg-[#800020] text-[#FFF5E1] shadow-md shadow-[#800020]/20' : 'bg-white text-slate-700 border border-[#EBD3AE] hover:bg-[#FFF5E1]'"
           >
-            <span aria-hidden="true" class="w-4 h-4 shrink-0 inline-flex items-center justify-center origin-center transition-transform duration-200 ease-out group-hover:scale-150 group-focus-visible:scale-150 motion-reduce:transition-none">
+            <span aria-hidden="true" class="category-icon w-5 h-5 shrink-0 inline-flex items-center justify-center origin-center transition-transform duration-200 ease-out group-hover:scale-[1.35] group-focus-visible:scale-[1.35] motion-reduce:transition-none">
               @if (cat.emoji && (cat.emoji.startsWith('http') || cat.emoji.startsWith('/') || cat.emoji.startsWith('data:') || cat.emoji.length > 10)) {
                 <img [src]="cat.emoji" alt="" class="w-full h-full object-contain rounded-xs" />
               } @else {
@@ -87,6 +89,24 @@ import { Product, Category } from '../../core/models';
             <span>{{ cat.name }}</span>
           </button>
         }
+      </div>
+      @if (showRightCategories()) {
+        <div aria-hidden="true" class="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-[#FAF7F2] via-[#FAF7F2]/75 to-transparent"></div>
+      }
+      </div>
+      @if (showLeftCategories() || showRightCategories()) {
+        <div class="flex w-10 shrink-0 items-center justify-center">
+          @if (showRightCategories()) {
+            <button type="button" (click)="scrollCategories('right')" aria-label="Cuộn sang các danh mục tiếp theo" title="Danh mục tiếp theo" class="-translate-y-2 flex shrink-0 items-center justify-center p-1 text-[#800020] transition-transform hover:translate-x-0.5 focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800020]">
+              <span class="material-symbols-outlined text-[28px]" aria-hidden="true">arrow_forward</span>
+            </button>
+          } @else if (showLeftCategories()) {
+            <button type="button" (click)="scrollCategories('left')" aria-label="Cuộn về các danh mục trước" title="Danh mục trước" class="-translate-y-2 flex shrink-0 items-center justify-center p-1 text-[#800020] transition-transform hover:-translate-x-0.5 focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800020]">
+              <span class="material-symbols-outlined text-[28px]" aria-hidden="true">arrow_back</span>
+            </button>
+          }
+        </div>
+      }
       </div>
 
       <!-- MAIN LAYOUT: Sidebar Filters + Products Grid -->
@@ -138,7 +158,7 @@ import { Product, Category } from '../../core/models';
                     type="button"
                     (click)="toggleOccasion(occ)"
                     class="px-2.5 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer"
-                    [ngClass]="selectedOccasion === occ ? 'bg-[#800020] text-[#FFF5E1] shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-[#FDF0D5] hover:text-[#800020]'"
+                    [ngClass]="selectedOccasion === occ ? 'bg-[#800020] text-[#FFF5E1] shadow-2xs' : 'bg-[#FDFBF7] text-slate-700 border border-[#EBD3AE]/80 hover:bg-[#FAF7F2] hover:text-[#800020]'"
                   >
                     {{ occ }}
                   </button>
@@ -155,7 +175,7 @@ import { Product, Category } from '../../core/models';
                     type="button"
                     (click)="toggleRecipient(rec)"
                     class="px-2.5 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer"
-                    [ngClass]="selectedRecipient === rec ? 'bg-[#800020] text-[#FFF5E1] shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-[#FDF0D5] hover:text-[#800020]'"
+                    [ngClass]="selectedRecipient === rec ? 'bg-[#800020] text-[#FFF5E1] shadow-2xs' : 'bg-[#FDFBF7] text-slate-700 border border-[#EBD3AE]/80 hover:bg-[#FAF7F2] hover:text-[#800020]'"
                   >
                     {{ rec }}
                   </button>
@@ -423,16 +443,46 @@ import { Product, Category } from '../../core/models';
   `
 })
 export class ProductsComponent implements OnInit, OnDestroy {
+  @ViewChild('categoryTabs') private categoryTabs?: ElementRef<HTMLDivElement>;
   private productService = inject(ProductService);
   private aiChatbotService = inject(AiChatbotService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
+  showLeftCategories = signal(false);
+  showRightCategories = signal(false);
+
+  scrollCategories(direction: 'left' | 'right'): void {
+    this.categoryTabs?.nativeElement.scrollBy({ left: direction === 'right' ? 280 : -280, behavior: 'smooth' });
+  }
+
+  updateCategoryScrollState(): void {
+    const element = this.categoryTabs?.nativeElement;
+    if (!element) return;
+    this.showLeftCategories.set(element.scrollLeft > 1);
+    this.showRightCategories.set(element.scrollLeft + element.clientWidth < element.scrollWidth - 1);
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void { this.refreshCategoryScrollState(); }
+
+  private refreshCategoryScrollState(): void {
+    requestAnimationFrame(() => this.updateCategoryScrollState());
+  }
+
+
   private productsRequest?: Subscription;
   private routeSubscription?: Subscription;
   products = signal<Product[]>([]);
   bestSellers = signal<Product[]>([]);
-  categories = signal<Category[]>([]);
+  categories = signal<Category[]>([
+    { _id: 'fallback-cups', name: 'Bình Giữ Nhiệt & Cốc Sứ', slug: 'binh-giu-nhiet-coc-su', emoji: '☕', order: 1 },
+    { _id: 'fallback-notebooks', name: 'Sổ Tay & Bút Ký Kim Loại', slug: 'so-tay-but-ky', emoji: '✒️', order: 2 },
+    { _id: 'fallback-candles', name: 'Nến Thơm & Decor Không Gian', slug: 'nen-thom-decor', emoji: '🕯️', order: 3 },
+    { _id: 'fallback-wood', name: 'Móc Khóa & Quà Gỗ', slug: 'moc-khoa-tho-go', emoji: '🐰', order: 4 },
+    { _id: 'fallback-apparel', name: 'Áo Thun & Ốp Gốm Monogram', slug: 'ao-thun-op-custom', emoji: '👕', order: 5 },
+    { _id: 'fallback-giftsets', name: 'Set Quà Sang Trọng & Tạp Dề', slug: 'set-qua-sang-trong', emoji: '🎁', order: 6 },
+  ]);
   allCategoriesIcon = signal('🎁');
 
   isCategoryIconImage(value: string): boolean {
@@ -476,7 +526,11 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Load categories
-    this.productService.getCategories().subscribe(cats => this.categories.set(cats));
+    this.refreshCategoryScrollState();
+    this.productService.getCategories().subscribe(cats => {
+      this.categories.set(cats);
+      this.refreshCategoryScrollState();
+    });
     this.productService.getCategoryDisplaySettings().subscribe({
       next: settings => this.allCategoriesIcon.set(settings.allCategoriesIcon || '🎁'),
       error: () => this.allCategoriesIcon.set('🎁'),

@@ -118,7 +118,7 @@ export class CartService {
     const shippingDiscount = applied?.discountType === 'FREESHIP' ? Math.min(baseShippingFee, savings) : 0;
     const shippingFee = baseShippingFee - shippingDiscount;
     const voucherDiscount = applied ? (applied.discountType === 'FREESHIP' ? 0 : Math.min(itemsTotal, savings)) : 0;
-    const giftWrapFee = confirmed.pricing.giftWrapFee;
+    const giftWrapFee = items.reduce((sum, item) => sum + (item.giftBoxFee || 0) * item.quantity, 0);
     const totalAmount = Math.max(0, itemsTotal - voucherDiscount + shippingFee + giftWrapFee);
     const rawDepositAmount = confirmed.paymentMode === 'FULL_PAYMENT' ? totalAmount
       : items.reduce((sum, item) => sum + (item.isCustom ? Math.round(item.price * item.quantity * 0.5) : 0), 0);
@@ -254,6 +254,11 @@ export class CartService {
       if (currentIndex < 0) return of(this.confirmedCart!);
       return this.api.patch<Cart>(`cart/items/${currentIndex}/custom?sessionId=${encodeURIComponent(sessionId)}`, { customDetails, variantName, customDesignId });
     });
+  }
+
+  updateGiftBox(index: number, style: NonNullable<CartItem['giftBoxStyle']>) {
+    const sessionId = this.getSessionId();
+    return this.mutate(() => this.api.patch<Cart>(`cart/items/${index}/gift-box?sessionId=${encodeURIComponent(sessionId)}`, { style, sessionId }));
   }
 
   removeItem(index: number) {

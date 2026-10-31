@@ -410,6 +410,10 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   <span class="font-bold text-slate-800">{{ displayPricing().itemsTotal | number:'1.0-0' }}đ</span>
                 </div>
 
+                @if ((displayPricing().giftWrapFee || 0) > 0) {
+                  <div class="flex items-center justify-between text-[#800020]"><span>Phí hộp quà:</span><strong>{{ displayPricing().giftWrapFee | number:'1.0-0' }}đ</strong></div>
+                }
+
                 <div class="flex items-center justify-between">
                   <span>Phí vận chuyển ({{ selectedShippingMethod() === 'EXPRESS' ? 'Hỏa Tốc' : 'Tiêu Chuẩn' }}):</span>
                   <span class="font-semibold text-slate-800">{{ (displayPricing().baseShippingFee ?? displayPricing().shippingFee) === 0 ? 'Miễn phí' : (((displayPricing().baseShippingFee ?? displayPricing().shippingFee) | number:'1.0-0') + 'đ') }}</span>

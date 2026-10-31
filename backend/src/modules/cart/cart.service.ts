@@ -10,6 +10,8 @@ import { AddToCartDto } from './dto/add-to-cart.dto';
 import { PaymentMode } from '../../common/enums/role.enum';
 import { customizationFee, studioUnitPrice } from '../../common/utils/studio-pricing';
 
+const GIFT_BOX_FEES: Record<string, number> = { NONE: 0, STANDARD: 0, SILK: 45000, LUXURY: 79000 };
+
 @Injectable()
 export class CartService {
   constructor(
@@ -23,7 +25,7 @@ export class CartService {
     let cart = await this.findOrCreateCart(userId, sessionId);
     await cart.populate({
       path: 'items.productId',
-      select: 'name slug price salePrice images isCustomizable customBaseFee'
+      select: 'name slug price salePrice images stock variants isCustomizable customBaseFee'
     });
     // Refresh Studio quotes, including carts saved with the former zero-fee fallback bug.
     let priceChanged = false;
@@ -69,17 +71,7 @@ export class CartService {
     const depositAmount = isCustom ? Math.round(finalPrice * 0.5) : 0;
 
     // Check if duplicate standard item exists
-    const existingIndex = cart.items.findIndex(item => 
-      item.productId.toString() === dto.productId &&
-      (variant?.sku ? item.variantSku === variant.sku : item.variantName === (variant?.name || 'Tiêu chuẩn')) &&
-      !isCustom && !item.isCustom
-    );
-
-    if (existingIndex > -1) {
-      cart.items[existingIndex].quantity += dto.quantity;
-      cart.items[existingIndex].depositRequired = cart.items[existingIndex].quantity * depositAmount;
-    } else {
-      cart.items.push({
+    cart.items.push({
         productId: new Types.ObjectId(dto.productId),
         variantName: variant?.name || 'Tiêu chuẩn',
         variantSku: variant?.sku,
@@ -89,9 +81,10 @@ export class CartService {
         customDetails: dto.customDetails || null,
         price: finalPrice,
         isCustom,
-        depositRequired: depositAmount * dto.quantity
+        depositRequired: depositAmount * dto.quantity,
+        giftBoxStyle: 'NONE',
+        giftBoxFee: 0,
       } as any);
-    }
 
     await cart.save();
     return this.getCart(userId, dto.sessionId);
@@ -131,6 +124,28 @@ export class CartService {
       await cart.save();
     }
     return this.getCart(userId, sessionId);
+  }
+
+  async updateGiftBox(itemIndex: number, style: string, userId?: string, sessionId?: string) {
+    const cart = await this.findOrCreateCart(userId, sessionId);
+    const item = cart.items[itemIndex];
+    if (!item) throw new NotFoundException('Sản phẩm không có trong giỏ hàng');
+    const normalized = String(style || '').toUpperCase();
+    if (!(normalized in GIFT_BOX_FEES)) throw new BadRequestException('Kiểu hộp quà không hợp lệ');
+    const product = await this.productModel.findById(item.productId).select('name');
+    const name = product?.name || 'sản phẩm';
+    const boxFitReason = this.giftBoxFitReason(normalized, name);
+    if (boxFitReason) throw new BadRequestException(boxFitReason);
+    item.giftBoxStyle = normalized;
+    item.giftBoxFee = GIFT_BOX_FEES[normalized];
+    await cart.save();
+    return this.getCart(userId, sessionId);
+  }
+
+  private giftBoxFitReason(style: string, productName: string): string | null {
+    const capacity = Number(productName.match(/(\d{3,4})\s?ml/i)?.[1] || 0);
+    if (style === 'STANDARD' && capacity > 450) return `Hộp tiêu chuẩn không vừa với ${productName}`;
+    return null;
   }
 
   async applyVoucher(code: string, userId?: string, sessionId?: string) {
@@ -272,7 +287,7 @@ export class CartService {
     }
     const shippingDiscount = appliedVoucher?.shippingDiscount || 0;
     const shippingFee = baseShippingFee - shippingDiscount;
-    const giftWrapFee = 0; // Free today from Stitch banner
+    const giftWrapFee = cart.items.reduce((sum, item) => sum + (item.giftBoxFee || 0) * item.quantity, 0);
     const voucherDiscount = appliedVoucher?.itemDiscount || 0;
     const totalAmount = Math.max(0, itemsTotal - voucherDiscount + shippingFee + giftWrapFee);
 

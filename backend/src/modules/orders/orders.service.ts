@@ -256,7 +256,9 @@ export class OrdersService {
           status: OrderItemStatus.PENDING,
           customDesignId: item.customDesignId,
           customDetails: item.customDetails || null,
-          depositRequired
+          depositRequired,
+          giftBoxStyle: item.giftBoxStyle || 'NONE',
+          giftBoxFee: item.giftBoxFee || 0,
         };
       });
     }
@@ -273,7 +275,7 @@ export class OrdersService {
     const shippingDiscount = voucher?.shippingDiscount || 0;
     const shippingFee = baseShippingFee - shippingDiscount;
 
-    const giftWrapFee = 0;
+    const giftWrapFee = orderItems.reduce((sum, item) => sum + (item.giftBoxFee || 0) * item.quantity, 0);
     const totalAmount = Math.max(0, itemsTotal - voucherDiscount + shippingFee + giftWrapFee);
 
     // COD prepays only half of custom line totals; standard goods and shipping remain payable on delivery.

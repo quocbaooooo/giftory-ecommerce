@@ -133,15 +133,15 @@ import { Product, ProductVariant } from '../../../core/models';
             }
 
             <!-- Guarantee Highlights Panel -->
-            <div class="w-full bg-white rounded-2xl p-4 shadow-xs border border-slate-100 grid grid-cols-2 gap-3 mt-1">
-              <div class="flex items-center gap-3 p-2.5 rounded-xl bg-[#FFF5E1] border border-[#EBD3AE]/60">
+            <div class="w-full bg-white rounded-2xl p-4 shadow-xs border border-[#EBD3AE]/70 grid grid-cols-2 gap-3 mt-1">
+              <div class="flex items-center gap-3 p-2.5 rounded-xl bg-[#FDFBF7] border border-[#EBD3AE]/70">
                 <span class="material-symbols-outlined text-[#800020] text-[24px] shrink-0">verified_user</span>
                 <div class="flex flex-col min-w-0">
                   <span class="text-xs text-slate-900 font-bold">Bảo hành 1 đổi 1</span>
                   <span class="text-[11px] text-slate-500 truncate">Nếu nứt vỡ khi vận chuyển</span>
                 </div>
               </div>
-              <div class="flex items-center gap-3 p-2.5 rounded-xl bg-[#FFF5E1] border border-[#EBD3AE]/60">
+              <div class="flex items-center gap-3 p-2.5 rounded-xl bg-[#FDFBF7] border border-[#EBD3AE]/70">
                 <span class="material-symbols-outlined text-[#800020] text-[24px] shrink-0">view_in_ar</span>
                 <div class="flex flex-col min-w-0">
                   <span class="text-xs text-slate-900 font-bold">Duyệt Demo 3D</span>
@@ -161,8 +161,9 @@ import { Product, ProductVariant } from '../../../core/models';
               <!-- Badges & Ratings -->
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 text-xs font-bold">
-                    🔥 Đã bán {{ prod.soldCount || 120 }}+
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FDFBF7] text-[#800020] border border-[#EBD3AE] text-xs font-bold">
+                    <span class="material-symbols-outlined text-[14px]" aria-hidden="true">inventory_2</span>
+                    Đã bán {{ prod.soldCount || 120 }}+
                   </span>
                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium">
                     Mã: {{ options.selected()?.sku || prod.sku || 'Bespoke-01' }}
@@ -190,7 +191,7 @@ import { Product, ProductVariant } from '../../../core/models';
               }
 
               <!-- Pricing & Deposit Banner -->
-              <div class="bg-gradient-to-r from-[#FFF5E1]/80 via-[#FFFDF8] to-[#FFF5E1]/50 rounded-2xl p-4 border border-[#EBD3AE] flex flex-wrap items-center justify-between gap-3">
+              <div class="bg-gradient-to-r from-[#FDFBF7] via-white to-[#FAF7F2] rounded-2xl p-4 border border-[#EBD3AE]/80 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-baseline gap-3">
                   <span class="text-3xl font-black text-[#800020] tracking-tight">
                     {{ options.price() | number:'1.0-0' }}₫
@@ -199,16 +200,16 @@ import { Product, ProductVariant } from '../../../core/models';
                     <span class="text-sm text-slate-400 line-through">
                       {{ prod.price | number:'1.0-0' }}₫
                     </span>
-                    <span class="px-2 py-0.5 rounded-full bg-rose-600 text-white text-xs font-bold">
+                    <span class="px-2 py-0.5 rounded-full bg-[#800020] text-white text-xs font-bold">
                       -{{ ((prod.price - options.price()) / prod.price * 100) | number:'1.0-0' }}%
                     </span>
                   }
                 </div>
 
                 @if (prod.isCustomizable) {
-                  <div class="bg-white px-3.5 py-1.5 rounded-xl border border-[#EBD3AE] shadow-2xs flex items-center gap-2">
+                  <div class="bg-white px-3.5 py-1.5 rounded-xl border border-[#EBD3AE]/80 shadow-2xs flex items-center gap-2">
                     <span class="text-[11px] text-slate-500 uppercase font-semibold">Cọc 50%:</span>
-                    <span class="text-sm text-rose-600 font-extrabold">
+                    <span class="text-sm text-[#800020] font-extrabold">
                       {{ (options.price() * 0.5) | number:'1.0-0' }}₫
                     </span>
                   </div>
@@ -217,13 +218,13 @@ import { Product, ProductVariant } from '../../../core/models';
 
               <!-- Delivery Lead-time Badges -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                <div class="flex items-center gap-2 p-2.5 rounded-xl bg-[#FFF5E1] text-[#2B1A1A] border border-[#EBD3AE] font-medium">
+                <div class="flex items-center gap-2 p-2.5 rounded-xl bg-[#FDFBF7] text-[#2B1A1A] border border-[#EBD3AE]/80 font-medium">
                   <span class="material-symbols-outlined text-[#800020] text-[18px] shrink-0">schedule</span>
                   <span>Giao 3 - 5 ngày (1 - 2 ngày xưởng khắc hoàn thiện)</span>
                 </div>
-                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 text-slate-700">
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#FDFBF7] text-slate-700 border border-[#EBD3AE]/70">
                   <div class="flex items-center gap-1.5 font-medium">
-                    <span class="material-symbols-outlined text-amber-600 text-[18px]">bolt</span>
+                    <span class="material-symbols-outlined text-[#800020] text-[18px]">bolt</span>
                     <span>Hỏa tốc 2H nội thành HN / TP.HCM</span>
                   </div>
                   <span class="text-[#800020] font-bold text-[11px]">Đảm bảo</span>

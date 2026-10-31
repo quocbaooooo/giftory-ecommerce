@@ -246,6 +246,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
               <div class="space-y-1 flex-1 text-xs">
                 <h4 class="font-bold text-slate-900">{{ item.productName || item.name }} (x{{ item.quantity }})</h4>
                 <p class="text-[11px] text-slate-500">Phân loại: <strong class="text-slate-700">{{ item.variantName || 'Tiêu chuẩn' }}</strong></p>
+                <p *ngIf="item.giftBoxStyle && item.giftBoxStyle !== 'NONE'" class="text-[11px] font-semibold text-[#800020]">Hộp quà: {{ giftBoxName(item.giftBoxStyle) }} · {{ item.giftBoxFee | number:'1.0-0' }}đ × {{ item.quantity }}</p>
                 
                 <div *ngIf="item.isCustom && item.customDetails" class="p-2 rounded-xl bg-[#FFF5E1] border border-[#EBD3AE] text-[11px] text-[#800020]">
                   <span class="font-bold">Khắc:</span> "{{ item.customDetails.frontMessage || item.customDetails.customText || 'Theo mẫu' }}"
@@ -301,6 +302,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
   authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  giftBoxName(style?: string): string { return ({ NONE: 'Không lấy hộp', STANDARD: 'Hộp tiêu chuẩn', SILK: 'Hộp lụa cao cấp', LUXURY: 'Hộp quà sang trọng' } as Record<string, string>)[style || ''] || 'Hộp quà'; }
   private routeSubscription?: Subscription;
   private request?: Subscription;
   routeCode = signal('');

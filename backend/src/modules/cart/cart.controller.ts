@@ -75,6 +75,20 @@ export class CartController {
     return this.cartService.updateItemCustomDetails(Number(index), customDetails, variantName, customDesignId, userId, sessionId);
   }
 
+  @Patch('items/:index/gift-box')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Chọn kiểu hộp quà cho một dòng hàng trong giỏ' })
+  async updateGiftBox(
+    @Param('index') index: number,
+    @Body('style') style: string,
+    @Body('sessionId') bodySessionId?: string,
+    @Query('sessionId') querySessionId?: string,
+    @CurrentUser('sub') userId?: string,
+  ) {
+    return this.cartService.updateGiftBox(Number(index), style, userId, bodySessionId || querySessionId);
+  }
+
   @Delete('items/:index')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()

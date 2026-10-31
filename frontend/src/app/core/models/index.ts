@@ -255,6 +255,8 @@ export interface CartItem {
   price: number;
   isCustom: boolean;
   depositRequired: number;
+  giftBoxStyle?: 'NONE' | 'STANDARD' | 'SILK' | 'LUXURY';
+  giftBoxFee?: number;
 }
 
 export interface Cart {
@@ -305,6 +307,8 @@ export interface OrderItemDetail {
   status?: 'PENDING' | 'PREPARED' | 'IN_PRODUCTION' | 'QC_PENDING' | 'QC_PASSED' | 'QC_FAILED';
   customDetails?: any;
   depositRequired: number;
+  giftBoxStyle?: 'NONE' | 'STANDARD' | 'SILK' | 'LUXURY';
+  giftBoxFee?: number;
   qcNote?: string;
   qcHistory?: Array<{
     result: string;

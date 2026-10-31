@@ -64,6 +64,12 @@ export class OrderItem {
   @Prop({ default: 0 })
   depositRequired: number;
 
+  @Prop({ type: String, enum: ['NONE', 'STANDARD', 'SILK', 'LUXURY'], default: 'NONE' })
+  giftBoxStyle: string;
+
+  @Prop({ default: 0, min: 0 })
+  giftBoxFee: number;
+
   @Prop({ default: '' })
   qcNote?: string;
 

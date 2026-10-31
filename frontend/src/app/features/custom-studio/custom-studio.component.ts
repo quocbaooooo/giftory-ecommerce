@@ -47,7 +47,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
       <header class="bg-white rounded-2xl px-3.5 py-2 shadow-xs border border-[#EBD3AE]/70 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
         <!-- Left: Product switcher & Breadcrumb -->
         <div class="flex items-center gap-2.5">
-          <a routerLink="/products" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-100 hover:bg-[#FDF0D5] text-slate-700 hover:text-[#800020] flex items-center justify-center transition" title="Quay lại danh mục">
+          <a routerLink="/products" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FAF7F2] hover:bg-[#FDF0D5] text-[#2B1A1A] hover:text-[#800020] flex items-center justify-center transition" title="Quay lại danh mục">
             <span class="material-symbols-outlined text-[17px]">arrow_back</span>
           </a>
 
@@ -55,10 +55,10 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
             <div class="flex items-center gap-1.5">
               <span class="text-[11px] font-bold text-[#800020] uppercase tracking-wider flex items-center gap-1">
                 <span class="material-symbols-outlined text-[14px]">palette</span>
-                Konva 2D Design Studio
+                Giftory Studio
               </span>
               <span class="text-slate-300">•</span>
-              <span class="text-[11px] text-slate-500 font-medium hidden sm:inline">Phôi Chế Tác Độc Bản</span>
+              <span class="text-[11px] text-[#8C7B74] font-medium hidden sm:inline">Phôi Chế Tác Độc Bản</span>
             </div>
             <div class="flex items-center gap-2">
               <h1 class="font-bold text-xs sm:text-sm text-[#2B1A1A] truncate max-w-[240px] sm:max-w-md">
@@ -73,24 +73,21 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
           </div>
         </div>
 
-        <!-- Center: Blank Template Quick Rail -->
-        <div class="hidden xl:flex items-center gap-1.5 overflow-x-auto no-scrollbar max-w-sm py-0.5">
-          @for (tpl of templates(); track tpl._id) {
-            <button 
-              (click)="selectTemplate(tpl)"
-              class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[11px] font-semibold shrink-0 cursor-pointer transition-all"
-              [ngClass]="activeTemplate()?._id === tpl._id ? 'bg-[#800020] text-[#FFF5E1] border-[#800020] shadow-2xs' : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-[#EBD3AE]'"
-            >
-              <img [src]="tpl.images[0]" [alt]="tpl.name" class="w-4 h-4 rounded-md object-cover bg-white">
-              <span class="truncate max-w-[100px]">{{ tpl.name.split('&')[0].trim() }}</span>
-            </button>
-          }
-        </div>
+        <!-- Switch directly between custom products -->
+        <label class="flex h-10 min-w-0 items-center gap-2 rounded-xl border border-[#EBD3AE] bg-[#FAF7F2] px-3 text-[11px] font-semibold text-[#800020]">
+          <span class="material-symbols-outlined text-[17px]">storefront</span>
+          <span class="sr-only">Chọn sản phẩm hỗ trợ custom</span>
+          <select [ngModel]="activeTemplate()?._id || ''" (ngModelChange)="selectTemplateById($event)" aria-label="Chọn sản phẩm hỗ trợ custom" class="h-8 w-[150px] max-w-[calc(100vw-190px)] appearance-none border-0 bg-transparent text-[11px] font-bold text-[#800020] outline-none focus:border-0 focus:outline-none focus:ring-0 sm:w-[250px] sm:max-w-[250px] sm:text-xs">
+            @for (tpl of templates(); track tpl._id) {
+              <option [value]="tpl._id">{{ tpl.name }}</option>
+            }
+          </select>
+        </label>
 
         <!-- Right: Status & Quick Actions -->
         <div class="flex items-center gap-2">
           @if (lastAutoSavedTime()) {
-            <div class="hidden md:flex items-center gap-1.5 text-[10px] text-slate-500 bg-slate-50 px-2 py-1 rounded-full border border-slate-200">
+            <div class="hidden md:flex items-center gap-1.5 text-[10px] text-[#8C7B74] bg-[#FAF7F2] px-2 py-1 rounded-full border border-[#EBD3AE]">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               <span>Đã lưu {{ lastAutoSavedTime() }}</span>
             </div>
@@ -103,7 +100,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
 
           <button 
             (click)="onSaveDesignClick()"
-            class="px-3 py-1 rounded-xl border border-[#EBD3AE] bg-white hover:bg-[#FFF5E1] text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+            class="px-3 py-1 rounded-xl border border-[#EBD3AE] bg-white hover:bg-[#FFF5E1] text-[#2B1A1A] font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
             title="Lưu bản thiết kế này (AC12)"
           >
             <span class="material-symbols-outlined text-[15px] text-[#800020]">bookmark</span>
@@ -137,7 +134,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
             <button (click)="resetToDefaults()" class="text-[11px] font-bold text-[#800020]/70 hover:text-white underline cursor-pointer">
               Làm mới
             </button>
-            <button (click)="hasRestoredDraft.set(false)" class="text-slate-400 hover:text-white text-xs cursor-pointer ml-1" title="Đóng">
+            <button (click)="hasRestoredDraft.set(false)" class="text-[#A6968D] hover:text-white text-xs cursor-pointer ml-1" title="Đóng">
               ✕
             </button>
           </div>
@@ -151,12 +148,12 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
         <div class="lg:col-span-5 flex bg-white rounded-2xl sm:rounded-3xl border border-[#EBD3AE] shadow-shop-card overflow-hidden h-full min-h-0 flex-col sm:flex-row">
           
           <!-- Slim Left Tool Dock -->
-          <div class="w-full sm:w-16 md:w-18 bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-200 flex sm:flex-col items-center py-2 sm:py-3 gap-1 shrink-0 overflow-x-auto sm:overflow-y-auto overflow-y-hidden no-scrollbar justify-around sm:justify-start h-full">
+          <div class="w-full sm:w-16 md:w-18 bg-[#FAF7F2] border-b sm:border-b-0 sm:border-r border-[#EBD3AE] flex sm:flex-col items-center py-2 sm:py-3 gap-1 shrink-0 overflow-x-auto sm:overflow-y-auto overflow-y-hidden no-scrollbar justify-around sm:justify-start h-full">
             <!-- Tool 1: Colors -->
             <button
               (click)="activeToolTab.set('COLOR')"
               class="w-11 sm:w-13 py-1.5 sm:py-2 rounded-xl flex flex-col items-center gap-0.5 transition-all cursor-pointer"
-              [ngClass]="activeToolTab() === 'COLOR' ? 'bg-[#800020] text-[#FFF5E1] shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
+              [ngClass]="activeToolTab() === 'COLOR' ? 'bg-[#800020] text-[#FFF5E1] shadow-md' : 'text-[#5C4545] hover:bg-[#F1E8DC]'"
               title="Phối màu vỏ phôi"
             >
               <span class="material-symbols-outlined text-[18px]">palette</span>
@@ -167,7 +164,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
             <button
               (click)="activeToolTab.set('TEXT')"
               class="w-12 sm:w-14 py-2 sm:py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer"
-              [ngClass]="activeToolTab() === 'TEXT' ? 'bg-[#800020] text-[#FFF5E1] shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
+              [ngClass]="activeToolTab() === 'TEXT' ? 'bg-[#800020] text-[#FFF5E1] shadow-md' : 'text-[#5C4545] hover:bg-[#F1E8DC]'"
               title="Nội dung khắc laser"
             >
               <span class="material-symbols-outlined text-[19px] sm:text-[20px]">format_shapes</span>
@@ -178,7 +175,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
             <button
               (click)="activeToolTab.set('IMAGE')"
               class="w-12 sm:w-14 py-2 sm:py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer relative"
-              [ngClass]="activeToolTab() === 'IMAGE' ? 'bg-[#800020] text-[#FFF5E1] shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
+              [ngClass]="activeToolTab() === 'IMAGE' ? 'bg-[#800020] text-[#FFF5E1] shadow-md' : 'text-[#5C4545] hover:bg-[#F1E8DC]'"
               title="Tải ảnh cá nhân"
             >
               <span class="material-symbols-outlined text-[19px] sm:text-[20px]">add_photo_alternate</span>
@@ -192,7 +189,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
             <button
               (click)="activeToolTab.set('GRAPHICS')"
               class="w-12 sm:w-14 py-2 sm:py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer relative"
-              [ngClass]="activeToolTab() === 'GRAPHICS' ? 'bg-[#800020] text-[#FFF5E1] shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
+              [ngClass]="activeToolTab() === 'GRAPHICS' ? 'bg-[#800020] text-[#FFF5E1] shadow-md' : 'text-[#5C4545] hover:bg-[#F1E8DC]'"
               title="Thư viện đồ họa"
             >
               <span class="material-symbols-outlined text-[19px] sm:text-[20px]">collections</span>
@@ -202,13 +199,13 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
               }
             </button>
 
-            <div class="hidden sm:block w-8 border-t border-slate-200 my-0.5"></div>
+            <div class="hidden sm:block w-8 border-t border-[#EBD3AE] my-0.5"></div>
 
             <!-- Tool 6: Price & Specs -->
             <button
               (click)="activeToolTab.set('SUMMARY')"
               class="w-12 sm:w-14 py-2 sm:py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer"
-              [ngClass]="activeToolTab() === 'SUMMARY' ? 'bg-[#800020] text-[#FFF5E1] shadow-md' : 'text-slate-600 hover:bg-slate-200/70'"
+              [ngClass]="activeToolTab() === 'SUMMARY' ? 'bg-[#800020] text-[#FFF5E1] shadow-md' : 'text-[#5C4545] hover:bg-[#F1E8DC]'"
               title="Bảng giá & Đặt hàng"
             >
               <span class="material-symbols-outlined text-[19px] sm:text-[20px]">receipt_long</span>
@@ -227,7 +224,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                     <span class="material-symbols-outlined text-[#800020] text-[18px]">palette</span>
                     Phối Màu Vỏ Phôi
                   </h3>
-                  <p class="text-[10px] text-slate-500 mt-0.5">Chọn màu phôi riêng cho thiết kế của bạn</p>
+                  <p class="text-[10px] text-[#8C7B74] mt-0.5">Chọn màu phôi riêng cho thiết kế của bạn</p>
                 </div>
                 <span class="text-[11px] font-bold text-[#800020] bg-[#FFF5E1] px-2 py-0.5 rounded-full border border-[#EBD3AE]">
                   {{ selectedColor() }}
@@ -239,7 +236,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                     <span class="material-symbols-outlined text-[#800020] text-[18px]">format_shapes</span>
                     Khắc Chữ Đa Tầng
                   </h3>
-                  <p class="text-[10px] text-slate-500 mt-0.5">Nhiều khối chữ độc lập · Tự do xuống dòng và định dạng</p>
+                  <p class="text-[10px] text-[#8C7B74] mt-0.5">Nhiều khối chữ độc lập · Tự do xuống dòng và định dạng</p>
                 </div>
                 <span class="text-[11px] font-bold text-[#800020] bg-[#FFF5E1] px-2 py-0.5 rounded-full border border-[#EBD3AE]">
                   {{ isFrontFace() ? 'Mặt Trước' : 'Mặt Sau' }}
@@ -251,7 +248,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                     <span class="material-symbols-outlined text-[#800020] text-[18px]">add_photo_alternate</span>
                     In Ảnh Cá Nhân
                   </h3>
-                  <p class="text-[10px] text-slate-500 mt-0.5">Công nghệ in Nano UV HD chống bay màu</p>
+                  <p class="text-[10px] text-[#8C7B74] mt-0.5">Công nghệ in Nano UV HD chống bay màu</p>
                 </div>
                 @if (uploadedImage()) {
                   <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
@@ -265,7 +262,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                     <span class="material-symbols-outlined text-[#800020] text-[18px]">collections</span>
                     Thư viện Đồ họa
                   </h3>
-                  <p class="text-[10px] text-slate-500 mt-0.5">Thêm clipart vào mặt đang chỉnh</p>
+                  <p class="text-[10px] text-[#8C7B74] mt-0.5">Thêm clipart vào mặt đang chỉnh</p>
                 </div>
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDF0D5] text-[#800020]">
                   {{ activeStickers().length }} hình
@@ -277,7 +274,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                     <span class="material-symbols-outlined text-[#800020] text-[18px]">receipt_long</span>
                     Bảng Kê Chi Phí & Chính Sách Cọc
                   </h3>
-                  <p class="text-[10px] text-slate-500 mt-0.5">Minh bạch giá & chính sách cọc 50%</p>
+                  <p class="text-[10px] text-[#8C7B74] mt-0.5">Minh bạch giá & chính sách cọc 50%</p>
                 </div>
               }
             </div>
@@ -288,7 +285,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
               <!-- DRAWER 1: COLORS -->
               @if (activeToolTab() === 'COLOR') {
                 <div class="space-y-4 animate-fade-in">
-                  <p class="text-[11px] text-slate-500">Các màu phôi dùng chung vùng in và vùng an toàn của phôi gốc.</p>
+                  <p class="text-[11px] text-[#8C7B74]">Các màu phôi dùng chung vùng in và vùng an toàn của phôi gốc.</p>
                   @if (blankImageNotice()) { <p role="alert" class="text-xs text-amber-700">{{ blankImageNotice() }}</p> }
                   <div class="grid grid-cols-2 gap-2.5">
                     @for (c of availableColorOptions(); track c.name) {
@@ -296,10 +293,10 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                         (click)="!c.isOutOfStock && setColor(c.name)"
                         class="p-3 rounded-2xl border-2 flex items-center gap-3 transition-all"
                         [ngClass]="{
-                          'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200': c.isOutOfStock,
+                          'opacity-50 cursor-not-allowed bg-[#FAF7F2] border-[#EBD3AE]': c.isOutOfStock,
                           'cursor-pointer hover:border-[#800020]/70': !c.isOutOfStock,
                           'border-[#800020] bg-[#FFF5E1]/60 shadow-xs': selectedColor() === c.name && !c.isOutOfStock,
-                          'border-slate-200 bg-white': selectedColor() !== c.name && !c.isOutOfStock
+                          'border-[#EBD3AE] bg-white': selectedColor() !== c.name && !c.isOutOfStock
                         }"
                       >
                         <div 
@@ -311,13 +308,13 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                           }
                         </div>
                         <div class="min-w-0 flex-1">
-                          <span class="text-xs font-bold text-slate-800 block leading-tight truncate">{{ c.name }}</span>
+                          <span class="text-xs font-bold text-[#2B1A1A] block leading-tight truncate">{{ c.name }}</span>
                           @if (c.isOutOfStock) {
                             <span class="text-[9px] font-bold text-red-600 bg-red-100 px-1.5 py-0.2 rounded-md inline-block mt-0.5">Hết hàng</span>
                           } @else if (c.sku) {
                             <span class="text-[9px] font-mono text-[#800020] block truncate font-medium">{{ c.sku }}</span>
                           } @else {
-                            <span class="text-[10px] text-slate-400">Phôi thiết kế</span>
+                            <span class="text-[10px] text-[#A6968D]">Phôi thiết kế</span>
                           }
                         </div>
                       </div>
@@ -330,24 +327,24 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
               @if (activeToolTab() === 'TEXT') {
                 <div class="space-y-4 animate-fade-in">
                   <!-- Face Active Switch Tab in Text Drawer -->
-                  <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-xl">
+                  <div class="flex items-center gap-2 p-1 bg-[#FAF7F2] rounded-xl">
                     <button 
                       (click)="switchFace(true)"
                       class="flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1"
-                      [ngClass]="isFrontFace() ? 'bg-white text-[#800020] shadow-xs' : 'text-slate-600'"
+                      [ngClass]="isFrontFace() ? 'bg-white text-[#800020] shadow-xs' : 'text-[#5C4545]'"
                     >
                       <span>Mặt Trước (Front)</span>
                     </button>
                     <button 
                       (click)="switchFace(false)"
                       class="flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1"
-                      [ngClass]="!isFrontFace() ? 'bg-white text-[#800020] shadow-xs' : 'text-slate-600'"
+                      [ngClass]="!isFrontFace() ? 'bg-white text-[#800020] shadow-xs' : 'text-[#5C4545]'"
                     >
                       <span>Mặt Sau (Back)</span>
                     </button>
                   </div>
 
-                  <div class="flex items-center justify-between text-xs text-slate-500">
+                  <div class="flex items-center justify-between text-xs text-[#8C7B74]">
                     <span>{{ faceTextBlocks().length }} khối chữ · Không giới hạn số khối</span>
                     <span>Mỗi khối có định dạng riêng</span>
                   </div>
@@ -358,69 +355,69 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                     @for (block of faceTextBlocks(); track block.id; let idx = $index) {
                       <div class="rounded-xl border-2 overflow-hidden" [ngClass]="selectedTextBlockId() === block.id ? 'border-[#800020] bg-[#FFF5E1]/40' : 'border-slate-100 bg-white'">
                         <div class="flex items-center gap-1 px-2 py-2">
-                          <button type="button" (click)="selectTextBlock(block.id)" class="flex-1 min-w-0 flex items-center gap-2 text-left text-xs font-semibold text-slate-700">
+                          <button type="button" (click)="selectTextBlock(block.id)" class="flex-1 min-w-0 flex items-center gap-2 text-left text-xs font-semibold text-[#2B1A1A]">
                             <span class="rounded bg-[#FDF0D5] text-[#800020] w-5 h-5 flex items-center justify-center shrink-0">{{ idx + 1 }}</span>
                             <span class="truncate" [class.opacity-40]="!block.visible">{{ block.text.trim() || 'Khối chữ mới' }}</span>
                           </button>
-                          <button type="button" (click)="updateTextBlock(block.id, {visible: !block.visible})" [attr.aria-label]="block.visible ? 'Ẩn khối chữ' : 'Hiện khối chữ'" class="p-1 text-slate-400 hover:text-[#800020]"><span class="material-symbols-outlined text-base">{{ block.visible ? 'visibility' : 'visibility_off' }}</span></button>
-                          <button type="button" (click)="duplicateTextBlock(block.id)" aria-label="Nhân bản khối chữ" class="p-1 text-slate-400 hover:text-[#800020]"><span class="material-symbols-outlined text-base">content_copy</span></button>
+                          <button type="button" (click)="updateTextBlock(block.id, {visible: !block.visible})" [attr.aria-label]="block.visible ? 'Ẩn khối chữ' : 'Hiện khối chữ'" class="p-1 text-[#A6968D] hover:text-[#800020]"><span class="material-symbols-outlined text-base">{{ block.visible ? 'visibility' : 'visibility_off' }}</span></button>
+                          <button type="button" (click)="duplicateTextBlock(block.id)" aria-label="Nhân bản khối chữ" class="p-1 text-[#A6968D] hover:text-[#800020]"><span class="material-symbols-outlined text-base">content_copy</span></button>
                           <button type="button" (click)="removeTextBlock(block.id)" aria-label="Xóa khối chữ" class="p-1 text-red-400 hover:text-red-600"><span class="material-symbols-outlined text-base">delete</span></button>
                         </div>
                         <div class="px-3 pb-2 grid grid-cols-[minmax(0,1fr)_90px] gap-2">
-                          <label class="text-[10px] text-slate-500 space-y-1">Font chữ
-                            <select [attr.aria-label]="'Font chữ khối ' + (idx + 1)" [ngModel]="block.fontFamily" (ngModelChange)="setBlockFont(block.id, $event)" [style.font-family]="fontFamilyFor(block.fontFamily)" class="block w-full rounded-lg border border-[#EBD3AE] bg-white px-2 py-2 text-xs text-slate-800 outline-none focus:border-[#800020]">
+                          <label class="text-[10px] text-[#8C7B74] space-y-1">Font chữ
+                            <select [attr.aria-label]="'Font chữ khối ' + (idx + 1)" [ngModel]="block.fontFamily" (ngModelChange)="setBlockFont(block.id, $event)" [style.font-family]="fontFamilyFor(block.fontFamily)" class="block w-full rounded-lg border border-[#EBD3AE] bg-white px-2 py-2 text-xs text-[#2B1A1A] outline-none focus:border-[#800020]">
                               @for (font of fontOptions; track font.name) { <option [value]="font.name">{{ font.label }}</option> }
                             </select>
                           </label>
-                          <label class="text-[10px] text-slate-500 space-y-1">Cỡ chữ (px)
-                            <input type="number" min="8" max="120" step="1" [attr.aria-label]="'Cỡ chữ khối ' + (idx + 1)" [ngModel]="block.fontSize" (ngModelChange)="setBlockFontSize(block.id, $event)" class="block w-full rounded-lg border border-[#EBD3AE] bg-white px-2 py-2 text-xs text-slate-800 outline-none focus:border-[#800020]" />
+                          <label class="text-[10px] text-[#8C7B74] space-y-1">Cỡ chữ (px)
+                            <input type="number" min="8" max="120" step="1" [attr.aria-label]="'Cỡ chữ khối ' + (idx + 1)" [ngModel]="block.fontSize" (ngModelChange)="setBlockFontSize(block.id, $event)" class="block w-full rounded-lg border border-[#EBD3AE] bg-white px-2 py-2 text-xs text-[#2B1A1A] outline-none focus:border-[#800020]" />
                           </label>
                         </div>
                         @if (selectedTextBlockId() === block.id) {
                           <div class="px-3 pb-3 space-y-2">
-                            <div class="flex justify-between text-[10px] text-slate-500"><label [for]="'text-' + block.id">Nội dung khắc · hỗ trợ nhiều dòng</label><span>{{ block.text.length }} ký tự</span></div>
+                            <div class="flex justify-between text-[10px] text-[#8C7B74]"><label [for]="'text-' + block.id">Nội dung khắc · hỗ trợ nhiều dòng</label><span>{{ block.text.length }} ký tự</span></div>
                             <textarea [id]="'text-' + block.id" [style.font-family]="fontFamilyFor(block.fontFamily)" [style.font-weight]="block.bold ? '700' : '400'" [style.font-style]="block.italic ? 'italic' : 'normal'" rows="3" [ngModel]="block.text" (ngModelChange)="updateTextBlock(block.id, {text: $event})" placeholder="Nhập lời nhắn, xuống dòng tùy ý…" class="w-full rounded-lg border border-[#EBD3AE] bg-white p-2 text-xs outline-none focus:border-[#800020] resize-y"></textarea>
                             <div class="flex items-center justify-between gap-2 border-t border-[#EBD3AE] pt-2">
-                              <div class="flex items-center gap-1 rounded-xl bg-slate-100 p-1" role="group" [attr.aria-label]="'Căn lề khối ' + (idx + 1)">
+                              <div class="flex items-center gap-1 rounded-xl bg-[#FAF7F2] p-1" role="group" [attr.aria-label]="'Căn lề khối ' + (idx + 1)">
                                 @for (alignment of textAlignments; track alignment.value) {
-                                  <button type="button" (click)="editTextBlock(block.id, {align: alignment.value})" [attr.aria-label]="alignment.label + ' khối ' + (idx + 1)" [attr.aria-pressed]="block.align === alignment.value" class="w-7 h-7 rounded-lg flex items-center justify-center" [ngClass]="block.align === alignment.value ? 'bg-white text-[#800020] shadow-sm' : 'text-slate-500'">
+                                  <button type="button" (click)="editTextBlock(block.id, {align: alignment.value})" [attr.aria-label]="alignment.label + ' khối ' + (idx + 1)" [attr.aria-pressed]="block.align === alignment.value" class="w-7 h-7 rounded-lg flex items-center justify-center" [ngClass]="block.align === alignment.value ? 'bg-white text-[#800020] shadow-sm' : 'text-[#8C7B74]'">
                                     <span class="material-symbols-outlined text-[18px]">{{ alignment.icon }}</span>
                                   </button>
                                 }
                               </div>
-                              <div class="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
-                                <button type="button" (click)="editTextBlock(block.id, {bold: !block.bold})" [attr.aria-label]="'Chữ đậm khối ' + (idx + 1)" [attr.aria-pressed]="block.bold" class="w-7 h-7 rounded-lg font-bold" [ngClass]="block.bold ? 'bg-white text-[#800020] shadow-sm' : 'text-slate-500'">B</button>
-                                <button type="button" (click)="editTextBlock(block.id, {italic: !block.italic})" [attr.aria-label]="'Chữ nghiêng khối ' + (idx + 1)" [attr.aria-pressed]="block.italic" class="w-7 h-7 rounded-lg italic font-bold" [ngClass]="block.italic ? 'bg-white text-[#800020] shadow-sm' : 'text-slate-500'">I</button>
+                              <div class="flex items-center gap-1 rounded-xl bg-[#FAF7F2] p-1">
+                                <button type="button" (click)="editTextBlock(block.id, {bold: !block.bold})" [attr.aria-label]="'Chữ đậm khối ' + (idx + 1)" [attr.aria-pressed]="block.bold" class="w-7 h-7 rounded-lg font-bold" [ngClass]="block.bold ? 'bg-white text-[#800020] shadow-sm' : 'text-[#8C7B74]'">B</button>
+                                <button type="button" (click)="editTextBlock(block.id, {italic: !block.italic})" [attr.aria-label]="'Chữ nghiêng khối ' + (idx + 1)" [attr.aria-pressed]="block.italic" class="w-7 h-7 rounded-lg italic font-bold" [ngClass]="block.italic ? 'bg-white text-[#800020] shadow-sm' : 'text-[#8C7B74]'">I</button>
                               </div>
                             </div>
                             <div class="grid grid-cols-2 gap-3 border-t border-[#EBD3AE] pt-2">
-                              <label class="text-[10px] text-slate-500">Giãn ký tự: {{ block.letterSpacing }}px
+                              <label class="text-[10px] text-[#8C7B74]">Giãn ký tự: {{ block.letterSpacing }}px
                                 <input type="range" min="-2" max="12" step="0.5" [attr.aria-label]="'Giãn ký tự khối ' + (idx + 1)" [ngModel]="block.letterSpacing" (ngModelChange)="editTextBlock(block.id, {letterSpacing: +$event})" class="w-full accent-blue-600" />
                               </label>
-                              <label class="text-[10px] text-slate-500">Giãn dòng: {{ block.lineHeight }}×
+                              <label class="text-[10px] text-[#8C7B74]">Giãn dòng: {{ block.lineHeight }}×
                                 <input type="range" min="0.8" max="3" step="0.1" [attr.aria-label]="'Giãn dòng khối ' + (idx + 1)" [ngModel]="block.lineHeight" (ngModelChange)="editTextBlock(block.id, {lineHeight: +$event})" class="w-full accent-blue-600" />
                               </label>
                             </div>
                             <div class="space-y-2 border-t border-[#EBD3AE] pt-2">
                               <div class="flex items-center justify-between gap-2">
-                                <span class="text-[11px] font-semibold text-slate-600">Màu chữ</span>
-                                <label class="flex items-center gap-2 text-[10px] font-mono text-slate-500">
-                                  <input type="color" [attr.aria-label]="'Màu chữ khối ' + (idx + 1)" [ngModel]="block.color" (ngModelChange)="editTextBlock(block.id, {color: $event})" class="h-7 w-9 rounded border border-slate-200 bg-white cursor-pointer" />
+                                <span class="text-[11px] font-semibold text-[#5C4545]">Màu chữ</span>
+                                <label class="flex items-center gap-2 text-[10px] font-mono text-[#8C7B74]">
+                                  <input type="color" [attr.aria-label]="'Màu chữ khối ' + (idx + 1)" [ngModel]="block.color" (ngModelChange)="editTextBlock(block.id, {color: $event})" class="h-7 w-9 rounded border border-[#EBD3AE] bg-white cursor-pointer" />
                                   {{ block.color }}
                                 </label>
                               </div>
                               <div class="flex flex-wrap gap-2">
                                 @for (color of textColors; track color.hex) {
-                                  <button type="button" (click)="editTextBlock(block.id, {color: color.hex})" [attr.aria-label]="color.name + ' cho khối ' + (idx + 1)" [attr.aria-pressed]="block.color === color.hex" class="w-6 h-6 rounded-full border-2 shadow-sm" [style.background-color]="color.hex" [ngClass]="block.color === color.hex ? 'border-[#800020] ring-2 ring-[#F5D9AF]' : 'border-slate-200'"></button>
+                                  <button type="button" (click)="editTextBlock(block.id, {color: color.hex})" [attr.aria-label]="color.name + ' cho khối ' + (idx + 1)" [attr.aria-pressed]="block.color === color.hex" class="w-6 h-6 rounded-full border-2 shadow-sm" [style.background-color]="color.hex" [ngClass]="block.color === color.hex ? 'border-[#800020] ring-2 ring-[#F5D9AF]' : 'border-[#EBD3AE]'"></button>
                                 }
                               </div>
                             </div>
-                            <p class="text-[10px] text-slate-500">{{ block.visible ? 'Đang hiển thị' : 'Đã ẩn' }} · Hỗ trợ đầy đủ dấu tiếng Việt</p>
+                            <p class="text-[10px] text-[#8C7B74]">{{ block.visible ? 'Đang hiển thị' : 'Đã ẩn' }} · Hỗ trợ đầy đủ dấu tiếng Việt</p>
                           </div>
                         }
                       </div>
                     } @empty {
-                      <div class="text-center py-6 rounded-xl bg-slate-50 text-xs text-slate-500">Thêm khối chữ đầu tiên để bắt đầu.<br/>Kéo, co giãn và xoay từng khối trên phôi.</div>
+                      <div class="text-center py-6 rounded-xl bg-[#FAF7F2] text-xs text-[#8C7B74]">Thêm khối chữ đầu tiên để bắt đầu.<br/>Kéo, co giãn và xoay từng khối trên phôi.</div>
                     }
                   </div>
                   @if (pendingTextFonts()) {
@@ -446,16 +443,16 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                       />
                       <span class="material-symbols-outlined text-4xl text-[#800020]">cloud_upload</span>
                       <div>
-                        <p class="text-xs font-bold text-slate-700">Tải ảnh kỷ niệm (.JPG, .PNG)</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">Dung lượng tối đa 5MB • Phụ phí in ảnh HD: 30.000đ</p>
+                        <p class="text-xs font-bold text-[#2B1A1A]">Tải ảnh kỷ niệm (.JPG, .PNG)</p>
+                        <p class="text-[10px] text-[#A6968D] mt-0.5">Dung lượng tối đa 5MB • Phụ phí in ảnh HD: 30.000đ</p>
                       </div>
                     </label>
                   } @else {
-                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div class="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EBD3AE] space-y-3">
                       <div class="flex items-center gap-3">
                         <img [src]="uploadedImage()" alt="Preview" class="w-14 h-14 rounded-xl object-cover border border-slate-300 shadow-xs">
                         <div class="flex-1">
-                          <span class="text-xs font-bold text-slate-800 block">Ảnh đã đưa lên Canvas</span>
+                          <span class="text-xs font-bold text-[#2B1A1A] block">Ảnh đã đưa lên Canvas</span>
                           <span class="text-[10px] text-emerald-600 font-medium">Kéo thả & xoay chỉnh tự do trên Canvas</span>
                         </div>
                         <button (click)="removeImage()" class="w-8 h-8 rounded-xl bg-red-50 border border-red-200 hover:bg-red-100 flex items-center justify-center text-red-600 cursor-pointer" title="Xóa ảnh">
@@ -483,9 +480,9 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                 <div class="space-y-3 animate-fade-in">
                   <input type="search" [ngModel]="graphicsQuery()" (ngModelChange)="graphicsQuery.set($event)"
                     aria-label="Tìm đồ họa" placeholder="Tìm hoa, trái tim, sinh nhật…"
-                    class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-[#800020]">
+                    class="w-full px-3 py-2 border border-[#EBD3AE] rounded-xl text-xs focus:outline-none focus:border-[#800020]">
                   <select [ngModel]="graphicsCategory()" (ngModelChange)="graphicsCategory.set($event)" aria-label="Chủ đề đồ họa"
-                    class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                    class="w-full px-3 py-2 rounded-xl border border-[#EBD3AE] text-xs">
                     <option value="">Tất cả chủ đề</option>
                     @for (category of graphicsCategories(); track category) { <option [value]="category">{{ category }}</option> }
                   </select>
@@ -495,7 +492,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                       <button (click)="setPattern('none')" class="underline font-bold cursor-pointer">Bỏ họa tiết cũ</button>
                     </div>
                   }
-                  <p class="text-[11px] text-slate-500">Bấm để thêm hình vào {{ isFrontFace() ? 'mặt trước' : 'mặt sau' }}. Có thể thêm cùng một hình nhiều lần. Miễn phí.</p>
+                  <p class="text-[11px] text-[#8C7B74]">Bấm để thêm hình vào {{ isFrontFace() ? 'mặt trước' : 'mặt sau' }}. Có thể thêm cùng một hình nhiều lần. Miễn phí.</p>
                   @if (pendingGraphicAdds()) { <p role="status" class="text-xs text-[#800020]">Đang tải clipart…</p> }
                   @if (graphicsNotice()) { <p role="status" class="text-xs text-amber-700">{{ graphicsNotice() }}</p> }
                   @if (graphicsLibraryLoading()) {
@@ -507,22 +504,22 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                   <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     @for (asset of filteredGraphics(); track asset._id) {
                       <button (click)="addGraphic(asset)" [title]="'Thêm ' + asset.name" [disabled]="activeStickers().length >= 30"
-                        class="p-2 rounded-xl border border-slate-200 hover:border-[#800020] hover:bg-[#FFF5E1] disabled:opacity-40 flex flex-col items-center gap-1 cursor-pointer">
+                        class="p-2 rounded-xl border border-[#EBD3AE] hover:border-[#800020] hover:bg-[#FFF5E1] disabled:opacity-40 flex flex-col items-center gap-1 cursor-pointer">
                           <img [src]="asset.thumbnailUrl || asset.imageUrl || asset.icon" [alt]="asset.name" loading="lazy" class="w-12 h-12 object-contain">
-                        <span class="text-[10px] text-slate-600 truncate w-full text-center">{{ asset.name }}</span>
+                        <span class="text-[10px] text-[#5C4545] truncate w-full text-center">{{ asset.name }}</span>
                       </button>
                     } @empty {
                       @if (!graphicsLibraryLoading() && !graphicsLibraryError()) {
-                        <p class="col-span-full text-xs text-slate-500 py-4">{{ graphicsAssets().length ? 'Không tìm thấy clipart phù hợp.' : 'Thư viện chưa có clipart đang hoạt động.' }}</p>
+                        <p class="col-span-full text-xs text-[#8C7B74] py-4">{{ graphicsAssets().length ? 'Không tìm thấy clipart phù hợp.' : 'Thư viện chưa có clipart đang hoạt động.' }}</p>
                       }
                     }
                   </div>
-                  <p class="text-[10px] text-slate-400">{{ activeStickers().length }}/30 hình trong thiết kế • Kéo, thu phóng và xoay trên canvas.</p>
+                  <p class="text-[10px] text-[#A6968D]">{{ activeStickers().length }}/30 hình trong thiết kế • Kéo, thu phóng và xoay trên canvas.</p>
                   @if (activeStickers().length) {
                     <div class="space-y-1 border-t border-slate-100 pt-2">
-                      <p class="text-[11px] font-bold text-slate-700">Hình trong thiết kế</p>
+                      <p class="text-[11px] font-bold text-[#2B1A1A]">Hình trong thiết kế</p>
                       @for (graphic of activeStickers(); track graphic.id) {
-                        <div class="flex items-center justify-between gap-2 text-[11px] text-slate-600">
+                        <div class="flex items-center justify-between gap-2 text-[11px] text-[#5C4545]">
                           <span class="truncate">{{ graphic.name }} · {{ graphic.face === 'back' ? 'Mặt sau' : graphic.face === 'front' ? 'Mặt trước' : 'Hai mặt' }}</span>
                           <button (click)="removeGraphic(graphic.id)" [attr.aria-label]="'Xóa ' + graphic.name" class="text-red-600 cursor-pointer px-2 py-1">Xóa</button>
                         </div>
@@ -542,10 +539,10 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
               <!-- DRAWER 6: PRICE SUMMARY & SPECIFICATION -->
               @if (activeToolTab() === 'SUMMARY') {
                 <div class="space-y-4 animate-fade-in">
-                  <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
-                    <div class="flex items-center justify-between text-slate-600">
+                  <div class="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#EBD3AE] space-y-2 text-xs">
+                    <div class="flex items-center justify-between text-[#5C4545]">
                       <span>Giá phôi gốc ({{ activeTemplate()?.name }}):</span>
-                      <strong class="text-slate-800">{{ baseProductPrice() | number:'1.0-0' }}đ</strong>
+                      <strong class="text-[#2B1A1A]">{{ baseProductPrice() | number:'1.0-0' }}đ</strong>
                     </div>
                     @for (sc of surchargeList(); track sc.label) {
                       <div class="flex items-center justify-between text-[#800020]">
@@ -553,7 +550,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                         <strong class="font-bold">+{{ sc.amount | number:'1.0-0' }}đ</strong>
                       </div>
                     }
-                    <div class="pt-2 border-t border-slate-200 flex items-center justify-between font-bold text-sm text-[#2B1A1A]">
+                    <div class="pt-2 border-t border-[#EBD3AE] flex items-center justify-between font-bold text-sm text-[#2B1A1A]">
                       <span>Giá cuối cùng:</span>
                       <span class="text-[#800020] font-extrabold text-base">{{ finalProductPrice() | number:'1.0-0' }}đ</span>
                     </div>
@@ -561,7 +558,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                       <span>Cọc trước 50%:</span>
                       <span>{{ depositPrice() | number:'1.0-0' }}đ</span>
                     </div>
-                    <div class="flex items-center justify-between text-[11px] text-slate-500">
+                    <div class="flex items-center justify-between text-[11px] text-[#8C7B74]">
                       <span>Còn lại COD nhận hàng:</span>
                       <span>{{ (finalProductPrice() - depositPrice()) | number:'1.0-0' }}đ</span>
                     </div>
@@ -572,11 +569,11 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
             </div>
 
             <!-- C. STICKY BOTTOM CHECKOUT CTA BAR (Always Visible) -->
-            <div class="p-3.5 sm:p-4 border-t border-slate-200 bg-gradient-to-t from-blue-50/40 via-white to-white shrink-0 shadow-[0_-4px_14px_rgba(0,0,0,0.05)] z-10">
+            <div class="p-3.5 sm:p-4 border-t border-[#EBD3AE] bg-gradient-to-t from-blue-50/40 via-white to-white shrink-0 shadow-[0_-4px_14px_rgba(0,0,0,0.05)] z-10">
               <!-- Realtime Price & Deposit callout -->
               <div class="flex items-center justify-between mb-2">
                 <div class="flex items-baseline gap-1.5">
-                  <span class="text-xs text-slate-500 font-medium">Giá sản phẩm:</span>
+                  <span class="text-xs text-[#8C7B74] font-medium">Giá sản phẩm:</span>
                   <span class="text-base sm:text-lg font-black text-[#800020] leading-none">
                     @if (activeTemplate()) {
                       {{ finalProductPrice() | number:'1.0-0' }}đ
@@ -603,7 +600,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                   (click)="onPrimaryActionClick()"
                   [disabled]="savingToCart() || isFormInvalid()"
                   class="flex-1 py-2.5 px-3 rounded-xl text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer active:scale-[0.99]"
-                  [ngClass]="isFormInvalid() ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-[#800020] to-[#540015] hover:from-[#660019] hover:to-[#3D000F] shadow-[#800020]/20'"
+                  [ngClass]="isFormInvalid() ? 'bg-slate-300 text-[#8C7B74] cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-[#800020] to-[#540015] hover:from-[#660019] hover:to-[#3D000F] shadow-[#800020]/20'"
                 >
                   @if (savingToCart()) {
                     <span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true"></span>
@@ -616,7 +613,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
 
                 <button 
                   (click)="activeToolTab.set('SUMMARY')"
-                  class="px-2.5 py-2.5 rounded-xl border border-slate-200 hover:border-[#EBD3AE] hover:bg-[#FFF5E1] text-slate-700 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+                  class="px-2.5 py-2.5 rounded-xl border border-[#EBD3AE] hover:border-[#EBD3AE] hover:bg-[#FFF5E1] text-[#2B1A1A] font-bold text-xs flex items-center gap-1 transition cursor-pointer"
                   title="Xem bảng chiết tính giá chi tiết"
                 >
                   <span class="material-symbols-outlined text-[16px] text-[#800020]">receipt_long</span>
@@ -625,7 +622,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
               </div>
 
               <!-- Trust Assurance Note -->
-              <div class="flex items-center justify-between text-[10px] text-slate-400 mt-1 px-0.5">
+              <div class="flex items-center justify-between text-[10px] text-[#A6968D] mt-1 px-0.5">
                 <span class="flex items-center gap-1">
                   <span class="material-symbols-outlined text-[11px] text-emerald-500">verified</span>
                   <span>Chuẩn phôi 100%</span>
@@ -644,11 +641,11 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
             <!-- Canvas Floating Controls Header -->
             <div class="w-full flex flex-wrap items-center justify-between gap-1.5 mb-1 shrink-0 z-10">
               <!-- Front / Back Face Switcher (AC8 & AC9) -->
-              <div class="flex items-center gap-1 bg-slate-100 p-0.5 sm:p-1 rounded-2xl shadow-inner border border-slate-200">
+              <div class="flex items-center gap-1 bg-[#FAF7F2] p-0.5 sm:p-1 rounded-2xl shadow-inner border border-[#EBD3AE]">
                 <button 
                   (click)="switchFace(true)"
                   class="flex items-center gap-1 text-[11px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 rounded-xl transition cursor-pointer"
-                  [ngClass]="isFrontFace() ? 'bg-white text-[#800020] shadow-2xs' : 'text-slate-600 hover:text-slate-900'"
+                  [ngClass]="isFrontFace() ? 'bg-white text-[#800020] shadow-2xs' : 'text-[#5C4545] hover:text-[#2B1A1A]'"
                 >
                   <span class="material-symbols-outlined text-[15px]">flip_to_front</span>
                   <span>Mặt Trước</span>
@@ -656,7 +653,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                 <button 
                   (click)="switchFace(false)"
                   class="flex items-center gap-1 text-[11px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 rounded-xl transition cursor-pointer"
-                  [ngClass]="!isFrontFace() ? 'bg-white text-[#800020] shadow-2xs' : 'text-slate-600 hover:text-slate-900'"
+                  [ngClass]="!isFrontFace() ? 'bg-white text-[#800020] shadow-2xs' : 'text-[#5C4545] hover:text-[#2B1A1A]'"
                 >
                   <span class="material-symbols-outlined text-[15px]">flip_to_back</span>
                   <span>Mặt Sau</span>
@@ -673,14 +670,14 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                   <!-- Layer order buttons -->
                   <button 
                     (click)="bringForward()" 
-                    class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-[#FDF0D5] text-slate-600 hover:text-[#800020] flex items-center justify-center transition cursor-pointer" 
+                    class="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-[#FDF0D5] text-[#5C4545] hover:text-[#800020] flex items-center justify-center transition cursor-pointer" 
                     title="Đưa lên trên (Bring Forward)"
                   >
                     <span class="material-symbols-outlined text-[15px]">vertical_align_top</span>
                   </button>
                   <button 
                     (click)="sendBackward()" 
-                    class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-[#FDF0D5] text-slate-600 hover:text-[#800020] flex items-center justify-center transition cursor-pointer" 
+                    class="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-[#FDF0D5] text-[#5C4545] hover:text-[#800020] flex items-center justify-center transition cursor-pointer" 
                     title="Đưa xuống dưới (Send Backward)"
                   >
                     <span class="material-symbols-outlined text-[15px]">vertical_align_bottom</span>
@@ -688,23 +685,23 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                 }
 
                 <!-- Zoom Controls -->
-                <div class="hidden sm:flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                <div class="hidden sm:flex items-center gap-0.5 bg-[#FAF7F2] p-0.5 rounded-lg border border-[#EBD3AE]">
                   <button 
                     (click)="setZoom(0.85)" 
                     class="px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer"
-                    [ngClass]="canvasZoom() === 0.85 ? 'bg-white text-[#800020] shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                    [ngClass]="canvasZoom() === 0.85 ? 'bg-white text-[#800020] shadow-2xs' : 'text-[#8C7B74] hover:text-[#2B1A1A]'"
                     title="Thu nhỏ 85%"
                   >85%</button>
                   <button 
                     (click)="setZoom(1.0)" 
                     class="px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer"
-                    [ngClass]="canvasZoom() === 1.0 ? 'bg-white text-[#800020] shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                    [ngClass]="canvasZoom() === 1.0 ? 'bg-white text-[#800020] shadow-2xs' : 'text-[#8C7B74] hover:text-[#2B1A1A]'"
                     title="Kích thước chuẩn"
                   >100%</button>
                   <button 
                     (click)="setZoom(1.15)" 
                     class="px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer"
-                    [ngClass]="canvasZoom() === 1.15 ? 'bg-white text-[#800020] shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                    [ngClass]="canvasZoom() === 1.15 ? 'bg-white text-[#800020] shadow-2xs' : 'text-[#8C7B74] hover:text-[#2B1A1A]'"
                     title="Phóng to 115%"
                   >115%</button>
                 </div>
@@ -713,14 +710,14 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                 <button 
                   (click)="toggleGuides()" 
                   class="w-7 h-7 rounded-lg flex items-center justify-center transition cursor-pointer"
-                  [ngClass]="showGuides() ? 'bg-[#FDF0D5] text-[#800020]' : 'bg-slate-100 text-slate-400 hover:text-slate-600'"
+                  [ngClass]="showGuides() ? 'bg-[#FDF0D5] text-[#800020]' : 'bg-[#FAF7F2] text-[#A6968D] hover:text-[#5C4545]'"
                   [title]="showGuides() ? 'Đang hiện Khung in (Bấm để ẩn)' : 'Đang ẩn Khung in (Bấm để hiện)'"
                 >
                   <span class="material-symbols-outlined text-[15px]">{{ showGuides() ? 'crop_free' : 'crop' }}</span>
                 </button>
                 <button 
                   (click)="fitIntoSafeArea()" 
-                  class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 flex items-center justify-center transition cursor-pointer"
+                  class="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-emerald-100 text-[#5C4545] hover:text-emerald-700 flex items-center justify-center transition cursor-pointer"
                   title="Căn phần tử vào Vùng An Toàn"
                 >
                   <span class="material-symbols-outlined text-[15px]">aspect_ratio</span>
@@ -728,28 +725,28 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
 
                 <button 
                   (click)="centerSelectedNode()" 
-                  class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-[#FDF0D5] text-slate-600 hover:text-[#800020] flex items-center justify-center transition cursor-pointer"
+                  class="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-[#FDF0D5] text-[#5C4545] hover:text-[#800020] flex items-center justify-center transition cursor-pointer"
                   title="Căn giữa đối tượng"
                 >
                   <span class="material-symbols-outlined text-[15px]">filter_center_focus</span>
                 </button>
                 <button 
                   (click)="deleteSelectedNode()" 
-                  class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 flex items-center justify-center transition cursor-pointer"
+                  class="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-red-100 text-[#5C4545] hover:text-red-600 flex items-center justify-center transition cursor-pointer"
                   title="Xóa đối tượng đang chọn"
                 >
                   <span class="material-symbols-outlined text-[15px]">delete</span>
                 </button>
                 <button 
                   (click)="downloadSnapshot()" 
-                  class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-600 flex items-center justify-center transition cursor-pointer"
+                  class="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-emerald-100 text-[#5C4545] hover:text-emerald-600 flex items-center justify-center transition cursor-pointer"
                   title="Tải ảnh mô phỏng 1:1"
                 >
                   <span class="material-symbols-outlined text-[15px]">download</span>
                 </button>
                 <button 
                   (click)="resetToDefaults()" 
-                  class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer"
+                  class="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-[#F1E8DC] text-[#5C4545] flex items-center justify-center transition cursor-pointer"
                   title="Đặt lại mặc định"
                 >
                   <span class="material-symbols-outlined text-[15px]">restart_alt</span>
@@ -758,7 +755,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
             </div>
 
             <!-- KONVA.JS CANVAS STAGE CONTAINER (Flex-1 Responsive wrapper) -->
-            <div #stageWrapper class="relative w-full flex-1 min-h-0 flex items-center justify-center overflow-hidden my-0.5">
+            <div #stageWrapper (wheel)="onCanvasWheel($event)" class="relative w-full flex-1 min-h-0 flex items-center justify-center overflow-hidden my-0.5" [class.cursor-grab]="canvasZoom() > 1">
               <div 
                 #konvaContainer
                 id="konva-container"
@@ -769,14 +766,14 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
               </div>
 
               <!-- Canvas floating watermark -->
-              <div class="absolute top-2 right-2 bg-white/90 backdrop-blur-md rounded-md px-2 py-0.5 text-[9px] font-bold text-slate-700 border border-slate-200/80 shadow-2xs flex items-center gap-1 pointer-events-none z-10">
+              <div class="absolute top-2 right-2 bg-white/90 backdrop-blur-md rounded-md px-2 py-0.5 text-[9px] font-bold text-[#2B1A1A] border border-[#EBD3AE]/80 shadow-2xs flex items-center gap-1 pointer-events-none z-10">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span>Konva • {{ isFrontFace() ? 'Mặt Trước' : 'Mặt Sau' }}</span>
+                <span>{{ isFrontFace() ? 'Mặt Trước' : 'Mặt Sau' }}</span>
               </div>
             </div>
 
             <!-- PRINT AREA & SAFE AREA GUIDES LEGEND -->
-            <div class="w-full flex items-center justify-between text-[10px] text-slate-500 pt-0.5 pb-0.5 px-1 shrink-0">
+            <div class="w-full flex items-center justify-between text-[10px] text-[#8C7B74] pt-0.5 pb-0.5 px-1 shrink-0">
               <div class="flex items-center gap-1.5 flex-wrap">
                 <span class="inline-flex items-center gap-1 text-[#800020] font-semibold text-[9.5px]">
                   <span class="w-2 h-2 border border-dashed border-[#800020] rounded-xs inline-block"></span>
@@ -798,7 +795,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
             </div>
 
             <!-- Canvas Bottom Meta Info Bar -->
-            <div class="w-full flex items-center justify-between text-xs pt-1.5 border-t border-slate-100 text-slate-500 shrink-0">
+            <div class="w-full flex items-center justify-between text-xs pt-1.5 border-t border-slate-100 text-[#8C7B74] shrink-0">
               <div class="flex items-center gap-2.5 text-[10px] sm:text-[11px]">
                 <span>Vỏ: <strong class="text-[#800020]">{{ selectedColor() }}</strong></span>
                 <span>•</span>
@@ -806,7 +803,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                 <span>•</span>
                 <span>Màu chữ: <strong class="text-[#800020]">{{ selectedTextColor() }}</strong></span>
               </div>
-              <div class="text-[10px] text-slate-400 hidden sm:block">
+              <div class="text-[10px] text-[#A6968D] hidden sm:block">
                 Kéo thả / xoay chỉnh trực quan
               </div>
             </div>
@@ -822,7 +819,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
       @if (showSaveLoginModal()) {
         <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
           <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EBD3AE] relative">
-            <button (click)="showSaveLoginModal.set(false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+            <button (click)="showSaveLoginModal.set(false)" class="absolute top-4 right-4 text-[#A6968D] hover:text-[#5C4545]">
               <span class="material-symbols-outlined">close</span>
             </button>
 
@@ -831,14 +828,14 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
             </div>
 
             <h3 class="text-lg font-bold text-[#2B1A1A] mb-1">Lưu thiết kế vào tài khoản</h3>
-            <p class="text-xs text-slate-500 mb-5 leading-relaxed">
+            <p class="text-xs text-[#8C7B74] mb-5 leading-relaxed">
               Đăng nhập để lưu thiết kế của riêng bạn. Bản nháp được giữ trên thiết bị này để bạn tiếp tục sau khi đăng nhập.
             </p>
 
             <div class="space-y-3">
               <button 
                 (click)="goToAccount('login')"
-                class="w-full py-3 px-4 rounded-xl border border-slate-300 hover:bg-slate-50 font-bold text-xs text-slate-700 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                class="w-full py-3 px-4 rounded-xl border border-slate-300 hover:bg-[#FAF7F2] font-bold text-xs text-[#2B1A1A] flex items-center justify-center gap-2 cursor-pointer transition-all"
               >
                 <span class="material-symbols-outlined text-[18px]">login</span>
                 <span>Đăng nhập bằng email</span>
@@ -862,7 +859,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
       @if (showGuestChoiceModal()) {
         <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
           <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#EBD3AE] relative">
-            <button (click)="showGuestChoiceModal.set(false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+            <button (click)="showGuestChoiceModal.set(false)" class="absolute top-4 right-4 text-[#A6968D] hover:text-[#5C4545]">
               <span class="material-symbols-outlined">close</span>
             </button>
 
@@ -871,7 +868,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
             </div>
 
             <h3 class="text-xl font-bold text-[#2B1A1A] mb-2">Đưa Thiết Kế Vào Giỏ Hàng</h3>
-            <p class="text-xs text-slate-500 mb-6 leading-relaxed">
+            <p class="text-xs text-[#8C7B74] mb-6 leading-relaxed">
               Bản thiết kế độc bản đã được tạo thành công! Hãy lựa chọn cách thức tiếp tục theo mong muốn của bạn:
             </p>
 
@@ -886,7 +883,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
                     <span class="text-xs font-bold text-[#800020]">13.1. Đăng Nhập 1-Click</span>
                     <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[9px] font-bold">+50 Điểm</span>
                   </div>
-                  <p class="text-[11px] text-slate-600 leading-snug">
+                  <p class="text-[11px] text-[#5C4545] leading-snug">
                     Kích hoạt <strong>SyncDesignDraft()</strong>, đồng bộ thiết kế vào tài khoản thành Member Cart Item.
                   </p>
                 </div>
@@ -898,18 +895,18 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
               <!-- Choice 2: Continue as Guest (AC 13.2 / AF3) -->
               <div 
                 (click)="handleContinueAsGuest()"
-                class="p-4 rounded-2xl border-2 border-slate-200 hover:border-slate-300 bg-white transition-all cursor-pointer flex flex-col justify-between"
+                class="p-4 rounded-2xl border-2 border-[#EBD3AE] hover:border-slate-300 bg-white transition-all cursor-pointer flex flex-col justify-between"
               >
                 <div>
                   <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-bold text-slate-700">13.2. Mua Dưới Dạng Khách</span>
-                    <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[9px] font-bold">Nhanh chóng</span>
+                    <span class="text-xs font-bold text-[#2B1A1A]">13.2. Mua Dưới Dạng Khách</span>
+                    <span class="px-2 py-0.5 rounded-full bg-[#FAF7F2] text-[#5C4545] text-[9px] font-bold">Nhanh chóng</span>
                   </div>
-                  <p class="text-[11px] text-slate-600 leading-snug">
+                  <p class="text-[11px] text-[#5C4545] leading-snug">
                     Giữ nguyên thiết kế trong <strong>Guest Cart</strong> và chuyển thẳng sang luồng Checkout mà không cần tài khoản.
                   </p>
                 </div>
-                <button class="mt-4 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold">
+                <button class="mt-4 w-full py-2 bg-[#FAF7F2] hover:bg-[#F1E8DC] text-[#2B1A1A] rounded-xl text-xs font-bold">
                   Tiếp tục làm Khách
                 </button>
               </div>
@@ -1402,6 +1399,14 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.stage.width(availableSize);
     this.stage.height(availableSize);
     this.stage.scale({ x: finalScale, y: finalScale });
+    this.stage.draggable(zoom > 1);
+    const centeredOffset = zoom > 1 ? -availableSize * (zoom - 1) / 2 : 0;
+    const maxOffset = availableSize * Math.max(0, zoom - 1);
+    this.stage.dragBoundFunc(position => ({
+      x: Math.max(-maxOffset, Math.min(0, position.x)),
+      y: Math.max(-maxOffset, Math.min(0, position.y)),
+    }));
+    this.stage.position({ x: centeredOffset, y: centeredOffset });
     this.stage.batchDraw();
   }
 
@@ -2190,8 +2195,19 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   setZoom(zoom: number): void {
-    this.canvasZoom.set(zoom);
+    this.canvasZoom.set(Math.min(1.6, Math.max(0.5, zoom)));
     this.fitStageToWrapper();
+  }
+
+  selectTemplateById(id: string): void {
+    const template = this.templates().find(item => item._id === id);
+    if (template && template._id !== this.activeTemplate()?._id) this.selectTemplate(template);
+  }
+
+  onCanvasWheel(event: WheelEvent): void {
+    event.preventDefault();
+    const step = event.deltaY < 0 ? 0.05 : -0.05;
+    this.setZoom(Math.round((this.canvasZoom() + step) * 100) / 100);
   }
 
   @HostListener('window:keydown', ['$event'])
@@ -2317,6 +2333,24 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   selectTemplate(tpl: Product): void {
+    const isChangingProduct = !!this.activeTemplate() && this.activeTemplate()?._id !== tpl._id;
+    if (isChangingProduct) {
+      this.studioService.clearDraftFromStorage();
+      this.textBlocks.set([]);
+      this.selectedTextBlockId.set(null);
+      this.frontMessage.set('');
+      this.backMessage.set('');
+      this.selectedFont.set('Signature');
+      this.selectedTextColor.set('#0F172A');
+      this.selectedPattern.set('none');
+      this.uploadedImage.set('');
+      this.imageScale.set(1);
+      this.activeStickers.set([]);
+      this.transformer?.nodes([]);
+      this.textNodes.clear();
+      this.hasRestoredDraft.set(false);
+      this.syncTextSummaries();
+    }
     this.activeTemplate.set(tpl);
     this.selectedColor.set(this.availableColorOptions()[0]?.name || 'Mặc định');
     this.updateKonvaCanvas();

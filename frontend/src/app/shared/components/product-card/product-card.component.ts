@@ -14,6 +14,13 @@ import { calculateDiscountPercent } from '../../../core/utils/product-price.util
   host: {
     class: 'flex flex-col h-full w-full'
   },
+  styles: [`
+    .wishlist-button { opacity: 0; transform: translateY(-4px) scale(.92); transition: opacity 180ms ease, transform 220ms cubic-bezier(.2,.8,.2,1), color 180ms ease; }
+    .group:hover .wishlist-button, .group:focus-within .wishlist-button { opacity: 1; transform: translateY(0) scale(1); }
+    @media (hover: none), (prefers-reduced-motion: reduce) {
+      .wishlist-button { opacity: 1; transform: none; transition: none; }
+    }
+  `],
   template: `
     <article class="g-card g-card-hover w-full h-full bg-white rounded-2xl p-4 sm:p-5 shadow-shop-card border border-[#EBD3AE]/60 hover:-translate-y-1 hover:border-[#800020] transition-all duration-200 ease-out flex flex-col justify-between group relative overflow-hidden">
       <!-- Top Image with Floating Badges -->
@@ -48,7 +55,7 @@ import { calculateDiscountPercent } from '../../../core/utils/product-price.util
         <!-- Wishlist Heart Button -->
         <button 
           (click)="toggleWishlist($event)"
-          class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-slate-400 hover:text-[#F43F5E] flex items-center justify-center shadow-sm transition-transform active:scale-90 z-10"
+          class="wishlist-button absolute top-2 right-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/80 bg-white/90 text-slate-400 shadow-md backdrop-blur-sm hover:text-[#800020] hover:shadow-lg active:scale-90 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800020]"
           [class.text-[#F43F5E]]="isWishlisted()"
           title="Lưu vào danh sách quà tặng"
         >
@@ -123,21 +130,30 @@ import { calculateDiscountPercent } from '../../../core/utils/product-price.util
           </div>
 
           <!-- Quick Action Button: Standardized height (h-9) -->
-          <div class="relative z-10 shrink-0 flex items-center">
+          <div class="relative z-10 shrink-0 flex items-center" [ngClass]="product.isCustomizable ? 'gap-2' : ''">
             @if (product.isCustomizable) {
+              <button 
+                type="button"
+                (click)="quickAddToCart($event)"
+                class="w-9 h-9 rounded-xl bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] flex items-center justify-center transition-all duration-200 active:scale-95 shadow-md shadow-[#800020]/20 hover:shadow-lg hover:shadow-[#800020]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800020]"
+                title="Thêm phiên bản có sẵn vào giỏ"
+                aria-label="Thêm phiên bản có sẵn vào giỏ"
+              >
+                <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
+              </button>
               <a 
                 [routerLink]="['/custom-studio']"
                 [queryParams]="{ productId: product._id }"
-                class="h-9 px-3 rounded-xl bg-[#FDF0D5] hover:bg-[#EBD3AE] text-[#800020] font-semibold text-xs flex items-center gap-1 transition-all active:scale-95 shadow-sm"
+                class="h-9 px-2.5 sm:px-3 rounded-xl bg-[#FDF0D5] hover:bg-[#EBD3AE] text-[#800020] font-semibold text-[11px] sm:text-xs flex items-center justify-center gap-1 transition-all active:scale-95 shadow-sm"
                 title="Mở Studio chế tác cá nhân"
               >
                 <span class="material-symbols-outlined text-[15px]">draw</span>
-                <span>Chế tác</span>
+                <span class="hidden sm:inline">Chế tác</span>
               </a>
             } @else {
               <button 
                 (click)="quickAddToCart($event)"
-                class="w-9 h-9 rounded-xl bg-[#FDF0D5] hover:bg-[#800020] text-[#800020] hover:text-[#FFF5E1] flex items-center justify-center transition-all active:scale-95 shadow-sm"
+                class="w-9 h-9 rounded-xl bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] flex items-center justify-center transition-all duration-200 active:scale-95 shadow-md shadow-[#800020]/20 hover:shadow-lg hover:shadow-[#800020]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800020]"
                 title="Thêm nhanh vào giỏ"
               >
                 <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
