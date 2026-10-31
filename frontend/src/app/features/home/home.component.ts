@@ -50,7 +50,7 @@ import { FlashSaleCountdownService } from '../../core/services/flash-sale-countd
         <!-- Logo Giftory nhận diện thương hiệu (Cân đối tỉ lệ nổi bật) -->
         @if (campaignsLoaded() && campaigns().length === 0) {
           <div class="relative z-10 my-3 flex flex-col items-center">
-            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAREDp7FnIhC43TVVvZX8CAhyxh7GsZiVJXWmPlVDoQO8HxUf04y-8r4E4j75mE4xh9BLWTO3LJnuW1opufuY41WZOoXvO7Yf9-lzQvlV0gEsD_WzGzwY1NG_hOpsy6daNo7l0AE_9HAoY_6d2wKyh4oyRiwhzX26em4NyrRpBfMAwJIkYMmuvNoOM9rx1Lw0_gYEWx31mNC_GRXoDApK-BNOQNYxq15X0LdvM5VgL2IXRBuCNS6Trpn6T0FgF0_ZLT8kI" alt="Giftory" class="w-auto h-24 md:h-32 object-contain mx-auto transition-transform hover:scale-105 duration-300 drop-shadow-md">
+            <img src="/logo.png" alt="Giftory" class="w-auto h-36 md:h-44 object-contain mx-auto transition-transform hover:scale-105 duration-300 drop-shadow-md">
           </div>
         }
 
