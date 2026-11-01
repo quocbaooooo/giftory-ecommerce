@@ -767,7 +767,7 @@ export class AdminCategoriesComponent implements OnInit {
   }
 
   loadCategories() {
-    this.isLoading.set(true);
+    if (this.categories().length === 0) this.isLoading.set(true);
     this.adminService.getAdminCategories().subscribe({
       next: (data) => {
         this.categories.set(data || []);

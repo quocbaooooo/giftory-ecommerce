@@ -14,6 +14,7 @@ import { Wishlist, WishlistSchema } from './schemas/wishlist.schema';
 import { StudioAsset, StudioAssetSchema } from './schemas/studio-asset.schema';
 import { GuestCodOtpChallenge, GuestCodOtpChallengeSchema } from './schemas/guest-cod-otp-challenge.schema';
 import { MarketingCampaign, MarketingCampaignSchema } from './schemas/marketing-campaign.schema';
+import { GiftBoxConfig, GiftBoxConfigSchema } from './schemas/gift-box-config.schema';
 
 const MODELS = [
   { name: User.name, schema: UserSchema },
@@ -30,6 +31,7 @@ const MODELS = [
   { name: StudioAsset.name, schema: StudioAssetSchema },
   { name: GuestCodOtpChallenge.name, schema: GuestCodOtpChallengeSchema },
   { name: MarketingCampaign.name, schema: MarketingCampaignSchema },
+  { name: GiftBoxConfig.name, schema: GiftBoxConfigSchema },
 ];
 
 @Global()

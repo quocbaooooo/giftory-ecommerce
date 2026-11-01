@@ -118,6 +118,10 @@ export class ProductService {
     return this.cached('categories', {}, () => this.api.get<Category[]>('categories'));
   }
 
+  getAdminCategories(): Observable<any[]> {
+    return this.cached('categories/admin/all', {}, () => this.api.get<any[]>('categories/admin/all'));
+  }
+
   getCategoryDisplaySettings(): Observable<{ allCategoriesIcon: string }> {
     return this.cached('categories/display-settings', {}, () => this.api.get<{ allCategoriesIcon: string }>('categories/display-settings'));
   }

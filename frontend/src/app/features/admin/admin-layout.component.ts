@@ -22,7 +22,11 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
 
           <!-- Navigation Links -->
-          <nav class="space-y-1.5"><a routerLink="/admin/care" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold">CSKH & Kiểm duyệt</a>
+          <nav class="space-y-1.5">
+            <a routerLink="/admin/care" routerLinkActive="bg-giftory-primary/10 text-giftory-primary font-bold" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold text-giftory-ink/70 hover:bg-giftory-canvas transition">
+              <span class="material-symbols-outlined text-lg" aria-hidden="true">support_agent</span>
+              CSKH & Kiểm duyệt
+            </a>
             <a
               routerLink="/admin/dashboard"
               routerLinkActive="bg-giftory-primary/10 text-giftory-primary font-bold"
@@ -40,12 +44,6 @@ import { AuthService } from '../../core/services/auth.service';
             >
               <span class="material-symbols-outlined text-lg">inventory_2</span>
               Quản Lý Sản Phẩm
-            </a>
-
-            <a [routerLink]="['/admin/products']" [queryParams]="{ tab: 'cliparts' }"
-              class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold text-giftory-ink/70 hover:bg-giftory-canvas transition">
-              <span class="material-symbols-outlined text-lg">download</span>
-              Nhập clipart
             </a>
 
             <a

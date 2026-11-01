@@ -6,6 +6,7 @@ import { Router, RouterModule } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
 import { CartItem } from '../../core/models';
+import { ApiService } from '../../core/services/api.service';
 
 interface GiftBoxOption {
   id: NonNullable<CartItem['giftBoxStyle']>;
@@ -112,10 +113,12 @@ interface GiftBoxOption {
             </div>
 
             <!-- Items Loop -->
-            <div role="status" aria-live="polite" class="min-h-4 text-xs">
-              @if (cartService.quantityError()) { <span class="text-rose-700">{{ cartService.quantityError() }}</span> }
-              @else if (cartService.quantitySyncPending()) { <span class="text-[#800020]">Đang lưu số lượng…</span> }
-            </div>
+            @if (cartService.quantityError() || cartService.quantitySyncPending()) {
+              <div role="status" aria-live="polite" class="text-xs">
+                @if (cartService.quantityError()) { <span class="text-rose-700">{{ cartService.quantityError() }}</span> }
+                @else { <span class="text-[#800020]">Đang lưu số lượng…</span> }
+              </div>
+            }
             @for (item of cartService.items(); track item._id || $index; let itemIndex = $index) {
               <article class="bg-white rounded-2xl p-5 sm:p-6 shadow-shop-card border border-[#EBD3AE] relative overflow-hidden group" [class.cart-item-exit]="isRemoving(item, $index)">
                 <!-- Color edge indicator -->
@@ -302,7 +305,7 @@ interface GiftBoxOption {
           </div>
 
           <!-- RIGHT COLUMN: PRICE BREAKDOWN & 50% DEPOSIT CHECKOUT PANEL -->
-          <div class="lg:col-span-5 flex flex-col gap-6">
+          <div class="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-6 lg:max-h-[calc(100dvh-3rem)] lg:overflow-y-auto">
             <div class="bg-white rounded-3xl p-6 shadow-shop-card border border-[#EBD3AE] flex flex-col gap-5">
               
               <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
@@ -311,7 +314,7 @@ interface GiftBoxOption {
               </div>
 
               <label class="text-xs text-slate-600">Giao hàng dự kiến
-                <select aria-label="Giao hàng dự kiến" [ngModel]="cartService.cart()?.shippingMethod || 'STANDARD'" (ngModelChange)="changeShipping($event)" [disabled]="cartService.quantitySyncPending() || shippingBusy" class="w-full mt-2 border border-[#EBD3AE] rounded-xl p-2">
+                <select aria-label="Giao hàng dự kiến" [ngModel]="cartService.cart()?.shippingMethod || 'STANDARD'" (ngModelChange)="changeShipping($event)" [disabled]="cartService.quantitySyncPending() || shippingBusy" class="w-full mt-2 border border-[#EBD3AE] rounded-xl bg-white p-2 font-sans text-xs text-[#2B1A1A]">
                   <option value="STANDARD">Tiêu chuẩn · Miễn phí từ 250.000đ</option>
                   <option value="EXPRESS">Hỏa tốc · 50.000đ</option>
                 </select>
@@ -422,6 +425,7 @@ interface GiftBoxOption {
 export class CartComponent {
   cartService = inject(CartService);
   authService = inject(AuthService);
+  private api = inject(ApiService);
   private router = inject(Router);
 
 
@@ -435,6 +439,9 @@ export class CartComponent {
     { id: 'SILK', name: 'Hộp lụa cao cấp', fee: 45000, image: '/gift-boxes/silk.svg', shortDescription: 'Hộp lụa, nơ lụa, thiệp', description: 'Hộp bọc lụa cao cấp kèm nơ lụa và thiệp chúc mừng.', dimensions: '30 × 22 × 15 cm', available: true },
     { id: 'LUXURY', name: 'Hộp quà sang trọng', fee: 79000, image: '/gift-boxes/luxury.svg', shortDescription: 'Hộp cứng cao cấp, nơ lụa', description: 'Hộp cứng cao cấp, lòng lót mềm, nơ lụa; phù hợp set quà và quà biếu.', dimensions: '36 × 28 × 18 cm', available: true },
   ];
+  constructor() {
+    this.api.get<GiftBoxOption[]>('cart/gift-boxes').subscribe({ next: boxes => { if (Array.isArray(boxes)) this.giftBoxes = boxes; } });
+  }
   private removingItems = signal(new Set<string>());
   private removalTimers = new Map<string, ReturnType<typeof setTimeout>>();
   changeShipping(method: 'STANDARD' | 'EXPRESS') {

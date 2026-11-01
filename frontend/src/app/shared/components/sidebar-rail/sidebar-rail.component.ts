@@ -10,6 +10,22 @@ import { CartService } from '../../../core/services/cart.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   styles: [`
+    .store-rail { flex-direction:column;border-right-width:1px;padding:12px 0; }
+    .rail-nav { width:100%;overflow-y:auto;padding:16px 8px; }
+    .rail-links { min-height:100%;display:flex;flex-direction:column;justify-content:center;gap:8px; }
+    .rail-account { padding-top:12px;border-top-width:1px; }
+    .account-popover { left:calc(100% + 14px);bottom:0;max-width:calc(100vw - 90px);max-height:calc(100dvh - 24px); }
+    @media(max-width:767px) {
+      .store-rail { bottom:0;right:0;width:100%;height:calc(72px + env(safe-area-inset-bottom));padding:6px 6px calc(6px + env(safe-area-inset-bottom));flex-direction:row;gap:4px;border-right:0;border-top-width:1px; }
+      .rail-brand { display:none; }
+      .rail-nav { width:auto;padding:0;overflow:visible; }
+      .rail-links { flex-direction:row;gap:2px; }
+      .rail-links .rail-link { min-width:0;min-height:54px;flex:1;border-radius:12px;gap:4px; }
+      .rail-link .material-symbols-outlined { font-size:21px; }
+      .rail-account { border:0;padding:0 2px; }
+      .rail-account>button { width:36px;height:36px; }
+      .account-popover { position:fixed;left:auto;right:12px;bottom:calc(82px + env(safe-area-inset-bottom));max-width:calc(100vw - 24px);max-height:calc(100dvh - 110px); }
+    }
     .rail-link { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:100%;min-height:54px;border-radius:14px;color:#6E5656;position:relative;transition:background .15s,color .15s }
     .rail-link:hover { background:#FFF5E1;color:#800020 }
     .rail-link.active { background:#800020;color:#FFF5E1 }
@@ -28,32 +44,34 @@ import { CartService } from '../../../core/services/cart.service';
     .account-link .material-symbols-outlined { font-size:20px }
   `],
   template: `
-    <aside class="fixed left-0 inset-y-0 h-dvh w-16 md:w-20 bg-white/95 backdrop-blur-md border-r border-[#EBD3AE] z-50 flex flex-col items-center py-3 shadow-sm">
-      <a routerLink="/" class="shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center hover:bg-[#FFF5E1] focus-visible:outline-[#800020]" title="Trang chủ Giftory" aria-label="Trang chủ Giftory">
+    <aside class="store-rail fixed left-0 md:inset-y-0 md:h-dvh md:w-20 bg-white/95 backdrop-blur-md border-[#EBD3AE] z-50 flex items-center shadow-sm">
+      <a routerLink="/" class="rail-brand shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center hover:bg-[#FFF5E1] focus-visible:outline-[#800020]" title="Trang chủ Giftory" aria-label="Trang chủ Giftory">
         <img src="/logo.png" alt="Giftory" class="w-10 h-10 object-contain" />
       </a>
 
-      <nav aria-label="Điều hướng chính" class="flex-1 min-h-0 overflow-y-auto w-full px-1.5 md:px-2 py-4">
-        <div class="min-h-full flex flex-col justify-center gap-2">
+      <nav aria-label="Điều hướng chính" class="rail-nav flex-1 min-h-0">
+        <div class="rail-links">
           @for (item of primaryLinks; track item.path) {
             <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.path === '/' }" ariaCurrentWhenActive="page" class="rail-link shrink-0" [title]="item.title" [attr.aria-label]="item.title">
-              <span class="material-symbols-outlined text-[22px]" aria-hidden="true">{{ item.icon }}</span>
+              <span class="relative inline-flex items-center justify-center">
+                <span class="material-symbols-outlined text-[22px]" aria-hidden="true">{{ item.icon }}</span>
+                @if (item.path === '/cart' && cartService.productCount() > 0) {
+                  <span class="cart-count-badge absolute -top-1.5 -right-2.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#800020] px-1 text-[10px] font-bold leading-none text-[#FFF5E1]" [class.badge-pop]="badgePulsing()" [attr.aria-label]="cartService.itemsCount() + ' sản phẩm trong giỏ, ' + cartService.productCount() + ' loại sản phẩm'">{{ cartService.itemsCount() > 99 ? '99+' : cartService.itemsCount() }}</span>
+                }
+              </span>
               <span class="text-[9px] md:text-[10px] font-semibold">{{ item.label }}</span>
-              @if (item.path === '/cart' && cartService.productCount() > 0) {
-                <span class="cart-count-badge absolute top-0 right-0 min-w-[17px] px-1 rounded-full bg-[#800020] text-[#FFF5E1] text-[10px] font-bold" [class.badge-pop]="badgePulsing()" [attr.aria-label]="cartService.itemsCount() + ' sản phẩm trong giỏ, ' + cartService.productCount() + ' loại sản phẩm'">{{ cartService.itemsCount() > 99 ? '99+' : cartService.itemsCount() }}</span>
-              }
             </a>
           }
         </div>
       </nav>
 
-      <div #accountArea class="relative shrink-0 pt-3 border-t border-[#EBD3AE]" (focusout)="onFocusOut($event)">
+      <div #accountArea class="rail-account relative shrink-0 border-[#EBD3AE]" (focusout)="onFocusOut($event)">
         <button #avatarButton type="button" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen()" aria-controls="account-navigation" aria-label="Mở menu tài khoản và tiện ích" title="Tài khoản & tiện ích" class="w-11 h-11 rounded-full border-2 border-[#800020] bg-[#FFF5E1] text-[#800020] flex items-center justify-center hover:bg-[#FDF0D5] transition-colors">
           @if (authService.currentUser()) { <span class="text-xs font-bold">{{ getInitials() }}</span> }
           @else { <span class="material-symbols-outlined" aria-hidden="true">person</span> }
         </button>
         @if (menuOpen()) {
-          <div id="account-navigation" class="absolute left-[calc(100%+14px)] bottom-0 w-64 max-w-[calc(100vw-90px)] max-h-[calc(100dvh-24px)] overflow-y-auto rounded-2xl border border-[#EBD3AE] bg-white shadow-xl p-2" aria-label="Tài khoản và tiện ích">
+          <div id="account-navigation" class="account-popover absolute w-64 overflow-y-auto rounded-2xl border border-[#EBD3AE] bg-white shadow-xl p-2" aria-label="Tài khoản và tiện ích">
             <div class="px-3 py-3 border-b border-slate-100 mb-1">
               <p class="text-sm font-bold text-slate-900 truncate">{{ authService.currentUser()?.name || 'Chào bạn!' }}</p>
               <p class="text-xs text-slate-500 mt-1">{{ authService.currentUser() ? 'Tài khoản & tiện ích' : 'Đăng nhập để quản lý quà của bạn' }}</p>

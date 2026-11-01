@@ -15,11 +15,23 @@ import { AddToCartDto } from './dto/add-to-cart.dto';
 import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { PaymentMode } from '../../common/enums/role.enum';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { UserRole } from '../../common/enums/role.enum';
 
 @ApiTags('Cart')
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
+
+  @Get('gift-boxes')
+  getGiftBoxes() { return this.cartService.getGiftBoxes(); }
+
+  @Patch('gift-boxes')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  saveGiftBoxes(@Body() boxes: any[]) { return this.cartService.saveGiftBoxes(boxes); }
 
   @Get()
   @UseGuards(OptionalJwtAuthGuard)

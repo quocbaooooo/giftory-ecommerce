@@ -64,13 +64,14 @@ export class OrdersService {
       return this.resendGuestCodOtp({ challengeId: existing.challengeId, phone, sessionId: dto.sessionId }, userId);
     }
     const code = randomInt(0, 1_000_000).toString().padStart(6, '0');
-    await this.deliverGuestCodOtp(phone, code);
+    const demoMode = process.env.NODE_ENV !== 'production';
+    if (!demoMode) await this.deliverGuestCodOtp(phone, code);
     const challenge = await this.guestCodOtpModel.create({
       challengeId: randomUUID(), phone, sessionId: dto.sessionId,
       codeHash: this.guestCodOtpHash(code), attemptsUsed: 0, sendCount: 1,
       status: 'PENDING', expiresAt: new Date(Date.now() + 60_000),
     });
-    return { challengeId: challenge.challengeId, expiresInSeconds: 60, attemptsRemaining: 5, resendsRemaining: 4, verified: false };
+    return { challengeId: challenge.challengeId, expiresInSeconds: 60, attemptsRemaining: 5, resendsRemaining: 4, verified: false, ...(demoMode ? { demoCode: code } : {}) };
   }
 
   async resendGuestCodOtp(dto: GuestCodOtpResendDto, userId?: string) {
@@ -81,12 +82,13 @@ export class OrdersService {
       throw new BadRequestException('Không thể gửi thêm mã OTP. Vui lòng bắt đầu lại quy trình đặt hàng.');
     }
     const code = randomInt(0, 1_000_000).toString().padStart(6, '0');
-    await this.deliverGuestCodOtp(phone, code);
+    const demoMode = process.env.NODE_ENV !== 'production';
+    if (!demoMode) await this.deliverGuestCodOtp(phone, code);
     await this.guestCodOtpModel.updateOne(
       { _id: challenge._id, status: 'PENDING', attemptsUsed: challenge.attemptsUsed, sendCount: challenge.sendCount },
       { $set: { codeHash: this.guestCodOtpHash(code), expiresAt: new Date(Date.now() + 60_000) }, $inc: { sendCount: 1 } },
     );
-    return { challengeId: challenge.challengeId, expiresInSeconds: 60, attemptsRemaining: Math.max(0, 5 - challenge.attemptsUsed), resendsRemaining: Math.max(0, 5 - challenge.sendCount - 1), verified: false };
+    return { challengeId: challenge.challengeId, expiresInSeconds: 60, attemptsRemaining: Math.max(0, 5 - challenge.attemptsUsed), resendsRemaining: Math.max(0, 5 - challenge.sendCount - 1), verified: false, ...(demoMode ? { demoCode: code } : {}) };
   }
 
   async verifyGuestCodOtp(dto: GuestCodOtpVerifyDto, userId?: string) {

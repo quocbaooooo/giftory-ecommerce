@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, timeout } from 'rxjs';
 import { ApiService } from './api.service';
 import { ProductService } from './product.service';
 import { tap } from 'rxjs/operators';
@@ -117,6 +117,12 @@ export class AdminService {
     return this.api.post('upload/image', formData);
   }
 
+  uploadGiftBoxImage(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.api.post<{ url: string }>('upload/gift-box-image', formData).pipe(timeout(45000));
+  }
+
   uploadCampaignBanner(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
@@ -126,7 +132,7 @@ export class AdminService {
 
   // Category Management
   getAdminCategories(): Observable<any[]> {
-    return this.api.get<any[]>('categories/admin/all');
+    return this.products.getAdminCategories();
   }
 
   createCategory(categoryData: any): Observable<any> {

@@ -3,3 +3,50 @@
   display: block;
   min-height: 100vh;
 }
+
+.storefront-search {
+  position: fixed;
+  left: 80px;
+  right: 0;
+  bottom: 24px;
+  pointer-events: none;
+}
+.storefront-search > div {
+  pointer-events: auto;
+}
+.storefront-search.purchase-search {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  padding-top: 16px;
+}
+.storefront-assistance.purchase-assistance {
+  left: 88px;
+  right: auto;
+  bottom: 24px !important;
+}
+.storefront-assistance.purchase-assistance > a {
+  display: none;
+}
+@media (max-width: 767px) {
+  .storefront-canvas {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+  .storefront-search {
+    left: 0;
+    bottom: calc(88px + env(safe-area-inset-bottom));
+  }
+  .storefront-assistance {
+    bottom: calc(160px + env(safe-area-inset-bottom)) !important;
+    right: 12px;
+    gap: 6px;
+  }
+  .storefront-assistance.purchase-assistance {
+    left: auto;
+    bottom: calc(88px + env(safe-area-inset-bottom)) !important;
+  }
+  .storefront-assistance > a {
+    display: none;
+  }
+}

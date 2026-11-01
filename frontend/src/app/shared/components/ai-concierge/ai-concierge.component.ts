@@ -1,4 +1,4 @@
-import { Component, signal, ViewChild, ElementRef, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, signal, ViewChild, ElementRef, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -22,17 +22,26 @@ export interface ChatMessage {
   selector: 'app-ai-concierge',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
+  styles: [`
+    .compact-trigger { width:48px;height:48px;padding:0;justify-content:center; }
+    .compact-trigger .trigger-label,.compact-trigger .online-dot { display:none; }
+    @media(max-width:767px) {
+      .chat-window { bottom:calc(84px + env(safe-area-inset-bottom));right:3vw;max-height:calc(100dvh - 110px); }
+    }
+  `],
   template: `
     <!-- Floating AI Trigger Button (When minimized) -->
     @if (!isOpen()) {
       <button 
         (click)="openWidget()"
+        [class.compact-trigger]="compact"
+        aria-label="Mở trợ lý AI tư vấn quà tặng"
         class="relative flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-[#800020] via-[#660019] to-[#991B33] text-[#FFF5E1] font-semibold text-sm shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 border-2 border-white cursor-pointer group"
         title="Mở trợ lý AI tư vấn quà tặng và tra cứu đơn hàng"
       >
         <span class="material-symbols-outlined text-[20px] animate-bounce">auto_awesome</span>
-        <span>AI Tư Vấn Quà Tặng</span>
-        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 border border-white animate-pulse"></span>
+        <span class="trigger-label">AI Tư Vấn Quà Tặng</span>
+        <span class="online-dot w-2.5 h-2.5 rounded-full bg-emerald-400 border border-white animate-pulse"></span>
         @if (messages().length > 1) {
           <span class="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-bold border border-white shadow-xs">
             {{ messages().length }}
@@ -44,7 +53,7 @@ export interface ChatMessage {
     <!-- AI Chat Window Dialog: Unified Window (US-PD-03.2) -->
     @if (isOpen()) {
       <div 
-        class="fixed bottom-6 right-6 z-50 bg-white rounded-3xl shadow-2xl border border-[#EBD3AE]/90 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 transition-all"
+        class="chat-window fixed bottom-6 right-6 z-50 bg-white rounded-3xl shadow-2xl border border-[#EBD3AE]/90 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 transition-all"
         [ngClass]="isExpanded() 
           ? 'w-[94vw] sm:w-[680px] md:w-[780px] h-[88vh] max-h-[860px]' 
           : 'w-[94vw] sm:w-[480px] md:w-[500px] h-[80vh] sm:h-[730px] max-h-[calc(100vh-2.5rem)]'"
@@ -366,6 +375,7 @@ export interface ChatMessage {
   `
 })
 export class AiConciergeComponent implements OnInit, OnDestroy {
+  @Input() compact = false;
   isOpen = signal<boolean>(false);
   isExpanded = signal<boolean>(false);
   isThinking = signal<boolean>(false);

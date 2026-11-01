@@ -4,13 +4,19 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Cart, CartDocument } from '../../database/schemas/cart.schema';
+import { GiftBoxConfig, GiftBoxConfigDocument } from '../../database/schemas/gift-box-config.schema';
 import { Product, ProductDocument } from '../../database/schemas/product.schema';
 import { Voucher, VoucherDocument } from '../../database/schemas/voucher.schema';
 import { AddToCartDto } from './dto/add-to-cart.dto';
 import { PaymentMode } from '../../common/enums/role.enum';
 import { customizationFee, studioUnitPrice } from '../../common/utils/studio-pricing';
 
-const GIFT_BOX_FEES: Record<string, number> = { NONE: 0, STANDARD: 0, SILK: 45000, LUXURY: 79000 };
+const DEFAULT_GIFT_BOXES = [
+  { id: 'NONE', name: 'Không lấy hộp', fee: 0, image: '/gift-boxes/none.svg', shortDescription: 'Túi giao hàng thường', description: 'Không kèm hộp quà; sản phẩm được bảo vệ bằng bao bì vận chuyển tiêu chuẩn.', dimensions: 'Không áp dụng', available: true },
+  { id: 'STANDARD', name: 'Hộp tiêu chuẩn', fee: 0, image: '/gift-boxes/standard.svg', shortDescription: 'Giấy cứng, nơ cơ bản', description: 'Hộp giấy cứng tiêu chuẩn, hoàn thiện gọn gàng với nơ cơ bản.', dimensions: '24 × 18 × 12 cm', available: true },
+  { id: 'SILK', name: 'Hộp lụa cao cấp', fee: 45000, image: '/gift-boxes/silk.svg', shortDescription: 'Hộp lụa, nơ lụa, thiệp', description: 'Hộp bọc lụa cao cấp kèm nơ lụa và thiệp chúc mừng.', dimensions: '30 × 22 × 15 cm', available: true },
+  { id: 'LUXURY', name: 'Hộp quà sang trọng', fee: 79000, image: '/gift-boxes/luxury.svg', shortDescription: 'Hộp cứng cao cấp, nơ lụa', description: 'Hộp cứng cao cấp, lòng lót mềm, nơ lụa; phù hợp set quà và quà biếu.', dimensions: '36 × 28 × 18 cm', available: true },
+];
 
 @Injectable()
 export class CartService {
@@ -18,8 +24,21 @@ export class CartService {
     @InjectModel(Cart.name) private readonly cartModel: Model<CartDocument>,
     @InjectModel(Product.name) private readonly productModel: Model<ProductDocument>,
     @InjectModel(Voucher.name) private readonly voucherModel: Model<VoucherDocument>,
+    @InjectModel(GiftBoxConfig.name) private readonly giftBoxConfigModel: Model<GiftBoxConfigDocument>,
     private readonly vouchers: VouchersService,
   ) {}
+
+  async getGiftBoxes() {
+    const config = await this.giftBoxConfigModel.findOne({ key: 'default' }).lean().exec();
+    return config?.boxes || DEFAULT_GIFT_BOXES;
+  }
+
+  async saveGiftBoxes(boxes: any[]) {
+    if (!Array.isArray(boxes) || boxes.length !== DEFAULT_GIFT_BOXES.length || DEFAULT_GIFT_BOXES.some(item => !boxes.some(box => box.id === item.id))) throw new BadRequestException('Cần gửi đủ các kiểu hộp quà hợp lệ.');
+    const sanitized = boxes.map(box => ({ ...box, fee: Math.max(0, Number(box.fee) || 0), available: box.id === 'NONE' ? true : !!box.available }));
+    await this.giftBoxConfigModel.findOneAndUpdate({ key: 'default' }, { $set: { boxes: sanitized } }, { upsert: true, new: true, setDefaultsOnInsert: true }).exec();
+    return sanitized;
+  }
 
   async getCart(userId?: string, sessionId?: string) {
     let cart = await this.findOrCreateCart(userId, sessionId);
@@ -131,13 +150,14 @@ export class CartService {
     const item = cart.items[itemIndex];
     if (!item) throw new NotFoundException('Sản phẩm không có trong giỏ hàng');
     const normalized = String(style || '').toUpperCase();
-    if (!(normalized in GIFT_BOX_FEES)) throw new BadRequestException('Kiểu hộp quà không hợp lệ');
+    const box = (await this.getGiftBoxes()).find(item => item.id === normalized);
+    if (!box || !box.available) throw new BadRequestException('Kiểu hộp quà hiện không khả dụng');
     const product = await this.productModel.findById(item.productId).select('name');
     const name = product?.name || 'sản phẩm';
     const boxFitReason = this.giftBoxFitReason(normalized, name);
     if (boxFitReason) throw new BadRequestException(boxFitReason);
     item.giftBoxStyle = normalized;
-    item.giftBoxFee = GIFT_BOX_FEES[normalized];
+    item.giftBoxFee = box.fee;
     await cart.save();
     return this.getCart(userId, sessionId);
   }

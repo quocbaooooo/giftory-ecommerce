@@ -73,6 +73,12 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
           <span>Danh Mục Quà Tặng ({{ categories().length }})</span>
         </button>
 
+        <button (click)="activeTab.set('GIFT_BOXES')"
+          class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer shrink-0"
+          [ngClass]="activeTab() === 'GIFT_BOXES' ? 'bg-[#800020] text-[#FFF5E1] shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'">
+          <span class="material-symbols-outlined text-[18px]">redeem</span><span>Hộp Quà</span>
+        </button>
+
         <button
           (click)="activeTab.set('STUDIO_ASSETS')"
           class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer shrink-0"
@@ -81,11 +87,8 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
           <span class="material-symbols-outlined text-[18px]">palette</span>
           <span>Thư Viện Clipart Studio ({{ studioAssets().length }})</span>
         </button>
-        <button (click)="activeTab.set('CLIPART_IMPORT')"
-          class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer shrink-0"
-          [ngClass]="activeTab() === 'CLIPART_IMPORT' ? 'bg-[#800020] text-[#FFF5E1] shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'">
-          <span class="material-symbols-outlined text-[18px]">download</span><span>Nhập clipart</span>
-        </button>
+        <button type="button" (click)="exportProductsCsv()" class="px-4 py-2.5 rounded-xl bg-[#FFF5E1] text-[#800020] font-bold text-xs">Xuất Excel (CSV)</button>
+        <label class="px-4 py-2.5 rounded-xl bg-[#800020] text-[#FFF5E1] font-bold text-xs cursor-pointer">Nhập Excel (CSV)<input type="file" accept=".csv,text/csv" (change)="importProductsCsv($event)" class="hidden" /></label>
       </div>
 
       @if (activeTab() === 'CLIPART_IMPORT') {
@@ -229,6 +232,30 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
       <!-- ================= TAB 3: CATEGORIES MANAGEMENT ================= -->
       @if (activeTab() === 'CATEGORIES') {
         <app-admin-categories #categoryComp (categoriesChanged)="loadCategories()"></app-admin-categories>
+      }
+
+      @if (activeTab() === 'GIFT_BOXES') {
+        <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          @for (box of giftBoxOptions; track box.id) {
+            <article class="rounded-2xl border border-giftory-border bg-white p-5 shadow-xs">
+              <img [src]="box.image" [alt]="box.name" class="mb-4 h-36 w-full rounded-xl bg-[#FFF5E1] object-contain p-3" />
+              <label class="mb-2 block text-xs font-semibold">Tên hộp<input [(ngModel)]="box.name" [disabled]="box.id === 'NONE'" class="mt-1 w-full rounded-lg border border-giftory-border px-3 py-2" /></label>
+              <label class="mb-2 block text-xs font-semibold">Mô tả ngắn<input [(ngModel)]="box.shortDescription" [disabled]="box.id === 'NONE'" class="mt-1 w-full rounded-lg border border-giftory-border px-3 py-2" /></label>
+              <label class="mb-2 block text-xs font-semibold">Mô tả<textarea [(ngModel)]="box.description" [disabled]="box.id === 'NONE'" class="mt-1 w-full rounded-lg border border-giftory-border px-3 py-2"></textarea></label>
+              <div class="grid grid-cols-2 gap-2"><label class="text-xs font-semibold">Kích thước<input [(ngModel)]="box.dimensions" [disabled]="box.id === 'NONE'" class="mt-1 w-full rounded-lg border border-giftory-border px-3 py-2" /></label><label class="text-xs font-semibold">Phí (đ)<input type="number" min="0" [(ngModel)]="box.fee" [disabled]="box.id === 'NONE'" class="mt-1 w-full rounded-lg border border-giftory-border px-3 py-2" /></label></div>
+              <label class="mt-2 block text-xs font-semibold">URL ảnh<input [(ngModel)]="box.image" [disabled]="giftBoxesSaving() || giftBoxUploading()[box.id]" class="mt-1 w-full rounded-lg border border-giftory-border px-3 py-2" /></label>
+              <input #giftBoxFile type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml" class="hidden" (change)="onGiftBoxFileSelected($event, box)" />
+              <button type="button" (click)="giftBoxFile.click()" [disabled]="giftBoxesSaving() || giftBoxUploading()[box.id]" [attr.aria-label]="'Tải ảnh lên Cloudinary cho ' + box.name" class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-giftory-border bg-[#FFF5E1]/50 px-3 py-2.5 text-xs font-bold text-[#800020] transition hover:bg-[#FFF5E1] disabled:cursor-wait disabled:opacity-50">
+                <span class="material-symbols-outlined text-lg" aria-hidden="true">cloud_upload</span>
+                {{ giftBoxUploading()[box.id] ? 'Đang tải ảnh…' : 'Tải ảnh lên Cloudinary' }}
+              </button>
+              <p class="mt-2 text-[10px] text-slate-500">JPG, PNG, WebP, GIF hoặc SVG · Tối đa 8 MB</p>
+              @if (giftBoxUploadMessages()[box.id]) { <p role="status" class="mt-2 text-xs" [class.text-red-600]="giftBoxUploadErrors()[box.id]" [class.text-emerald-700]="!giftBoxUploadErrors()[box.id]">{{ giftBoxUploadMessages()[box.id] }}</p> }
+              <label class="mt-3 flex items-center gap-2 text-xs"><input type="checkbox" [(ngModel)]="box.available" [disabled]="box.id === 'NONE'" /> Đang cung cấp</label>
+            </article>
+          }
+          <div class="md:col-span-2 xl:col-span-4 flex justify-end"><button type="button" (click)="saveGiftBoxes()" [disabled]="giftBoxesSaving() || giftBoxUploadsPending()" class="rounded-xl bg-[#800020] px-5 py-3 text-sm font-bold text-[#FFF5E1] disabled:opacity-50">{{ giftBoxesSaving() ? 'Đang lưu…' : 'Lưu cấu hình hộp quà' }}</button></div>
+        </section>
       }
 
       <!-- ================= MODAL: CREATE / EDIT PRODUCT & BESPOKE BLANK ================= -->
@@ -1048,7 +1075,56 @@ export class AdminProductsComponent implements OnInit {
 
   @ViewChild('categoryComp') categoryComp?: AdminCategoriesComponent;
 
-  activeTab = signal<'PRODUCTS' | 'CATEGORIES' | 'STUDIO_ASSETS' | 'CLIPART_IMPORT'>('PRODUCTS');
+  activeTab = signal<'PRODUCTS' | 'CATEGORIES' | 'STUDIO_ASSETS' | 'CLIPART_IMPORT' | 'GIFT_BOXES'>('PRODUCTS');
+  giftBoxesSaving = signal(false);
+  giftBoxUploading = signal<Record<string, boolean>>({});
+  giftBoxUploadMessages = signal<Record<string, string>>({});
+  giftBoxUploadErrors = signal<Record<string, boolean>>({});
+  giftBoxUploadsPending() { return Object.values(this.giftBoxUploading()).some(Boolean); }
+
+  onGiftBoxFileSelected(event: Event, box: { id: string; image: string }) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || this.giftBoxesSaving() || this.giftBoxUploading()[box.id]) return;
+    const report = (message: string, failed: boolean) => {
+      this.giftBoxUploadMessages.update(values => ({ ...values, [box.id]: message }));
+      this.giftBoxUploadErrors.update(values => ({ ...values, [box.id]: failed }));
+    };
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'].includes(file.type)) {
+      report('Vui lòng chọn ảnh JPG, PNG, WebP, GIF hoặc SVG.', true); return;
+    }
+    if (file.size > 8 * 1024 * 1024) { report('Ảnh vượt quá 8 MB. Vui lòng chọn ảnh nhỏ hơn.', true); return; }
+    this.giftBoxUploading.update(values => ({ ...values, [box.id]: true }));
+    report('', false);
+    this.adminService.uploadGiftBoxImage(file).subscribe({
+      next: (res: any) => {
+        this.giftBoxUploading.update(values => ({ ...values, [box.id]: false }));
+        const url = res?.url;
+        if (typeof url !== 'string' || !url.startsWith('https://res.cloudinary.com/')) {
+          report('Chưa nhận được URL Cloudinary hợp lệ. Vui lòng thử lại.', true); return;
+        }
+        const currentBox = this.giftBoxOptions.find(item => item.id === box.id);
+        if (currentBox) currentBox.image = url;
+        report('Đã tải ảnh. Nhấn “Lưu cấu hình hộp quà” để lưu thay đổi.', false);
+      },
+      error: err => {
+        this.giftBoxUploading.update(values => ({ ...values, [box.id]: false }));
+        const message = err.status === 0
+          ? 'Không kết nối được máy chủ tải ảnh. Vui lòng kiểm tra backend tại cổng 3000 và thử lại.'
+          : err.name === 'TimeoutError'
+            ? 'Tải ảnh quá thời gian chờ. Vui lòng kiểm tra kết nối và thử lại.'
+            : err.error?.message || 'Không thể tải ảnh lên Cloudinary. Vui lòng thử lại.';
+        report(message, true);
+      }
+    });
+  }
+  giftBoxOptions: any[] = [
+    { id: 'NONE', name: 'Không lấy hộp', fee: 0, image: '/gift-boxes/none.svg', description: 'Bao bì vận chuyển tiêu chuẩn.', dimensions: 'Không áp dụng', available: true },
+    { id: 'STANDARD', name: 'Hộp tiêu chuẩn', fee: 0, image: '/gift-boxes/standard.svg', description: 'Hộp giấy cứng với nơ cơ bản.', dimensions: '24 × 18 × 12 cm', available: true },
+    { id: 'SILK', name: 'Hộp lụa cao cấp', fee: 45000, image: '/gift-boxes/silk.svg', description: 'Bọc lụa, nơ lụa và thiệp chúc mừng.', dimensions: '30 × 22 × 15 cm', available: true },
+    { id: 'LUXURY', name: 'Hộp quà sang trọng', fee: 79000, image: '/gift-boxes/luxury.svg', description: 'Hộp cứng lót mềm, phù hợp set quà biếu.', dimensions: '36 × 28 × 18 cm', available: true },
+  ];
   products = signal<Product[]>([]);
   categories = signal<Category[]>([]);
   studioAssets = signal<StudioAsset[]>([]);
@@ -1091,6 +1167,7 @@ export class AdminProductsComponent implements OnInit {
   productForm!: FormGroup;
 
   ngOnInit() {
+    this.loadGiftBoxes();
     this.route.queryParams.subscribe(params => {
       const tab = params['tab'];
       if (tab === 'categories') {
@@ -1109,6 +1186,13 @@ export class AdminProductsComponent implements OnInit {
     this.loadStudioAssets();
     this.initForm();
     this.initVariantForm();
+  }
+
+  loadGiftBoxes() { this.api.get<any[]>('cart/gift-boxes').subscribe({ next: boxes => { if (Array.isArray(boxes)) this.giftBoxOptions = boxes; } }); }
+  saveGiftBoxes() {
+    if (this.giftBoxesSaving() || this.giftBoxUploadsPending()) return;
+    this.giftBoxesSaving.set(true);
+    this.api.patch<any[]>('cart/gift-boxes', this.giftBoxOptions).subscribe({ next: boxes => { this.giftBoxOptions = boxes; this.giftBoxesSaving.set(false); alert('Đã lưu cấu hình hộp quà.'); }, error: err => { this.giftBoxesSaving.set(false); alert(err.error?.message || 'Không lưu được cấu hình hộp quà.'); } });
   }
 
   blankFaces: { key: 'frontBlankImage' | 'backBlankImage'; label: string }[] = [
@@ -1385,7 +1469,7 @@ export class AdminProductsComponent implements OnInit {
   }
 
   loadCategories() {
-    this.api.get<any>('categories').subscribe({
+    this.productService.getCategories().subscribe({
       next: (res: any) => {
         const list = Array.isArray(res) ? res : (res?.data || []);
         this.categories.set(list);
@@ -1400,6 +1484,35 @@ export class AdminProductsComponent implements OnInit {
         this.products.set(list);
       }
     });
+  }
+
+  exportProductsCsv(): void {
+    const headers = ['name', 'sku', 'price', 'salePrice', 'stock', 'status', 'categoryId', 'isCustomizable'];
+    const rows = this.products().map(p => [p.name, p.sku || '', p.price, p.salePrice || '', p.stock || 0, p.status, (p.category as any)?._id || p.category || '', !!p.isCustomizable]);
+    const csv = [headers, ...rows].map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob); link.download = 'giftory-products.csv'; link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  importProductsCsv(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const lines = String(reader.result || '').replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean);
+      const headers = (lines.shift() || '').split(',').map(cell => cell.replace(/^"|"$/g, '').toLowerCase());
+      const imported = lines.map(line => {
+        const values = line.match(/("(?:[^"]|"")*"|[^,]*)(,|$)/g)?.map(value => value.replace(/,$/, '').replace(/^"|"$/g, '').replace(/""/g, '"')) || [];
+        return Object.fromEntries(headers.map((header, i) => [header, values[i] || '']));
+      }).filter(row => row['name'] && row['price']);
+      if (!imported.length) { alert('CSV không có dòng hợp lệ. Cần cột name và price.'); input.value = ''; return; }
+      alert(`Đã đọc ${imported.length} dòng. Vui lòng lưu từng sản phẩm qua biểu mẫu quản trị để kiểm tra danh mục, SKU và biến thể trước khi cập nhật.`);
+      input.value = '';
+    };
+    reader.readAsText(file, 'UTF-8');
   }
 
   filteredProducts(): Product[] {

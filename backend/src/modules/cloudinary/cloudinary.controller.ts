@@ -51,6 +51,22 @@ export class CloudinaryController {
     };
   }
 
+  @Post('gift-box-image')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Upload ảnh hộp quà lên Cloudinary (Admin)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 8 * 1024 * 1024 } }))
+  async uploadGiftBoxImage(@UploadedFile() file: any) {
+    if (!file) throw new BadRequestException('Vui lòng chọn ảnh hộp quà (tối đa 8 MB)');
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'].includes(file.mimetype)) {
+      throw new BadRequestException('Chỉ chấp nhận ảnh JPG, PNG, WebP, GIF hoặc SVG');
+    }
+    const url = await this.cloudinaryService.uploadImage(file.buffer, 'giftory/gift-boxes', file.mimetype, {}, false, 30000);
+    return { success: true, url, message: 'Đã tải ảnh hộp quà lên Cloudinary' };
+  }
+
   @Post('campaign-banner')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)

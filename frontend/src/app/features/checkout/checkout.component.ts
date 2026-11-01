@@ -62,7 +62,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
 
               <div class="space-y-4 text-xs">
                 @if (authService.isAuthenticated()) {
-                  <div class="p-4 rounded-2xl bg-[#FFF5E1] border border-[#EBD3AE] space-y-2">
+                  <div class="p-4 rounded-2xl bg-[#FAF8F9] border border-[#EADFE3] space-y-2">
                     <label for="saved-recipient" class="font-bold text-[#2B1A1A] block">Danh bạ người nhận</label>
                     <div class="flex gap-2 items-center">
                       <select id="saved-recipient" [ngModel]="selectedRecipientId" (ngModelChange)="selectRecipient($event)" [disabled]="!!pendingOrder() || recipientsLoading() || recipientSaving()" class="min-w-0 flex-1 px-3 py-2.5 rounded-xl border border-[#EBD3AE] bg-white text-sm text-slate-800 disabled:bg-slate-50">
@@ -88,9 +88,11 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                       id="recipient-name" maxlength="100" autocomplete="name"
                       [(ngModel)]="customerName"
                       [disabled]="!!pendingOrder() || recipientSaving()"
+                      [class.border-rose-500]="showRecipientValidation() && !recipientNameValid()"
                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
                       placeholder="Nguyễn Minh Anh"
                     >
+                    @if (showRecipientValidation() && !recipientNameValid()) { <p class="mt-1 text-xs font-semibold text-rose-700">Nhập họ tên người nhận từ 2 đến 100 ký tự.</p> }
                   </div>
                   <div>
                     <label for="recipient-phone" class="font-bold text-slate-700 block mb-1">Số điện thoại liên hệ *</label>
@@ -98,9 +100,11 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                       id="recipient-phone" type="tel" maxlength="20" autocomplete="tel"
                       [(ngModel)]="customerPhone"
                       [disabled]="!!pendingOrder() || recipientSaving()"
+                      [class.border-rose-500]="showRecipientValidation() && !recipientPhoneValid()"
                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
                       placeholder="0912 345 678"
                     >
+                    @if (showRecipientValidation() && !recipientPhoneValid()) { <p class="mt-1 text-xs font-semibold text-rose-700">Số điện thoại cần đúng 10 số, bắt đầu bằng 0.</p> }
                   </div>
                 </div>
 
@@ -119,17 +123,19 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label for="recipient-province" class="font-bold text-slate-700 block mb-1">Tỉnh/Thành phố *</label>
-                      <select id="recipient-province" [ngModel]="provinceCode" (ngModelChange)="changeProvince($event)" [disabled]="!!pendingOrder() || recipientSaving() || provincesLoading()" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50">
+                      <select id="recipient-province" [ngModel]="provinceCode" (ngModelChange)="changeProvince($event)" [disabled]="!!pendingOrder() || recipientSaving() || provincesLoading()" [class.border-rose-500]="showRecipientValidation() && !provinceCode" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50">
                         <option value="">{{ provincesLoading() ? 'Đang tải tỉnh/thành…' : 'Chọn tỉnh/thành phố' }}</option>
                         @for (province of provinces(); track province.code) { <option [value]="province.code">{{ province.name }}</option> }
                       </select>
+                      @if (showRecipientValidation() && !provinceCode) { <p class="mt-1 text-xs font-semibold text-rose-700">Chọn tỉnh/thành phố.</p> }
                     </div>
                     <div>
                       <label for="recipient-ward" class="font-bold text-slate-700 block mb-1">Phường/Xã *</label>
-                      <select id="recipient-ward" [(ngModel)]="wardCode" [disabled]="!!pendingOrder() || recipientSaving() || !provinceCode || wardsLoading()" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50">
+                      <select id="recipient-ward" [(ngModel)]="wardCode" [disabled]="!!pendingOrder() || recipientSaving() || !provinceCode || wardsLoading()" [class.border-rose-500]="showRecipientValidation() && !wardCode" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50">
                         <option value="">{{ wardsLoading() ? 'Đang tải phường/xã…' : 'Chọn phường/xã' }}</option>
                         @for (ward of wards(); track ward.code) { <option [value]="ward.code">{{ ward.name }}</option> }
                       </select>
+                      @if (showRecipientValidation() && !wardCode) { <p class="mt-1 text-xs font-semibold text-rose-700">Chọn phường/xã.</p> }
                     </div>
                   </div>
                   @if (locationError()) {
@@ -137,7 +143,8 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   }
                   <div>
                     <label for="recipient-street" class="font-bold text-slate-700 block mb-1">Số nhà, tên đường *</label>
-                    <input id="recipient-street" [(ngModel)]="street" [disabled]="!!pendingOrder() || recipientSaving()" maxlength="200" autocomplete="address-line1" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50" placeholder="Ví dụ: 128 Đường Số 7, căn hộ A12">
+                    <input id="recipient-street" [(ngModel)]="street" [disabled]="!!pendingOrder() || recipientSaving()" maxlength="200" autocomplete="address-line1" [class.border-rose-500]="showRecipientValidation() && !streetValid()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50" placeholder="Ví dụ: 128 Đường Số 7, căn hộ A12">
+                    @if (showRecipientValidation() && !streetValid()) { <p class="mt-1 text-xs font-semibold text-rose-700">Nhập số nhà và tên đường (ít nhất 3 ký tự).</p> }
                   </div>
                   @if (customerAddress) { <p class="text-slate-500"><strong>Địa chỉ giao quà:</strong> {{ customerAddress }}</p> }
                   @if (legacyAddress && !customerAddress) { <p class="text-slate-500">Địa chỉ hồ sơ: {{ legacyAddress }}. Vui lòng chọn tỉnh/thành và phường/xã để chuẩn hóa địa chỉ giao quà.</p> }
@@ -220,7 +227,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 <label 
                   (click)="!pendingOrder() && changeShipping('STANDARD')"
                   class="flex items-start gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all"
-                  [ngClass]="selectedShippingMethod() === 'STANDARD' ? 'border-[#800020] bg-[#FFF5E1] shadow-sm' : 'border-slate-200 hover:border-[#EBD3AE] bg-white'"
+                  [ngClass]="selectedShippingMethod() === 'STANDARD' ? 'border-[#800020] bg-[#FCF7F9] shadow-sm' : 'border-[#E8E3E5] hover:border-[#CBA9B3] bg-white'"
                 >
                   <input type="radio" name="shippingMethod" [checked]="selectedShippingMethod() === 'STANDARD'" [disabled]="!!pendingOrder()" class="mt-1 accent-[#800020]">
                   <div>
@@ -236,7 +243,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 <label 
                   (click)="!pendingOrder() && changeShipping('EXPRESS')"
                   class="flex items-start gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all"
-                  [ngClass]="selectedShippingMethod() === 'EXPRESS' ? 'border-[#800020] bg-[#FFF5E1] shadow-sm' : 'border-slate-200 hover:border-[#EBD3AE] bg-white'"
+                  [ngClass]="selectedShippingMethod() === 'EXPRESS' ? 'border-[#800020] bg-[#FCF7F9] shadow-sm' : 'border-[#E8E3E5] hover:border-[#CBA9B3] bg-white'"
                 >
                   <input type="radio" name="shippingMethod" [checked]="selectedShippingMethod() === 'EXPRESS'" [disabled]="!!pendingOrder()" class="mt-1 accent-[#800020]">
                   <div>
@@ -268,8 +275,8 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   </div>
                 </div>
               } @else {
-                <div class="mb-4 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-start gap-2.5">
-                  <span class="material-symbols-outlined text-emerald-600 text-lg shrink-0 mt-0.5">inventory_2</span>
+                <div class="mb-4 p-3.5 rounded-2xl bg-[#F8F7F8] border border-[#E8E3E5] text-[#65545A] text-xs font-medium flex items-start gap-2.5">
+                  <span class="material-symbols-outlined text-[#916976] text-lg shrink-0 mt-0.5">inventory_2</span>
                   <div>
                     <strong class="font-bold block">Đơn hàng chỉ gồm sản phẩm có sẵn:</strong>
                     <span>Chọn COD đơn hàng sẽ ở trạng thái <strong>"COD Pending"</strong> (không cần cọc trước). Chọn QR để thanh toán trước 100%.</span>
@@ -282,14 +289,14 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 <div 
                   (click)="!pendingOrder() && (selectedPaymentMethod() === 'COD' ? selectedPaymentMethod.set('VIETQR') : null)"
                   class="p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-3.5"
-                  [ngClass]="selectedPaymentMethod() !== 'COD' ? 'border-[#800020] bg-[#FFF5E1] shadow-sm' : 'border-slate-200 hover:border-[#EBD3AE] bg-white'"
+                  [ngClass]="selectedPaymentMethod() !== 'COD' ? 'border-[#800020] bg-[#FCF7F9] shadow-sm' : 'border-[#E8E3E5] hover:border-[#CBA9B3] bg-white'"
                 >
                   <div class="flex items-start gap-3">
                     <input type="radio" name="payGroup" [checked]="selectedPaymentMethod() !== 'COD'" [disabled]="!!pendingOrder()" class="mt-1 accent-[#800020] shrink-0">
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center justify-between gap-2">
                         <span class="font-bold text-sm text-[#2B1A1A]">Thanh Toán Trực Tuyến 100%</span>
-                        <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold shrink-0">Xác nhận tự động</span>
+                        <span class="px-2.5 py-0.5 rounded-full bg-[#F2E7EC] text-[#800020] text-[10px] font-bold shrink-0">Xác nhận tự động</span>
                       </div>
                       <p class="text-xs text-slate-500 mt-1 leading-snug">
                         Thanh toán toàn bộ ngay để đơn hàng được ưu tiên xử lý & giao hàng nhanh nhất.
@@ -345,13 +352,13 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 <div 
                   (click)="!pendingOrder() && selectedPaymentMethod.set('COD')"
                   class="p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3"
-                  [ngClass]="selectedPaymentMethod() === 'COD' ? 'border-[#800020] bg-[#FFF5E1] shadow-sm' : 'border-slate-200 hover:border-[#EBD3AE] bg-white'"
+                  [ngClass]="selectedPaymentMethod() === 'COD' ? 'border-[#800020] bg-[#FCF7F9] shadow-sm' : 'border-[#E8E3E5] hover:border-[#CBA9B3] bg-white'"
                 >
                   <input type="radio" name="payGroup" [checked]="selectedPaymentMethod() === 'COD'" [disabled]="!!pendingOrder()" class="mt-1 accent-[#800020] shrink-0">
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between gap-2">
                       <span class="font-bold text-sm text-[#2B1A1A]">COD - Thanh toán khi nhận hàng</span>
-                      <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full shrink-0" [ngClass]="hasCustomItems() ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'">
+                      <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full shrink-0" [ngClass]="hasCustomItems() ? 'bg-amber-100 text-amber-800' : 'bg-[#F2E7EC] text-[#800020]'">
                         {{ hasCustomItems() ? 'Cọc 50% tiền Custom' : 'COD Pending (0đ cọc)' }}
                       </span>
                     </div>
@@ -365,8 +372,8 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
           </div>
 
           <!-- RIGHT COLUMN: ORDER SUMMARY & SUBMIT -->
-          <div class="lg:col-span-5 flex flex-col gap-6">
-            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#EBD3AE] flex flex-col gap-5 sticky top-6">
+          <div class="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-6 lg:max-h-[calc(100dvh-3rem)] lg:overflow-y-auto">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#EBD3AE] flex flex-col gap-5">
               <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
                   <h3 class="font-bold text-lg text-[#2B1A1A]">Tóm Tắt Đơn Hàng ({{ displayItems().length }} món)</h3>
@@ -501,7 +508,8 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
             <div class="text-center space-y-2">
               <div class="w-12 h-12 rounded-2xl bg-[#FFF5E1] text-[#800020] border border-[#EBD3AE] flex items-center justify-center mx-auto"><span class="material-symbols-outlined text-2xl">phonelink_lock</span></div>
               <h2 id="guest-cod-otp-title" class="text-lg font-extrabold text-slate-900">Xác minh số điện thoại</h2>
-              <p class="text-xs text-slate-600">Giftory đã gửi OTP đến <b>{{ normalizedCustomerPhone() }}</b>. Mã có hiệu lực 1 phút. Đơn hàng chỉ được tạo sau khi xác minh thành công.</p>
+              <p class="text-xs text-slate-600">@if (guestOtpDemoCode()) { Mã OTP mô phỏng dành cho đồ án: } @else { Giftory đã gửi OTP đến <b>{{ normalizedCustomerPhone() }}</b>. } Mã có hiệu lực 1 phút. Đơn hàng chỉ được tạo sau khi xác minh thành công.</p>
+              @if (guestOtpDemoCode()) { <p class="rounded-xl bg-amber-50 px-4 py-3 text-center text-sm font-extrabold tracking-widest text-[#800020]">{{ guestOtpDemoCode() }}</p> }
             </div>
             <label class="block text-xs font-bold text-slate-700">Mã OTP 6 chữ số
               <input [(ngModel)]="guestOtpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" class="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3 text-center text-xl tracking-[0.5em] font-bold focus:border-[#800020] focus:outline-none" [disabled]="guestOtpBusy() || guestOtpSeconds() === 0" />
@@ -644,6 +652,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   recipientError = signal<string | null>(null);
   recipientNotice = signal<string | null>(null);
   recipientFormError = signal<string | null>(null);
+  showRecipientValidation = signal(false);
   locationError = signal<string | null>(null);
 
   get customerAddress(): string {
@@ -675,6 +684,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   orderError = signal('');
   showGuestOtpModal = signal(false);
   guestOtpChallengeId = signal('');
+  guestOtpDemoCode = signal('');
   guestOtpVerified = signal(false);
   guestOtpAttemptsRemaining = signal(5);
   guestOtpResendsRemaining = signal(4);
@@ -884,10 +894,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   recipientValid(): boolean {
-    const phone = this.customerPhone.replace(/[\s().-]/g, '').replace(/^\+?84/, '0');
-    return this.customerName.trim().length >= 2 && this.customerName.trim().length <= 100 && /^0\d{9}$/.test(phone)
-      && this.street.trim().length >= 3 && this.street.trim().length <= 200 && !!this.customerAddress && !this.wardsLoading();
+    return this.recipientNameValid() && this.recipientPhoneValid() && this.streetValid() && !!this.provinceCode && !!this.wardCode && !!this.customerAddress && !this.wardsLoading();
   }
+
+  recipientNameValid(): boolean { return this.customerName.trim().length >= 2 && this.customerName.trim().length <= 100; }
+  recipientPhoneValid(): boolean { const phone = this.customerPhone.replace(/[\s().-]/g, '').replace(/^\+?84/, '0'); return /^0\d{9}$/.test(phone); }
+  streetValid(): boolean { return this.street.trim().length >= 3 && this.street.trim().length <= 200; }
 
   saveRecipient(): void {
     if (!this.authService.isAuthenticated() || !this.recipientValid() || this.recipientSaving() || this.recipientsLoading() || this.pendingOrder()) return;
@@ -948,9 +960,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     }
 
     if (!this.recipientValid()) {
+      this.showRecipientValidation.set(true);
       this.recipientFormError.set('Vui lòng nhập tên người nhận, số điện thoại hợp lệ gồm 10 số, chọn tỉnh/thành và phường/xã, rồi nhập số nhà, tên đường.');
       return;
     }
+    this.showRecipientValidation.set(false);
     this.recipientFormError.set(null);
 
     if (!this.authService.isAuthenticated() && this.selectedPaymentMethod() === 'COD' && !this.guestOtpVerified()) {
@@ -1058,9 +1072,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         this.isSubmitting.set(false);
         this.guestOtpBusy.set(false);
         this.guestOtpChallengeId.set(response.challengeId);
+        this.guestOtpDemoCode.set(response.demoCode || '');
         this.guestOtpAttemptsRemaining.set(response.attemptsRemaining ?? 5);
         this.guestOtpResendsRemaining.set(response.resendsRemaining ?? 4);
         this.guestOtpCode = '';
+        this.guestOtpDemoCode.set(response.demoCode || '');
         if (response.verified) {
           this.guestOtpVerified.set(true);
           this.submitOrder();
@@ -1133,6 +1149,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.guestOtpError.set('');
     this.guestOtpVerified.set(false);
     this.guestOtpChallengeId.set('');
+    this.guestOtpDemoCode.set('');
   }
 
   ngOnDestroy(): void {

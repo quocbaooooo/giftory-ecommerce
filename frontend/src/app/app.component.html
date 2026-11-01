@@ -11,8 +11,8 @@
     <!-- Primary navigation rail -->
     <app-sidebar-rail></app-sidebar-rail>
 
-    <!-- Main Content Canvas (Offset by pl-16 md:pl-20 to clear sidebar rail) -->
-    <div class="pl-16 md:pl-20 flex flex-col" [ngClass]="isCustomStudioRoute() ? 'h-full lg:h-screen lg:overflow-hidden min-h-0' : 'min-h-screen'">
+    <!-- Main canvas clears the desktop rail and mobile bottom navigation. -->
+    <div class="storefront-canvas md:pl-20 flex flex-col" [ngClass]="isCustomStudioRoute() ? 'h-full lg:h-screen lg:overflow-hidden min-h-0' : 'min-h-screen'">
       <!-- Auto-Rotating Top Announcement Bar Ticker (Hidden in Custom Studio) -->
       <div *ngIf="!isCustomStudioRoute()" class="bg-gradient-to-r from-[#660019] via-[#800020] to-[#991B33] text-[#FFF5E1] py-1.5 px-3 md:px-6 tracking-wide flex items-center justify-between shadow-xs border-b border-[#540015]/30 relative overflow-hidden h-9 select-none">
         <!-- Prev Button -->
@@ -56,9 +56,9 @@
         </div>
       </div>
 
-      <div *ngIf="!isHomeRoute() && !isCustomStudioRoute()" class="fixed left-16 md:left-20 right-0 bottom-5 sm:bottom-6 z-40 px-3 pointer-events-none" style="padding-bottom: env(safe-area-inset-bottom)" aria-label="Tìm kiếm sản phẩm">
+      <div *ngIf="!isHomeRoute() && !isCustomStudioRoute()" class="storefront-search z-40 px-3" [class.purchase-search]="isPurchaseRoute()" style="padding-bottom: env(safe-area-inset-bottom)" aria-label="Tìm kiếm sản phẩm">
         <div class="w-full max-w-lg mx-auto pointer-events-auto">
-          <app-pill-search [floating]="true"></app-pill-search>
+          <app-pill-search [floating]="!isPurchaseRoute()"></app-pill-search>
         </div>
       </div>
 
@@ -137,7 +137,7 @@
     </div>
 
     <!-- AI Concierge Floating Assistant & Zalo (Hidden in Custom Studio) -->
-    <div *ngIf="!isCustomStudioRoute()" class="fixed right-6 z-50 flex items-center gap-3" [ngClass]="isHomeRoute() ? 'bottom-6' : 'bottom-24 xl:bottom-6'">
+    <div *ngIf="!isCustomStudioRoute()" class="storefront-assistance fixed right-6 z-40 flex items-center gap-3" [class.purchase-assistance]="isPurchaseRoute()" [ngClass]="isHomeRoute() ? 'bottom-6' : 'bottom-24 xl:bottom-6'">
       <!-- Quick Zalo Button (Circular) -->
       <a 
         href="https://zalo.me" 
@@ -149,7 +149,7 @@
       </a>
 
       <!-- AI Concierge Sparkle Button -->
-      <app-ai-concierge></app-ai-concierge>
+      <app-ai-concierge [compact]="isPurchaseRoute()"></app-ai-concierge>
     </div>
   </div>
 </ng-container>
