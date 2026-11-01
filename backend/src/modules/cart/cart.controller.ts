@@ -87,6 +87,12 @@ export class CartController {
     return this.cartService.updateItemCustomDetails(Number(index), customDetails, variantName, customDesignId, userId, sessionId);
   }
 
+  @Post('packaging')
+  @UseGuards(OptionalJwtAuthGuard)
+  setPackaging(@Body() body: any, @CurrentUser('sub') userId?: string) {
+    return this.cartService.setPackaging(body.packaging, userId, body.sessionId);
+  }
+
   @Patch('items/:index/gift-box')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()

@@ -56,7 +56,7 @@
         </div>
       </div>
 
-      <div *ngIf="!isHomeRoute() && !isCustomStudioRoute()" class="storefront-search z-40 px-3" [class.purchase-search]="isPurchaseRoute()" style="padding-bottom: env(safe-area-inset-bottom)" aria-label="Tìm kiếm sản phẩm">
+      <div *ngIf="!isHomeRoute() && !isCustomStudioRoute() && !isCheckoutRoute()" class="storefront-search z-40 px-3" [class.purchase-search]="isPurchaseRoute()" style="padding-bottom: env(safe-area-inset-bottom)" aria-label="Tìm kiếm sản phẩm">
         <div class="w-full max-w-lg mx-auto pointer-events-auto">
           <app-pill-search [floating]="!isPurchaseRoute()"></app-pill-search>
         </div>

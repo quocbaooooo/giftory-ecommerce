@@ -420,6 +420,7 @@ import { environment } from '../../../environments/environment';
                     </span>
                   </div>
 
+                  @if (c.claimantRole === 'RECIPIENT') { <div class="rounded-xl border border-[#E6D2DA] bg-white p-3 text-xs text-[#800020]"><strong>Bảo hành từ người nhận quà</strong><p>{{ c.claimantName }} · {{ c.claimantPhone }}</p><p>Chỉ đổi/bảo hành sản phẩm lỗi. Quyền hủy/hoàn tiền thuộc người đặt.</p></div> }
                   @if (c.reason) {
                     <p class="text-xs font-bold text-slate-800">Lý do: {{ c.reason }}</p>
                   }
@@ -484,7 +485,7 @@ import { environment } from '../../../environments/environment';
                               <select [(ngModel)]="c.resolution" class="w-full bg-white border border-slate-200 rounded-xl p-2 text-xs">
                                 <option value="">-- Chọn phương án --</option>
                                 @for (r of resolutions; track r) {
-                                  <option [value]="r">{{ label(r) }}</option>
+                                  <option [value]="r" [disabled]="c.claimantRole === 'RECIPIENT' && r === 'REFUND'">{{ label(r) }}</option>
                                 }
                               </select>
                             </div>

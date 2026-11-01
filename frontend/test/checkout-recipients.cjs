@@ -68,6 +68,7 @@ test('changing province clears ward and stale responses cannot replace new optio
 });
 test('save normalizes phone and selects the persisted recipient', () => {
   const f = fixture();
+  f.component.directGift.set(true);
   f.component.selectRecipient(saved.id);
   f.wardRequests[0].response.next([ward]);
   f.component.customerPhone = '+84 912 345 678';
@@ -76,6 +77,7 @@ test('save normalizes phone and selects the persisted recipient', () => {
   assert.equal(f.saves[0].phone, '0912345678');
   assert.equal(f.saves[0].street, saved.street);
   assert.equal(f.component.recipientSaving(), true);
+  assert.equal(f.saves[0].purpose, 'RECIPIENT');
   f.saveResponse.next([saved]);
   assert.equal(f.component.recipientSaving(), false);
   assert.equal(f.component.selectedRecipientId, saved.id);
@@ -112,12 +114,49 @@ test('failed save leaves entered data available for retry', () => {
   assert.equal(f.component.customerAddress, saved.address);
 });
 console.log(`${count} checkout recipient checks passed`);
-test('optional greeting card is submitted separately from delivery notes', () => {
+
+test('member checkout uses profile address without reselecting province or ward', () => {
+  const f = fixture(); const c = f.component;
+  c.authService.currentUser = () => ({ address: { detailAddress: '12 Profile Street', street: 'Old Street', ward: 'Profile Ward', district: 'Profile District', city: 'Profile City' } });
+  c.customerName = 'Buyer Name'; c.customerPhone = '0912345678';
+  assert.equal(c.usesSavedBuyerAddress(), true);
+  assert.equal(c.recipientValid(), true);
+  assert.equal(c.provinceCode, '');
+  c.submitOrder();
+  assert.equal(f.orders[0].customerInfo.address, '12 Profile Street, Profile Ward, Profile District, Profile City');
+  assert.equal(f.orders[0].customerInfo.provinceCode, undefined);
+  assert.equal(f.orders[0].customerInfo.street, undefined);
+});
+
+test('saved buyer address preserves buyer contact; new addresses require structured entry', () => {
+  const f = fixture(); const c = f.component;
+  c.authService.currentUser = () => ({ address: { street: '12 Home', city: 'Home City' } });
+  c.customerName = 'Buyer Name'; c.customerPhone = '0901234567';
+  c.recipients.set([{ ...saved, purpose: 'DELIVERY' }]);
+  c.selectBuyerAddress(saved.id);
+  assert.equal(c.customerAddress, saved.address);
+  assert.equal(c.customerName, 'Buyer Name'); assert.equal(c.customerPhone, '0901234567');
+  c.selectBuyerAddress('new');
+  assert.equal(c.usesSavedBuyerAddress(), false); assert.equal(c.customerAddress, ''); assert.equal(c.recipientValid(), false);
+  c.provinceCode = province.code; c.wards.set([ward]); c.wardCode = ward.code; c.street = '99 New Street';
+  c.saveRecipient();
+  const stored = { ...saved, purpose: 'DELIVERY', id: 'new-address', name: c.customerName, phone: c.customerPhone, street: c.street, address: `99 New Street, ${ward.name}, ${province.name}` };
+  f.saveResponse.next([stored]);
+  assert.equal(f.saves[0].purpose, 'DELIVERY');
+  assert.equal(c.buyerAddressChoice(), stored.id); assert.equal(c.customerAddress, stored.address);
+});
+function enableGift(component) {
+  component.directGift.set(true);
+  component.selectedPaymentMethod.set('VIETQR');
+  component.buyerName = 'Gift Buyer'; component.buyerPhone = '0988888888'; component.buyerEmail = 'buyer@example.test';
+}
+
+test('gift greeting card is submitted separately from delivery notes', () => {
   const f = fixture();
   f.component.selectRecipient(saved.id);
   f.wardRequests[0].response.next([ward]);
   f.component.greetingCardTemplates.set([{ id: 'LOVE', name: 'Lãng mạn' }]);
-  f.component.includeGreetingCard.set(true);
+  enableGift(f.component);
   f.component.greetingCardTemplateId.set('LOVE');
   f.component.greetingCardHeading = '  Gửi người bạn thân nhất  ';
   f.component.greetingCardMessage = '  Thương bạn nhiều!\nMột ngày thật vui nhé.  ';
@@ -128,9 +167,9 @@ test('optional greeting card is submitted separately from delivery notes', () =>
 });
 test('blank or overflowing greeting card blocks placing an order', () => {
   const f = fixture();
-  f.component.includeGreetingCard.set(true);
+  enableGift(f.component);
   f.component.greetingCardTemplates.set([{ id: 'BIRTHDAY', name: 'Thanh lịch' }]);
-  for (const message of ['  ', 'a'.repeat(301), Array(7).fill('Chúc vui').join('\n')]) {
+  for (const message of ['  ', 'a'.repeat(201), Array(7).fill('Chúc vui').join('\n')]) {
     f.component.greetingCardMessage = message;
     f.component.submitOrder();
     assert.ok(f.component.greetingCardError());
@@ -142,7 +181,7 @@ test('turning greeting card off omits its draft from the order', () => {
   f.component.selectRecipient(saved.id);
   f.wardRequests[0].response.next([ward]);
   f.component.greetingCardMessage = 'Chỉ là bản nháp';
-  f.component.includeGreetingCard.set(false);
+  f.component.directGift.set(false);
   f.component.submitOrder();
   assert.equal(f.orders.length, 1);
   assert.equal(f.orders[0].greetingCard, undefined);
@@ -151,7 +190,7 @@ test('style changes preserve a custom heading and message in the submitted card'
   const f = fixture();
   f.component.selectRecipient(saved.id);
   f.wardRequests[0].response.next([ward]);
-  f.component.includeGreetingCard.set(true);
+  enableGift(f.component);
   f.component.greetingCardTemplates.set([{ id: 'BIRTHDAY', name: 'Thanh lịch' }, { id: 'LOVE', name: 'Lãng mạn' }, { id: 'THANK_YOU', name: 'Tự nhiên' }]);
   f.component.greetingCardHeading = 'Mừng ngày đặc biệt của mẹ';
   f.component.greetingCardMessage = 'Chúc mẹ luôn vui và khỏe!';
@@ -167,7 +206,7 @@ test('style changes preserve a custom heading and message in the submitted card'
 test('empty and oversized headings block checkout when a card is requested', () => {
   for (const heading of ['   ', 'a'.repeat(81)]) {
     const f = fixture();
-    f.component.includeGreetingCard.set(true);
+    enableGift(f.component);
     f.component.greetingCardHeading = heading;
     f.component.submitOrder();
     assert.equal(f.orders.length, 0);

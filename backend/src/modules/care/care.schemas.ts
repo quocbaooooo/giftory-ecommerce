@@ -23,6 +23,9 @@ export const ReviewSchema = new Schema(
 ReviewSchema.index({ orderId: 1, productId: 1 }, { unique: true });
 export const SupportCaseSchema = new Schema(
   {
+    claimantRole: { type: String, enum: ['BUYER', 'RECIPIENT'], default: 'BUYER' },
+    claimantName: String,
+    claimantPhone: String,
     userId: oid,
     orderId: { type: oid, ref: 'Order', required: true },
     productId: oid,

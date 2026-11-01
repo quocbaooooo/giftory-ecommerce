@@ -1,3 +1,4 @@
+import { CartPackagingComponent } from './cart-packaging.component';
 import { DialogFocusDirective } from './dialog-focus.directive';
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -10,7 +11,7 @@ import { Product } from '../../core/models';
 @Component({
   selector: 'app-shopping-overlays',
   standalone: true,
-  imports: [CommonModule, RouterModule, DialogFocusDirective],
+  imports: [CommonModule, RouterModule, DialogFocusDirective, CartPackagingComponent],
   host: { '(document:keydown.escape)': 'close()' },
   styles: [`
     @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
@@ -256,6 +257,7 @@ import { Product } from '../../core/models';
             </div>
           </div>
 
+          @if (cart.items().length) { <div class="py-3"><app-cart-packaging /></div> }
           <div class="pt-4 border-t border-slate-100 space-y-3">
             <div class="flex items-center justify-between text-base font-bold text-slate-900">
               <span>Tạm tính:</span>

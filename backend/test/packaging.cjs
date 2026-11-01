@@ -1,0 +1,73 @@
+require('reflect-metadata');
+const assert = require('node:assert/strict');
+const { quotePackaging, normalizeBoxes, DEFAULT_GIFT_BOXES, legacyPackaging } = require('../dist/modules/cart/packaging.rules');
+const { CartService } = require('../dist/modules/cart/cart.service');
+const { OrdersService } = require('../dist/modules/orders/orders.service');
+const config = normalizeBoxes();
+const line = (id, size = 'SMALL', quantity = 1) => ({ _id: id, productId: { _id: '507f1f77bcf86cd799439011', name: 'Quà ' + id, packagingSize: size, images: [] }, price: 100000, quantity, isCustom: false });
+const items = [line('A'), line('B'), line('C')];
+let plan = quotePackaging(items, { mode: 'BUNDLED', boxStyle: 'SILK', totalFee: 1 }, config);
+assert.equal(plan.boxCount, 1);
+assert.equal(plan.totalFee, 45000, 'bundle charges exactly one box, ignoring submitted fee');
+assert.deepEqual(plan.boxes[0].items.map(i => i.itemId), ['A', 'B', 'C']);
+const allocations = items.map(i => ({itemId: i._id, boxStyle: 'SILK', quantity: 1}));
+plan = quotePackaging(items, { mode: 'INDIVIDUAL', allocations }, config);
+assert.equal(plan.boxCount, 3);
+assert.equal(plan.totalFee, 135000);
+plan = quotePackaging([line('A', 'SMALL', 3), line('B')], {mode: 'PARTIAL', allocations: [{itemId: 'A', boxStyle: 'SILK', quantity: 1}]}, config);
+assert.equal(plan.totalFee, 45000, 'partial allocation only charges selected units');
+assert.equal(plan.boxCount, 1);
+assert.throws(() => quotePackaging(items, {mode:'INDIVIDUAL',allocations:allocations.slice(0,1)},config));
+assert.throws(() => quotePackaging(items, {mode:'PARTIAL',allocations:[allocations[0],allocations[0]]},config));
+assert.throws(() => quotePackaging(items, {mode:'PARTIAL',allocations:[{...allocations[0],quantity:2}]},config));
+assert.throws(() => quotePackaging(items, {mode:'PARTIAL',allocations:[{...allocations[0],itemId:'removed'}]},config));
+assert.throws(() => quotePackaging([line('A','MEDIUM')],{mode:'BUNDLED',boxStyle:'STANDARD'},config), /kích thước|dung tích/);
+assert.throws(() => quotePackaging([line('A','MEDIUM',3)],{mode:'BUNDLED',boxStyle:'SILK'},config), /dung tích/);
+assert.equal(quotePackaging([line('A','MEDIUM',3)],{mode:'BUNDLED',boxStyle:'LUXURY'},config).boxCount,1);
+assert.throws(() => quotePackaging([line('A','LARGE',3)],{mode:'BUNDLED',boxStyle:'LUXURY'},config));
+assert.throws(() => quotePackaging([line('A','OVERSIZED')],{mode:'PARTIAL',allocations:[allocations[0]]},config), /đặc thù/);
+plan = quotePackaging([line('A'),line('oversized','OVERSIZED')],{mode:'BUNDLED',boxStyle:'STANDARD'},config);
+assert.equal(plan.boxes[0].items.length,1,'oversized items retain dedicated packaging outside the bundle');
+assert.throws(() => quotePackaging(items,{mode:'BUNDLED',boxStyle:'SILK'},config.map(b=>({...b,available:false}))));
+assert.throws(() => quotePackaging(items,{mode:'BUNDLED',boxStyle:'SILK'},config.map(b=>({...b,capacity:NaN}))));
+assert.equal(quotePackaging(items,{mode:'NONE'},config).totalFee,0);
+const old = [Object.assign(line('A'),{giftBoxStyle:'SILK',giftBoxFee:1})];
+assert.equal(quotePackaging(old,legacyPackaging(old),config).totalFee,45000,'legacy carts use current authoritative box prices');
+console.log('PASS packaging modes, per-box pricing, quantities, fit, capacity, oversized, disabled boxes, and tampered requests');
+(async()=>{
+  let created;
+  const service = Object.create(OrdersService.prototype);
+  const cart = { items, packaging: {mode:'BUNDLED',boxStyle:'SILK'}, save:async()=>{} };
+  Object.assign(service,{
+    cartModel:{findOne:()=>({populate:async()=>cart})},
+    giftBoxConfigModel:{findOne:()=>({lean:()=>({exec:async()=>({boxes:DEFAULT_GIFT_BOXES})})})},
+    orderModel:{create:async input=>{created=input;return input;}}
+  });
+  const result = await service.createOrder({paymentMethod:'COD',shippingMethod:'STANDARD',customerInfo:{name:'Test',phone:'0900000000',address:'Test'}},'507f1f77bcf86cd799439012');
+  assert.equal(result.timeline.length,2,'COD creation must not prepopulate production or shipping events');
+  assert.ok(result.timeline.every(event=>event.completed && event.timestamp.getTime() <= Date.now()));
+  assert.equal(result.trackingCode,'','tracking is assigned on actual dispatch');
+  assert.equal(result.deliveryInfo.trackingCode,'');
+  assert.equal(result.pricing.giftWrapFee,45000);
+  assert.equal(result.pricing.totalAmount,345000);
+  assert.equal(result.pricing.remainingCodAmount,345000);
+  assert.equal(result.packaging.boxCount,1);
+  assert.equal(result.items[0].cartItemId,'A');
+  assert.equal(cart.packaging,null,'clearing a completed cart also clears its packing plan');
+  assert.equal(created.packaging.boxes[0].items.length,3,'warehouse snapshot survives cart clear');
+  console.log('PASS order preserves per-box charges and warehouse allocations through cart clear');
+  const badCart = { items: [line('A','LARGE',3)], packaging: {mode:'BUNDLED',boxStyle:'LUXURY'}, save:async()=>{} };
+  service.cartModel.findOne = () => ({populate:async()=>badCart});
+  service.orderModel.create = async () => { throw new Error('must not create an invalid order'); };
+  await assert.rejects(service.createOrder({paymentMethod:'COD',customerInfo:{name:'Test',phone:'0900000000',address:'Test'}},'507f1f77bcf86cd799439012'), /dung tích/);
+  assert.equal(badCart.items.length,1,'invalid packing cannot clear the cart');
+  const cartService = Object.create(CartService.prototype);
+  cartService.vouchers = {list:async()=>[]};
+  cartService.getGiftBoxes = async()=>config;
+  const invalidQuote = await cartService.calculateCartTotals(badCart);
+  assert.equal(invalidQuote.packaging.valid,false);
+  assert.match(invalidQuote.packaging.notice,/cập nhật/);
+  assert.equal(invalidQuote.pricing.giftWrapFee,0);
+  console.log('PASS changed capacity is surfaced on cart and rejected before order creation');
+
+})().catch(error=>{console.error(error);process.exitCode=1;});

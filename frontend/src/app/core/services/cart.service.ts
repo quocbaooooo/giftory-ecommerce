@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { catchError, defer, finalize, firstValueFrom, from, Observable, of, switchMap, tap } from 'rxjs';
 import { ApiService } from './api.service';
-import { Cart, CartItem, Product } from '../models';
+import { Cart, CartItem, Product, GiftPackaging } from '../models';
 
 @Injectable({
   providedIn: 'root'
@@ -64,6 +64,7 @@ export class CartService {
     totalCustomItems: 0
   });
   paymentMode = computed(() => this.cart()?.paymentMode || 'DEPOSIT_50');
+  packagingSyncPending = signal(false);
   quantitySyncPending = signal(false);
   voucherSyncPending = signal(false);
   quantityError = signal<string | null>(null);
@@ -118,7 +119,11 @@ export class CartService {
     const shippingDiscount = applied?.discountType === 'FREESHIP' ? Math.min(baseShippingFee, savings) : 0;
     const shippingFee = baseShippingFee - shippingDiscount;
     const voucherDiscount = applied ? (applied.discountType === 'FREESHIP' ? 0 : Math.min(itemsTotal, savings)) : 0;
-    const giftWrapFee = items.reduce((sum, item) => sum + (item.giftBoxFee || 0) * item.quantity, 0);
+    const giftWrapFee = confirmed.packaging
+      ? confirmed.packaging.mode === 'INDIVIDUAL'
+        ? (confirmed.packaging.boxes || []).reduce((sum, box) => sum + box.unitFee * (items.find(item => item._id === box.items[0]?.itemId)?.quantity || 0), 0)
+        : confirmed.packaging.totalFee || 0
+      : items.reduce((sum, item) => sum + (item.giftBoxFee || 0) * item.quantity, 0);
     const totalAmount = Math.max(0, itemsTotal - voucherDiscount + shippingFee + giftWrapFee);
     const rawDepositAmount = confirmed.paymentMode === 'FULL_PAYMENT' ? totalAmount
       : items.reduce((sum, item) => sum + (item.isCustom ? Math.round(item.price * item.quantity * 0.5) : 0), 0);
@@ -253,6 +258,16 @@ export class CartService {
       const currentIndex = this.confirmedCart?.items.findIndex(candidate => this.itemKey(candidate) === key) ?? -1;
       if (currentIndex < 0) return of(this.confirmedCart!);
       return this.api.patch<Cart>(`cart/items/${currentIndex}/custom?sessionId=${encodeURIComponent(sessionId)}`, { customDetails, variantName, customDesignId });
+    });
+  }
+
+  updatePackaging(packaging: GiftPackaging) {
+    return defer(() => {
+      this.packagingSyncPending.set(true);
+      return from(this.waitForQuantityUpdates()).pipe(
+        switchMap(() => this.mutate(() => this.api.post<Cart>('cart/packaging', { packaging, sessionId: this.getSessionId() }))),
+        finalize(() => this.packagingSyncPending.set(false)),
+      );
     });
   }
 

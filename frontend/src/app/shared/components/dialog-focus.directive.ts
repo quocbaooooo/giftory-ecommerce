@@ -6,7 +6,7 @@ export class DialogFocusDirective implements AfterViewInit, OnDestroy {
   private previous = document.activeElement as HTMLElement | null;
   private overflow = document.body.style.overflow;
   private focusable() {
-    return Array.from(this.element.nativeElement.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), [tabindex="0"]'));
+    return Array.from(this.element.nativeElement.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]'));
   }
   ngAfterViewInit() {
     document.body.style.overflow = 'hidden';

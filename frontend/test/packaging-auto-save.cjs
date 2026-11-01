@@ -1,0 +1,53 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const ts = require('typescript');
+const rx = require('rxjs');
+const source = ts.transpileModule(fs.readFileSync(path.join(__dirname, '../src/app/shared/components/cart-packaging.component.ts'), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, experimentalDecorators: true } }).outputText;
+function fixture() {
+  const requests = [];
+  const pending = [];
+  const state = { items: [{ _id: 'A', quantity: 2, packagingSize: 'SMALL' }, { _id: 'B', quantity: 1, packagingSize: 'SMALL' }], packaging: { mode: 'NONE' } };
+  const signal = value => { const read = () => value; read.set = next => value = next; read.update = fn => value = fn(value); return read; };
+  const cart = { cart: () => state, items: () => state.items, packagingSyncPending: () => false, quantitySyncPending: () => false,
+    updatePackaging: request => { requests.push(request); const result = new rx.Subject(); pending.push({ request, result }); return result; } };
+  const api = {};
+  const module = { exports: {} };
+  new Function('require', 'module', 'exports', source)(name => {
+    if (name === '@angular/core') return { Component: () => target => target, signal, computed: fn => fn, effect: () => {}, untracked: fn => fn(), inject: token => token };
+    if (name.includes('/cart.service')) return { CartService: cart };
+    if (name.includes('/api.service')) return { ApiService: api };
+    return {};
+  }, module, module.exports);
+  const component = new module.exports.CartPackagingComponent();
+  component.boxes.set([{ id: 'SILK', size: 'M', capacity: 6, fee: 45000, available: true }, { id: 'LUXURY', size: 'L', capacity: 12, fee: 79000, available: true }]);
+  component.loading.set(false); component.initialize();
+  return { component, state, requests, success: () => { const p = pending.shift(); state.packaging = p.request; p.result.next(state); p.result.complete(); }, fail: () => pending.shift().result.error({ error: { message: 'Offline' } }) };
+}
+const f = fixture();
+f.component.choosePackaging(true);
+assert.equal(f.requests.length, 1); assert.equal(f.requests[0].mode, 'BUNDLED'); assert.equal(f.requests[0].boxStyle, 'SILK');
+assert.equal(f.component.saving(), true); f.success();
+f.component.chooseBundle('LUXURY');
+assert.equal(f.requests.at(-1).boxStyle, 'LUXURY'); f.success();
+assert.equal(f.component.draftFee(), 79000);
+f.component.setMode('INDIVIDUAL');
+assert.equal(f.requests.length, 3, 'switching mode sends exactly one complete allocation, not one request per row');
+assert.equal(f.requests.at(-1).mode, 'INDIVIDUAL'); assert.deepEqual(f.requests.at(-1).allocations.map(a => a.quantity), [2, 1]); f.success();
+f.component.setMode('PARTIAL'); f.success();
+f.component.updateRow(f.state.items[0], { quantity: 1 });
+assert.equal(f.requests.at(-1).allocations[0].quantity, 1); f.success();
+f.component.updateRow(f.state.items[0], { selected: false });
+assert.equal(f.requests.at(-1).mode, 'NONE'); f.success();
+assert.equal(f.component.enabled(), true, 'unchecking the last item keeps the editor available');
+f.component.updateRow(f.state.items[1], { selected: true });
+assert.equal(f.requests.at(-1).mode, 'PARTIAL'); f.success();
+f.component.choosePackaging(false); assert.equal(f.requests.at(-1).mode, 'NONE'); f.success();
+assert.equal(f.component.enabled(), false);
+console.log('PASS box, mode, partial quantity, checkbox and opt-out changes save without confirmation');
+const failure = fixture(); failure.component.choosePackaging(true); failure.success();
+failure.component.chooseBundle('LUXURY'); failure.fail();
+assert.equal(failure.component.bundleStyle(), 'SILK', 'failed writes restore the server-confirmed selection');
+assert.equal(failure.component.error(), 'Offline');
+assert.equal(failure.component.saving(), false);
+console.log('PASS failed automatic saves keep the last confirmed packing plan and report the error');

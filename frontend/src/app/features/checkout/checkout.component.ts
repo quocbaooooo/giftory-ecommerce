@@ -53,11 +53,117 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
           <!-- LEFT COLUMN: SHIPPING INFO, SHIPPING METHOD & PAYMENT METHOD -->
           <div class="lg:col-span-7 flex flex-col gap-6">
             
+              <section class="rounded-3xl border border-[#EBD3AE] bg-white p-6 shadow-shop-card sm:p-8">
+                <div class="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3"><span class="flex h-7 w-7 items-center justify-center rounded-xl bg-[#800020] text-xs font-bold text-[#FFF5E1]">1</span><h2 class="text-lg font-bold text-[#42202E]">Thông tin người đặt</h2></div>
+                <p class="mb-4 text-xs leading-relaxed text-slate-500">Hóa đơn, xác nhận thanh toán và tiến độ gửi riêng cho bạn. Giftory liên hệ bạn nếu giao quà gặp sự cố.</p>
+                <fieldset [disabled]="!!pendingOrder() || isSubmitting()" class="grid grid-cols-1 gap-4 text-xs sm:grid-cols-2">
+                  <label class="font-semibold text-slate-700">Họ tên người đặt *<input [ngModel]="directGift() ? buyerName : customerName" (ngModelChange)="directGift() ? buyerName = $event : customerName = $event" maxlength="100" autocomplete="name" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 text-sm font-normal" /></label>
+                  <label class="font-semibold text-slate-700">Số điện thoại người đặt *<input [ngModel]="directGift() ? buyerPhone : customerPhone" (ngModelChange)="directGift() ? buyerPhone = $event : customerPhone = $event" type="tel" maxlength="20" autocomplete="tel" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 text-sm font-normal" /></label>
+                  <label class="font-semibold text-slate-700 sm:col-span-2">Email nhận hóa đơn{{ directGift() ? ' *' : '' }}<input [ngModel]="directGift() ? buyerEmail : customerEmail" (ngModelChange)="directGift() ? buyerEmail = $event : customerEmail = $event" type="email" maxlength="254" autocomplete="email" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 text-sm font-normal" /></label>
+                  @if (directGift()) {
+                  <label class="flex items-start gap-3 rounded-xl bg-[#FAF7F2] p-3 sm:col-span-2"><input type="checkbox" [(ngModel)]="giftAnonymous" class="mt-0.5 accent-[#800020]" /><span><strong>Gửi ẩn danh</strong><span class="mt-1 block font-normal text-slate-500">Trên thiệp và phiếu giao chỉ hiển thị người gửi là Giftory.</span></span></label>
+                  }
+                </fieldset>
+                @if (!directGift()) {
+                  <div class="mt-5 space-y-4 text-xs">
+                    @if (authService.isAuthenticated()) {
+                      <div class="space-y-3 rounded-2xl border border-[#EADFE3] bg-[#FAF8F9] p-4">
+                        <label for="buyer-address" class="block font-bold text-[#42202E]">Địa chỉ giao hàng</label>
+                        <select id="buyer-address" [ngModel]="buyerAddressChoice()" (ngModelChange)="selectBuyerAddress($event)" [disabled]="!!pendingOrder() || recipientSaving()" class="w-full rounded-xl border border-[#EBD3AE] bg-white px-3 py-3 text-sm">
+                          <option value="profile">Địa chỉ trong hồ sơ</option>
+                          @for (address of deliveryAddresses(); track address.id) { <option [value]="address.id">{{ address.address }}</option> }
+                          <option value="new">+ Thêm địa chỉ mới vào hồ sơ</option>
+                        </select>
+                        @if (buyerAddressChoice() !== 'new') {
+                          <p class="leading-relaxed text-slate-600">{{ buyerDeliveryAddress() || 'Bạn chưa có địa chỉ trong hồ sơ. Hãy thêm địa chỉ mới để giao hàng.' }}</p>
+                          <button type="button" (click)="selectBuyerAddress('new')" [disabled]="!!pendingOrder()" class="font-bold text-[#800020] disabled:opacity-50">+ Thêm địa chỉ mới</button>
+                          <a routerLink="/profile" fragment="delivery-addresses" class="ml-4 inline-block font-semibold text-[#800020] underline">Quản lý trong hồ sơ</a>
+                        }
+                        @if (recipientsLoading()) { <p role="status" class="text-slate-500">Đang tải địa chỉ đã lưu…</p> }
+                        @if (recipientError()) { <p role="alert" class="text-rose-700">{{ recipientError() }} <button type="button" (click)="loadRecipients()" class="underline">Tải lại</button></p> }
+                      </div>
+                    }
+                    @if (!authService.isAuthenticated() || buyerAddressChoice() === 'new') {
+                      <ng-container *ngTemplateOutlet="deliveryAddress" />
+                    } @else {
+                      <label class="block font-bold text-slate-700">Ghi chú gửi xưởng chế tác / Shipper<textarea [(ngModel)]="customerNote" [disabled]="!!pendingOrder()" rows="2" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 text-sm font-normal" placeholder="Ghi chú giao hàng…"></textarea></label>
+                      @if (recipientFormError()) { <p role="alert" class="text-rose-700">{{ recipientFormError() }}</p> }
+                      @if (recipientNotice()) { <p role="status" class="text-emerald-700">{{ recipientNotice() }}</p> }
+                    }
+                  </div>
+                }
+                @if (giftError()) { <p role="alert" class="mt-3 text-xs font-semibold text-rose-700">{{ giftError() }}</p> }
+              </section>
+            <section class="rounded-3xl border border-[#E6D2DA] bg-[#FCF7F9] p-5 sm:p-6">
+              <label class="flex cursor-pointer items-start gap-3">
+                <input type="checkbox" [ngModel]="directGift()" (ngModelChange)="setDirectGift($event)" [disabled]="!!pendingOrder() || isSubmitting()" class="mt-1 h-4 w-4 accent-[#800020]" />
+                <span><strong class="block text-sm text-[#552337]">Gửi đơn hàng này làm quà tặng trực tiếp cho người khác</strong>
+                  <span class="mt-1 block text-xs leading-relaxed text-[#846472]">{{ directGift() ? 'Giấu toàn bộ giá tiền · Người nhận không trả COD · Người đặt thanh toán trước 100%.' : 'Giao cho chính bạn. Giá hiển thị đầy đủ, thanh toán và hậu mãi theo quy định thông thường.' }}</span>
+                </span>
+              </label>
+            </section>
+            <ng-template #deliveryAddress>
+                <div class="space-y-3">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label for="recipient-province" class="font-bold text-slate-700 block mb-1">Tỉnh/Thành phố *</label>
+                      <select id="recipient-province" [ngModel]="provinceCode" (ngModelChange)="changeProvince($event)" [disabled]="!!pendingOrder() || recipientSaving() || provincesLoading()" [class.border-rose-500]="showRecipientValidation() && !provinceCode" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50">
+                        <option value="">{{ provincesLoading() ? 'Đang tải tỉnh/thành…' : 'Chọn tỉnh/thành phố' }}</option>
+                        @for (province of provinces(); track province.code) { <option [value]="province.code">{{ province.name }}</option> }
+                      </select>
+                      @if (showRecipientValidation() && !provinceCode) { <p class="mt-1 text-xs font-semibold text-rose-700">Chọn tỉnh/thành phố.</p> }
+                    </div>
+                    <div>
+                      <label for="recipient-ward" class="font-bold text-slate-700 block mb-1">Phường/Xã *</label>
+                      <select id="recipient-ward" [(ngModel)]="wardCode" [disabled]="!!pendingOrder() || recipientSaving() || !provinceCode || wardsLoading()" [class.border-rose-500]="showRecipientValidation() && !wardCode" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50">
+                        <option value="">{{ wardsLoading() ? 'Đang tải phường/xã…' : 'Chọn phường/xã' }}</option>
+                        @for (ward of wards(); track ward.code) { <option [value]="ward.code">{{ ward.name }}</option> }
+                      </select>
+                      @if (showRecipientValidation() && !wardCode) { <p class="mt-1 text-xs font-semibold text-rose-700">Chọn phường/xã.</p> }
+                    </div>
+                  </div>
+                  @if (directGift()) {
+                    <label class="block font-semibold text-slate-700">Quận/Huyện (nếu địa chỉ có)
+                      <input [(ngModel)]="districtName" [disabled]="!!pendingOrder()" maxlength="100" placeholder="Bổ sung quận/huyện theo địa chỉ người nhận" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-normal" />
+                    </label>
+                  }
+                  @if (locationError()) {
+                    <p role="alert" class="text-rose-700">{{ locationError() }} <button type="button" (click)="retryLocations()" class="underline font-semibold">Thử tải lại</button></p>
+                  }
+                  <div>
+                    <label for="recipient-street" class="font-bold text-slate-700 block mb-1">Số nhà, tên đường *</label>
+                    <input id="recipient-street" [(ngModel)]="street" [disabled]="!!pendingOrder() || recipientSaving()" maxlength="200" autocomplete="address-line1" [class.border-rose-500]="showRecipientValidation() && !streetValid()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50" placeholder="Ví dụ: 128 Đường Số 7, căn hộ A12">
+                    @if (showRecipientValidation() && !streetValid()) { <p class="mt-1 text-xs font-semibold text-rose-700">Nhập số nhà và tên đường (ít nhất 3 ký tự).</p> }
+                  </div>
+                  @if (customerAddress) { <p class="text-slate-500"><strong>Địa chỉ giao quà:</strong> {{ customerAddress }}</p> }
+                  @if (legacyAddress && !customerAddress) { <p class="text-slate-500">Địa chỉ hồ sơ: {{ legacyAddress }}. Vui lòng chọn tỉnh/thành và phường/xã để chuẩn hóa địa chỉ giao quà.</p> }
+                  @if (authService.isAuthenticated()) {
+                    <div class="flex flex-wrap items-center gap-3">
+                      <button type="button" (click)="saveRecipient()" [disabled]="!!pendingOrder() || recipientSaving() || recipientsLoading() || !recipientValid()" class="px-4 py-2.5 rounded-xl border border-[#EBD3AE] text-[#800020] bg-[#FFF5E1] hover:bg-[#FDF0D5] font-bold disabled:opacity-50 disabled:cursor-not-allowed">{{ recipientSaving() ? 'Đang lưu…' : directGift() ? 'Lưu người nhận vào danh bạ' : 'Lưu địa chỉ cho lần sau' }}</button>
+                      @if (recipientNotice()) { <span role="status" class="text-emerald-700">{{ recipientNotice() }}</span> }
+                    </div>
+                  }
+                  @if (recipientFormError()) { <p role="alert" class="text-rose-700">{{ recipientFormError() }}</p> }
+                </div>
+
+                <div>
+                  <label class="font-bold text-slate-700 block mb-1">Ghi chú gửi xưởng chế tác / Shipper</label>
+                  <textarea
+                    [(ngModel)]="customerNote"
+                    [disabled]="!!pendingOrder()"
+                    rows="2"
+                    class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
+                    placeholder="Ví dụ: Gọi trước khi giao 15 phút, quà tặng sinh nhật nên giao đúng ngày..."
+                  ></textarea>
+                </div>
+            </ng-template>
+
+            @if (directGift()) {
             <!-- Section 1: Customer & Delivery Address -->
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#EBD3AE]">
               <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
-                <span class="w-7 h-7 rounded-xl bg-[#800020] text-[#FFF5E1] flex items-center justify-center font-bold text-xs">1</span>
-                <h2 class="text-base sm:text-lg font-bold text-[#2B1A1A]">Thông Tin Người Nhận Quà</h2>
+                <span class="w-7 h-7 rounded-xl bg-[#800020] text-[#FFF5E1] flex items-center justify-center font-bold text-xs">2</span>
+                <h2 class="text-base sm:text-lg font-bold text-[#2B1A1A]">Thông tin người nhận quà</h2>
               </div>
 
               <div class="space-y-4 text-xs">
@@ -67,7 +173,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                     <div class="flex gap-2 items-center">
                       <select id="saved-recipient" [ngModel]="selectedRecipientId" (ngModelChange)="selectRecipient($event)" [disabled]="!!pendingOrder() || recipientsLoading() || recipientSaving()" class="min-w-0 flex-1 px-3 py-2.5 rounded-xl border border-[#EBD3AE] bg-white text-sm text-slate-800 disabled:bg-slate-50">
                         <option value="">{{ recipientsLoading() ? 'Đang tải danh bạ…' : '+ Nhập người nhận mới' }}</option>
-                        @for (recipient of recipients(); track recipient.id) {
+                        @for (recipient of giftRecipients(); track recipient.id) {
                           <option [value]="recipient.id">{{ recipient.name }} · {{ recipient.phone }} · {{ recipient.address }}</option>
                         }
                       </select>
@@ -75,7 +181,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                         <button type="button" (click)="removeRecipient()" [disabled]="!!pendingOrder() || recipientSaving()" class="text-rose-600 font-semibold p-2 disabled:opacity-50" aria-label="Xóa người nhận đã chọn khỏi danh bạ">Xóa</button>
                       }
                     </div>
-                    <p class="text-slate-500">Chọn người nhận đã lưu để tự điền tên, số điện thoại và địa chỉ.</p>
+                    <p class="text-slate-500">Chọn người nhận đã lưu để tự điền tên, số điện thoại và địa chỉ. <a routerLink="/profile" fragment="recipient-addresses" class="font-semibold text-[#800020] underline">Quản lý danh bạ trong hồ sơ</a></p>
                     @if (recipientError()) {
                       <p role="alert" class="text-rose-700">{{ recipientError() }} <button type="button" (click)="loadRecipients()" [disabled]="recipientsLoading()" class="underline font-semibold">Tải lại danh bạ</button></p>
                     }
@@ -108,77 +214,18 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   </div>
                 </div>
 
-                <div>
-                  <label class="font-bold text-slate-700 block mb-1">Địa chỉ email (nhận hóa đơn & mã đơn tracking)</label>
-                  <input 
-                    [(ngModel)]="customerEmail"
-                    [disabled]="!!pendingOrder()"
-                    type="email"
-                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
-                    placeholder="minhanh@gmail.com"
-                  >
-                </div>
-
-                <div class="space-y-3">
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label for="recipient-province" class="font-bold text-slate-700 block mb-1">Tỉnh/Thành phố *</label>
-                      <select id="recipient-province" [ngModel]="provinceCode" (ngModelChange)="changeProvince($event)" [disabled]="!!pendingOrder() || recipientSaving() || provincesLoading()" [class.border-rose-500]="showRecipientValidation() && !provinceCode" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50">
-                        <option value="">{{ provincesLoading() ? 'Đang tải tỉnh/thành…' : 'Chọn tỉnh/thành phố' }}</option>
-                        @for (province of provinces(); track province.code) { <option [value]="province.code">{{ province.name }}</option> }
-                      </select>
-                      @if (showRecipientValidation() && !provinceCode) { <p class="mt-1 text-xs font-semibold text-rose-700">Chọn tỉnh/thành phố.</p> }
-                    </div>
-                    <div>
-                      <label for="recipient-ward" class="font-bold text-slate-700 block mb-1">Phường/Xã *</label>
-                      <select id="recipient-ward" [(ngModel)]="wardCode" [disabled]="!!pendingOrder() || recipientSaving() || !provinceCode || wardsLoading()" [class.border-rose-500]="showRecipientValidation() && !wardCode" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50">
-                        <option value="">{{ wardsLoading() ? 'Đang tải phường/xã…' : 'Chọn phường/xã' }}</option>
-                        @for (ward of wards(); track ward.code) { <option [value]="ward.code">{{ ward.name }}</option> }
-                      </select>
-                      @if (showRecipientValidation() && !wardCode) { <p class="mt-1 text-xs font-semibold text-rose-700">Chọn phường/xã.</p> }
-                    </div>
-                  </div>
-                  @if (locationError()) {
-                    <p role="alert" class="text-rose-700">{{ locationError() }} <button type="button" (click)="retryLocations()" class="underline font-semibold">Thử tải lại</button></p>
-                  }
-                  <div>
-                    <label for="recipient-street" class="font-bold text-slate-700 block mb-1">Số nhà, tên đường *</label>
-                    <input id="recipient-street" [(ngModel)]="street" [disabled]="!!pendingOrder() || recipientSaving()" maxlength="200" autocomplete="address-line1" [class.border-rose-500]="showRecipientValidation() && !streetValid()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50" placeholder="Ví dụ: 128 Đường Số 7, căn hộ A12">
-                    @if (showRecipientValidation() && !streetValid()) { <p class="mt-1 text-xs font-semibold text-rose-700">Nhập số nhà và tên đường (ít nhất 3 ký tự).</p> }
-                  </div>
-                  @if (customerAddress) { <p class="text-slate-500"><strong>Địa chỉ giao quà:</strong> {{ customerAddress }}</p> }
-                  @if (legacyAddress && !customerAddress) { <p class="text-slate-500">Địa chỉ hồ sơ: {{ legacyAddress }}. Vui lòng chọn tỉnh/thành và phường/xã để chuẩn hóa địa chỉ giao quà.</p> }
-                  @if (authService.isAuthenticated()) {
-                    <div class="flex flex-wrap items-center gap-3">
-                      <button type="button" (click)="saveRecipient()" [disabled]="!!pendingOrder() || recipientSaving() || recipientsLoading() || !recipientValid()" class="px-4 py-2.5 rounded-xl border border-[#EBD3AE] text-[#800020] bg-[#FFF5E1] hover:bg-[#FDF0D5] font-bold disabled:opacity-50 disabled:cursor-not-allowed">{{ recipientSaving() ? 'Đang lưu…' : 'Lưu người nhận vào danh bạ' }}</button>
-                      @if (recipientNotice()) { <span role="status" class="text-emerald-700">{{ recipientNotice() }}</span> }
-                    </div>
-                  }
-                  @if (recipientFormError()) { <p role="alert" class="text-rose-700">{{ recipientFormError() }}</p> }
-                </div>
-
-                <div>
-                  <label class="font-bold text-slate-700 block mb-1">Ghi chú gửi xưởng chế tác / Shipper</label>
-                  <textarea 
-                    [(ngModel)]="customerNote"
-                    [disabled]="!!pendingOrder()"
-                    rows="2"
-                    class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-[#800020] focus:outline-none text-sm text-slate-800 disabled:bg-slate-50"
-                    placeholder="Ví dụ: Gọi trước khi giao 15 phút, quà tặng sinh nhật nên giao đúng ngày..."
-                  ></textarea>
-                </div>
+                <ng-container *ngTemplateOutlet="deliveryAddress" />
               </div>
             </div>
 
+            }
+
+            @if (directGift()) {
             <section class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#EBD3AE] space-y-4" aria-labelledby="greeting-card-title">
-              <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" [ngModel]="includeGreetingCard()" (ngModelChange)="includeGreetingCard.set($event)" [disabled]="!!pendingOrder() || isSubmitting()" class="w-4 h-4 accent-[#800020]">
-                <span>
-                  <span id="greeting-card-title" class="block text-base font-bold text-[#2B1A1A]">Thêm thiệp chúc mừng</span>
-                  <span class="text-xs text-slate-500">Chọn phong cách, viết tiêu đề và lời chúc để xưởng in kèm trong gói quà.</span>
-                </span>
-              </label>
-              @if (includeGreetingCard()) {
+              <div>
+                <h2 id="greeting-card-title" class="text-base font-bold text-[#2B1A1A]">Thiệp chúc mừng</h2>
+                <p class="mt-1 text-xs text-slate-500">Chọn phong cách, viết tiêu đề và lời chúc để xưởng in kèm trong gói quà.</p>
+              </div>
                 @if (greetingCardTemplatesLoading()) {
                   <p role="status" class="text-xs text-slate-500">Đang tải mẫu thiệp…</p>
                 }
@@ -203,8 +250,8 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   </div>
                   <div>
                     <label for="greeting-message" class="block text-xs font-bold text-slate-700 mb-1">Lời chúc trên thiệp *</label>
-                    <textarea id="greeting-message" [(ngModel)]="greetingCardMessage" rows="4" maxlength="300" aria-describedby="greeting-message-help" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:border-[#800020] focus:outline-none text-sm" placeholder="Viết điều bạn muốn gửi gắm đến người nhận…"></textarea>
-                    <p id="greeting-message-help" class="text-xs text-slate-500 mt-1">{{ greetingCardMessage.length }}/300 ký tự · Tối đa 6 dòng. Nội dung được in đúng như bạn nhập.</p>
+                    <textarea id="greeting-message" [(ngModel)]="greetingCardMessage" rows="4" [attr.maxlength]="directGift() ? 200 : 300" aria-describedby="greeting-message-help" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:border-[#800020] focus:outline-none text-sm" placeholder="Viết điều bạn muốn gửi gắm đến người nhận…"></textarea>
+                    <p id="greeting-message-help" class="text-xs text-slate-500 mt-1">{{ greetingCardMessage.length }}/{{ directGift() ? 200 : 300 }} ký tự · Tối đa 6 dòng. Nội dung được in đúng như bạn nhập.</p>
                     @if (greetingCardError()) { <p role="alert" class="text-xs text-rose-700 mt-2">{{ greetingCardError() }}</p> }
                   </div>
                 </fieldset>
@@ -212,13 +259,13 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   <p class="text-xs font-bold text-slate-500">Xem trước thiệp</p>
                   <app-greeting-card-preview [templateId]="template.id" [heading]="greetingCardHeading.trim()" [message]="greetingCardMessage.trim()" />
                 }
-              }
             </section>
+            }
 
             <!-- Section 2: Shipping Method Selector (AC 4, PF Step 5-6) -->
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#EBD3AE]">
               <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
-                <span class="w-7 h-7 rounded-xl bg-[#800020] text-[#FFF5E1] flex items-center justify-center font-bold text-xs">2</span>
+                <span class="w-7 h-7 rounded-xl bg-[#800020] text-[#FFF5E1] flex items-center justify-center font-bold text-xs">{{ directGift() ? 3 : 2 }}</span>
                 <h2 class="text-base sm:text-lg font-bold text-[#2B1A1A]">Lựa Chọn Phương Thức Giao Hàng</h2>
               </div>
 
@@ -261,12 +308,14 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
             <!-- Section 3: Payment Method Selector (BR-02, BR-03, BR-04, BR-07) -->
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#EBD3AE]">
               <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
-                <span class="w-7 h-7 rounded-xl bg-[#800020] text-[#FFF5E1] flex items-center justify-center font-bold text-xs">3</span>
+                <span class="w-7 h-7 rounded-xl bg-[#800020] text-[#FFF5E1] flex items-center justify-center font-bold text-xs">{{ directGift() ? 4 : 3 }}</span>
                 <h2 class="text-base sm:text-lg font-bold text-[#2B1A1A]">Phương Thức Thanh Toán</h2>
               </div>
 
               <!-- Structure Notice Banner -->
-              @if (hasCustomItems()) {
+              @if (directGift()) {
+                <div class="mb-4 rounded-2xl border border-[#E6D2DA] bg-[#FCF7F9] p-4 text-xs leading-relaxed text-[#552337]"><strong>Người đặt thanh toán trước 100%.</strong> Người nhận không phải trả tiền. Giá được ẩn trên phiếu giao và trang dành cho người nhận. Gói quà, ruy băng và thiệp đi kèm; mẫu hộp theo lựa chọn trong giỏ.</div>
+              } @else if (hasCustomItems()) {
                 <div class="mb-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium flex items-start gap-2.5">
                   <span class="material-symbols-outlined text-amber-600 text-lg shrink-0 mt-0.5">auto_awesome</span>
                   <div>
@@ -349,6 +398,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 </div>
 
                 <!-- Group 2: COD -->
+                @if (!directGift()) {
                 <div 
                   (click)="!pendingOrder() && selectedPaymentMethod.set('COD')"
                   class="p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3"
@@ -367,6 +417,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                     </p>
                   </div>
                 </div>
+                }
               </div>
             </div>
           </div>
@@ -409,6 +460,12 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
               </div>
 
               @if (!pendingOrder() && !isBuyNowMode()) { <app-cart-vouchers /> }
+              @if (!isBuyNowMode() && cartService.cart()?.packaging; as plan) {
+                @if (plan.boxCount || plan.valid === false) {
+                  <section class="rounded-xl border border-[#E8D7DD] bg-[#FCF7F9] p-3 text-xs"><h4 class="font-bold text-[#800020]">Đóng gói quà tặng · {{ plan.boxCount || 0 }} hộp</h4>@for (box of plan.boxes || []; track $index) { <p class="mt-2 text-slate-600">{{ box.name }} · Size {{ box.size }} × {{ box.quantity }}</p> }@if (plan.valid === false) { <p role="alert" class="mt-2 text-rose-700">{{ plan.notice }}</p> }<a routerLink="/cart" class="mt-2 inline-block font-semibold text-[#800020] underline">Chỉnh sửa đóng gói</a></section>
+                }
+              }
+
               @if (shippingSyncPending()) { <p role="status" class="text-xs text-[#800020]">Đang cập nhật giao hàng…</p> }
               <!-- Dynamic Calculated Pricing Breakdown -->
               <div class="flex flex-col gap-2 pt-3 border-t border-slate-100 text-xs text-slate-600">
@@ -416,6 +473,8 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   <span>Tổng tiền hàng:</span>
                   <span class="font-bold text-slate-800">{{ displayPricing().itemsTotal | number:'1.0-0' }}đ</span>
                 </div>
+
+
 
                 @if ((displayPricing().giftWrapFee || 0) > 0) {
                   <div class="flex items-center justify-between text-[#800020]"><span>Phí hộp quà:</span><strong>{{ displayPricing().giftWrapFee | number:'1.0-0' }}đ</strong></div>
@@ -471,7 +530,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
               @if (!pendingOrder()) {
                 <button 
                   (click)="submitOrder()"
-                  [disabled]="isSubmitting() || shippingSyncPending() || cartService.quantitySyncPending() || cartService.voucherSyncPending()"
+                  [disabled]="isSubmitting() || shippingSyncPending() || cartService.quantitySyncPending() || cartService.voucherSyncPending() || cartService.packagingSyncPending() || cartService.cart()?.packaging?.valid === false"
                   class="w-full py-4 px-4 bg-[#800020] hover:bg-[#660019] disabled:opacity-50 text-[#FFF5E1] rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#800020]/20 transition-all active:scale-95 cursor-pointer"
                 >
                   @if (isSubmitting()) {
@@ -624,7 +683,15 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private recipientService = inject(RecipientService);
   private readonly pageSubscriptions = new Subscription();
   private wardsSubscription?: Subscription;
-  includeGreetingCard = signal(false);
+  directGift = signal(false);
+  buyerName = '';
+  buyerPhone = '';
+  buyerEmail = '';
+  giftAnonymous = false;
+  districtName = '';
+  giftError = signal('');
+  private selfDelivery: any = null;
+  includeGreetingCard = computed(() => this.directGift());
   greetingCardTemplateId = signal('BIRTHDAY');
   greetingCardHeading = 'Gửi bạn thật nhiều yêu thương';
   greetingCardMessage = '';
@@ -655,7 +722,31 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   showRecipientValidation = signal(false);
   locationError = signal<string | null>(null);
 
+  deliveryAddresses = computed(() => this.recipients().filter(item => item.purpose === 'DELIVERY'));
+  giftRecipients = computed(() => this.recipients().filter(item => item.purpose !== 'DELIVERY'));
+  buyerAddressChoice = signal('profile');
+  profileDeliveryAddress(): string {
+    const address = this.authService.currentUser?.()?.address;
+    if (!address) return '';
+    const street = (address.detailAddress || address.street || '').trim();
+    return street && address.city?.trim() ? [street, address.ward, address.district, address.city].filter(Boolean).join(', ') : '';
+  }
+  buyerDeliveryAddress(): string {
+    return this.buyerAddressChoice() === 'profile' ? this.profileDeliveryAddress() : this.deliveryAddresses().find(item => item.id === this.buyerAddressChoice())?.address || '';
+  }
+  usesSavedBuyerAddress(): boolean {
+    return !this.directGift() && this.authService.isAuthenticated() && this.buyerAddressChoice() !== 'new' && !!this.buyerDeliveryAddress();
+  }
+  selectBuyerAddress(choice: string): void {
+    if (this.pendingOrder() || this.recipientSaving()) return;
+    this.buyerAddressChoice.set(choice);
+    this.recipientFormError.set(null); this.recipientNotice.set(null); this.showRecipientValidation.set(false);
+    if (choice === 'new') {
+      this.selectedRecipientId = ''; this.street = ''; this.legacyAddress = ''; this.changeProvince('');
+    }
+  }
   get customerAddress(): string {
+    if (this.usesSavedBuyerAddress()) return this.buyerDeliveryAddress();
     const province = this.provinces().find(item => item.code === this.provinceCode);
     const ward = this.wards().find(item => item.code === this.wardCode);
     return province && ward && this.street.trim() ? `${this.street.trim().replace(/\s+/g, ' ')}, ${ward.name}, ${province.name}` : '';
@@ -768,6 +859,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return {
       itemsTotal,
       voucherDiscount,
+      giftWrapFee: this.isBuyNowMode() ? 0 : (this.cartService.pricing().giftWrapFee || 0),
       shippingFee: this.calculatedShippingFee(),
       baseShippingFee: this.isBuyNowMode() ? this.calculatedShippingFee() : (this.cartService.pricing().baseShippingFee ?? this.calculatedShippingFee()),
       shippingDiscount: this.isBuyNowMode() ? 0 : (this.cartService.pricing().shippingDiscount || 0),
@@ -787,7 +879,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       : this.cartService.pricing().itemsTotal;
     const voucherDiscount = this.isBuyNowMode() ? 0 : this.cartService.pricing().voucherDiscount;
     const shipping = this.calculatedShippingFee();
-    return Math.max(0, itemsTotal - voucherDiscount + shipping);
+    return Math.max(0, itemsTotal - voucherDiscount + shipping + (this.isBuyNowMode() ? 0 : (this.cartService.pricing().giftWrapFee || 0)));
   });
 
   // Calculate required deposit amount based on BP-03 rules
@@ -796,7 +888,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       return this.pendingOrder().pricing.depositAmount;
     }
     const total = this.calculatedTotalAmount();
-    if (this.selectedPaymentMethod() !== 'COD') return total;
+    if (this.directGift() || this.selectedPaymentMethod() !== 'COD') return total;
     const items = this.displayItems();
     const customDeposit = items.reduce((sum: number, item: any) => {
       const isCustom = this.isBuyNowMode()
@@ -807,6 +899,36 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return Math.min(total, customDeposit);
   });
 
+  setDirectGift(enabled: boolean) {
+    if (this.pendingOrder() || this.isSubmitting() || enabled === this.directGift()) return;
+    this.giftError.set('');
+    if (enabled) {
+      this.selfDelivery = { customerName: this.customerName, customerPhone: this.customerPhone, customerEmail: this.customerEmail, street: this.street, provinceCode: this.provinceCode, wardCode: this.wardCode, legacyAddress: this.legacyAddress, selectedRecipientId: this.selectedRecipientId, payment: this.selectedPaymentMethod() };
+      this.buyerName = this.customerName; this.buyerPhone = this.customerPhone; this.buyerEmail = this.customerEmail;
+      this.customerName = ''; this.customerPhone = ''; this.street = ''; this.legacyAddress = ''; this.selectedRecipientId = '';
+      this.changeProvince('');
+      this.selectedPaymentMethod.set('VIETQR');
+    } else if (this.selfDelivery) {
+      const previous = this.selfDelivery;
+      this.customerName = this.buyerName; this.customerPhone = this.buyerPhone; this.customerEmail = this.buyerEmail;
+      this.street = previous.street; this.legacyAddress = previous.legacyAddress; this.selectedRecipientId = previous.selectedRecipientId;
+      this.changeProvince(previous.provinceCode, previous.wardCode);
+      this.selectedPaymentMethod.set(previous.payment); this.districtName = '';
+    }
+    this.directGift.set(enabled);
+    this.showRecipientValidation.set(false); this.recipientFormError.set(null);
+  }
+  private giftFormValid() {
+    const phone = (value: string) => value.replace(/[\s().-]/g, '').replace(/^\+?84/, '0');
+    if (this.buyerName.trim().length < 2 || !/^0[35789]\d{8}$/.test(phone(this.buyerPhone)) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.buyerEmail.trim())) {
+      this.giftError.set('Nhập đầy đủ họ tên, số điện thoại và email hợp lệ của người đặt.'); return false;
+    }
+    if (phone(this.buyerPhone) === phone(this.customerPhone)) { this.giftError.set('Người nhận quà cần có số điện thoại khác người đặt.'); return false; }
+    if (this.selectedPaymentMethod() === 'COD') { this.giftError.set('Gửi quà trực tiếp phải thanh toán trước 100%, không dùng COD.'); return false; }
+    if (this.giftAnonymous && `${this.greetingCardHeading} ${this.greetingCardMessage}`.toLocaleLowerCase('vi').includes(this.buyerName.trim().toLocaleLowerCase('vi'))) { this.giftError.set('Vui lòng bỏ tên người đặt khỏi nội dung thiệp ẩn danh.'); return false; }
+    return true;
+  }
+
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       this.isBuyNowQuery.set(params['buyNow'] === '1');
@@ -814,12 +936,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
     const user = this.authService.currentUser();
     if (user) {
-      this.customerName = user.name || '';
+      this.customerName = user.fullName || user.name || '';
       this.customerPhone = user.phone || '';
       this.customerEmail = user.email || '';
-      if (user.address?.street) {
-        this.street = user.address.street;
-        this.legacyAddress = [user.address.street, user.address.ward, user.address.district, user.address.city].filter(Boolean).join(', ');
+      if (user.address?.detailAddress || user.address?.street) {
+        this.street = user.address.detailAddress || user.address.street || '';
+        this.legacyAddress = [this.street, user.address.ward, user.address.district, user.address.city].filter(Boolean).join(', ');
       }
     }
     this.loadProvinces();
@@ -894,7 +1016,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   recipientValid(): boolean {
-    return this.recipientNameValid() && this.recipientPhoneValid() && this.streetValid() && !!this.provinceCode && !!this.wardCode && !!this.customerAddress && !this.wardsLoading();
+    return this.recipientNameValid() && this.recipientPhoneValid() && (this.usesSavedBuyerAddress() || (this.streetValid() && !!this.provinceCode && !!this.wardCode && !!this.customerAddress && !this.wardsLoading()));
   }
 
   recipientNameValid(): boolean { return this.customerName.trim().length >= 2 && this.customerName.trim().length <= 100; }
@@ -907,6 +1029,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.recipientNotice.set(null);
     this.recipientFormError.set(null);
     const input = {
+      purpose: this.directGift() ? 'RECIPIENT' as const : 'DELIVERY' as const,
       name: this.customerName.trim().replace(/\s+/g, ' '),
       phone: this.customerPhone.replace(/[\s().-]/g, '').replace(/^\+?84/, '0'),
       provinceCode: this.provinceCode, wardCode: this.wardCode, street: this.street.trim().replace(/\s+/g, ' '),
@@ -914,9 +1037,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.pageSubscriptions.add(this.recipientService.save(input).subscribe({
       next: list => {
         this.recipients.set(list);
-        this.selectedRecipientId = list.find(item => item.phone === input.phone && item.name.toLocaleLowerCase('vi') === input.name.toLocaleLowerCase('vi') && item.provinceCode === input.provinceCode && item.wardCode === input.wardCode && item.street.toLocaleLowerCase('vi') === input.street.toLocaleLowerCase('vi'))?.id || '';
+        this.selectedRecipientId = list.find(item => (item.purpose || 'RECIPIENT') === input.purpose && item.phone === input.phone && item.name.toLocaleLowerCase('vi') === input.name.toLocaleLowerCase('vi') && item.provinceCode === input.provinceCode && item.wardCode === input.wardCode && item.street.toLocaleLowerCase('vi') === input.street.toLocaleLowerCase('vi'))?.id || '';
         this.recipientSaving.set(false);
-        this.recipientNotice.set('Đã lưu người nhận. Lần sau bạn chỉ cần chọn từ danh bạ.');
+        if (!this.directGift() && this.buyerAddressChoice() === 'new' && this.selectedRecipientId) this.buyerAddressChoice.set(this.selectedRecipientId);
+        this.recipientNotice.set(this.directGift() ? 'Đã lưu vào danh bạ người nhận trong hồ sơ.' : 'Đã lưu địa chỉ giao hàng vào hồ sơ.');
       },
       error: err => { this.recipientSaving.set(false); this.recipientFormError.set(typeof err.error?.message === 'string' ? err.error.message : 'Không lưu được người nhận. Vui lòng thử lại.'); },
     }));
@@ -933,8 +1057,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   submitOrder(): void {
+    if (!this.isBuyNowMode() && (this.cartService.cart()?.packaging?.valid === false || this.cartService.packagingSyncPending?.())) {
+      this.orderError.set('Vui lòng quay lại giỏ hàng để cập nhật cách đóng gói.'); return;
+    }
     if (this.isSubmitting() || this.pendingOrder() || this.shippingSyncPending() || this.cartService.quantitySyncPending() || this.cartService.voucherSyncPending()) return;
     this.greetingCardError.set(null);
+    if (this.directGift() && !this.giftFormValid()) return;
     if (this.includeGreetingCard()) {
       const heading = this.greetingCardHeading.trim();
       if (!heading || heading.length > 80) {
@@ -942,8 +1070,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         return;
       }
       const message = this.greetingCardMessage.trim().replace(/\r\n?/g, '\n');
-      if (!this.selectedGreetingCardTemplate() || !message || message.length > 300 || message.split('\n').length > 6) {
-        this.greetingCardError.set('Vui lòng chọn mẫu thiệp và nhập lời chúc từ 1 đến 300 ký tự, tối đa 6 dòng.');
+      if (!this.selectedGreetingCardTemplate() || !message || message.length > (this.directGift() ? 200 : 300) || message.split('\n').length > 6) {
+        this.greetingCardError.set(`Vui lòng chọn mẫu thiệp và nhập lời chúc từ 1 đến ${this.directGift() ? 200 : 300} ký tự, tối đa 6 dòng.`);
         return;
       }
     }
@@ -977,15 +1105,15 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.paymentError.set(null);
 
     const orderPayload: any = {
+      ...(this.directGift() ? { gift: { enabled: true, anonymous: this.giftAnonymous, sender: { name: this.buyerName.trim(), phone: this.buyerPhone.trim(), email: this.buyerEmail.trim() } } } : {}),
       ...(this.includeGreetingCard() ? { greetingCard: { templateId: this.greetingCardTemplateId(), heading: this.greetingCardHeading.trim().replace(/\s+/g, ' '), message: this.greetingCardMessage.trim() } } : {}),
       customerInfo: {
         name: this.customerName.trim(),
         phone: this.customerPhone.replace(/[\s().-]/g, '').replace(/^\+?84/, '0'),
-        email: this.customerEmail.trim(),
+        email: this.directGift() ? '' : this.customerEmail.trim(),
+        ...(this.directGift() ? { districtName: this.districtName.trim() } : {}),
         address: this.customerAddress.trim(),
-        provinceCode: this.provinceCode,
-        wardCode: this.wardCode,
-        street: this.street.trim(),
+        ...(!this.usesSavedBuyerAddress() ? { provinceCode: this.provinceCode, wardCode: this.wardCode, street: this.street.trim() } : {}),
         note: this.customerNote.trim()
       },
       paymentMode: this.calculatedDepositAmount() < this.calculatedTotalAmount() ? 'DEPOSIT_50' : 'FULL_PAYMENT',
@@ -1022,7 +1150,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
         // Standard product + COD => No QR payment modal needed, go directly to completion page (AF3)
         if (order.pricing.depositAmount === 0) {
-          this.router.navigate(['/orders', order.orderCode], { state: { lookupPhone: order.customerInfo?.phone } });
+          this.router.navigate(['/orders', order.orderCode], { state: { lookupPhone: (order.gift?.enabled ? order.gift.sender.phone : order.customerInfo?.phone) } });
         } else {
           // Requires Online Payment / QR Deposit => Display VietQR Payment Modal (AF2, AF4)
           this.pendingOrder.set(order);
@@ -1172,12 +1300,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     if (!order) return;
     if (this.demoPayment) {
       this.paymentPolling = timer(4000).pipe(
-        switchMap(() => this.orderService.simulateDemoPayment(order.orderCode, order.customerInfo?.phone).pipe(timeout(10000)))
+        switchMap(() => this.orderService.simulateDemoPayment(order.orderCode, (order.gift?.enabled ? order.gift.sender.phone : order.customerInfo?.phone)).pipe(timeout(10000)))
       ).subscribe({
         next: latest => {
           if (latest.paymentStatus === 'PAID_FULL' || latest.paymentStatus === 'PARTIALLY_PAID_DEPOSIT_50') {
             this.showPaymentModal.set(false);
-            this.router.navigate(['/payment-result', latest.orderCode], { state: { lookupPhone: order.customerInfo?.phone } });
+            this.router.navigate(['/payment-result', latest.orderCode], { state: { lookupPhone: (order.gift?.enabled ? order.gift.sender.phone : order.customerInfo?.phone) } });
           } else {
             this.paymentError.set('Giao dịch mô phỏng chưa được xác nhận. Vui lòng thử lại.');
           }
@@ -1188,7 +1316,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     }
     this.paymentWaitStarted = Date.now();
     this.paymentPolling = timer(0, 5000).pipe(
-      exhaustMap(() => this.orderService.getOrderByCode(order.orderCode, order.customerInfo?.phone).pipe(
+      exhaustMap(() => this.orderService.getOrderByCode(order.orderCode, (order.gift?.enabled ? order.gift.sender.phone : order.customerInfo?.phone)).pipe(
         timeout(10000),
         catchError(() => of(null))
       ))
@@ -1201,14 +1329,14 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           this.paymentPolling?.unsubscribe();
           this.showPaymentModal.set(false);
           this.router.navigate(['/payment-result', latest.orderCode], {
-            state: { lookupPhone: order.customerInfo?.phone }
+            state: { lookupPhone: (order.gift?.enabled ? order.gift.sender.phone : order.customerInfo?.phone) }
           });
           return;
         }
         if (['CANCELLED', 'RETURNED_BP06', 'DELIVERED'].includes(latest.orderStatus) || latest.paymentStatus === 'REFUNDED') {
           this.paymentPolling?.unsubscribe();
           this.showPaymentModal.set(false);
-          this.router.navigate(['/orders', latest.orderCode], { state: { lookupPhone: order.customerInfo?.phone } });
+          this.router.navigate(['/orders', latest.orderCode], { state: { lookupPhone: (order.gift?.enabled ? order.gift.sender.phone : order.customerInfo?.phone) } });
           return;
         }
       }

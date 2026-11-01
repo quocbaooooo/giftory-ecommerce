@@ -16,8 +16,8 @@ function fixture(depositAmount = 50000) {
     _id: 'demo-order', orderCode: 'GF-DEMO', userId: { toString: () => 'owner' },
     customerInfo: { phone: '0912345678' },
     pricing: { depositAmount, totalAmount: 100000 },
-    paymentStatus: PaymentStatus.UNPAID, orderStatus: OrderStatus.AWAITING_CONFIRMATION,
-    timeline: [{ title: 'Đặt hàng' }, { title: 'Chờ thanh toán' }],
+    paymentStatus: PaymentStatus.UNPAID, orderStatus: OrderStatus.AWAITING_CONFIRMATION, fulfillmentStatus: 'AWAITING_CONFIRMATION',
+    timeline: [{ title: 'Đặt hàng', completed: true, timestamp: new Date() }, { title: 'Chờ thanh toán', completed: false }, { title: 'Bàn giao Shipper vận chuyển', completed: false, timestamp: new Date(Date.now() + 86400000) }],
   };
   let writes = 0;
   const model = {
@@ -26,6 +26,7 @@ function fixture(depositAmount = 50000) {
       if (order.paymentStatus !== filter.paymentStatus) return null;
       writes++;
       Object.assign(order, update.$set);
+      if (update.$push?.timeline) order.timeline.push(update.$push.timeline);
       return order;
     } }),
   };
@@ -40,16 +41,28 @@ function fixture(depositAmount = 50000) {
       const { service, order } = fixture(amount);
       await service.processDemoPayment(order.orderCode, undefined, '0912345678');
       assert.equal(order.paymentStatus, status);
-      assert.equal(order.timeline[1].completed, true);
+      assert.equal(order.orderStatus, OrderStatus.AWAITING_CONFIRMATION);
+      assert.equal(order.fulfillmentStatus, 'AWAITING_CONFIRMATION');
+      assert.equal(order.timeline.length, 4);
+      assert.equal(order.timeline[1].completed, false);
+      assert.equal(order.timeline[2].completed, false);
+      assert.equal(order.timeline.at(-1).completed, true);
       assert.match(order.timeline.at(-1).title, /mô phỏng/);
     }
+  });
+  await test('payment preserves progress already recorded by admin', async () => {
+    const f = fixture();
+    Object.assign(f.order, { orderStatus: 'CONFIRMED', fulfillmentStatus: 'PACKAGED' });
+    await f.service.processDemoPayment('GF-DEMO', 'owner');
+    assert.equal(f.order.orderStatus, 'CONFIRMED');
+    assert.equal(f.order.fulfillmentStatus, 'PACKAGED');
   });
   await test('retries and concurrent confirmations do not double-write', async () => {
     const f = fixture();
     await Promise.all(Array.from({ length: 3 }, () => f.service.processDemoPayment('GF-DEMO', 'owner')));
     await f.service.processDemoPayment('GF-DEMO', 'owner');
     assert.equal(f.writes(), 1);
-    assert.equal(f.order.timeline.length, 3);
+    assert.equal(f.order.timeline.length, 4);
   });
   await test('wrong guest phone cannot confirm an order', async () => {
     const f = fixture();

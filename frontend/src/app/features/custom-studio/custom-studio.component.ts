@@ -8,6 +8,7 @@ import { CustomStudioService } from '../../core/services/custom-studio.service';
 import { CartService } from '../../core/services/cart.service';
 import { ProductService } from '../../core/services/product.service';
 import { AuthService } from '../../core/services/auth.service';
+import { DialogFocusDirective } from '../../shared/components/dialog-focus.directive';
 import { Product, StudioAsset, StudioGraphic, StudioTextBlock, AreaBox } from '../../core/models';
 
 interface CustomPattern {
@@ -28,7 +29,7 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
 @Component({
   selector: 'app-custom-studio',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, DialogFocusDirective],
   styles: [`
     :host {
       display: flex;
@@ -74,15 +75,12 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
         </div>
 
         <!-- Switch directly between custom products -->
-        <label class="flex h-10 min-w-0 items-center gap-2 rounded-xl border border-[#EBD3AE] bg-[#FAF7F2] px-3 text-[11px] font-semibold text-[#800020]">
-          <span class="material-symbols-outlined text-[17px]">storefront</span>
-          <span class="sr-only">Chọn sản phẩm hỗ trợ custom</span>
-          <select [ngModel]="activeTemplate()?._id || ''" (ngModelChange)="selectTemplateById($event)" aria-label="Chọn sản phẩm hỗ trợ custom" class="h-8 w-[150px] max-w-[calc(100vw-190px)] appearance-none border-0 bg-transparent text-[11px] font-bold text-[#800020] outline-none focus:border-0 focus:outline-none focus:ring-0 sm:w-[250px] sm:max-w-[250px] sm:text-xs">
-            @for (tpl of templates(); track tpl._id) {
-              <option [value]="tpl._id">{{ tpl.name }}</option>
-            }
-          </select>
-        </label>
+        <button type="button" (click)="productSearch.set(''); showProductPicker.set(true)" aria-label="Chọn sản phẩm hỗ trợ custom" aria-haspopup="dialog"
+          class="flex h-10 min-w-0 items-center gap-2 rounded-xl border border-[#EBD3AE] bg-[#FAF7F2] px-3 text-xs font-semibold text-[#800020] hover:bg-[#FFF5E1]">
+          <span class="material-symbols-outlined text-[17px]" aria-hidden="true">storefront</span>
+          <span class="max-w-[180px] truncate sm:max-w-[250px]">{{ activeTemplate()?.name || 'Chọn sản phẩm' }}</span>
+          <span class="material-symbols-outlined text-base" aria-hidden="true">open_in_new</span>
+        </button>
 
         <!-- Right: Status & Quick Actions -->
         <div class="flex items-center gap-2">
@@ -813,6 +811,39 @@ type StudioToolTab = 'COLOR' | 'TEXT' | 'IMAGE' | 'GRAPHICS' | 'SUMMARY';
 
       </div>
 
+      @if (showProductPicker()) {
+        <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-[#21131A]/55 p-3 backdrop-blur-sm sm:p-6" (click)="showProductPicker.set(false)">
+          <section appDialogFocus role="dialog" aria-modal="true" aria-labelledby="studio-product-title"
+            class="flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-[#EBD3AE] bg-[#FAF7F2] shadow-2xl"
+            (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" (keydown.escape)="showProductPicker.set(false)">
+            <header class="flex items-start justify-between gap-4 border-b border-[#EBD3AE]/60 bg-white p-5">
+              <div><p class="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#9C6E7E]">Giftory Studio</p>
+                <h2 id="studio-product-title" class="text-xl font-bold text-[#42202E]">Chọn sản phẩm để thiết kế</h2>
+                <p class="mt-2 text-xs leading-relaxed text-slate-500">Đổi sản phẩm sẽ bắt đầu thiết kế mới. Đóng cửa sổ để tiếp tục thiết kế hiện tại.</p>
+              </div>
+              <button type="button" aria-label="Đóng chọn sản phẩm" (click)="showProductPicker.set(false)" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FAF7F2] text-[#800020]"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
+            </header>
+            <div class="border-b border-[#EBD3AE]/60 bg-white px-5 pb-4 pt-3">
+              <input type="search" aria-label="Tìm sản phẩm trong Studio" placeholder="Tìm sản phẩm bạn muốn thiết kế…" [ngModel]="productSearch()" (ngModelChange)="productSearch.set($event)" class="w-full rounded-xl border border-[#EBD3AE] bg-[#FAF7F2] px-4 py-3 text-sm outline-none focus:border-[#800020]" />
+            </div>
+            <div class="min-h-0 overflow-y-auto overscroll-contain p-5">
+              <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                @for (tpl of filteredTemplates(); track tpl._id) {
+                  <button type="button" (click)="chooseStudioProduct(tpl._id)" [attr.aria-pressed]="tpl._id === activeTemplate()?._id"
+                    class="rounded-2xl border bg-white p-3 text-left transition hover:border-[#800020]"
+                    [class.border-[#800020]]="tpl._id === activeTemplate()?._id" [class.border-[#E7DBDF]]="tpl._id !== activeTemplate()?._id">
+                    <img [src]="tpl.images[0] || '/logo.png'" [alt]="tpl.name" class="aspect-square w-full rounded-xl bg-[#FAF7F2] object-contain" />
+                    <strong class="mt-3 block text-xs leading-relaxed text-[#42202E]">{{ tpl.name }}</strong>
+                    <span class="mt-2 block text-sm font-bold text-[#800020]">{{ (tpl.salePrice || tpl.price) | number }}đ</span>
+                    @if (tpl._id === activeTemplate()?._id) { <span class="mt-2 inline-block rounded-full bg-[#F5E7EC] px-2 py-1 text-[10px] font-bold text-[#800020]">Đang thiết kế</span> }
+                  </button>
+                } @empty { <p class="col-span-full py-8 text-center text-sm text-slate-500">Không tìm thấy sản phẩm phù hợp.</p> }
+              </div>
+            </div>
+          </section>
+        </div>
+      }
+
       <!-- ================= MODALS ================= -->
 
       <!-- MODAL 1: Save Design Login Modal (AC12 / AF2) -->
@@ -934,6 +965,12 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
   activeToolTab = signal<StudioToolTab>('TEXT');
 
   templates = signal<Product[]>([]);
+  showProductPicker = signal(false);
+  productSearch = signal('');
+  filteredTemplates = computed(() => {
+    const search = this.productSearch().trim().toLocaleLowerCase('vi');
+    return this.templates().filter(product => product.name.toLocaleLowerCase('vi').includes(search));
+  });
   activeTemplate = signal<Product | null>(null);
   requestedProductNotFound = signal(false);
 
@@ -2199,6 +2236,12 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.fitStageToWrapper();
   }
 
+  chooseStudioProduct(id: string): void {
+    this.selectTemplateById(id);
+    this.requestedProductNotFound.set(false);
+    this.showProductPicker.set(false);
+  }
+
   selectTemplateById(id: string): void {
     const template = this.templates().find(item => item._id === id);
     if (template && template._id !== this.activeTemplate()?._id) this.selectTemplate(template);
@@ -2212,6 +2255,7 @@ export class CustomStudioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent): void {
+    if (this.showProductPicker()) return;
     const target = event.target as HTMLElement;
     if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
       return;

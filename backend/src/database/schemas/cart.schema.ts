@@ -54,6 +54,9 @@ export const CartItemSchema = SchemaFactory.createForClass(CartItem);
 
 @Schema({ timestamps: true })
 export class Cart {
+  @Prop({ type: Object, default: null })
+  packaging?: any;
+
   @Prop({ enum: ['STANDARD', 'EXPRESS'], default: 'STANDARD' })
   shippingMethod: string;
 

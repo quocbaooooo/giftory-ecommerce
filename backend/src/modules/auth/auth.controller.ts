@@ -6,6 +6,7 @@ import {
   Post,
   Body,
   Get,
+  Patch,
   UseGuards,
   HttpCode,
   HttpStatus
@@ -17,6 +18,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -72,5 +74,12 @@ export class AuthController {
   @ApiOperation({ summary: 'Lấy thông tin tài khoản hiện tại' })
   async getProfile(@CurrentUser('sub') userId: string) {
     return this.authService.getProfile(userId);
+  }
+
+  @Patch('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  updateProfile(@CurrentUser('sub') userId: string, @Body() dto: UpdateProfileDto) {
+    return this.authService.updateProfile(userId, dto);
   }
 }

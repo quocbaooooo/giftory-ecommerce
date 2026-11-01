@@ -100,6 +100,12 @@ export const CustomBlankConfigSchema = SchemaFactory.createForClass(CustomBlankC
 
 @Schema({ timestamps: true })
 export class Product {
+  @Prop({ enum: ['SMALL', 'MEDIUM', 'LARGE', 'OVERSIZED'], default: 'MEDIUM' })
+  packagingSize: string;
+
+  @Prop({ min: 1 })
+  packagingUnits?: number;
+
   @Prop({ default: true })
   loyaltyEligible: boolean;
 

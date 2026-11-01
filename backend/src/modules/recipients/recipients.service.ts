@@ -16,13 +16,19 @@ export class RecipientsService {
     return user.recipients || [];
   }
 
-  async save(userId: string, dto: RecipientDto) {
+  private entry(dto: RecipientDto, id: string = randomUUID()) {
     const address = normalizeAddress(dto);
     const key = createHash('sha256').update(JSON.stringify([
       dto.name.toLocaleLowerCase('vi'), dto.phone,
       address.provinceCode, address.wardCode, address.street.toLocaleLowerCase('vi'),
+      ...(dto.purpose === 'DELIVERY' ? ['DELIVERY'] : []),
     ])).digest('hex');
-    const recipient = { id: randomUUID(), key, name: dto.name, phone: dto.phone, ...address };
+    return { id, key, purpose: dto.purpose || 'RECIPIENT', name: dto.name, phone: dto.phone, ...address };
+  }
+
+  async save(userId: string, dto: RecipientDto) {
+    const recipient = this.entry(dto);
+    const key = recipient.key;
     const user = await this.users.findOneAndUpdate(
       { _id: userId, isActive: true, 'recipients.key': { $ne: key }, 'recipients.49': { $exists: false } },
       { $push: { recipients: recipient } }, { new: true },
@@ -30,7 +36,19 @@ export class RecipientsService {
     if (user) return user.recipients;
     const existing = await this.list(userId);
     if (existing.some(item => item.key === key)) return existing;
-    throw new BadRequestException('Danh bạ tối đa 50 người nhận. Vui lòng xóa người nhận không còn sử dụng.');
+    throw new BadRequestException('Hồ sơ tối đa 50 địa chỉ và người nhận. Vui lòng xóa mục không còn sử dụng.');
+  }
+
+  async update(userId: string, id: string, dto: RecipientDto) {
+    const recipient = this.entry(dto, id);
+    const user = await this.users.findOneAndUpdate(
+      { _id: userId, isActive: true, 'recipients.id': id, recipients: { $not: { $elemMatch: { key: recipient.key, id: { $ne: id } } } } },
+      { $set: { 'recipients.$': recipient } }, { new: true, runValidators: true },
+    ).select('recipients').exec();
+    if (user) return user.recipients;
+    const existing = await this.list(userId);
+    if (!existing.some(item => item.id === id)) throw new NotFoundException('Không tìm thấy địa chỉ trong hồ sơ của bạn');
+    throw new BadRequestException('Địa chỉ này đã có trong hồ sơ');
   }
 
   async remove(userId: string, id: string) {

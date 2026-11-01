@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Product, ProductDocument } from '../../database/schemas/product.schema';
@@ -314,6 +314,8 @@ export class ProductsService {
   }
 
   async update(id: string, updateDto: any) {
+    if (updateDto.packagingSize !== undefined && !['SMALL', 'MEDIUM', 'LARGE', 'OVERSIZED'].includes(updateDto.packagingSize)) throw new BadRequestException('Kích thước đóng gói không hợp lệ.');
+    if (updateDto.packagingUnits != null && (!Number.isFinite(Number(updateDto.packagingUnits)) || Number(updateDto.packagingUnits) < 1)) throw new BadRequestException('Dung tích quy đổi phải lớn hơn hoặc bằng 1.');
     if (updateDto.supportsCustomization === undefined && updateDto.isCustomizable !== undefined) {
       updateDto.supportsCustomization = updateDto.isCustomizable;
     }

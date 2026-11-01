@@ -22,6 +22,12 @@ export const GreetingCardSchema = SchemaFactory.createForClass(GreetingCard);
 
 @Schema({ timestamps: true })
 export class OrderItem {
+  @Prop()
+  cartItemId?: string;
+
+  @Prop()
+  packagingSize?: string;
+
   @Prop({ default: true })
   loyaltyEligible: boolean;
 
@@ -109,6 +115,12 @@ export const OrderTimelineEventSchema = SchemaFactory.createForClass(OrderTimeli
 
 @Schema({ timestamps: true, optimisticConcurrency: true })
 export class Order {
+  @Prop({ type: Object, default: null })
+  gift?: any;
+
+  @Prop({ type: Object, default: null })
+  packaging?: any;
+
   @Prop({ default: '' }) voucherCode: string;
   @Prop({ default: '' }) voucherType: string;
 
@@ -136,6 +148,7 @@ export class Order {
       phone: { type: String, required: true },
       email: { type: String, default: '' },
       address: { type: String, required: true },
+      districtName: { type: String, default: '' },
       provinceCode: { type: String },
       provinceName: { type: String },
       wardCode: { type: String },
@@ -150,6 +163,7 @@ export class Order {
     phone: string;
     email: string;
     address: string;
+    districtName?: string;
     provinceCode?: string;
     provinceName?: string;
     wardCode?: string;
@@ -302,3 +316,8 @@ OrderSchema.index({ userId: 1 });
 OrderSchema.index({ orderStatus: 1 });
 OrderSchema.index({ paymentStatus: 1 });
 OrderSchema.index({ fulfillmentStatus: 1 });
+
+OrderSchema.set('toJSON', { transform: (_doc, value: any) => {
+  if (value.gift) { delete value.gift.recipientAccessToken; delete value.gift.recipientAccessHash; }
+  return value;
+} });

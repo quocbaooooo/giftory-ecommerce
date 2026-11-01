@@ -37,6 +37,9 @@ export class OrderService {
     return this.api.get<Order[]>('orders');
   }
 
+  scheduleGift(orderCode: string, phone: string | undefined, window: string): Observable<any> { return this.api.post(`orders/${encodeURIComponent(orderCode)}/gift-schedule`, { phone, window }); }
+  settleGiftDemo(orderCode: string, phone?: string): Observable<Order> { return this.api.post<Order>(`orders/${encodeURIComponent(orderCode)}/gift-settle-demo`, { phone }); }
+
   simulateDemoPayment(orderCode: string, phone?: string): Observable<Order> {
     return this.api.post<Order>(`orders/${encodeURIComponent(orderCode)}/demo-payment`, { phone });
   }

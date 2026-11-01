@@ -6,6 +6,7 @@ export type UserDocument = User & Document;
 
 @Schema({ _id: false })
 export class Recipient {
+  @Prop({ enum: ['DELIVERY', 'RECIPIENT'], default: 'RECIPIENT' }) purpose: string;
   @Prop({ required: true }) id: string;
   @Prop({ required: true }) key: string;
   @Prop({ required: true, trim: true }) name: string;
@@ -57,6 +58,9 @@ export class User {
   @Prop({
     type: {
       street: { type: String, default: '' },
+      detailAddress: { type: String, default: '' },
+      provinceCode: { type: String, default: '' },
+      wardCode: { type: String, default: '' },
       ward: { type: String, default: '' },
       district: { type: String, default: '' },
       city: { type: String, default: '' }
@@ -65,6 +69,9 @@ export class User {
   })
   address: {
     street: string;
+    detailAddress?: string;
+    provinceCode?: string;
+    wardCode?: string;
     ward: string;
     district: string;
     city: string;

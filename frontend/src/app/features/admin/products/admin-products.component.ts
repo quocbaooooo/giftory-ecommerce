@@ -243,6 +243,10 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
               <label class="mb-2 block text-xs font-semibold">Mô tả ngắn<input [(ngModel)]="box.shortDescription" [disabled]="box.id === 'NONE'" class="mt-1 w-full rounded-lg border border-giftory-border px-3 py-2" /></label>
               <label class="mb-2 block text-xs font-semibold">Mô tả<textarea [(ngModel)]="box.description" [disabled]="box.id === 'NONE'" class="mt-1 w-full rounded-lg border border-giftory-border px-3 py-2"></textarea></label>
               <div class="grid grid-cols-2 gap-2"><label class="text-xs font-semibold">Kích thước<input [(ngModel)]="box.dimensions" [disabled]="box.id === 'NONE'" class="mt-1 w-full rounded-lg border border-giftory-border px-3 py-2" /></label><label class="text-xs font-semibold">Phí (đ)<input type="number" min="0" [(ngModel)]="box.fee" [disabled]="box.id === 'NONE'" class="mt-1 w-full rounded-lg border border-giftory-border px-3 py-2" /></label></div>
+              @if (box.id !== 'NONE') {
+                <div class="mt-3 grid grid-cols-2 gap-2"><label class="text-xs font-semibold">Size hộp<select [(ngModel)]="box.size" class="mt-1 w-full rounded-lg border p-2"><option value="S">S</option><option value="M">M</option><option value="L">L</option></select></label><label class="text-xs font-semibold">Sức chứa<input type="number" min="1" [(ngModel)]="box.capacity" class="mt-1 w-full rounded-lg border p-2" /></label></div>
+                <p class="mt-1 text-[10px] text-slate-500">Dung tích quy đổi mặc định: S = 3, M = 6, L = 12.</p>
+              }
               <label class="mt-2 block text-xs font-semibold">URL ảnh<input [(ngModel)]="box.image" [disabled]="giftBoxesSaving() || giftBoxUploading()[box.id]" class="mt-1 w-full rounded-lg border border-giftory-border px-3 py-2" /></label>
               <input #giftBoxFile type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml" class="hidden" (change)="onGiftBoxFileSelected($event, box)" />
               <button type="button" (click)="giftBoxFile.click()" [disabled]="giftBoxesSaving() || giftBoxUploading()[box.id]" [attr.aria-label]="'Tải ảnh lên Cloudinary cho ' + box.name" class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-giftory-border bg-[#FFF5E1]/50 px-3 py-2.5 text-xs font-bold text-[#800020] transition hover:bg-[#FFF5E1] disabled:cursor-wait disabled:opacity-50">
@@ -384,6 +388,11 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
                     <label class="text-xs font-bold text-giftory-ink">Mô tả sản phẩm</label>
                     <textarea rows="3" formControlName="description" placeholder="Mô tả chất liệu, quy cách quà tặng..." class="w-full px-4 py-2 bg-[#FFF5E1]/50 rounded-xl border border-giftory-border text-sm font-medium focus:outline-none focus:border-[#800020]"></textarea>
                   </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl border border-[#EBD3AE] bg-[#FAF7F2] p-4">
+                    <label class="text-xs font-bold">Kích thước đóng gói<select formControlName="packagingSize" class="mt-2 w-full rounded-xl border bg-white p-2.5"><option value="SMALL">Small · Nhỏ (1 đơn vị)</option><option value="MEDIUM">Medium · Vừa (3 đơn vị)</option><option value="LARGE">Large · Lớn (6 đơn vị)</option><option value="OVERSIZED">Oversized · Đóng gói chuyên dụng</option></select></label>
+                    <label class="text-xs font-bold">Dung tích quy đổi / món (tùy chọn)<input type="number" min="1" step="1" formControlName="packagingUnits" placeholder="Để trống: mặc định theo size" class="mt-2 w-full rounded-xl border bg-white p-2.5" /><span class="mt-1 block text-[10px] font-normal text-slate-500">Oversized không áp dụng hộp quà nắp gập.</span></label>
+                  </div>
+
 
                   <div class="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/60 p-4">
                     <div>
@@ -1565,6 +1574,8 @@ export class AdminProductsComponent implements OnInit {
       sku: p.sku || '',
       imageUrl: p.images && p.images[0] ? p.images[0] : '',
       description: p.description || '',
+      packagingSize: p.packagingSize || 'MEDIUM',
+      packagingUnits: p.packagingUnits ?? null,
       loyaltyEligible: p.loyaltyEligible !== false,
       isCustomizable: p.isCustomizable,
       studioSupported: p.studioSupported === true,
@@ -1817,6 +1828,8 @@ export class AdminProductsComponent implements OnInit {
       sku: [''],
       imageUrl: ['https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600'],
       description: [''],
+      packagingSize: ['MEDIUM'],
+      packagingUnits: [null],
       loyaltyEligible: [true],
       isCustomizable: [false],
       studioSupported: [false],
@@ -1872,6 +1885,8 @@ export class AdminProductsComponent implements OnInit {
       sku: val.sku || ('SKU-' + Date.now().toString().slice(-6)),
       images,
       description: val.description || val.name,
+      packagingSize: val.packagingSize,
+      packagingUnits: val.packagingUnits ? Number(val.packagingUnits) : null,
       variants: this.variants(),
       loyaltyEligible: val.loyaltyEligible,
       isCustomizable: val.isCustomizable,

@@ -17,6 +17,8 @@ export interface User {
     district?: string;
     city?: string;
     detailAddress?: string;
+    provinceCode?: string;
+    wardCode?: string;
   };
 }
 
@@ -164,7 +166,10 @@ export interface StudioTextBlock {
   zIndex: number;
 }
 
+export type PackagingSize = 'SMALL' | 'MEDIUM' | 'LARGE' | 'OVERSIZED';
 export interface Product {
+  packagingSize?: PackagingSize;
+  packagingUnits?: number;
   loyaltyEligible?: boolean;
   _id: string;
   name: string;
@@ -257,9 +262,22 @@ export interface CartItem {
   depositRequired: number;
   giftBoxStyle?: 'NONE' | 'STANDARD' | 'SILK' | 'LUXURY';
   giftBoxFee?: number;
+  packagingSize?: PackagingSize;
+  packagingUnits?: number;
 }
 
+export interface GiftPackaging {
+  mode: 'NONE' | 'BUNDLED' | 'INDIVIDUAL' | 'PARTIAL';
+  boxStyle?: string;
+  allocations?: { itemId: string; boxStyle: string; quantity: number }[];
+  totalFee?: number;
+  boxCount?: number;
+  valid?: boolean;
+  notice?: string;
+  boxes?: { boxId: string; name: string; image: string; size: string; unitFee: number; quantity: number; items: { itemId: string; productName: string; quantity: number }[] }[];
+}
 export interface Cart {
+  packaging?: GiftPackaging;
   shippingMethod?: 'STANDARD' | 'EXPRESS';
   vouchers?: VoucherOffer[];
   appliedVoucher?: VoucherOffer | null;
@@ -309,6 +327,8 @@ export interface OrderItemDetail {
   depositRequired: number;
   giftBoxStyle?: 'NONE' | 'STANDARD' | 'SILK' | 'LUXURY';
   giftBoxFee?: number;
+  packagingSize?: PackagingSize;
+  packagingUnits?: number;
   qcNote?: string;
   qcHistory?: Array<{
     result: string;
@@ -332,7 +352,21 @@ export interface GreetingCard {
   message: string;
 }
 
+export interface DirectGift {
+  enabled: boolean;
+  anonymous: boolean;
+  sender: { name: string; phone: string; email: string };
+  senderLabel: string;
+  blindShipping: boolean;
+  wrapIncluded: boolean;
+  ribbonIncluded: boolean;
+  proofOfDelivery?: string;
+  exception?: { status: string; reason: string; requestedWindow?: string } | null;
+  notifications?: Array<{ id: string; audience: 'BUYER' | 'RECIPIENT'; text: string; timestamp: string; status: string; kind: string }>;
+}
 export interface Order {
+  gift?: DirectGift | null;
+  packaging?: GiftPackaging;
   greetingCard?: GreetingCard | null;
   _id: string;
   orderCode: string;

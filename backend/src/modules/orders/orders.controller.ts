@@ -183,7 +183,7 @@ export class OrdersController {
   @ApiOperation({ summary: 'Delivery Service báo cáo kết quả giao hàng: thành công hoặc không thành công (US-04.05, US-04.06, BR-11 -> BR-15)' })
   async reportDeliveryResult(
     @Param('id') id: string,
-    @Body() body: { success: boolean; failureReason?: string; allowRetry?: boolean; note?: string },
+    @Body() body: { success: boolean; failureReason?: string; allowRetry?: boolean; note?: string; proofOfDelivery?: string },
     @CurrentUser() user: any
   ) {
     return this.ordersService.reportDeliveryResult(id, body, user);
@@ -231,6 +231,31 @@ export class OrdersController {
   // ==========================================
   // CUSTOMER / PUBLIC ENDPOINTS
   // ==========================================
+
+  @Get('admin/:id/gift-slip')
+  @UseGuards(JwtAuthGuard, RolesGuard) @Roles(UserRole.ADMIN)
+  giftSlip(@Param('id') id: string) { return this.ordersService.giftSlip(id); }
+
+  @Post('admin/:id/gift-link/simulate')
+  @UseGuards(JwtAuthGuard, RolesGuard) @Roles(UserRole.ADMIN)
+  giftLink(@Param('id') id: string) { return this.ordersService.simulateGiftLink(id); }
+
+  @Post('gift/:code/access')
+  recipientGift(@Param('code') code: string, @Body() body: { token: string }) { return this.ordersService.recipientGift(code, body.token); }
+
+  @Post('gift/:code/schedule')
+  recipientSchedule(@Param('code') code: string, @Body() body: { token: string; window: string }) { return this.ordersService.recipientSchedule(code, body.token, body.window); }
+
+  @Post('gift/:code/warranty')
+  recipientWarranty(@Param('code') code: string, @Body() body: any) { return this.ordersService.recipientWarranty(code, body.token, body); }
+
+  @Post(':orderCode/gift-schedule')
+  @UseGuards(OptionalJwtAuthGuard)
+  buyerSchedule(@Param('orderCode') code: string, @CurrentUser('sub') userId: string, @Body() body: { phone: string; window: string }) { return this.ordersService.buyerSchedule(code, userId, body.phone, body.window); }
+
+  @Post(':orderCode/gift-settle-demo')
+  @UseGuards(OptionalJwtAuthGuard)
+  settleGift(@Param('orderCode') code: string, @CurrentUser('sub') userId: string, @Body() body: { phone?: string }) { return this.ordersService.settleGiftBalance(code, userId, body.phone); }
 
   @Get(':orderCode')
   @UseGuards(OptionalJwtAuthGuard)

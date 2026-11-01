@@ -79,7 +79,9 @@ export class AdminService {
     return this.api.post(`orders/admin/${orderId}/dispatch`, payload);
   }
 
-  reportDeliveryResult(orderId: string, payload: { success: boolean; failureReason?: string; allowRetry?: boolean; note?: string }): Observable<any> {
+  simulateGiftLink(orderId: string): Observable<any> { return this.api.post(`orders/admin/${orderId}/gift-link/simulate`, {}); }
+
+  reportDeliveryResult(orderId: string, payload: { success: boolean; failureReason?: string; allowRetry?: boolean; note?: string; proofOfDelivery?: string }): Observable<any> {
     return this.api.post(`orders/admin/${orderId}/delivery-result`, payload);
   }
 

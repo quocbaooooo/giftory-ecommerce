@@ -38,6 +38,7 @@ export class AppComponent {
 
   isHomeRoute = signal(true);
   isPurchaseRoute = signal(false);
+  isCheckoutRoute = signal(false);
   isAuthRoute = signal(false);
   isAdminRoute = signal<boolean>(false);
   isCustomStudioRoute = signal<boolean>(false);
@@ -83,6 +84,7 @@ export class AppComponent {
       const path = window.location.pathname;
       this.isHomeRoute.set(path === "/");
       this.isPurchaseRoute.set(/^\/(cart|checkout)(?:[/?#]|$)/.test(path));
+      this.isCheckoutRoute.set(/^\/checkout(?:[/?#]|$)/.test(path));
       this.isAuthRoute.set(/^\/(login|register|forgot-password|reset-password)(?:[/?#]|$)/.test(path));
       this.isAdminRoute.set(path.startsWith('/admin'));
       this.isCustomStudioRoute.set(path.startsWith('/custom-studio'));
@@ -101,6 +103,7 @@ export class AppComponent {
       this.isCustomStudioRoute.set(event.urlAfterRedirects.startsWith('/custom-studio'));
       this.isHomeRoute.set(event.urlAfterRedirects.split(/[?#]/)[0] === "/");
       this.isPurchaseRoute.set(/^\/(cart|checkout)(?:[/?#]|$)/.test(event.urlAfterRedirects));
+      this.isCheckoutRoute.set(/^\/checkout(?:[/?#]|$)/.test(event.urlAfterRedirects));
       window.scrollTo(0, 0);
     });
   }

@@ -6,23 +6,12 @@ import { Router, RouterModule } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
 import { CartItem } from '../../core/models';
-import { ApiService } from '../../core/services/api.service';
-
-interface GiftBoxOption {
-  id: NonNullable<CartItem['giftBoxStyle']>;
-  name: string;
-  fee: number;
-  image: string;
-  shortDescription: string;
-  description: string;
-  dimensions: string;
-  available: boolean;
-}
+import { CartPackagingComponent } from '../../shared/components/cart-packaging.component';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, CartVouchersComponent],
+  imports: [CommonModule, FormsModule, RouterModule, CartVouchersComponent, CartPackagingComponent],
   styles: [`
     .cart-item-exit { animation: cartItemExit .22s ease-in forwards; pointer-events:none; }
     @keyframes cartItemExit {
@@ -112,6 +101,7 @@ interface GiftBoxOption {
               </button>
             </div>
 
+
             <!-- Items Loop -->
             @if (cartService.quantityError() || cartService.quantitySyncPending()) {
               <div role="status" aria-live="polite" class="text-xs">
@@ -159,8 +149,8 @@ interface GiftBoxOption {
                           Hàng chuẩn • Không yêu cầu cọc
                         </span>
                       }
-                      <button (click)="removeItem($index)" [disabled]="cartService.quantitySyncPending()" class="text-slate-400 hover:text-red-500 transition-colors disabled:opacity-50" title="Xóa món này">
-                        <span class="material-symbols-outlined text-[18px]">close</span>
+                      <button (click)="removeItem($index)" [disabled]="cartService.quantitySyncPending()" class="text-slate-400 hover:text-red-500 transition-colors disabled:opacity-50" title="Xóa món này" aria-label="Xóa món này">
+                        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">delete</span>
                       </button>
                     </div>
 
@@ -272,28 +262,11 @@ interface GiftBoxOption {
                   </div>
                 }
 
-                <section class="mt-5 border-t border-[#F0E5D8] pt-4" aria-label="Chọn hộp quà">
-                  <div class="mb-3 flex flex-wrap items-end justify-between gap-2">
-                    <div><h3 class="text-sm font-extrabold text-[#2B1A1A]">🎁 Hộp quà cho món này</h3><p class="mt-0.5 text-[11px] text-slate-500">Chọn riêng cho từng sản phẩm trong giỏ</p></div>
-                    <span class="text-xs font-bold text-[#800020]">{{ boxStyle(item.giftBoxStyle).name }} · {{ (item.giftBoxFee || 0) | number:'1.0-0' }}đ</span>
-                  </div>
-                  <div class="grid grid-cols-2 gap-2 xl:grid-cols-4">
-                    @for (box of giftBoxes; track box.id) {
-                      <button type="button" (click)="openBoxPreview(itemIndex, box.id)" [disabled]="!canUseGiftBox(item, box.id) || cartService.quantitySyncPending()" class="group rounded-xl border p-2 text-left transition hover:-translate-y-0.5 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-45" [class.border-[#800020]]="item.giftBoxStyle === box.id || (!item.giftBoxStyle && box.id === 'NONE')" [class.ring-1]="item.giftBoxStyle === box.id || (!item.giftBoxStyle && box.id === 'NONE')" [class.ring-[#800020]]="item.giftBoxStyle === box.id || (!item.giftBoxStyle && box.id === 'NONE')" [class.border-[#EBD3AE]]="item.giftBoxStyle !== box.id && (item.giftBoxStyle || 'NONE') !== box.id">
-                        <img [src]="box.image" [alt]="box.name" class="mb-1 h-14 w-full rounded-lg object-cover">
-                        <span class="block truncate text-[10px] font-extrabold text-[#2B1A1A]">{{ box.name }}</span>
-                        <span class="mt-0.5 block text-[10px] font-bold text-[#800020]">{{ box.fee === 0 ? '+0đ' : '+' + (box.fee | number:'1.0-0') + 'đ' }}</span>
-                        <span class="mt-0.5 block line-clamp-2 text-[9px] leading-3 text-slate-500">{{ box.shortDescription }}</span>
-                        @if (!canUseGiftBox(item, box.id)) { <span class="mt-1 block text-[9px] font-bold text-rose-700">{{ boxUnavailableReason(item, box.id) }}</span> }
-                      </button>
-                    }
-                  </div>
-                  @if ((item.giftBoxFee || 0) > 0) {
-                    <div class="mt-3 flex justify-between rounded-lg bg-[#FFFBF2] px-3 py-2 text-xs"><span>Phí hộp quà × {{ item.quantity }}</span><strong class="text-[#800020]">{{ (item.giftBoxFee || 0) * item.quantity | number:'1.0-0' }}đ</strong></div>
-                  }
-                </section>
+
               </article>
             }
+
+            <app-cart-packaging />
 
             <!-- Action Link -->
             <div class="pt-2 flex items-center justify-between">
@@ -377,7 +350,7 @@ interface GiftBoxOption {
               <!-- Checkout Submit Button -->
               <button 
                 (click)="proceedToCheckout()"
-                [disabled]="checkoutNavigating() || cartService.quantitySyncPending() || shippingBusy || cartService.voucherSyncPending()"
+                [disabled]="checkoutNavigating() || cartService.quantitySyncPending() || shippingBusy || cartService.voucherSyncPending() || cartService.packagingSyncPending() || cartService.cart()?.packaging?.valid === false"
                 class="w-full py-3.5 px-4 bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#800020]/20 transition-all active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-wait"
               >
                 @if (checkoutNavigating()) {
@@ -409,39 +382,18 @@ interface GiftBoxOption {
         </div>
       }
 
-      @if (boxPreview(); as preview) {
-        <div class="fixed inset-0 z-[11000] flex items-center justify-center bg-black/65 p-4" (click)="boxPreview.set(null)">
-          <section class="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl" (click)="$event.stopPropagation()">
-            <img [src]="boxStyle(preview.style).image" [alt]="boxStyle(preview.style).name" class="h-48 w-full rounded-2xl bg-[#FAF7F2] object-cover">
-            <div class="mt-4 flex items-start justify-between gap-3"><div><h2 class="text-lg font-extrabold text-[#2B1A1A]">{{ boxStyle(preview.style).name }}</h2><p class="mt-1 text-sm text-slate-600">{{ boxStyle(preview.style).description }}</p></div><strong class="shrink-0 text-[#800020]">{{ boxStyle(preview.style).fee === 0 ? 'Miễn phí' : '+' + (boxStyle(preview.style).fee | number:'1.0-0') + 'đ' }}</strong></div>
-            <p class="mt-3 text-xs text-slate-500">Kích thước tham khảo: {{ boxStyle(preview.style).dimensions }}</p>
-            <button type="button" (click)="chooseGiftBox(preview.index, preview.style)" [disabled]="!canUseGiftBox(cartService.items()[preview.index], preview.style) || cartService.quantitySyncPending()" class="mt-5 w-full rounded-xl bg-[#800020] px-4 py-3 text-sm font-bold text-white disabled:opacity-50">Chọn hộp này</button>
-          </section>
-        </div>
-      }
     </div>
   `
 })
 export class CartComponent {
   cartService = inject(CartService);
   authService = inject(AuthService);
-  private api = inject(ApiService);
   private router = inject(Router);
 
 
   shippingBusy = false;
   checkoutNavigating = signal(false);
   designPreview = signal<any | null>(null);
-  boxPreview = signal<{ index: number; style: GiftBoxOption['id'] } | null>(null);
-  giftBoxes: GiftBoxOption[] = [
-    { id: 'NONE', name: 'Không lấy hộp', fee: 0, image: '/gift-boxes/none.svg', shortDescription: 'Túi giao hàng thường', description: 'Không kèm hộp quà; sản phẩm được bảo vệ bằng bao bì vận chuyển tiêu chuẩn.', dimensions: 'Không áp dụng', available: true },
-    { id: 'STANDARD', name: 'Hộp tiêu chuẩn', fee: 0, image: '/gift-boxes/standard.svg', shortDescription: 'Giấy cứng, nơ cơ bản', description: 'Hộp giấy cứng tiêu chuẩn, hoàn thiện gọn gàng với nơ cơ bản.', dimensions: '24 × 18 × 12 cm', available: true },
-    { id: 'SILK', name: 'Hộp lụa cao cấp', fee: 45000, image: '/gift-boxes/silk.svg', shortDescription: 'Hộp lụa, nơ lụa, thiệp', description: 'Hộp bọc lụa cao cấp kèm nơ lụa và thiệp chúc mừng.', dimensions: '30 × 22 × 15 cm', available: true },
-    { id: 'LUXURY', name: 'Hộp quà sang trọng', fee: 79000, image: '/gift-boxes/luxury.svg', shortDescription: 'Hộp cứng cao cấp, nơ lụa', description: 'Hộp cứng cao cấp, lòng lót mềm, nơ lụa; phù hợp set quà và quà biếu.', dimensions: '36 × 28 × 18 cm', available: true },
-  ];
-  constructor() {
-    this.api.get<GiftBoxOption[]>('cart/gift-boxes').subscribe({ next: boxes => { if (Array.isArray(boxes)) this.giftBoxes = boxes; } });
-  }
   private removingItems = signal(new Set<string>());
   private removalTimers = new Map<string, ReturnType<typeof setTimeout>>();
   changeShipping(method: 'STANDARD' | 'EXPRESS') {
@@ -456,16 +408,6 @@ export class CartComponent {
     this.cartService.updateQuantity(index, qty).subscribe();
   }
 
-  boxStyle(style?: CartItem['giftBoxStyle']): GiftBoxOption { return this.giftBoxes.find(box => box.id === (style || 'NONE')) || this.giftBoxes[0]; }
-  openBoxPreview(index: number, style: GiftBoxOption['id']) { this.boxPreview.set({ index, style }); }
-  canUseGiftBox(item: CartItem | undefined, style: GiftBoxOption['id']): boolean { return !!item && this.boxUnavailableReason(item, style) === ''; }
-  boxUnavailableReason(item: CartItem | undefined, style: GiftBoxOption['id']): string {
-    if (!item) return 'Không khả dụng';
-    if (!this.boxStyle(style).available) return 'Hết hộp mẫu này';
-    const capacity = Number((item.productId?.name || '').match(/(\d{3,4})\s?ml/i)?.[1] || 0);
-    if (style === 'STANDARD' && capacity > 450) return `Hộp này không vừa với ${item.productId?.name}`;
-    return '';
-  }
   availableStock(item: CartItem): number {
     const product: any = item.productId;
     const variant = product?.variants?.find((entry: any) => item.variantSku ? entry.sku === item.variantSku : entry.name === item.variantName);
@@ -474,15 +416,6 @@ export class CartComponent {
     return Math.max(0, Number(variant?.stock ?? product?.stock ?? 99) - otherQty);
   }
   remainingStock(item: CartItem): number { return Math.max(0, this.availableStock(item) - item.quantity); }
-  chooseGiftBox(index: number, style: GiftBoxOption['id']) {
-    const item = this.cartService.items()[index];
-    if (!item || !this.canUseGiftBox(item, style)) return;
-    this.cartService.updateGiftBox(index, style).subscribe({
-      next: () => { this.boxPreview.set(null); this.cartService.notify(`Đã chọn ${this.boxStyle(style).name}`); },
-      error: err => { this.cartService.notify(err.error?.message || 'Không cập nhật được hộp quà. Vui lòng thử lại.'); },
-    });
-  }
-
   removeItem(index: number): void {
     if (this.cartService.quantitySyncPending()) return;
     const item = this.cartService.items()[index];
@@ -538,7 +471,7 @@ export class CartComponent {
   }
 
   proceedToCheckout(): void {
-    if (this.checkoutNavigating() || this.cartService.quantitySyncPending() || this.shippingBusy || this.cartService.voucherSyncPending()) return;
+    if (this.cartService.cart()?.packaging?.valid === false || this.cartService.packagingSyncPending() || this.checkoutNavigating() || this.cartService.quantitySyncPending() || this.shippingBusy || this.cartService.voucherSyncPending()) return;
     this.checkoutNavigating.set(true);
     this.router.navigate(['/checkout']).then(navigated => {
       if (!navigated) this.checkoutNavigating.set(false);

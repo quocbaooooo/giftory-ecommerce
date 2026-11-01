@@ -55,6 +55,22 @@ async function request(method, route, token, body, expected = 200) {
   const two = await request('POST', '/auth/register', null, { name: 'Người mua hai', email: 'two@example.test', password: 'Test-password-123' }, 201);
   const province = locations[0], ward = province.wards[0];
   const input = { name: '  Nguyễn   Minh Anh  ', phone: '+84 912 345 678', provinceCode: province.code, wardCode: ward.code, street: '  128   Đường Số 7  ' };
+  await test('profile updates require authentication and reject invalid location relationships', async () => {
+    const profile = { fullName: 'Profile Buyer', phone: '0912345678', address: { provinceCode: province.code, wardCode: ward.code, detailAddress: '12 Profile Street' } };
+    await request('PATCH', '/auth/me', null, profile, 401);
+    await request('PATCH', '/auth/me', one.accessToken, { ...profile, address: { ...profile.address, wardCode: locations[1].wards[0].code } }, 400);
+    await request('PATCH', '/auth/me', one.accessToken, { ...profile, phone: '123' }, 400);
+  });
+  await test('profile saves normalized API location codes and names, and persists after login', async () => {
+    const updated = await request('PATCH', '/auth/me', one.accessToken, { fullName: '  Profile   Buyer ', phone: '+84 912 345 678', role: 'ADMIN', email: 'fake@example.test', address: { provinceCode: province.code, wardCode: ward.code, detailAddress: '  12   Profile Street ', city: 'Fake', ward: 'Fake' } });
+    assert.equal(updated.name, 'Profile Buyer'); assert.equal(updated.phone, '0912345678'); assert.equal(updated.role, 'CUSTOMER'); assert.equal(updated.email, one.user.email); assert.equal(updated.password, undefined);
+    assert.equal(updated.address.provinceCode, province.code); assert.equal(updated.address.wardCode, ward.code);
+    assert.equal(updated.address.city, province.name); assert.equal(updated.address.ward, ward.name); assert.equal(updated.address.detailAddress, '12 Profile Street'); assert.equal(updated.address.street, '12 Profile Street');
+    const session = await request('POST', '/auth/login', null, { email: one.user.email, password: 'Test-password-123' });
+    const reloaded = await request('GET', '/auth/me', session.accessToken);
+    assert.deepEqual(reloaded.address, updated.address);
+    assert.equal((await request('GET', '/auth/me', two.accessToken)).address?.street || '', '');
+  });
   let saved;
   await test('complete local location catalog and province-scoped wards', async () => {
     const provinces = await request('GET', '/locations/provinces');
@@ -162,6 +178,26 @@ async function request(method, route, token, body, expected = 200) {
     assert.equal((await request('GET', '/vouchers')).find(v => v.code === 'SAVE20K').saved, false);
     assert.equal((await connection.model('Voucher').findById(voucher._id)).usedCount, 0);
     await request('POST', '/cart/apply-voucher', one.accessToken, {}, 400);
+  });
+  await test('profile keeps delivery addresses separate from recipient contacts, and supports owned edits', async () => {
+    const contact = (await request('POST', '/recipients', one.accessToken, input, 201)).find(item => item.purpose === 'RECIPIENT');
+    const list = await request('POST', '/recipients', one.accessToken, { ...input, purpose: 'DELIVERY' }, 201);
+    const delivery = list.find(item => item.purpose === 'DELIVERY');
+    assert.ok(delivery); assert.ok(list.some(item => item.id === contact.id && item.purpose === 'RECIPIENT'));
+    const changed = { ...input, purpose: 'DELIVERY', street: '99 Updated Street' };
+    await request('PATCH', `/recipients/${delivery.id}`, null, changed, 401);
+    await request('PATCH', `/recipients/${delivery.id}`, two.accessToken, changed, 404);
+    await request('PATCH', `/recipients/${delivery.id}`, one.accessToken, { ...changed, wardCode: locations[1].wards[0].code }, 400);
+    const updated = await request('PATCH', `/recipients/${delivery.id}`, one.accessToken, changed);
+    assert.equal(updated.find(item => item.id === delivery.id).street, changed.street);
+    assert.equal(updated.find(item => item.id === contact.id).street, '128 Đường Số 7');
+    const duplicate = await request('POST', '/recipients', one.accessToken, changed, 201);
+    assert.equal(duplicate.filter(item => item.purpose === 'DELIVERY').length, 1);
+    const another = (await request('POST', '/recipients', one.accessToken, { ...changed, street: '123 Other Street' }, 201)).find(item => item.street === '123 Other Street');
+    await request('PATCH', `/recipients/${another.id}`, one.accessToken, changed, 400);
+    const remaining = await request('DELETE', `/recipients/${delivery.id}`, one.accessToken);
+    assert.ok(!remaining.some(item => item.id === delivery.id)); assert.ok(remaining.some(item => item.id === contact.id));
+    assert.ok((await request('GET', '/recipients', one.accessToken)).some(item => item.id === another.id));
   });
   console.log(`${checks} recipient integration checks passed`);
   if (preview) {

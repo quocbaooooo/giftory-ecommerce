@@ -257,3 +257,9 @@ app-custom-studio {
   body:has(app-greeting-card-print) .greeting-card-sheet * { visibility: visible !important; }
   body:has(app-greeting-card-print) .greeting-card-sheet { position: fixed; top: 0; left: 0; width: 148mm; height: 105mm; margin: 0; }
 }
+
+@media print {
+  body:has(app-gift-slip-print) * { visibility: hidden !important; animation: none !important; transform: none !important; box-shadow: none !important; }
+  body:has(app-gift-slip-print) .gift-slip-sheet, body:has(app-gift-slip-print) .gift-slip-sheet * { visibility: visible !important; }
+  body:has(app-gift-slip-print) .gift-slip-sheet { position: absolute; inset: 0; width: 100%; margin: 0; border: 0; print-color-adjust: exact; }
+}

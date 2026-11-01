@@ -1,10 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, ValidateNested, IsIn, IsUUID, MaxLength, Matches } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, ValidateNested, IsIn, IsUUID, MaxLength, Matches, IsBoolean, IsEmail } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { GREETING_CARD_TEMPLATES } from '../greeting-card.rules';
 import { PaymentMethod, PaymentMode } from '../../../common/enums/role.enum';
 
 export class CustomerInfoDto {
+  @IsOptional() @IsString() @MaxLength(100) districtName?: string;
+
   @IsOptional()
   @IsString()
   provinceCode?: string;
@@ -92,7 +94,21 @@ export class GreetingCardDto {
   message: string;
 }
 
+export class GiftSenderDto {
+  @IsString() @IsNotEmpty() @MaxLength(100) name: string;
+  @IsString() @Matches(/^\+?[0-9 .()-]{10,20}$/) phone: string;
+  @IsEmail() @MaxLength(254) email: string;
+}
+export class GiftOptionsDto {
+  @IsBoolean() enabled: boolean;
+  @IsOptional() @IsBoolean() anonymous?: boolean;
+  @IsOptional() @IsObject() @ValidateNested() @Type(() => GiftSenderDto) sender?: GiftSenderDto;
+}
+
 export class CreateOrderDto {
+  @IsOptional() @IsObject() @ValidateNested() @Type(() => GiftOptionsDto)
+  gift?: GiftOptionsDto;
+
   @ApiProperty({ type: GreetingCardDto, required: false })
   @IsOptional()
   @IsObject()

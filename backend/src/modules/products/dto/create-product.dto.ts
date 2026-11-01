@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
+  IsIn,
   IsBoolean,
   IsNotEmpty,
   IsNumber,
@@ -10,6 +11,15 @@ import {
 } from 'class-validator';
 
 export class CreateProductDto {
+  @IsOptional()
+  @IsIn(['SMALL', 'MEDIUM', 'LARGE', 'OVERSIZED'])
+  packagingSize?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  packagingUnits?: number;
+
   @ApiProperty({ required: false, default: true })
   @IsOptional()
   @IsBoolean()

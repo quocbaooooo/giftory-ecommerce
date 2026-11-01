@@ -1,3 +1,4 @@
+import { DEFAULT_GIFT_BOXES, normalizeBoxes, quotePackaging, legacyPackaging, itemPackaging } from './packaging.rules';
 import { VouchersService } from '../vouchers/vouchers.service';
 import { shippingPrice } from '../vouchers/voucher.rules';
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
@@ -11,12 +12,6 @@ import { AddToCartDto } from './dto/add-to-cart.dto';
 import { PaymentMode } from '../../common/enums/role.enum';
 import { customizationFee, studioUnitPrice } from '../../common/utils/studio-pricing';
 
-const DEFAULT_GIFT_BOXES = [
-  { id: 'NONE', name: 'Không lấy hộp', fee: 0, image: '/gift-boxes/none.svg', shortDescription: 'Túi giao hàng thường', description: 'Không kèm hộp quà; sản phẩm được bảo vệ bằng bao bì vận chuyển tiêu chuẩn.', dimensions: 'Không áp dụng', available: true },
-  { id: 'STANDARD', name: 'Hộp tiêu chuẩn', fee: 0, image: '/gift-boxes/standard.svg', shortDescription: 'Giấy cứng, nơ cơ bản', description: 'Hộp giấy cứng tiêu chuẩn, hoàn thiện gọn gàng với nơ cơ bản.', dimensions: '24 × 18 × 12 cm', available: true },
-  { id: 'SILK', name: 'Hộp lụa cao cấp', fee: 45000, image: '/gift-boxes/silk.svg', shortDescription: 'Hộp lụa, nơ lụa, thiệp', description: 'Hộp bọc lụa cao cấp kèm nơ lụa và thiệp chúc mừng.', dimensions: '30 × 22 × 15 cm', available: true },
-  { id: 'LUXURY', name: 'Hộp quà sang trọng', fee: 79000, image: '/gift-boxes/luxury.svg', shortDescription: 'Hộp cứng cao cấp, nơ lụa', description: 'Hộp cứng cao cấp, lòng lót mềm, nơ lụa; phù hợp set quà và quà biếu.', dimensions: '36 × 28 × 18 cm', available: true },
-];
 
 @Injectable()
 export class CartService {
@@ -30,12 +25,14 @@ export class CartService {
 
   async getGiftBoxes() {
     const config = await this.giftBoxConfigModel.findOne({ key: 'default' }).lean().exec();
-    return config?.boxes || DEFAULT_GIFT_BOXES;
+    return normalizeBoxes(config?.boxes || DEFAULT_GIFT_BOXES);
   }
 
   async saveGiftBoxes(boxes: any[]) {
     if (!Array.isArray(boxes) || boxes.length !== DEFAULT_GIFT_BOXES.length || DEFAULT_GIFT_BOXES.some(item => !boxes.some(box => box.id === item.id))) throw new BadRequestException('Cần gửi đủ các kiểu hộp quà hợp lệ.');
-    const sanitized = boxes.map(box => ({ ...box, fee: Math.max(0, Number(box.fee) || 0), available: box.id === 'NONE' ? true : !!box.available }));
+    const normalized = normalizeBoxes(boxes);
+    for (const box of normalized) { if (box.id !== 'NONE' && (!['S', 'M', 'L'].includes(box.size) || !Number.isFinite(Number(box.capacity)) || Number(box.capacity) <= 0 || !Number.isFinite(Number(box.fee)) || Number(box.fee) < 0)) throw new BadRequestException('Size, dung tích hoặc phí hộp không hợp lệ.'); }
+    const sanitized = normalized.map(box => ({ ...box, capacity: Number(box.capacity), fee: Math.max(0, Number(box.fee) || 0), available: box.id === 'NONE' ? true : !!box.available }));
     await this.giftBoxConfigModel.findOneAndUpdate({ key: 'default' }, { $set: { boxes: sanitized } }, { upsert: true, new: true, setDefaultsOnInsert: true }).exec();
     return sanitized;
   }
@@ -44,7 +41,7 @@ export class CartService {
     let cart = await this.findOrCreateCart(userId, sessionId);
     await cart.populate({
       path: 'items.productId',
-      select: 'name slug price salePrice images stock variants isCustomizable customBaseFee'
+      select: 'name slug price salePrice images stock variants isCustomizable customBaseFee packagingSize packagingUnits'
     });
     // Refresh Studio quotes, including carts saved with the former zero-fee fallback bug.
     let priceChanged = false;
@@ -152,20 +149,25 @@ export class CartService {
     const normalized = String(style || '').toUpperCase();
     const box = (await this.getGiftBoxes()).find(item => item.id === normalized);
     if (!box || !box.available) throw new BadRequestException('Kiểu hộp quà hiện không khả dụng');
-    const product = await this.productModel.findById(item.productId).select('name');
-    const name = product?.name || 'sản phẩm';
-    const boxFitReason = this.giftBoxFitReason(normalized, name);
-    if (boxFitReason) throw new BadRequestException(boxFitReason);
+    await cart.populate('items.productId');
+    const current = cart.packaging || legacyPackaging(cart.items);
+    const allocations = (current.allocations || []).filter(a => a.itemId !== String((item as any)._id));
+    if (normalized !== 'NONE') allocations.push({ itemId: String((item as any)._id), boxStyle: normalized, quantity: item.quantity });
+    cart.packaging = quotePackaging(cart.items, allocations.length ? { mode: 'PARTIAL', allocations } : { mode: 'NONE' }, await this.getGiftBoxes());
     item.giftBoxStyle = normalized;
     item.giftBoxFee = box.fee;
     await cart.save();
     return this.getCart(userId, sessionId);
   }
 
-  private giftBoxFitReason(style: string, productName: string): string | null {
-    const capacity = Number(productName.match(/(\d{3,4})\s?ml/i)?.[1] || 0);
-    if (style === 'STANDARD' && capacity > 450) return `Hộp tiêu chuẩn không vừa với ${productName}`;
-    return null;
+  async setPackaging(request: any, userId?: string, sessionId?: string) {
+    const cart = await this.findOrCreateCart(userId, sessionId);
+    await cart.populate('items.productId');
+    cart.packaging = quotePackaging(cart.items, request, await this.getGiftBoxes());
+    // New allocation is authoritative; remove old per-line charges.
+    cart.items.forEach(item => { item.giftBoxStyle = 'NONE'; item.giftBoxFee = 0; });
+    await cart.save();
+    return this.getCart(userId, sessionId);
   }
 
   async applyVoucher(code: string, userId?: string, sessionId?: string) {
@@ -234,6 +236,7 @@ export class CartService {
   async clearCart(userId?: string, sessionId?: string) {
     const cart = await this.findOrCreateCart(userId, sessionId);
     cart.items = [];
+    cart.packaging = null;
     cart.voucherCode = '';
     cart.voucherDiscount = 0;
     await cart.save();
@@ -307,7 +310,10 @@ export class CartService {
     }
     const shippingDiscount = appliedVoucher?.shippingDiscount || 0;
     const shippingFee = baseShippingFee - shippingDiscount;
-    const giftWrapFee = cart.items.reduce((sum, item) => sum + (item.giftBoxFee || 0) * item.quantity, 0);
+    let packaging: any;
+    try { packaging = quotePackaging(cart.items, cart.packaging || legacyPackaging(cart.items), await this.getGiftBoxes()); }
+    catch (error) { packaging = { ...(cart.packaging || legacyPackaging(cart.items)), valid: false, totalFee: 0, boxes: [], boxCount: 0, notice: error.message + ' Vui lòng cập nhật cách đóng gói.' }; }
+    const giftWrapFee = packaging.totalFee;
     const voucherDiscount = appliedVoucher?.itemDiscount || 0;
     const totalAmount = Math.max(0, itemsTotal - voucherDiscount + shippingFee + giftWrapFee);
 
@@ -322,7 +328,8 @@ export class CartService {
 
     return {
       _id: cart._id,
-      items: cart.items,
+      items: cart.items.map(item => ({ ...((item as any).toObject?.() || item), ...{ packagingSize: itemPackaging(item).size, packagingUnits: itemPackaging(item).units } })),
+      packaging,
       paymentMode: cart.paymentMode,
       shippingMethod: cart.shippingMethod,
       voucherCode: cart.voucherCode,

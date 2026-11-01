@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Patch, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RecipientsService } from './recipients.service';
@@ -18,6 +18,9 @@ export class RecipientsController {
 
   @Delete(':id')
   remove(@CurrentUser('sub') userId: string, @Param('id') id: string) { return this.recipients.remove(userId, id); }
+
+  @Patch(':id')
+  update(@CurrentUser('sub') userId: string, @Param('id') id: string, @Body() dto: RecipientDto) { return this.recipients.update(userId, id, dto); }
 }
 
 @Controller('locations')

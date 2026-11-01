@@ -44,6 +44,8 @@ export const routes: Routes = [
     path: 'orders',
     loadComponent: () => import('./features/orders/orders.component').then(m => m.OrdersComponent)
   },
+  { path: 'gift/:code', loadComponent: () => import('./features/orders/gift-recipient.component').then(m => m.GiftRecipientComponent) },
+  { path: 'admin/orders/:code/gift-slip', canActivate: [adminGuard], loadComponent: () => import('./features/admin/orders/gift-slip-print.component').then(m => m.GiftSlipPrintComponent) },
   {
     path: 'orders/:code',
     loadComponent: () => import('./features/orders/orders.component').then(m => m.OrdersComponent)

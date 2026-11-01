@@ -1,3 +1,6 @@
+import { normalizeGift, giftPhone, giftNotice, giftRecipientView, validateGiftToken, requireGiftPrepaid } from './gift.rules';
+import { GiftBoxConfig, GiftBoxConfigDocument } from '../../database/schemas/gift-box-config.schema';
+import { normalizeBoxes, quotePackaging, legacyPackaging } from '../cart/packaging.rules';
 import { VouchersService } from '../vouchers/vouchers.service';
 import { shippingPrice } from '../vouchers/voucher.rules';
 import { CareService } from '../care/care.service';
@@ -38,6 +41,7 @@ export class OrdersService {
     @InjectModel(GuestCodOtpChallenge.name) private readonly guestCodOtpModel: Model<GuestCodOtpChallengeDocument>,
     private readonly vouchers?: VouchersService,
     private readonly configService?: ConfigService,
+    @InjectModel(GiftBoxConfig.name) private readonly giftBoxConfigModel?: Model<GiftBoxConfigDocument>,
   ) {}
 
   async sendGuestCodOtp(dto: GuestCodOtpRequestDto, userId?: string) {
@@ -156,15 +160,21 @@ export class OrdersService {
   }
 
   async createOrder(dto: CreateOrderDto, userId?: string) {
+    const greetingCard = normalizeGreetingCard(dto.greetingCard);
+    const gift = normalizeGift(dto.gift, dto.customerInfo, greetingCard, dto.paymentMethod);
     const requiresGuestCodOtp = !userId && dto.paymentMethod === PaymentMethod.COD;
     if (requiresGuestCodOtp && !dto.guestCodOtpChallengeId) {
       throw new BadRequestException('Khách đặt COD cần xác minh OTP trước khi tạo đơn hàng.');
     }
-    const greetingCard = normalizeGreetingCard(dto.greetingCard);
     const info = dto.customerInfo;
     if (info?.provinceCode !== undefined || info?.wardCode !== undefined || info?.street !== undefined) {
       dto.customerInfo = { ...info, ...normalizeAddress({ provinceCode: info.provinceCode, wardCode: info.wardCode, street: info.street }) };
     }
+    if (dto.customerInfo.districtName?.trim()) {
+      dto.customerInfo.districtName = dto.customerInfo.districtName.trim();
+      dto.customerInfo.address = dto.customerInfo.address.replace(/, ([^,]+)$/, `, ${dto.customerInfo.districtName}, $1`);
+    }
+    if (gift) dto.customerInfo.email = '';
     let orderItems: any[] = [];
     let itemsTotal = 0;
     let customDeposit = 0;
@@ -201,6 +211,7 @@ export class OrdersService {
         productId: product._id,
         productName: product.name,
         loyaltyEligible: product.loyaltyEligible !== false,
+        packagingSize: product.packagingSize || 'MEDIUM',
         productImage: variant?.image || variant?.images?.[0] || product.images?.[0] || '',
         variantName: variant?.name || 'Tiêu chuẩn',
         variantSku: variant?.sku,
@@ -245,9 +256,11 @@ export class OrdersService {
         customDeposit += depositRequired;
 
         return {
+          cartItemId: String(item._id),
           productId: product._id,
           productName: product.name,
         loyaltyEligible: product.loyaltyEligible !== false,
+        packagingSize: product.packagingSize || 'MEDIUM',
           productImage: item.image || product.images?.[0] || '',
           variantName: item.variantName || 'Tiêu chuẩn',
           variantSku: item.variantSku,
@@ -277,11 +290,13 @@ export class OrdersService {
     const shippingDiscount = voucher?.shippingDiscount || 0;
     const shippingFee = baseShippingFee - shippingDiscount;
 
-    const giftWrapFee = orderItems.reduce((sum, item) => sum + (item.giftBoxFee || 0) * item.quantity, 0);
+    const boxConfig = cart ? await this.giftBoxConfigModel?.findOne({ key: 'default' }).lean().exec() : null;
+    const packaging = cart ? quotePackaging(cart.items, cart.packaging || legacyPackaging(cart.items), normalizeBoxes(boxConfig?.boxes)) : null;
+    const giftWrapFee = packaging?.totalFee || 0;
     const totalAmount = Math.max(0, itemsTotal - voucherDiscount + shippingFee + giftWrapFee);
 
     // COD prepays only half of custom line totals; standard goods and shipping remain payable on delivery.
-    const depositAmount = dto.paymentMethod === PaymentMethod.COD
+    const depositAmount = !gift && dto.paymentMethod === PaymentMethod.COD
       ? Math.min(totalAmount, customDeposit)
       : totalAmount;
 
@@ -290,38 +305,19 @@ export class OrdersService {
 
     const isStandardCod = !hasCustomProduct && dto.paymentMethod === PaymentMethod.COD;
 
-    const initialTimeline = [
-      {
-        title: 'Đơn hàng khởi tạo thành công',
-        description: `Đơn hàng ${orderCode} đã được ghi nhận trên hệ thống Giftory.`,
-        timestamp: new Date(),
-        completed: true
-      },
-      {
-        title: isStandardCod ? 'Ghi nhận đơn hàng COD Pending' : (dto.paymentMethod === PaymentMethod.COD ? 'Đặt cọc 50% tiền Custom & Chờ duyệt xưởng' : 'Thanh toán trực tuyến QR 100%'),
-        description: isStandardCod
-          ? 'Đơn hàng sản phẩm có sẵn sử dụng COD (COD Pending). Chuẩn bị chuyển đóng gói.'
-          : (depositAmount > 0 
-              ? `Cần thanh toán ${depositAmount.toLocaleString('vi-VN')}đ qua mã QR để chuyển thông tin xưởng chế tác.`
-              : 'Đơn hàng sẵn sàng đóng gói.'),
-        timestamp: new Date(),
-        completed: isStandardCod
-      },
-      {
-        title: hasCustomProduct ? 'Gia công & Chế tác tại Xưởng Giftory' : 'Đóng gói sản phẩm quà tặng',
-        description: hasCustomProduct 
-          ? 'Đội ngũ nghệ nhân tiến hành xử lý nhiệt, khắc laser vi điểm hoặc in UV chuyên dụng.'
-          : 'Xịt tinh dầu hoa khô, niêm phong tem seal và đóng hộp quà.',
-        timestamp: new Date(Date.now() + 6 * 60 * 60 * 1000),
-        completed: false
-      },
-      {
-        title: 'Bàn giao Shipper vận chuyển',
-        description: `Đơn hàng giao qua ${shippingMethod === 'EXPRESS' ? 'Hỏa Tốc 2h - 48h' : 'Giao Hàng Tiêu Chuẩn'}.`,
-        timestamp: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        completed: false
-      }
-    ];
+    // History contains only events that have actually happened.
+    const initialTimeline = [{
+      title: 'Đơn hàng khởi tạo thành công',
+      description: `Đơn hàng ${orderCode} đã được ghi nhận và đang chờ admin xác nhận.`,
+      timestamp: new Date(),
+      completed: true,
+    }];
+    if (isStandardCod) initialTimeline.push({
+      title: 'Ghi nhận thanh toán khi nhận hàng',
+      description: 'Đơn hàng COD không cần thanh toán trước và đang chờ admin xác nhận.',
+      timestamp: new Date(),
+      completed: true,
+    });
 
     const initialPaymentStatus = isStandardCod 
       ? PaymentStatus.UNPAID // COD Pending
@@ -360,7 +356,9 @@ export class OrdersService {
         userId: userId ? new Types.ObjectId(userId) : undefined,
         customerInfo: dto.customerInfo,
         greetingCard,
+        gift,
         items: orderItems,
+      packaging,
         pricing: {
           itemsTotal,
           voucherDiscount,
@@ -376,7 +374,7 @@ export class OrdersService {
         orderStatus: OrderStatus.AWAITING_CONFIRMATION,
         fulfillmentStatus: FulfillmentStatus.AWAITING_CONFIRMATION,
         timeline: initialTimeline,
-        trackingCode: `GHTK-VN-${Math.floor(1000000 + Math.random() * 9000000)}`,
+        trackingCode: '',
         shippingCarrier: shippingMethod === 'EXPRESS' ? 'Giao Hàng Hỏa Tốc (2h - 48h)' : 'Giao Hàng Tiêu Chuẩn',
         confirmationWait: {
           minWaitHours: 12,
@@ -389,7 +387,7 @@ export class OrdersService {
         isPackaged: false,
         deliveryInfo: {
           carrier: shippingMethod === 'EXPRESS' ? 'Giao Hàng Hỏa Tốc (2h - 48h)' : 'Giao Hàng Tiêu Chuẩn',
-          trackingCode: `GHTK-VN-${Math.floor(1000000 + Math.random() * 9000000)}`,
+          trackingCode: '',
           deliveryAttempts: [],
           deliveryResult: 'PENDING',
           failureReason: '',
@@ -408,9 +406,14 @@ export class OrdersService {
       throw error;
     }
 
+    if (gift) {
+      giftNotice(order, 'ORDER_CREATED', `Đã nhận đơn quà ${orderCode}. Hóa đơn và thông báo thanh toán chỉ dành cho người đặt ${gift.sender.name}.`);
+      await order.save();
+    }
     // Clear cart items ONLY for regular cart orders (preserve cart for Buy Now)
     if (!dto.buyNowItem && cart) {
       cart.items = [];
+      cart.packaging = null;
       cart.voucherCode = '';
       cart.voucherDiscount = 0;
       await cart.save();
@@ -431,30 +434,87 @@ export class OrdersService {
     if (order.paymentStatus !== PaymentStatus.UNPAID) return order;
 
     const isFull = order.pricing.depositAmount >= order.pricing.totalAmount;
-    const timeline = order.timeline.map((entry, index) => index === 1 ? {
-      ...entry,
-      completed: true,
+    const paymentEvent = {
       title: isFull ? 'Đã thanh toán 100% (mô phỏng)' : 'Đã cọc 50% (mô phỏng)',
-      description: `Đồ án mô phỏng nhận ${order.pricing.depositAmount.toLocaleString('vi-VN')}đ. Không có giao dịch ngân hàng thực.`,
-    } : entry);
-    timeline.push({
-      title: 'Hệ thống mô phỏng xác nhận thanh toán',
-      description: 'Thanh toán thành công trong chế độ đồ án. Không có giao dịch ngân hàng thực.',
+      description: `Đã ghi nhận ${order.pricing.depositAmount.toLocaleString('vi-VN')}đ trong chế độ đồ án. Không có giao dịch ngân hàng thực. Tiến độ xử lý đơn hàng được cập nhật bởi admin.`,
       timestamp: new Date(),
       completed: true,
-    });
+    };
     // Conditional update makes retries safe, including simultaneous requests.
     const updated = await this.orderModel.findOneAndUpdate(
       { _id: order._id, paymentStatus: PaymentStatus.UNPAID, orderStatus: order.orderStatus, refundPending: { $ne: true } },
       {
         $set: {
           paymentStatus: isFull ? PaymentStatus.PAID_FULL : PaymentStatus.PARTIALLY_PAID_DEPOSIT_50,
-          fulfillmentStatus: FulfillmentStatus.AT_WORKSHOP,
-          timeline,
         },
+        $push: { timeline: paymentEvent, ...(order.gift?.enabled ? { 'gift.notifications': { id: randomUUID(), kind: 'PAYMENT_CONFIRMED', audience: 'BUYER', destination: order.gift.sender.email, status: 'SIMULATED', timestamp: new Date(), text: `Đã nhận thanh toán ${order.pricing.depositAmount.toLocaleString('vi-VN')}đ cho đơn quà ${order.orderCode}. Hóa đơn gửi riêng người đặt.` } } : {}) },
       },
       { new: true },
     ).exec();
+    return updated || this.getOrderByCode(orderCode, userId, phone);
+  }
+
+  async giftRecipientOrder(orderCode: string, token: string) {
+    const order = await this.orderModel.findOne({ orderCode: orderCode.trim().toUpperCase() }).exec();
+    validateGiftToken(order, token);
+    return order;
+  }
+  async recipientGift(orderCode: string, token: string) {
+    const order = await this.giftRecipientOrder(orderCode, token);
+    return { ...giftRecipientView(order), cases: await this.care.recipientGiftCases(order._id) };
+  }
+  async giftSlip(id: string) {
+    const order = await this.findOrderById(id);
+    if (!order.gift?.enabled) throw new BadRequestException('Đơn này không gửi quà trực tiếp');
+    const base = (this.configService?.get<string>('FRONTEND_URL') || 'http://localhost:4200').replace(/\/$/, '');
+    const recipientUrl = `${base}/gift/${order.orderCode}#${order.gift.recipientAccessToken}`;
+    const QRCode = require('qrcode');
+    const qrImage = await QRCode.toDataURL(recipientUrl, { errorCorrectionLevel: 'M', margin: 4, width: 240 });
+    return { ...giftRecipientView(order), recipientUrl, qrImage };
+  }
+  async simulateGiftLink(id: string) {
+    const order = await this.findOrderById(id);
+    if (!order.gift?.enabled || !['AWAITING_BUYER', 'AWAITING_RECIPIENT'].includes(order.gift.exception?.status)) throw new BadRequestException('Chỉ gửi link hẹn lại khi có ngoại lệ giao quà');
+    order.gift.exception.status = 'AWAITING_RECIPIENT';
+    giftNotice(order, 'REDELIVERY_LINK', 'Giftory mời bạn xác nhận thời gian nhận quà thuận tiện qua link riêng.', 'RECIPIENT');
+    await order.save();
+    return { status: 'SIMULATED', ...(await this.giftSlip(id)) };
+  }
+  private validateGiftWindow(window: string) {
+    const value = typeof window === 'string' ? new Date(window) : null;
+    if (!value || !Number.isFinite(value.getTime()) || value.getTime() < Date.now() || value.getTime() > Date.now() + 30 * 86400000) throw new BadRequestException('Chọn giờ giao lại trong 30 ngày tới');
+    return value.toISOString();
+  }
+  async scheduleGift(order: any, window: string, actor: string) {
+    if (!order.gift?.enabled || !['AWAITING_BUYER', 'AWAITING_RECIPIENT'].includes(order.gift.exception?.status) || !['IN_TRANSIT', 'SHIPPING'].includes(order.orderStatus)) throw new BadRequestException('Đơn không chờ hẹn giao lại');
+    order.gift.exception = { ...order.gift.exception, status: 'READY_TO_RETRY', requestedWindow: this.validateGiftWindow(window), confirmedBy: actor, confirmedAt: new Date() };
+    giftNotice(order, 'REDELIVERY_CONFIRMED', `Đã hẹn giao lại cho ${order.customerInfo.name}: ${order.gift.exception.requestedWindow}.`);
+    order.timeline.push({ title: 'Đã xác nhận thời gian giao lại', description: `${actor} đã chọn thời gian nhận quà.`, timestamp: new Date(), completed: true });
+    await order.save();
+    return { status: 'CONFIRMED', requestedWindow: order.gift.exception.requestedWindow };
+  }
+  async recipientSchedule(orderCode: string, token: string, window: string) {
+    const order = await this.giftRecipientOrder(orderCode, token);
+    if (order.gift.exception?.status !== 'AWAITING_RECIPIENT') throw new BadRequestException('Chưa có lời mời xác nhận giao lại');
+    return this.scheduleGift(order, window, 'Người nhận');
+  }
+  async buyerSchedule(orderCode: string, userId: string, phone: string, window: string) {
+    const order = await this.getOrderByCode(orderCode, userId, phone);
+    return this.scheduleGift(order, window, 'Người đặt');
+  }
+  async recipientWarranty(orderCode: string, token: string, body: any) {
+    const order = await this.giftRecipientOrder(orderCode, token);
+    return this.care.createRecipientGiftCase(order, body);
+  }
+  async settleGiftBalance(orderCode: string, userId?: string, phone?: string) {
+    if (process.env.NODE_ENV === 'production' || process.env.ENABLE_PAYMENT_SIMULATION === 'false') throw new BadRequestException('Thanh toán mô phỏng không khả dụng');
+    const order = await this.getOrderByCode(orderCode, userId, phone);
+    if (!order.gift?.enabled || order.paymentStatus !== PaymentStatus.PARTIALLY_PAID_DEPOSIT_50 || order.refundPending || [OrderStatus.CANCELLED, OrderStatus.DELIVERED, OrderStatus.RETURNED_BP06].includes(order.orderStatus)) throw new BadRequestException('Đơn không cần hoặc không thể thanh toán bổ sung');
+    const updated = await this.orderModel.findOneAndUpdate({ _id: order._id, paymentStatus: PaymentStatus.PARTIALLY_PAID_DEPOSIT_50, orderStatus: order.orderStatus, refundPending: { $ne: true } }, {
+      $set: { paymentStatus: PaymentStatus.PAID_FULL, 'pricing.depositAmount': order.pricing.totalAmount, 'pricing.remainingCodAmount': 0 },
+      $push: { timeline: { title: 'Người đặt đã thanh toán đủ tiền quà (mô phỏng)', description: 'Không thu COD từ người nhận.', completed: true, timestamp: new Date() },
+        'gift.notifications': { kind: 'PAYMENT_SETTLED', text: 'Người đặt đã thanh toán đủ 100% tiền quà. Không thu tiền từ người nhận.', audience: 'BUYER', destination: order.gift.sender.email, status: 'SIMULATED', timestamp: new Date() } },
+    }, { new: true }).exec();
     return updated || this.getOrderByCode(orderCode, userId, phone);
   }
 
@@ -472,7 +532,7 @@ export class OrdersService {
     const order = await this.orderModel.findOne({ orderCode: orderCode.trim().toUpperCase() }).exec();
     const normalizePhone = (value: string) => value.replace(/[\s().-]/g, '').replace(/^\+?84/, '0');
     const owned = order && userId && order.userId?.toString() === userId;
-    const verifiedPhone = order && typeof phone === 'string' && /^0\d{8,10}$/.test(normalizePhone(phone)) && normalizePhone(phone) === normalizePhone(order.customerInfo.phone);
+    const verifiedPhone = order && typeof phone === 'string' && /^0\d{8,10}$/.test(normalizePhone(phone)) && normalizePhone(phone) === normalizePhone(order.gift?.enabled ? order.gift.sender.phone : order.customerInfo.phone);
     if (!order || (!owned && !verifiedPhone)) {
       throw new NotFoundException('Không tìm thấy đơn hàng phù hợp với thông tin tra cứu');
     }
@@ -533,6 +593,9 @@ export class OrdersService {
     }
     if (body.orderStatus && [OrderStatus.PENDING, OrderStatus.AWAITING_CONFIRMATION].includes(body.orderStatus) && ![OrderStatus.PENDING, OrderStatus.AWAITING_CONFIRMATION].includes(order.orderStatus)) throw new BadRequestException('Không thể đưa đơn đã xác nhận về trạng thái chưa xác nhận');
     if (body.orderStatus && !Object.values(OrderStatus).includes(body.orderStatus)) throw new BadRequestException('Trạng thái đơn không hợp lệ');
+    if (order.gift?.enabled && ([OrderStatus.IN_TRANSIT, OrderStatus.SHIPPING].includes(body.orderStatus) || body.fulfillmentStatus === FulfillmentStatus.SHIPPED)) {
+      throw new BadRequestException('Vui lòng dùng thao tác bàn giao vận chuyển để kiểm tra thanh toán và phương án giao quà');
+    }
     if (body.orderStatus) order.orderStatus = body.orderStatus;
     if (body.fulfillmentStatus) order.fulfillmentStatus = body.fulfillmentStatus;
     if (body.paymentStatus) order.paymentStatus = body.paymentStatus;
@@ -614,6 +677,7 @@ export class OrdersService {
       order.confirmationWait.confirmedBy = user?.name || 'Admin Quản lý đơn hàng';
     }
 
+    giftNotice(order, 'ORDER_CONFIRMED', `Đơn quà ${order.orderCode} đã được xác nhận để chuẩn bị cho ${order.customerInfo.name}.`);
     // BR-05: Trích xuất thông tin Order Items và phân loại sản phẩm
     if (order.items && order.items.length > 0) {
       order.items = order.items.map((item: any) => {
@@ -689,6 +753,7 @@ export class OrdersService {
     }
 
     item.status = OrderItemStatus.IN_PRODUCTION;
+    giftNotice(order, 'PRODUCTION', `Món quà ${item.productName} đang được gia công theo thiết kế đã đặt.`);
     order.fulfillmentStatus = FulfillmentStatus.AT_WORKSHOP;
 
     order.timeline.push({
@@ -791,6 +856,7 @@ export class OrdersService {
       );
     }
 
+    giftNotice(order, 'PACKAGED', `Món quà cho ${order.customerInfo.name} đã được gói, kèm ruy băng và thiệp chúc mừng.`);
     order.isPackaged = true;
     order.packagedAt = new Date();
     order.packagedBy = user?.name || 'Admin Quản lý đơn hàng';
@@ -815,6 +881,8 @@ export class OrdersService {
   ) {
     const order = await this.findOrderById(orderId);
 
+    requireGiftPrepaid(order);
+    if (order.gift?.exception?.status === 'AWAITING_BUYER' || order.gift?.exception?.status === 'AWAITING_RECIPIENT') throw new BadRequestException('Đang chờ xác nhận thời gian giao lại từ người đặt/người nhận');
     // BR-10: Đơn chưa đóng gói thì không được bàn giao
     if (order.refundPending || [OrderStatus.CANCELLED, OrderStatus.DELIVERED, OrderStatus.RETURNED_BP06].includes(order.orderStatus)) throw new BadRequestException('Đơn không thể bàn giao vận chuyển');
     if (!order.isPackaged) {
@@ -824,6 +892,7 @@ export class OrdersService {
     const carrier = body.carrier || order.shippingCarrier || 'Giao Hàng Tiết Kiệm (GHTK)';
     const trackingCode = body.trackingCode || order.trackingCode || `GHTK-VN-${Math.floor(1000000 + Math.random() * 9000000)}`;
 
+    giftNotice(order, 'IN_TRANSIT', `Món quà của bạn đang trên đường tới ${order.customerInfo.name}.`);
     order.orderStatus = OrderStatus.IN_TRANSIT;
     order.fulfillmentStatus = FulfillmentStatus.SHIPPED;
     order.shippingCarrier = carrier;
@@ -859,6 +928,7 @@ export class OrdersService {
       failureReason?: string;
       allowRetry?: boolean;
       note?: string;
+      proofOfDelivery?: string;
     },
     user: any
   ) {
@@ -882,6 +952,12 @@ export class OrdersService {
     }
 
     if (body.success) {
+      if (order.gift?.enabled) {
+        if (typeof body.proofOfDelivery !== 'string' || !/^https:\/\//.test(body.proofOfDelivery) || body.proofOfDelivery.length > 2000) throw new BadRequestException('Đơn quà cần ảnh bằng chứng giao hàng (URL HTTPS)');
+        order.gift.proofOfDelivery = body.proofOfDelivery;
+        order.gift.exception = null;
+        giftNotice(order, 'DELIVERED', `Món quà đã được giao thành công tới ${order.customerInfo.name}. Ảnh giao hàng: ${body.proofOfDelivery}`);
+      }
       // US-04.05, BR-12: Giao hàng thành công
       order.deliveredAt = new Date();
       order.orderStatus = OrderStatus.DELIVERED;
@@ -910,7 +986,12 @@ export class OrdersService {
         note: body.note || ''
       });
 
-      if (body.allowRetry) {
+      if (order.gift?.enabled) {
+        order.deliveryInfo.allowRetry = true;
+        order.gift.exception = { status: 'AWAITING_BUYER', reason: body.failureReason.trim(), raisedAt: new Date() };
+        giftNotice(order, 'DELIVERY_EXCEPTION', `Chúng tôi không liên lạc được với người nhận ${order.customerInfo.name} hoặc người nhận từ chối nhận quà. Bạn vui lòng hỗ trợ liên hệ hoặc xác nhận khung giờ giao lại. Lý do: ${body.failureReason.trim()}`);
+        order.timeline.push({ title: 'Chờ người đặt hỗ trợ giao quà', description: 'Giữ kiện quà tại đơn vị vận chuyển; không tự ý hủy hoặc trả hàng. Đang liên hệ người đặt để xác nhận giao lại.', timestamp: new Date(), completed: true });
+      } else if (body.allowRetry) {
         // BR-14: Được phép giao lại -> Trạng thái vẫn là "In transit"
         order.orderStatus = OrderStatus.IN_TRANSIT;
         order.timeline.push({
@@ -948,6 +1029,7 @@ export class OrdersService {
   async receiveReturnedOrder(orderId: string, user: any) {
     const order = await this.findOrderById(orderId);
 
+    if (order.gift?.enabled && ['AWAITING_BUYER', 'AWAITING_RECIPIENT'].includes(order.gift.exception?.status)) throw new BadRequestException('Không được tự trả quà khi chưa xử lý ngoại lệ với người đặt');
     if (order.fulfillmentStatus !== FulfillmentStatus.RETURNING && !order.deliveryInfo?.returnedAt) {
       throw new BadRequestException('Chỉ tiếp nhận hàng trả về đối với đơn hàng Delivery Service đã xác nhận trả hàng (US-04.07)!');
     }

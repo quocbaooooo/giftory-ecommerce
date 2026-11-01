@@ -191,5 +191,19 @@ async function test(name, run) { await run(); count++; console.log(`PASS ${name}
     await full.fire(); await full.reply(full.requests[0]);
     assert.equal(full.service.pricing().depositAmount, 955000);
   });
+  await test('packaging waits for quantity edits before saving and exposes pending state', async () => {
+    const f = await fixture();
+    f.service.updateQuantity(0, 2).subscribe();
+    f.service.updatePackaging({ mode: 'BUNDLED', boxStyle: 'SILK' }).subscribe();
+    await tick();
+    assert.equal(f.service.packagingSyncPending(), true);
+    assert.equal(f.requests.length, 1);
+    assert.equal(f.requests[0].method, 'PATCH');
+    await f.reply(f.requests[0]); await tick();
+    assert.equal(f.requests[1].url, 'cart/packaging');
+    assert.equal(f.requests[1].body.packaging.mode, 'BUNDLED');
+    await f.reply(f.requests[1]);
+    assert.equal(f.service.packagingSyncPending(), false);
+  });
   console.log(`${count} cart quantity checks passed`);
 })().catch(error => { console.error(error); process.exitCode = 1; });

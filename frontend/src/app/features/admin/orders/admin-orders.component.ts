@@ -280,6 +280,23 @@ import { Order, OrderItemDetail } from '../../../core/models';
             </button>
           </div>
 
+          @if (ord.gift?.enabled) {
+            <section class="space-y-3 rounded-2xl border border-[#E6D2DA] bg-[#FCF7F9] p-5 text-xs">
+              <h3 class="font-bold text-[#800020]">Gửi quà trực tiếp · Giấu giá · Không thu COD</h3>
+              <div class="grid gap-3 sm:grid-cols-2"><div><strong>Người đặt / Chủ thể thanh toán</strong><p class="mt-1">{{ ord.gift?.sender?.name }} · {{ ord.gift?.sender?.phone }}</p><p>{{ ord.gift?.sender?.email }}</p></div><div><strong>Người nhận</strong><p class="mt-1">{{ ord.customerInfo?.name }} · {{ ord.customerInfo?.phone }}</p><p>Người gửi trên phiếu: {{ ord.gift?.anonymous ? 'Giftory (ẩn danh)' : ord.gift?.sender?.name }}</p></div></div>
+              <p>Gói quà, ruy băng và thiệp. Chỉ dùng phiếu giao không có giá; hóa đơn thuộc người đặt.</p>
+              <a [routerLink]="['/admin/orders', ord.orderCode, 'gift-slip']" target="_blank" rel="noopener" class="inline-block rounded-xl bg-[#800020] px-4 py-2 font-bold text-white">In phiếu giao & thiệp có QR bảo hành</a>
+              @if (ord.paymentStatus !== 'PAID_FULL') { <p class="font-bold text-rose-700">Chưa thanh toán đủ: không được bàn giao cho vận chuyển.</p> }
+              @if (ord.gift?.exception; as issue) {
+                <div class="rounded-xl border border-amber-200 bg-amber-50 p-3"><strong>Chờ xử lý ngoại lệ giao quà</strong><p class="mt-1">{{ issue.reason }}</p><p>Trạng thái: {{ issue.status }} @if (issue.requestedWindow) { · {{ issue.requestedWindow | date:'dd/MM/yyyy HH:mm':'+0700' }} }</p>
+                  <p class="mt-1">Liên hệ người đặt, không tự ý hủy/trả quà.</p>
+                  @if (issue.status === 'AWAITING_BUYER' || issue.status === 'AWAITING_RECIPIENT') { <button type="button" (click)="simulateGiftInvite(ord)" class="mt-3 rounded-lg border border-[#800020] px-3 py-2 font-bold text-[#800020]">Mô phỏng gửi link SMS/Zalo hẹn nhận</button> }
+                  @if (giftLinks()[ord._id]) { <p role="status" class="mt-2 text-emerald-700">Đã mô phỏng gửi, không gửi SMS/Zalo thật.</p><a [href]="giftLinks()[ord._id]" target="_blank" rel="noopener noreferrer" class="mt-2 block break-all text-[#800020] underline">{{ giftLinks()[ord._id] }}</a> }
+                </div>
+              }
+              <details><summary class="cursor-pointer font-semibold">Lịch sử thông báo mô phỏng</summary>@for (n of ord.gift?.notifications || []; track n.id) { <p class="mt-2 rounded-lg bg-white p-2">{{ n.audience === 'BUYER' ? 'Người đặt' : 'Người nhận' }} · {{ n.timestamp | date:'HH:mm dd/MM':'+0700' }} · {{ n.text }}</p> }</details>
+            </section>
+          }
           <!-- Customer & Order Meta Banner -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
             <div>
@@ -306,10 +323,13 @@ import { Order, OrderItemDetail } from '../../../core/models';
             <section class="p-5 rounded-2xl border border-[#EBD3AE] bg-[#FFF5E1]/40 space-y-3">
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <div><h3 class="font-bold text-sm text-[#800020]">Thiệp in kèm gói quà · {{ card.templateName }}</h3><p class="text-xs text-slate-500 mt-1">Kiểm tra lời chúc, in thiệp và cho vào hộp trước khi đóng gói.</p></div>
-                <a [routerLink]="['/admin/orders', ord.orderCode, 'greeting-card']" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#800020] text-[#FFF5E1] font-bold text-xs"><span class="material-symbols-outlined text-base" aria-hidden="true">print</span>Mở bản in thiệp</a>
+                <a [routerLink]="['/admin/orders', ord.orderCode, ord.gift?.enabled ? 'gift-slip' : 'greeting-card']" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#800020] text-[#FFF5E1] font-bold text-xs"><span class="material-symbols-outlined text-base" aria-hidden="true">print</span>Mở bản in thiệp</a>
               </div>
               <app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" />
             </section>
+          }
+          @if (ord.packaging?.boxCount) {
+            <section class="rounded-2xl border border-[#E8D7DD] bg-[#FCF7F9] p-4 text-xs"><h3 class="font-bold text-[#800020]">Hướng dẫn đóng gói · {{ ord.packaging?.boxCount }} hộp · {{ ord.packaging?.totalFee | number }}đ</h3>@for (box of ord.packaging?.boxes || []; track $index) { <div class="mt-3 rounded-xl bg-white p-3"><strong>{{ box.name }} · Size {{ box.size }} × {{ box.quantity }}</strong>@for (member of box.items; track member.itemId) { <p class="mt-1 text-slate-600">{{ member.productName }} × {{ member.quantity }}</p> }</div> }<p class="mt-3 text-slate-500">Các món không được phân bổ vào hộp quà dùng bao bì tiêu chuẩn; sản phẩm Oversized dùng bao bì chuyên dụng.</p></section>
           }
           <!-- STEP 1: XÁC NHẬN ĐƠN HÀNG (US-04.01, BR-01, BR-02, BR-03, BR-04) -->
           <!-- ========================================================== -->
@@ -586,6 +606,9 @@ import { Order, OrderItemDetail } from '../../../core/models';
               </span>
             </div>
 
+            @if (ord.gift?.enabled && ord.orderStatus === 'IN_TRANSIT') {
+              <div class="rounded-xl border bg-white p-4"><label class="block text-xs font-semibold">Ảnh bằng chứng giao hàng (bắt buộc với quà)<input type="url" [ngModel]="proofUrls()[ord._id] || ord.gift?.proofOfDelivery || ''" (ngModelChange)="setGiftProof(ord._id, $event)" placeholder="https://..." class="mt-2 block w-full rounded-xl border p-2 text-sm" /></label><label class="mt-2 block text-xs text-[#800020]">Tải ảnh giao hàng<input type="file" accept="image/jpeg,image/png,image/webp" (change)="uploadGiftProof($event, ord._id)" class="mt-1 block text-xs" /></label></div>
+            }
             <!-- If In Transit: Show Actions to Report Delivery Result -->
             <div *ngIf="ord.orderStatus === 'IN_TRANSIT'" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <!-- Success Option (US-04.05, BR-12) -->
@@ -1225,9 +1248,19 @@ export class AdminOrdersComponent implements OnInit {
   }
 
   // US-04.05: Delivery Success (BR-12)
+  giftLinks = signal<Record<string, string>>({});
+  proofUrls = signal<Record<string, string>>({});
+  setGiftProof(id: string, url: string) { this.proofUrls.update(value => ({ ...value, [id]: url })); }
+  uploadGiftProof(event: Event, id: string) {
+    const file = (event.target as HTMLInputElement).files?.[0]; if (!file) return;
+    this.adminService.uploadImage(file).subscribe({ next: result => { const url = result.url || result.secure_url; if (url) this.setGiftProof(id, url); }, error: () => alert('Chưa tải được ảnh giao hàng.') });
+  }
+  simulateGiftInvite(ord: Order) { this.adminService.simulateGiftLink(ord._id).subscribe({ next: result => { this.giftLinks.update(value => ({ ...value, [ord._id]: result.recipientUrl })); this.adminService.getOrderById(ord._id).subscribe(updated => this.updateLocalOrder(updated)); }, error: err => alert(err.error?.message || 'Chưa tạo được link nhận quà.') }); }
   handleDeliverySuccess(ord: Order) {
+    const proofOfDelivery = this.proofUrls()[ord._id] || ord.gift?.proofOfDelivery || '';
+    if (ord.gift?.enabled && !/^https:\/\//.test(proofOfDelivery)) { alert('Vui lòng tải hoặc nhập URL ảnh bằng chứng giao hàng trước.'); return; }
     if (!confirm('Xác nhận khách hàng đã nhận được kiện hàng thành công?')) return;
-    this.adminService.reportDeliveryResult(ord._id, { success: true }).subscribe({
+    this.adminService.reportDeliveryResult(ord._id, { success: true, ...(ord.gift?.enabled ? { proofOfDelivery } : {}) }).subscribe({
       next: (res: any) => {
         const updated = res?.data || res;
         this.updateLocalOrder(updated);

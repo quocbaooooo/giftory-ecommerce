@@ -20,11 +20,11 @@ import { environment } from '../../../environments/environment';
         @if (demoPayment) {
           <p class="text-xs font-semibold text-amber-800 bg-amber-50 rounded-xl p-3">Kết quả mô phỏng cho đồ án • Không có giao dịch ngân hàng thực</p>
         }
-        <p class="text-slate-600">{{ order()?.paymentStatus === 'PARTIALLY_PAID_DEPOSIT_50' ? 'Đã ghi nhận khoản cọc cho sản phẩm Custom. Phần còn lại thanh toán khi nhận hàng.' : 'Đã ghi nhận thanh toán 100% cho đơn hàng.' }}</p>
+        <p class="text-slate-600">{{ order()?.paymentStatus === 'PARTIALLY_PAID_DEPOSIT_50' ? (order()?.gift?.enabled ? 'Đã ghi nhận tiền cọc. Người đặt cần thanh toán đủ trước khi bàn giao quà; không thu COD từ người nhận.' : 'Đã ghi nhận khoản cọc cho sản phẩm Custom. Phần còn lại thanh toán khi nhận hàng.') : 'Đã ghi nhận thanh toán 100% cho đơn hàng.' }}</p>
         <p class="font-mono font-bold text-[#800020]">#{{ order()?.orderCode }}</p>
         <p class="text-xl font-bold">{{ order()?.pricing?.depositAmount | number:'1.0-0' }}đ</p>
         @if (order()?.paymentStatus === 'PARTIALLY_PAID_DEPOSIT_50') {
-          <p class="text-sm text-slate-500">Còn lại thanh toán khi nhận hàng: {{ order()?.pricing?.remainingCodAmount | number:'1.0-0' }}đ</p>
+          <p class="text-sm text-slate-500">{{ order()?.gift?.enabled ? 'Người đặt cần thanh toán trước khi giao:' : 'Còn lại thanh toán khi nhận hàng:' }} {{ order()?.pricing?.remainingCodAmount | number:'1.0-0' }}đ</p>
         }
         <a [routerLink]="['/orders', order()?.orderCode]" [state]="{ lookupPhone: lookupPhone }" class="inline-block px-6 py-3 rounded-xl bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] font-semibold">Xem lộ trình đơn hàng</a>
       } @else {

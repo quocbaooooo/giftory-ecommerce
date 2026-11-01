@@ -1,9 +1,10 @@
 import { Transform } from 'class-transformer';
-import { IsString, Length, Matches } from 'class-validator';
+import { IsString, Length, Matches, IsOptional, IsIn } from 'class-validator';
 
 const trim = ({ value }: { value: unknown }) => typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value;
 
 export class RecipientDto {
+  @IsOptional() @IsIn(['DELIVERY', 'RECIPIENT']) purpose?: 'DELIVERY' | 'RECIPIENT';
   @Transform(trim)
   @IsString()
   @Length(2, 100)

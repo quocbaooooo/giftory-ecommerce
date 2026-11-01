@@ -447,6 +447,27 @@ export class CareService implements OnModuleInit, OnModuleDestroy {
       return review;
     });
   }
+  private recipientCaseView(item: any) {
+    return { id: String(item._id), productId: String(item.productId), reason: item.reason, description: item.description, status: item.status, resolution: item.resolution === 'REFUND' ? undefined : item.resolution };
+  }
+  async recipientGiftCases(orderId: any) {
+    const list = await this.cases.find({ orderId, claimantRole: 'RECIPIENT' }).sort({ createdAt: -1 }).limit(20);
+    return list.map(item => this.recipientCaseView(item));
+  }
+  async createRecipientGiftCase(order: any, body: any) {
+    if (!order.gift?.enabled || !['IN_TRANSIT', 'SHIPPING', 'DELIVERED'].includes(order.orderStatus)) throw new BadRequestException('Chỉ yêu cầu bảo hành khi quà đã được giao hoặc đang bàn giao');
+    if (body.type && body.type !== 'WARRANTY' || body.resolution || body.refundAccount) throw new BadRequestException('Người nhận chỉ có quyền bảo hành/đổi sản phẩm lỗi, không có quyền tài chính');
+    if (!['SCRATCHED', 'BROKEN', 'WRONG_CUSTOM'].includes(body.reason)) throw new BadRequestException('Chọn lý do trầy xước, vỡ hoặc sai mẫu tùy chỉnh');
+    if (!order.items.some((item: any) => String(item.productId) === body.productId)) throw new BadRequestException('Sản phẩm không thuộc món quà này');
+    const description = requiredText(body.description, 'Mô tả lỗi', 10, 1000);
+    const item = await this.cases.findOneAndUpdate({ sourceKey: `gift-warranty:${order._id}:${body.productId}` }, { $setOnInsert: {
+      orderId: order._id, productId: this.id(body.productId), type: 'COMPLAINT', claimantRole: 'RECIPIENT',
+      claimantName: order.customerInfo.name, claimantPhone: order.customerInfo.phone,
+      reason: body.reason, description, attachments: [], ...supportAvailability(),
+    } }, { new: true, upsert: true });
+    return this.recipientCaseView(item);
+  }
+
   async createCase(userId: string, body: any) {
     const order = await this.ownedOrder(body.orderId, userId);
     if (!['RETURN', 'COMPLAINT', 'SUPPORT'].includes(body.type))
@@ -601,6 +622,7 @@ export class CareService implements OnModuleInit, OnModuleDestroy {
               'Đã có yêu cầu hoàn tiền, không được đổi phương án',
             );
           item.resolution = body.resolution;
+          if (body.resolution === 'REFUND' && item.claimantRole === 'RECIPIENT') throw new BadRequestException('Yêu cầu người nhận chỉ xử lý đổi hàng/bảo hành. Hoàn tiền phải từ yêu cầu riêng của người đặt và về nguồn thanh toán gốc.');
           if (body.resolution === 'REFUND' && !existingRefund) {
             const amount = paidAmount(order);
             if (
@@ -742,6 +764,8 @@ export class CareService implements OnModuleInit, OnModuleDestroy {
           orderId: String(refund.orderId),
           amount: refund.amount,
           currency: 'VND',
+          refundTarget: 'ORIGINAL_PAYMENT_SOURCE',
+          payerUserId: refund.userId ? String(refund.userId) : undefined,
         }),
         signal: AbortSignal.timeout(10000),
         redirect: 'error',

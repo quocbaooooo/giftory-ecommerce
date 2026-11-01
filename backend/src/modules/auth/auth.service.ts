@@ -10,6 +10,8 @@ import { RefreshToken, RefreshTokenDocument } from '../../database/schemas/refre
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UserRole } from '../../common/enums/role.enum';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { normalizeAddress } from '../recipients/address.rules';
 const digest = (value: string) => createHash('sha256').update(value).digest('hex');
 @Injectable()
 export class AuthService {
@@ -74,6 +76,20 @@ export class AuthService {
     const user = await this.userModel.findById(userId).select('-password');
     if (!user) throw new NotFoundException('Không tìm thấy tài khoản');
     return user;
+  }
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const name = dto.fullName.trim().replace(/\s+/g, ' ');
+    const phone = dto.phone.replace(/[\s().-]/g, '').replace(/^\+?84/, '0');
+    if (name.length < 2 || !/^0[35789]\d{8}$/.test(phone)) throw new BadRequestException('Họ tên hoặc số điện thoại không hợp lệ');
+    const update: any = { name, phone };
+    if (dto.address) {
+      const normalized = normalizeAddress({ provinceCode: dto.address.provinceCode, wardCode: dto.address.wardCode, street: dto.address.detailAddress });
+      update.address = { street: normalized.street, detailAddress: normalized.street, city: normalized.provinceName, ward: normalized.wardName,
+        provinceCode: normalized.provinceCode, wardCode: normalized.wardCode, district: dto.address.district?.trim() || '' };
+    }
+    const user = await this.userModel.findOneAndUpdate({ _id: userId, isActive: true }, { $set: update }, { new: true, runValidators: true });
+    if (!user) throw new NotFoundException('Không tìm thấy tài khoản');
+    return this.publicUser(user);
   }
   async forgotPassword(email: string) {
     const endpoint = this.configService.get<string>('AUTH_EMAIL_URL');

@@ -1,5 +1,5 @@
-import { combineLatest, Subscription } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
+import { combineLatest, EMPTY, Subscription, timer } from 'rxjs';
+import { catchError, distinctUntilChanged, filter, map, switchMap } from 'rxjs/operators';
 import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
@@ -114,13 +114,30 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
       }
       @if (activeOrder()) {
       <a routerLink="/care" class="inline-block text-sm font-semibold text-[#800020] hover:underline">Thông báo, đánh giá & hỗ trợ đơn hàng</a>
+      @if (activeOrder()?.gift?.enabled) {
+        <section class="space-y-3 rounded-3xl border border-[#E6D2DA] bg-[#FCF7F9] p-6 text-sm text-[#552337]">
+          <h2 class="font-bold">Món quà gửi tới {{ activeOrder()?.customerInfo?.name }}</h2>
+          <p class="text-xs">{{ activeOrder()?.gift?.anonymous ? 'Gửi ẩn danh dưới tên Giftory.' : 'Hiển thị tên người gửi trên thiệp và phiếu giao.' }} Người nhận không thấy giá và không phải thanh toán COD.</p>
+          @if (activeOrder()?.paymentStatus === 'PARTIALLY_PAID_DEPOSIT_50') { <p class="text-xs font-bold text-rose-700">Bạn cần thanh toán đủ trước khi bàn giao quà.</p><button type="button" [disabled]="giftBusy()" (click)="settleGift()" class="rounded-xl bg-[#800020] px-4 py-3 text-xs font-bold text-white">Thanh toán phần còn lại (mô phỏng)</button> }
+          @if (activeOrder()?.gift?.exception; as issue) {
+            <div class="rounded-xl border border-amber-200 bg-white p-4"><strong>Hỗ trợ giao quà</strong><p class="mt-2 text-xs">{{ issue.reason }}</p>
+              @if (issue.status === 'AWAITING_BUYER' || issue.status === 'AWAITING_RECIPIENT') { <label class="mt-3 block text-xs">Chọn thời gian giao lại<input type="datetime-local" [(ngModel)]="giftDeliveryWindow" class="mt-1 block w-full rounded-xl border p-3" /></label><button [disabled]="giftBusy() || !giftDeliveryWindow" (click)="scheduleGiftDelivery()" class="mt-3 rounded-xl bg-[#800020] px-4 py-3 text-xs font-bold text-white">Xác nhận giao lại</button> }
+              @else { <p class="mt-2 text-xs">Đã xác nhận giao lại: {{ issue.requestedWindow | date:'dd/MM/yyyy HH:mm':'+0700' }}</p> }
+            </div>
+          }
+          @if (activeOrder()?.gift?.proofOfDelivery; as proof) { <div><p class="text-xs font-semibold">Ảnh bằng chứng giao quà</p><img [src]="proof" alt="Bằng chứng đã giao quà" class="mt-2 max-h-64 rounded-xl object-contain" /></div> }
+          <details><summary class="cursor-pointer text-xs font-semibold">Thông báo dành cho người đặt (mô phỏng)</summary>@for (n of buyerGiftNotices(); track n.id) { <p class="mt-2 rounded-xl bg-white p-3 text-xs">{{ n.text }}</p> }</details>
+          @if (giftError()) { <p role="alert" class="text-xs text-rose-700">{{ giftError() }}</p> }
+        </section>
+      }
+      @if (activeOrder()?.orderStatus !== 'CANCELLED') {
       <!-- MAIN STEPPER CARD: Tiến Độ BP-04 Live -->
       <div class="bg-white rounded-3xl p-6 lg:p-8 border border-[#EBD3AE] shadow-sm space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100">
           <div>
             <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
               <span class="material-symbols-outlined text-[#800020] text-lg">precision_manufacturing</span>
-              Tiến Độ Thực Thi & Giao Vận (BP-04)
+              Tiến Độ Thực Thi & Giao Vận
             </h2>
             <p class="text-xs text-slate-400 mt-0.5">Minh bạch từng công đoạn chuẩn bị quà, đóng gói và giao hàng</p>
           </div>
@@ -147,7 +164,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   <span class="material-symbols-outlined text-xl">{{ getStepIcon(1) }}</span>
                 </div>
                 <div>
-                  <span class="text-[10px] font-extrabold tracking-wider uppercase block" [ngClass]="getStepSubClass(1)">BƯỚC 1 • BP-04</span>
+                  <span class="text-[10px] font-extrabold tracking-wider uppercase block" [ngClass]="getStepSubClass(1)">BƯỚC 1</span>
                   <span class="text-xs font-bold text-slate-800 block">Xác Nhận Đơn Hàng</span>
                   <span class="text-[11px] text-slate-500 block">{{ getStepDesc(1) }}</span>
                 </div>
@@ -159,7 +176,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   <span class="material-symbols-outlined text-xl">{{ getStepIcon(2) }}</span>
                 </div>
                 <div>
-                  <span class="text-[10px] font-extrabold tracking-wider uppercase block" [ngClass]="getStepSubClass(2)">BƯỚC 2 • BP-04</span>
+                  <span class="text-[10px] font-extrabold tracking-wider uppercase block" [ngClass]="getStepSubClass(2)">BƯỚC 2</span>
                   <span class="text-xs font-bold text-slate-800 block">Chuẩn Bị & Chế Tác</span>
                   <span class="text-[11px] text-slate-500 block">{{ getStepDesc(2) }}</span>
                 </div>
@@ -171,7 +188,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   <span class="material-symbols-outlined text-xl">{{ getStepIcon(3) }}</span>
                 </div>
                 <div>
-                  <span class="text-[10px] font-extrabold tracking-wider uppercase block" [ngClass]="getStepSubClass(3)">BƯỚC 3 • BP-04</span>
+                  <span class="text-[10px] font-extrabold tracking-wider uppercase block" [ngClass]="getStepSubClass(3)">BƯỚC 3</span>
                   <span class="text-xs font-bold text-slate-800 block">Đóng Gói Hộp Quà</span>
                   <span class="text-[11px] text-slate-500 block">{{ getStepDesc(3) }}</span>
                 </div>
@@ -183,9 +200,9 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   <span class="material-symbols-outlined text-xl">{{ getStepIcon(4) }}</span>
                 </div>
                 <div>
-                  <span class="text-[10px] font-extrabold tracking-wider uppercase block" [ngClass]="getStepSubClass(4)">BƯỚC 4 • BP-04</span>
+                  <span class="text-[10px] font-extrabold tracking-wider uppercase block" [ngClass]="getStepSubClass(4)">BƯỚC 4</span>
                   <span class="text-xs font-bold text-slate-800 block">In Transit (Vận chuyển)</span>
-                  <span class="text-[11px] text-slate-500 block font-mono">{{ getOrderTrackingCode() }}</span>
+                  <span class="text-[11px] text-slate-500 block font-mono">{{ getStepDesc(4) }}</span>
                 </div>
               </div>
 
@@ -195,7 +212,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                   <span class="material-symbols-outlined text-xl">{{ getStepIcon(5) }}</span>
                 </div>
                 <div>
-                  <span class="text-[10px] font-extrabold tracking-wider uppercase block" [ngClass]="getStepSubClass(5)">BƯỚC 5 • BP-04</span>
+                  <span class="text-[10px] font-extrabold tracking-wider uppercase block" [ngClass]="getStepSubClass(5)">BƯỚC 5</span>
                   <span class="text-xs font-bold text-slate-800 block">{{ getStepTitle(5) }}</span>
                   <span class="text-[11px] text-slate-500 block">{{ getStepDesc(5) }}</span>
                 </div>
@@ -206,6 +223,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
         </div>
       </div>
 
+      }
       <!-- TWO COLUMNS BOTTOM SECTION -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
@@ -269,7 +287,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
           <div class="flex items-center justify-between pb-3 border-b border-slate-100">
             <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
               <span class="material-symbols-outlined text-[#800020] text-base">near_me</span>
-              Hành Trình Giao Vận & Lịch Sử BP-04
+              Hành Trình Giao Vận & Lịch Sử
             </h3>
             <span class="font-mono text-xs font-bold text-slate-500">#{{ getOrderTrackingCode() }}</span>
           </div>
@@ -284,7 +302,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 <span class="font-bold text-slate-800 block">{{ t.title }}</span>
                 <span class="text-slate-500 text-[11px] block mt-0.5">{{ t.description }}</span>
               </div>
-              <span class="text-[10px] text-slate-400 font-mono shrink-0">{{ t.timestamp | date:'HH:mm dd/MM' }}</span>
+              <span class="text-[10px] text-slate-400 font-mono shrink-0">{{ t.timestamp | date:'HH:mm dd/MM':'+0700' }}</span>
             </div>
 
             <div *ngIf="!getOrderTimeline().length" class="text-xs text-slate-400 text-center py-6">
@@ -305,6 +323,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
   giftBoxName(style?: string): string { return ({ NONE: 'Không lấy hộp', STANDARD: 'Hộp tiêu chuẩn', SILK: 'Hộp lụa cao cấp', LUXURY: 'Hộp quà sang trọng' } as Record<string, string>)[style || ''] || 'Hộp quà'; }
   private routeSubscription?: Subscription;
   private request?: Subscription;
+  private refreshSubscription?: Subscription;
   routeCode = signal('');
   isListView = computed(() => this.authService.isAuthenticated() && !this.routeCode());
   orders = signal<Order[]>([]);
@@ -315,7 +334,27 @@ export class OrdersComponent implements OnInit, OnDestroy {
   searchPhone = '';
   activeOrder = signal<Order | null>(null);
 
+  giftBusy = signal(false); giftError = signal(''); giftDeliveryWindow = '';
+  buyerGiftNotices() { return this.activeOrder()?.gift?.notifications?.filter(n => n.audience === 'BUYER') || []; }
+  scheduleGiftDelivery() {
+    const order = this.activeOrder(); const value = new Date(this.giftDeliveryWindow);
+    if (!order || this.giftBusy() || !Number.isFinite(value.getTime())) return;
+    this.giftBusy.set(true); this.giftError.set('');
+    this.orderService.scheduleGift(order.orderCode, this.searchPhone.trim() || undefined, value.toISOString()).subscribe({ next: () => { this.giftBusy.set(false); this.lookupOrder(); }, error: err => { this.giftBusy.set(false); this.giftError.set(err.error?.message || 'Chưa hẹn lại được.'); } });
+  }
+  settleGift() {
+    const order = this.activeOrder(); if (!order || this.giftBusy()) return;
+    this.giftBusy.set(true); this.giftError.set('');
+    this.orderService.settleGiftDemo(order.orderCode, this.searchPhone.trim() || undefined).subscribe({ next: updated => { this.giftBusy.set(false); this.activeOrder.set(updated); }, error: err => { this.giftBusy.set(false); this.giftError.set(err.error?.message || 'Chưa thanh toán được.'); } });
+  }
+
   ngOnInit() {
+    this.refreshSubscription = timer(15000, 15000).pipe(
+      filter(() => !!this.activeOrder() && !this.loading()),
+      switchMap(() => this.orderService.getOrderByCode(this.activeOrder()!.orderCode, this.searchPhone.trim() || undefined).pipe(catchError(() => EMPTY))),
+    ).subscribe(order => {
+      if (order.orderCode === this.activeOrder()?.orderCode) this.activeOrder.set(order);
+    });
     this.routeSubscription = combineLatest([this.route.paramMap, this.route.queryParamMap]).pipe(
       map(([params, query]) => params.get('code') || query.get('code') || ''),
       distinctUntilChanged(),
@@ -326,7 +365,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
       this.loadPage();
     });
   }
-  ngOnDestroy() { this.routeSubscription?.unsubscribe(); this.request?.unsubscribe(); }
+  ngOnDestroy() { this.routeSubscription?.unsubscribe(); this.request?.unsubscribe(); this.refreshSubscription?.unsubscribe(); }
   loadPage() {
     this.request?.unsubscribe();
     this.activeOrder.set(null); this.error.set(''); this.loading.set(false);
@@ -364,33 +403,34 @@ export class OrdersComponent implements OnInit, OnDestroy {
   resetSearch() { this.request?.unsubscribe(); this.loading.set(false); this.error.set(''); this.activeOrder.set(null); this.searchCode = ''; this.searchPhone = ''; }
   onThumbnailError(event: Event) { const image = event.target as HTMLImageElement; if (!image.src.endsWith('/logo.png')) image.src = '/logo.png'; }
   getOrderItems(): any[] { return this.activeOrder()?.items || []; }
-  getOrderTimeline(): any[] { return this.activeOrder()?.timeline || []; }
+  getOrderTimeline(): any[] {
+    return (this.activeOrder()?.timeline || [])
+      .filter(event => event.completed === true)
+      .map(event => ({ ...event,
+        title: event.title.replace(/\s*\([^)]*(?:US-\d|BR-\d)[^)]*\)/g, '').replace(/BP-04/g, ''),
+        description: event.description.replace(/quy trình BP-04/g, 'quy trình giao hàng').replace(/BP-04/g, ''),
+      }))
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }
   getOrderCarrier(): string { const ord = this.activeOrder(); return ord?.deliveryInfo?.carrier || ord?.shippingCarrier || 'Chưa cập nhật'; }
-  getOrderTrackingCode(): string { const ord = this.activeOrder(); return ord?.deliveryInfo?.trackingCode || ord?.trackingCode || 'Chưa có mã vận đơn'; }
+  getOrderTrackingCode(): string { const ord = this.activeOrder(); return this.getStepStageNumber() >= 4 ? (ord?.deliveryInfo?.trackingCode || ord?.trackingCode || 'Chưa có mã vận đơn') : 'Chưa có mã vận đơn'; }
 
   // Stepper calculations based on BP-04 state
   getStepStageNumber(): number {
     const ord = this.activeOrder();
-    if (!ord) return 1;
+    if (!ord || ['AWAITING_CONFIRMATION', 'PENDING', 'CANCELLED'].includes(ord.orderStatus)) return 1;
 
     if (ord.orderStatus === 'DELIVERED') return 5;
     if (ord.orderStatus === 'RETURNED_BP06' || ord.fulfillmentStatus === 'RETURNING' || ord.fulfillmentStatus === 'RETURNED_RECEIVED') return 5;
     if (ord.orderStatus === 'IN_TRANSIT' || ord.orderStatus === 'SHIPPING') return 4;
     if (ord.isPackaged || ord.fulfillmentStatus === 'PACKAGED') return 3;
-    if (ord.orderStatus === 'CONFIRMED' || ord.fulfillmentStatus === 'AT_WORKSHOP') return 2;
+    if (ord.orderStatus === 'CONFIRMED' || ord.orderStatus === 'PROCESSING') return 2;
     return 1; // AWAITING_CONFIRMATION / PENDING
   }
 
   getStepperProgressPercent(): number {
     const stage = this.getStepStageNumber();
-    switch (stage) {
-      case 1: return 10;
-      case 2: return 35;
-      case 3: return 60;
-      case 4: return 85;
-      case 5: return 100;
-      default: return 10;
-    }
+    return (stage - 1) * 25;
   }
 
   getStepClass(stepNum: number): string {
@@ -402,21 +442,21 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   getStepIconClass(stepNum: number): string {
     const current = this.getStepStageNumber();
-    if (stepNum < current) return 'bg-emerald-500 text-white shadow-emerald-200';
+    if (stepNum < current || (stepNum === 5 && this.activeOrder()?.orderStatus === 'DELIVERED')) return 'bg-emerald-500 text-white shadow-emerald-200';
     if (stepNum === current) return 'bg-[#800020] text-[#FFF5E1] shadow-[#800020]/20 ring-4 ring-[#F5D9AF] animate-pulse';
     return 'bg-slate-100 text-slate-400 border border-slate-200';
   }
 
   getStepSubClass(stepNum: number): string {
     const current = this.getStepStageNumber();
-    if (stepNum < current) return 'text-emerald-600';
+    if (stepNum < current || (stepNum === 5 && this.activeOrder()?.orderStatus === 'DELIVERED')) return 'text-emerald-600';
     if (stepNum === current) return 'text-[#800020]';
     return 'text-slate-400';
   }
 
   getStepIcon(stepNum: number): string {
     const current = this.getStepStageNumber();
-    if (stepNum < current) return 'check';
+    if (stepNum < current || (stepNum === 5 && this.activeOrder()?.orderStatus === 'DELIVERED')) return 'check';
     switch (stepNum) {
       case 1: return 'hourglass_top';
       case 2: return 'handyman';
@@ -431,7 +471,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
     if (stepNum === 5) {
       const ord = this.activeOrder();
       if (ord?.orderStatus === 'RETURNED_BP06' || ord?.fulfillmentStatus === 'RETURNING') {
-        return 'Chuyển Xử Lý BP-06';
+        return 'Xử Lý Hàng Hoàn';
       }
       return 'Giao Hàng Thành Công';
     }
@@ -445,17 +485,17 @@ export class OrdersComponent implements OnInit, OnDestroy {
         if (ord?.orderStatus === 'AWAITING_CONFIRMATION' || ord?.orderStatus === 'PENDING') {
           return 'Đang chờ xác nhận (12h-48h)';
         }
-        return 'Đã duyệt đơn (BR-04)';
+        return 'Đã xác nhận bởi admin';
       case 2:
-        return 'Xưởng chế tác & Lấy hàng';
+        return this.getStepStageNumber() >= 2 ? 'Đang chuẩn bị theo cập nhật của admin' : 'Chờ xác nhận đơn hàng';
       case 3:
-        return ord?.isPackaged ? 'Đã đóng hộp quà' : 'Chờ kiểm định QC';
+        return this.getStepStageNumber() >= 3 ? 'Đã hoàn tất đóng gói' : 'Chờ chuẩn bị sản phẩm';
       case 4:
-        return ord?.orderStatus === 'IN_TRANSIT' ? 'Đang trên đường giao' : 'Sẵn sàng giao';
+        return this.getStepStageNumber() >= 4 ? this.getOrderTrackingCode() : 'Chưa bàn giao vận chuyển';
       case 5:
-        if (ord?.orderStatus === 'RETURNED_BP06') return 'Hàng trả về, chuyển BP-06';
+        if (ord?.orderStatus === 'RETURNED_BP06' || ord?.fulfillmentStatus === 'RETURNING' || ord?.fulfillmentStatus === 'RETURNED_RECEIVED') return 'Đang xử lý hàng hoàn';
         if (ord?.orderStatus === 'DELIVERED') return 'Khách đã ký nhận';
-        return 'Dự kiến hôm nay';
+        return 'Chưa giao hàng';
       default:
         return '';
     }
@@ -472,7 +512,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
         return { label: 'In Transit • Đang Vận Chuyển', class: 'bg-[#FFF5E1] text-[#800020] border border-[#EBD3AE]', icon: 'local_shipping' };
       case 'PROCESSING':
       case 'CONFIRMED':
-        return { label: ord.isPackaged ? 'Đã Đóng Hộp Quà' : 'Đang Chế Tác Tại Xưởng', class: 'bg-[#FFF5E1] text-[#800020] border border-[#EBD3AE]', icon: 'auto_fix_high' };
+        return { label: ord.isPackaged || ord.fulfillmentStatus === 'PACKAGED' ? 'Đã Đóng Hộp Quà' : ord.fulfillmentStatus === 'AT_WORKSHOP' || ord.orderStatus === 'PROCESSING' ? 'Đang Chuẩn Bị & Chế Tác' : 'Đã Xác Nhận', class: 'bg-[#FFF5E1] text-[#800020] border border-[#EBD3AE]', icon: 'auto_fix_high' };
       case 'AWAITING_CONFIRMATION':
       case 'PENDING':
         return { label: 'Chờ Xác Nhận (12h - 48h)', class: 'bg-amber-100 text-amber-800', icon: 'hourglass_top' };

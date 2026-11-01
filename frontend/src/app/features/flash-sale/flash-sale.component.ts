@@ -1,31 +1,13 @@
 import { VoucherService, VoucherOffer } from '../../core/services/voucher.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart.service';
-import { WishlistService } from '../../core/services/wishlist.service';
 import { Product } from '../../core/models';
-import { calculateDiscountPercent } from '../../core/utils/product-price.util';
+import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 import { FlashSaleCountdownService } from '../../core/services/flash-sale-countdown.service';
-
-interface FlashSaleDeal {
-  _id: string;
-  name: string;
-  slug: string;
-  price: number;
-  salePrice: number;
-  featureTag: string;
-  categoryTag: string;
-  rating: number;
-  reviewCount: number;
-  image: string;
-  stockLeft: number;
-  soldPercent: number;
-  depositAmount: number;
-  isCustomizable: boolean;
-}
 
 interface VoucherItem {
   id: string;
@@ -45,7 +27,7 @@ interface VoucherItem {
 @Component({
   selector: 'app-flash-sale',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ProductCardComponent],
   template: `
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-10 animate-fade-in text-[#2B1A1A]">
       <!-- Toast Notification -->
@@ -88,8 +70,7 @@ interface VoucherItem {
             </h1>
 
             <p class="text-sm sm:text-base text-[#4B5563] max-w-xl leading-relaxed">
-              Đồng giá quà tặng Custom chỉ từ <strong class="text-[#800020] font-bold">199.000đ</strong>. Áp dụng chính sách
-              <strong class="text-[#800020] font-bold">Đặt cọc 50%</strong> để giữ trọn vẹn giá Deal &amp; nhận hoa lụa thiệp in lời chúc miễn phí.
+              Khám phá các sản phẩm đang được giảm giá tại Giftory. Chọn quà có sẵn hoặc tự thiết kế trên những sản phẩm hỗ trợ cá nhân hóa.
             </p>
 
             <div class="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-3">
@@ -152,7 +133,7 @@ interface VoucherItem {
             </div>
 
             <div class="mt-4 text-[#800020] text-xs bg-[#FFF5E1]/70 px-4 py-1.5 rounded-full font-bold">
-              🔥 Đã có 4.280 lượt săn Deal trong hôm nay
+              Ưu đãi được cập nhật theo danh mục sản phẩm
             </div>
           </div>
         </div>
@@ -169,7 +150,7 @@ interface VoucherItem {
               </h2>
             </div>
             <p class="text-xs sm:text-sm text-[#6B7280] mt-0.5">
-              Lưu mã vào tài khoản, chọn một mã khi thanh toán. Gói quà và thiệp luôn miễn phí.
+              Lưu mã vào tài khoản và chọn một mã phù hợp khi thanh toán.
             </p>
           </div>
 
@@ -279,126 +260,19 @@ interface VoucherItem {
               </span>
             </div>
             <p class="text-xs text-[#6B7280] mt-0.5">
-              Mỗi sản phẩm đều được hỗ trợ khắc tên, khắc laser lời chúc theo yêu cầu cá nhân hóa
+              Giá và thông tin theo danh mục. Chỉ sản phẩm có nhãn chế tác mới hỗ trợ tùy chỉnh.
             </p>
           </div>
         </div>
 
+        @if (productsLoading()) { <p role="status" class="text-sm text-slate-500">Đang tải sản phẩm ưu đãi…</p> }
+        @if (productsError()) { <p role="alert" class="text-sm text-rose-700">{{ productsError() }} <button type="button" (click)="loadBackendProducts()" class="underline">Thử lại</button></p> }
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
-            *ngFor="let deal of displayDeals()"
-            class="relative group bg-white rounded-[28px] overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between border border-[#EBD3AE]"
-          >
-            <!-- Product Image Frame -->
-            <div class="relative w-full aspect-square overflow-hidden bg-slate-50">
-              <img
-                [src]="deal.image"
-                [alt]="deal.name"
-                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-
-              <!-- Badges top-left -->
-              <div class="absolute top-3 left-3 flex flex-col gap-1">
-                @if (discountPercent(deal) > 0) {
-                  <span class="px-3 py-1 rounded-full text-xs font-bold text-white shadow-md bg-[#F43F5E]">
-                    -{{ discountPercent(deal) }}% FLASH SALE
-                  </span>
-                }
-                <span
-                  *ngIf="deal.featureTag"
-                  class="px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-xs text-[11px] font-semibold text-[#2B1A1A] shadow-xs"
-                >
-                  {{ deal.featureTag }}
-                </span>
-              </div>
-
-              <!-- Wishlist Heart Button -->
-              <button
-                (click)="toggleWishlist(deal._id)"
-                type="button"
-                class="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center transition-all shadow-xs"
-                [ngClass]="isWishlisted(deal._id) ? 'text-[#F43F5E]' : 'text-[#800020] hover:bg-white'"
-                title="Yêu thích món quà này"
-              >
-                <span
-                  class="material-symbols-outlined text-[20px]"
-                  [ngClass]="{ 'fill-1': isWishlisted(deal._id) }"
-                >
-                  favorite
-                </span>
-              </button>
-            </div>
-
-            <!-- Card Content -->
-            <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
-              <div class="space-y-2">
-                <!-- Rating & Category Tag -->
-                <div class="flex items-center gap-1.5 text-xs">
-                  <span class="material-symbols-outlined text-sm text-amber-500 fill-1">star</span>
-                  <span class="font-bold text-[#2B1A1A]">{{ deal.rating }}</span>
-                  <span class="text-[#6B7280]">({{ deal.reviewCount }} đánh giá)</span>
-                  <span class="text-[#D1D5DB]">•</span>
-                  <span class="font-medium text-[#800020]">{{ deal.categoryTag }}</span>
-                </div>
-
-                <!-- Product Name -->
-                <a
-                  [routerLink]="['/products', deal.slug]"
-                  class="product-detail-link text-sm sm:text-base font-bold text-[#2B1A1A] hover:text-[#800020] transition-colors"
-                >
-                  <span class="line-clamp-2">{{ deal.name }}</span>
-                </a>
-
-                <!-- Price Row -->
-                <div class="flex items-baseline gap-2 pt-1">
-                  <span class="text-xl sm:text-2xl font-black font-mono text-[#800020]">
-                    {{ deal.salePrice | number }}đ
-                  </span>
-                  @if (discountPercent(deal) > 0) {
-                    <span class="text-xs text-slate-400 line-through">
-                      {{ deal.price | number }}đ
-                    </span>
-                  }
-                </div>
-
-                <!-- Stock & Progress -->
-                <div class="pt-1 space-y-1">
-                  <div class="flex items-center justify-between text-[11px]">
-                    <span class="font-semibold flex items-center gap-1 text-[#F43F5E]">
-                      <span class="w-1.5 h-1.5 rounded-full bg-[#F43F5E] animate-ping"></span>
-                      Chỉ còn {{ deal.stockLeft }} suất Deal
-                    </span>
-                    <span class="text-[#6B7280]">Đã bán {{ deal.soldPercent }}%</span>
-                  </div>
-                  <div class="w-full h-1.5 rounded-full bg-[#FDF0D5] overflow-hidden">
-                    <div
-                      class="h-full rounded-full bg-gradient-to-r from-[#800020] to-[#991B33]"
-                      [style.width.%]="deal.soldPercent"
-                    ></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Action & 50% Deposit Info -->
-              <div class="pt-2 space-y-2.5">
-                <div class="flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full bg-[#FFFBF2] text-[#800020] border border-[#EBD3AE]">
-                  <span class="material-symbols-outlined text-[14px]">payments</span>
-                  <span>Chỉ cần cọc trước <strong>{{ deal.depositAmount | number }}đ (50%)</strong></span>
-                </div>
-
-                <button
-                  (click)="quickBuyDeal(deal)"
-                  type="button"
-                  [disabled]="isAddingDeal(deal._id)"
-                  class="relative z-10 w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 text-white bg-[#800020] hover:bg-[#660019] disabled:opacity-60 disabled:cursor-wait"
-                  style="box-shadow: 0 4px 12px rgba(128, 0, 32, 0.25);"
-                >
-                  @if (isAddingDeal(deal._id)) { <span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true"></span><span>Đang thêm…</span> }
-                  @else { <span class="material-symbols-outlined text-base">view_in_ar</span><span>Săn Deal &amp; Tùy Biến 3D</span> }
-                </button>
-              </div>
-            </div>
-          </div>
+          @for (product of filteredDeals(); track product._id) {
+            <app-product-card [product]="product" />
+          } @empty {
+            @if (!productsLoading() && !productsError()) { <p class="col-span-full rounded-2xl border border-[#EBD3AE] bg-white p-6 text-sm text-slate-500">Hiện chưa có sản phẩm ưu đãi trong nhóm này.</p> }
+          }
         </div>
       </section>
 
@@ -473,25 +347,17 @@ interface VoucherItem {
   `
 })
 export class FlashSaleComponent implements OnInit {
-  discountPercent(deal: FlashSaleDeal): number {
-    return calculateDiscountPercent(deal.price, deal.salePrice);
-  }
   private productService = inject(ProductService);
   private cartService = inject(CartService);
-  private addingDealIds = signal(new Set<string>());
-  private wishlistService = inject(WishlistService);
-
   readonly countdown = inject(FlashSaleCountdownService);
   toastMessage = signal<string | null>(null);
 
   selectedTab = signal<string>('all');
 
   categoryTabs = [
-    { key: 'all', icon: '🔥', label: 'Deal Flash Sale 24h' },
-    { key: 'combo', icon: '🎁', label: 'Combo Quà Tặng Đội Ngũ/Sếp (-30%)' },
-    { key: 'custom', icon: '✨', label: 'Quà Custom Cọc 50% Tặng Thiệp' },
-    { key: 'ship', icon: '🎟️', label: 'Mã Giảm Giá Phí Ship & Hỏa Tốc' },
-    { key: 'anniversary', icon: '🌸', label: 'Quà Dịp Kỷ Niệm & Sinh Nhật' }
+    { key: 'all', icon: '🔥', label: 'Tất cả ưu đãi' },
+    { key: 'custom', icon: '✨', label: 'Hỗ trợ chế tác' },
+    { key: 'ready', icon: '🎁', label: 'Quà có sẵn' },
   ];
 
   private voucherService = inject(VoucherService);
@@ -522,146 +388,29 @@ export class FlashSaleComponent implements OnInit {
     });
   }
 
-  // Bộ sưu tập Flash Sale theo đúng thiết kế Stitch
-  mockDeals: FlashSaleDeal[] = [
-    {
-      _id: 'deal-1',
-      name: 'Khung Gỗ Kỷ Niệm LED Khắc Tên Bespoke',
-      slug: 'khung-go-ky-niem-led-khac-ten-bespoke',
-      price: 350000,
-      salePrice: 199000,
-      featureTag: '✨ Khắc tên lấy ngay 2h',
-      categoryTag: 'Bespoke LED',
-      rating: 4.9,
-      reviewCount: 420,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuArEXObxasubXCiRJSIN6fj-nsx8mGY4OmRsHMVxmHMuQj_XR3Rzj0HQIkLAo86IFXIr6CGWn-NHuts-1TKiZmkj03r6Pzi3S-tj9d3d_qWC4uAmugh2V30Dji9BLCOCrRGq_racZs9K689hUThEPLXafuuTV1v08jjhiGxHv8CwHHiN1voQWsvk2g6SFoGe4hZyRST-ftXgrn_iDXhF8dO29fzT3tG_k13E43bctE7qIAXC0eZMwjvyb1FtQkIP5jAZcg',
-      stockLeft: 5,
-      soldPercent: 83,
-      depositAmount: 99500,
-      isCustomizable: true
-    },
-    {
-      _id: 'deal-2',
-      name: 'Hộp Quà Bình Yên Ngày Mới (Nến Thơm + Trà Thảo Mộc)',
-      slug: 'hop-qua-binh-yen-ngay-moi',
-      price: 650000,
-      salePrice: 429000,
-      featureTag: '🌿 100% Thuần Tự Nhiên',
-      categoryTag: 'Combo Chữa Lành',
-      rating: 5.0,
-      reviewCount: 289,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD8KIuacr0hXocga6u3rVB3zwB56SazF0l16x0d42NoupJcpNXdPQe8Rhie9-8N9ncMhpviZeKkpdVtyNpVDTjYWZuZGgw_tneuSa2Pvl1Vnc4vgMxwExcDlvWDlyI4RuTw_QUg03V-ATGuSYZbaJUW3LbVJx-i_Vac6z0BYpRUDlcFR5VaIpRJUUekOlByVslqu4LKo_XaBBeBKJ4Yrd72oixnqaITRcfohy-g701CGyy2j_YNv7GrlnQZjMbx7aGml1w',
-      stockLeft: 7,
-      soldPercent: 72,
-      depositAmount: 214500,
-      isCustomizable: true
-    },
-    {
-      _id: 'deal-3',
-      name: 'Ví Da Sáp Khắc Tên & Chữ Ký Riêng Kèm Hộp Gỗ',
-      slug: 'vi-da-sap-khac-ten-chu-ky-rieng',
-      price: 600000,
-      salePrice: 390000,
-      featureTag: '🖋️ Khắc chữ ký laser',
-      categoryTag: 'Bespoke Leather',
-      rating: 4.9,
-      reviewCount: 331,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCIGs0Xk0EUNf1R_wZeCpbDwzg_pCWEbRZuNeHGSf3vEoKPp6zX8D8iu8lvmyEQOJlUNoP9JrBE0M_7EwO2CmROMRIl-4wKJT49RTmeCzT0fZxh_urM6w4z5DW4CIvbLgWAYfG9a8ph915-vsUZ5YTmIi6hP8-T5NhBZaW3Bc868yyIUyQz8hkokevfuUWsGe31dzjozvGcZWTlUd3pe2J7i4Tyik77niwj10cVg42UVBKhq2wLrDXL39ug9Gv3EvwD8to',
-      stockLeft: 5,
-      soldPercent: 79,
-      depositAmount: 195000,
-      isCustomizable: true
-    },
-    {
-      _id: 'deal-4',
-      name: 'Set Quà Mộc Vững Vàng Khắc Logo Doanh Nghiệp',
-      slug: 'set-qua-moc-vung-vang-khac-logo',
-      price: 680000,
-      salePrice: 490000,
-      featureTag: '🏢 Khắc Logo Doanh Nghiệp',
-      categoryTag: 'Quà Tri Ân',
-      rating: 4.9,
-      reviewCount: 196,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCc8ruMBG5EcIlqZBd6AUOI6AFmqmPQO0I7Fs51OOZlJJ2G3VTlFiGbHZpkBLL5StMoHmEumgvbsuN-oMT4nD3Bqkb_i2nO5v8kuY7J5qsi5rw6l8LkRkc4CZ8fp48nGvCzdMQiZN-lk2Wi_S6SvgcGZm8TMf6MDbbwlaZwMpZlsnMBCNLqKalETigL4jZdnkcHHavJ9aRtkwFSNkPY9uTIqav3-j8PgoQUuz45SLUzzDEwWxf9zd6Bookimj8YkoB3o9g',
-      stockLeft: 12,
-      soldPercent: 60,
-      depositAmount: 245000,
-      isCustomizable: true
-    },
-    {
-      _id: 'deal-5',
-      name: 'Hộp Kỷ Niệm Từng Khoảnh Khắc (Cuộn Phim Ảnh 12 Mốc)',
-      slug: 'hop-ky-niem-tung-khoanh-khac',
-      price: 490000,
-      salePrice: 299000,
-      featureTag: '🎞️ In 12 ảnh kỷ niệm',
-      categoryTag: 'Bespoke Memories',
-      rating: 4.9,
-      reviewCount: 670,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB_WTAMey-PnxTQfkveigNWyBUEIMPh_9LOsQFsa7U5vpOGBDEfrehdlxyuRLJhMs5LZLmCQiVyejWMgn8nGup9voJGlcPlZ-zhN7WK49zC5SuZz2V3mgdflTKSt2eqjvqhzxdO1wQ6hD2cQmunNj4JGuWM7aqva8VEArWUsDElliof78dQS7OS51b1vgZRhU6nqMM3QEvoP4ImWlrdkh0-erofGMQps3TtOXWhErsbZ2z3a0wDx15BrF2isdiuubKMMao',
-      stockLeft: 4,
-      soldPercent: 88,
-      depositAmount: 149500,
-      isCustomizable: true
-    },
-    {
-      _id: 'deal-6',
-      name: 'Set Tinh Dầu & Nến Thơm Tinh Khiết Dịp 20/10',
-      slug: 'set-tinh-dau-nen-thom-tinh-khiet',
-      price: 520000,
-      salePrice: 335000,
-      featureTag: '🌸 Bộ quà Phụ Nữ & Tri Ân',
-      categoryTag: 'Phiên Bản Giới Hạn',
-      rating: 5.0,
-      reviewCount: 340,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB6njhjkXq-rlCZzjcV-D2lxG3U4PJBsV7DPKQfzX7G3HDxJzgj8J9cM2GtZT6PdsyOeUFbSvzCUFIi8TgannSfq6gCVZlodqwhZeBmoLhIXy85hd1nuCShg56rXSQQxfwPCAQiNNvu-yzAtPqNSmBv17o-bmP2QWmyAPltkTAVc0YPIl2eiFngnoLotPx1TxlDfPSY1x9cbl7lLpPuZgn8pAvT-BMEmYypGf0rKz9gci54d1QHAKOJrRA_MUbH2BPlPms',
-      stockLeft: 8,
-      soldPercent: 74,
-      depositAmount: 167500,
-      isCustomizable: true
-    }
-  ];
-
-  displayDeals = signal<FlashSaleDeal[]>(this.mockDeals);
+  displayDeals = signal<Product[]>([]);
+  productsLoading = signal(false);
+  productsError = signal('');
+  filteredDeals = computed(() => this.displayDeals().filter(product =>
+    this.selectedTab() === 'custom' ? product.isCustomizable :
+    this.selectedTab() === 'ready' ? !product.isCustomizable : true));
 
   ngOnInit() {
     this.loadVouchers();
     this.loadBackendProducts();
   }
-
   loadBackendProducts() {
-    this.productService.getCatalogProducts({ isFlashSale: true }).subscribe({
-      next: (res: any) => {
-        const list: Product[] = Array.isArray(res) ? res : (res?.data || res?.items || []);
-        if (list && list.length > 0) {
-          const mapped: FlashSaleDeal[] = list.map((p, idx) => {
-            const salePrice = p.salePrice && p.salePrice > 0 ? p.salePrice : p.price;
-            return {
-              _id: p._id,
-              name: p.name,
-              slug: p.slug,
-              price: p.price,
-              salePrice: salePrice,
-              featureTag: p.isCustomizable ? '✨ Khắc tên laser miễn phí' : '🎁 Hộp nơ lụa cao cấp',
-              categoryTag: p.category?.name || 'Quà Tặng Giftory',
-              rating: 4.9,
-              reviewCount: 150 + idx * 45,
-              image: p.images?.[0] || 'https://lh3.googleusercontent.com/aida-public/AB6AXuArEXObxasubXCiRJSIN6fj-nsx8mGY4OmRsHMVxmHMuQj_XR3Rzj0HQIkLAo86IFXIr6CGWn-NHuts-1TKiZmkj03r6Pzi3S-tj9d3d_qWC4uAmugh2V30Dji9BLCOCrRGq_racZs9K689hUThEPLXafuuTV1v08jjhiGxHv8CwHHiN1voQWsvk2g6SFoGe4hZyRST-ftXgrn_iDXhF8dO29fzT3tG_k13E43bctE7qIAXC0eZMwjvyb1FtQkIP5jAZcg',
-              stockLeft: 3 + (idx % 8),
-              soldPercent: 70 + (idx % 25),
-              depositAmount: Math.round(salePrice / 2),
-              isCustomizable: p.isCustomizable || false
-            };
-          });
-
-          // Gộp các deal backend lên đầu, giữ các mock deal nếu backend ít
-          const combined = [...mapped, ...this.mockDeals.slice(mapped.length)];
-          this.displayDeals.set(combined);
-        }
+    this.productsLoading.set(true);
+    this.productsError.set('');
+    this.productService.getFlashSaleProducts().subscribe({
+      next: products => {
+        this.displayDeals.set(products.filter(product => product.isFlashSale && product.status !== 'INACTIVE'));
+        this.productsLoading.set(false);
       },
       error: () => {
-        // Fallback giữ nguyên mockDeals
-      }
+        this.productsLoading.set(false);
+        this.productsError.set('Chưa tải được sản phẩm ưu đãi.');
+      },
     });
   }
 
@@ -687,50 +436,4 @@ export class FlashSaleComponent implements OnInit {
     }, 3000);
   }
 
-  toggleWishlist(productId: string) {
-    this.wishlistService.toggleWishlist(productId).subscribe({
-      next: () => {
-        const isAdded = this.wishlistService.isWishlisted(productId);
-        this.showToast(isAdded ? 'Đã thêm vào danh sách yêu thích!' : 'Đã xóa khỏi danh sách yêu thích!');
-      },
-      error: () => {
-        this.showToast('Đã cập nhật danh sách yêu thích!');
-      }
-    });
-  }
-
-  isWishlisted(productId: string): boolean {
-    return this.wishlistService.isWishlisted(productId);
-  }
-
-  quickBuyDeal(deal: FlashSaleDeal) {
-    if (this.isAddingDeal(deal._id)) return;
-    this.setAddingDeal(deal._id, true);
-    this.cartService.addItem({
-      productId: deal._id,
-      name: deal.name,
-      price: deal.salePrice,
-      quantity: 1,
-      image: deal.image,
-      isCustom: false
-    }).subscribe({
-      next: () => {
-        this.setAddingDeal(deal._id, false);
-        this.showToast(`Đã thêm "${deal.name}" vào giỏ hàng!`);
-      },
-      error: () => {
-        this.setAddingDeal(deal._id, false);
-        this.showToast('Không thể thêm sản phẩm vào giỏ. Vui lòng thử lại.');
-      }
-    });
-  }
-
-  isAddingDeal(id: string): boolean { return this.addingDealIds().has(id); }
-  private setAddingDeal(id: string, adding: boolean): void {
-    this.addingDealIds.update(ids => {
-      const next = new Set(ids);
-      if (adding) next.add(id); else next.delete(id);
-      return next;
-    });
-  }
 }
