@@ -7,7 +7,9 @@ import { Component, input } from '@angular/core';
     <article class="card" [attr.data-template]="templateId()" aria-label="Xem trước thiệp chúc mừng">
       <div class="ornament" aria-hidden="true">{{ templateId() === 'BIRTHDAY' ? '✦ · ✧ · ✦' : templateId() === 'LOVE' ? '♡' : '❋' }}</div>
       <h3>{{ heading().normalize('NFC') || 'Tiêu đề thiệp của bạn' }}</h3>
+      @if (recipientName()) { <p class="names">Người nhận: {{ recipientName() }}</p> }
       <p class="message">{{ message().normalize('NFC') || 'Lời chúc của bạn sẽ xuất hiện ở đây…' }}</p>
+      @if (senderName()) { <p class="names">Người gửi: {{ senderName() }}</p> }
       <span class="signature">GIFTORY · Gửi quà, trao yêu thương</span>
     </article>
   `,
@@ -21,6 +23,7 @@ import { Component, input } from '@angular/core';
     h3 { font: 700 22px/1.45 'Giftory Card Serif', 'Times New Roman', serif; letter-spacing: normal; margin: 0; }
     .message { flex: 1; white-space: pre-wrap; font: 400 14px/1.65 'Giftory Card Serif', 'Times New Roman', serif; letter-spacing: normal; margin: 0; width: 100%; }
     .signature { font: 9px/1.4 Arial, sans-serif; letter-spacing: 1px; opacity: .7; }
+    .names { margin: 0; font: 400 14px/1.5 'Giftory Card Serif', 'Times New Roman', serif; }
     @media print {
       .card { min-height: 0; border-radius: 0; padding: 8mm; gap: 3mm; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
       h3 { font-size: 20px; }
@@ -32,4 +35,6 @@ export class GreetingCardPreviewComponent {
   readonly templateId = input('BIRTHDAY');
   readonly heading = input('Gửi bạn thật nhiều yêu thương');
   readonly message = input('');
+  readonly senderName = input('');
+  readonly recipientName = input('');
 }

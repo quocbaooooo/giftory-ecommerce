@@ -10,7 +10,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   if (!req.url.startsWith(`${environment.apiUrl}/`)) return next(req);
   // Public catalog reads do not need a bearer token (or a cross-origin preflight).
   const path = req.url.slice(environment.apiUrl.length).split('?')[0];
-  if (req.method === 'GET' && (/^\/products(?:\/|$)/.test(path)
+  if (req.method === 'GET' && ((/^\/products(?:\/|$)/.test(path) && !path.startsWith('/products/admin/'))
     || path === '/categories' || path === '/categories/display-settings')) return next(req);
   const token = auth.accessToken();
   const authorized = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;

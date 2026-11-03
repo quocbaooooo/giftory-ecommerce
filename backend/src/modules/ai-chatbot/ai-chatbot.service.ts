@@ -6,6 +6,7 @@ import { Product, ProductDocument } from '../../database/schemas/product.schema'
 import { Order, OrderDocument } from '../../database/schemas/order.schema';
 import { removeVietnameseAccents } from '../../common/utils/vietnamese.util';
 import { isStudioSupportedProduct, supportsCustomization } from '../../common/utils/studio-support';
+import { normalizeCatalogTag, catalogTagAliases } from '../../common/utils/catalog-metadata';
 import { ChatMessageDto } from './dto/chat-message.dto';
 
 export interface ChatResponse {
@@ -30,30 +31,6 @@ export interface ChatResponse {
   isProximateFallback?: boolean;
 }
 
-function normalizeCatalogTag(value: string): string {
-  return removeVietnameseAccents(String(value || '')).toLowerCase().trim().replace(/\s+/g, ' ');
-}
-
-function catalogTagAliases(value: string, kind: 'audience' | 'occasion'): Set<string> {
-  const normalized = normalizeCatalogTag(value);
-  const groups: Record<string, string[]> = kind === 'audience' ? {
-    'ban than': ['ban than', 'ban be'],
-    'ban trai': ['nguoi yeu'],
-    'ban gai': ['nguoi yeu'],
-    'vo': ['nguoi yeu'],
-    'chong': ['nguoi yeu'],
-    'crush': ['nguoi yeu'],
-    'sep': ['sep', 'dong nghiep'],
-    'dong nghiep / sep': ['sep', 'dong nghiep'],
-  } : {
-    'ngay phu nu': ['ngay phu nu', '8/3', '20/10'],
-    'ky niem tinh yeu': ['ky niem', 'valentine'],
-    'tet': ['tet', 'nam moi'],
-    'nam moi': ['nam moi', 'tet'],
-    'giang sinh / nam moi': ['giang sinh', 'noel', 'nam moi', 'tet'],
-  };
-  return new Set(groups[normalized] || [normalized]);
-}
 
 interface GeminiExtractionResult {
   intent: 'RECOMMENDATION' | 'SUPPORT_ORDER' | 'SUPPORT_POLICY' | 'HANDOVER_HUMAN' | 'AMBIGUOUS';

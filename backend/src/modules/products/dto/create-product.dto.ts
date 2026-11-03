@@ -74,16 +74,19 @@ export class CreateProductDto {
   @ApiProperty({ required: false, default: [] })
   @IsOptional()
   @IsArray()
+  @IsString({ each: true })
   tags?: string[];
 
   @ApiProperty({ required: false, type: [String], example: ['mẹ', 'người yêu'] })
   @IsOptional()
   @IsArray()
+  @IsString({ each: true })
   audience?: string[];
 
   @ApiProperty({ required: false, type: [String], example: ['sinh nhật', 'kỷ niệm'] })
   @IsOptional()
   @IsArray()
+  @IsString({ each: true })
   occasions?: string[];
 
   @ApiProperty({ required: false })

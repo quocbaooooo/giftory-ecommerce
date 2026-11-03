@@ -6,7 +6,7 @@ export const GREETING_CARD_TEMPLATES = [
   { id: 'THANK_YOU', name: 'Tự nhiên' },
 ];
 
-export function normalizeGreetingCard(input?: { templateId: string; heading?: string; message: string } | null) {
+export function normalizeGreetingCard(input?: { templateId: string; heading?: string; message: string; senderName?: string; recipientName?: string } | null) {
   if (input == null) return null;
   const template = GREETING_CARD_TEMPLATES.find(item => item.id === input.templateId);
   const message = typeof input.message === 'string' ? input.message.replace(/\r\n?/g, '\n').trim() : '';
@@ -20,5 +20,13 @@ export function normalizeGreetingCard(input?: { templateId: string; heading?: st
   if (!message || Array.from(message).length > 300 || message.split('\n').length > 6) {
     throw new BadRequestException('Lời chúc cần từ 1 đến 300 ký tự và tối đa 6 dòng');
   }
-  return { templateId: template.id, templateName: template.name, heading, message };
+  const names: { senderName?: string; recipientName?: string } = {};
+  for (const key of ['senderName', 'recipientName'] as const) {
+    if (input[key] === undefined) continue;
+    if (typeof input[key] !== 'string' || Array.from(input[key]).length > 100) {
+      throw new BadRequestException('Tên trên thiệp tối đa 100 ký tự');
+    }
+    names[key] = input[key].trim().replace(/\s+/g, ' ');
+  }
+  return { templateId: template.id, templateName: template.name, heading, message, ...names };
 }

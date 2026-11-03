@@ -245,7 +245,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
             <div class="mb-4 space-y-3">
               <h4 class="text-sm font-bold text-[#2B1A1A]">Thiệp chúc mừng · {{ card.templateName }}</h4>
               <p class="text-xs text-slate-500">Xưởng in thiệp và đặt kèm trong gói quà.</p>
-              <app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" />
+              <app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" [senderName]="card.senderName || ''" [recipientName]="card.recipientName || ''" />
             </div>
           }
           <!-- Product items list -->

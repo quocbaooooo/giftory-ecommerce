@@ -325,7 +325,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
                 <div><h3 class="font-bold text-sm text-[#800020]">Thiệp in kèm gói quà · {{ card.templateName }}</h3><p class="text-xs text-slate-500 mt-1">Kiểm tra lời chúc, in thiệp và cho vào hộp trước khi đóng gói.</p></div>
                 <a [routerLink]="['/admin/orders', ord.orderCode, ord.gift?.enabled ? 'gift-slip' : 'greeting-card']" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#800020] text-[#FFF5E1] font-bold text-xs"><span class="material-symbols-outlined text-base" aria-hidden="true">print</span>Mở bản in thiệp</a>
               </div>
-              <app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" />
+              <app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" [senderName]="card.senderName || ''" [recipientName]="card.recipientName || ''" />
             </section>
           }
           @if (ord.packaging?.boxCount) {

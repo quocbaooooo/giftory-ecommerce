@@ -59,12 +59,21 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 <fieldset [disabled]="!!pendingOrder() || isSubmitting()" class="grid grid-cols-1 gap-4 text-xs sm:grid-cols-2">
                   <label class="font-semibold text-slate-700">Họ tên người đặt *<input [ngModel]="directGift() ? buyerName : customerName" (ngModelChange)="directGift() ? buyerName = $event : customerName = $event" maxlength="100" autocomplete="name" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 text-sm font-normal" /></label>
                   <label class="font-semibold text-slate-700">Số điện thoại người đặt *<input [ngModel]="directGift() ? buyerPhone : customerPhone" (ngModelChange)="directGift() ? buyerPhone = $event : customerPhone = $event" type="tel" maxlength="20" autocomplete="tel" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 text-sm font-normal" /></label>
-                  <label class="font-semibold text-slate-700 sm:col-span-2">Email nhận hóa đơn{{ directGift() ? ' *' : '' }}<input [ngModel]="directGift() ? buyerEmail : customerEmail" (ngModelChange)="directGift() ? buyerEmail = $event : customerEmail = $event" type="email" maxlength="254" autocomplete="email" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 text-sm font-normal" /></label>
-                  @if (directGift()) {
-                  <label class="flex items-start gap-3 rounded-xl bg-[#FAF7F2] p-3 sm:col-span-2"><input type="checkbox" [(ngModel)]="giftAnonymous" class="mt-0.5 accent-[#800020]" /><span><strong>Gửi ẩn danh</strong><span class="mt-1 block font-normal text-slate-500">Trên thiệp và phiếu giao chỉ hiển thị người gửi là Giftory.</span></span></label>
-                  }
+                  <label class="font-semibold text-slate-700 sm:col-span-2">Email nhận hóa đơn<input [ngModel]="directGift() ? buyerEmail : customerEmail" (ngModelChange)="directGift() ? buyerEmail = $event : customerEmail = $event" type="email" maxlength="254" autocomplete="email" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 text-sm font-normal" /></label>
                 </fieldset>
-                @if (!directGift()) {
+                @if (giftError()) { <p role="alert" class="mt-3 text-xs font-semibold text-rose-700">{{ giftError() }}</p> }
+              </section>
+            <section class="rounded-3xl border border-[#E6D2DA] bg-[#FCF7F9] p-5 sm:p-6">
+              <label class="flex cursor-pointer items-start gap-3">
+                <input type="checkbox" [ngModel]="directGift()" (ngModelChange)="setDirectGift($event)" [disabled]="!!pendingOrder() || isSubmitting()" class="mt-1 h-4 w-4 accent-[#800020]" />
+                <span><strong class="block text-sm text-[#552337]">Gửi đơn hàng này làm quà tặng trực tiếp cho người khác</strong>
+                  <span class="mt-1 block text-xs leading-relaxed text-[#846472]">{{ directGift() ? 'Giấu toàn bộ giá tiền · Người nhận không trả COD · Người đặt thanh toán trước 100%.' : 'Giao cho chính bạn. Giá hiển thị đầy đủ, thanh toán và hậu mãi theo quy định thông thường.' }}</span>
+                </span>
+              </label>
+            </section>
+            @if (!directGift()) {
+              <section class="rounded-3xl border border-[#EBD3AE] bg-white p-6 shadow-shop-card sm:p-8">
+                <div class="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3"><span class="flex h-7 w-7 items-center justify-center rounded-xl bg-[#800020] text-xs font-bold text-[#FFF5E1]">2</span><h2 class="text-lg font-bold text-[#42202E]">Thông tin giao hàng</h2></div>
                   <div class="mt-5 space-y-4 text-xs">
                     @if (authService.isAuthenticated()) {
                       <div class="space-y-3 rounded-2xl border border-[#EADFE3] bg-[#FAF8F9] p-4">
@@ -91,17 +100,8 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                       @if (recipientNotice()) { <p role="status" class="text-emerald-700">{{ recipientNotice() }}</p> }
                     }
                   </div>
-                }
-                @if (giftError()) { <p role="alert" class="mt-3 text-xs font-semibold text-rose-700">{{ giftError() }}</p> }
               </section>
-            <section class="rounded-3xl border border-[#E6D2DA] bg-[#FCF7F9] p-5 sm:p-6">
-              <label class="flex cursor-pointer items-start gap-3">
-                <input type="checkbox" [ngModel]="directGift()" (ngModelChange)="setDirectGift($event)" [disabled]="!!pendingOrder() || isSubmitting()" class="mt-1 h-4 w-4 accent-[#800020]" />
-                <span><strong class="block text-sm text-[#552337]">Gửi đơn hàng này làm quà tặng trực tiếp cho người khác</strong>
-                  <span class="mt-1 block text-xs leading-relaxed text-[#846472]">{{ directGift() ? 'Giấu toàn bộ giá tiền · Người nhận không trả COD · Người đặt thanh toán trước 100%.' : 'Giao cho chính bạn. Giá hiển thị đầy đủ, thanh toán và hậu mãi theo quy định thông thường.' }}</span>
-                </span>
-              </label>
-            </section>
+            }
             <ng-template #deliveryAddress>
                 <div class="space-y-3">
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -223,7 +223,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
             @if (directGift()) {
             <section class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#EBD3AE] space-y-4" aria-labelledby="greeting-card-title">
               <div>
-                <h2 id="greeting-card-title" class="text-base font-bold text-[#2B1A1A]">Thiệp chúc mừng</h2>
+                <div class="flex items-center gap-2 border-b border-slate-100 pb-3"><span class="flex h-7 w-7 items-center justify-center rounded-xl bg-[#800020] text-xs font-bold text-[#FFF5E1]">3</span><h2 id="greeting-card-title" class="text-base sm:text-lg font-bold text-[#2B1A1A]">Thiệp chúc mừng</h2></div>
                 <p class="mt-1 text-xs text-slate-500">Chọn phong cách, viết tiêu đề và lời chúc để xưởng in kèm trong gói quà.</p>
               </div>
                 @if (greetingCardTemplatesLoading()) {
@@ -243,6 +243,15 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                     }
                   </div>
                   <p class="text-xs text-slate-500">Phong cách chỉ thay đổi màu sắc và họa tiết, giữ nguyên tiêu đề và lời chúc của bạn.</p>
+                  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <label class="text-xs font-bold text-slate-700">Người gửi trên thiệp
+                      <input [ngModel]="cardSenderName" (ngModelChange)="greetingCardSenderName = $event" [disabled]="giftAnonymous" maxlength="100" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 text-sm font-normal disabled:bg-slate-50" />
+                    </label>
+                    <label class="text-xs font-bold text-slate-700">Người nhận trên thiệp
+                      <input [ngModel]="cardRecipientName" (ngModelChange)="greetingCardRecipientName = $event" maxlength="100" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 text-sm font-normal" />
+                    </label>
+                  </div>
+                  <label class="flex items-start gap-3 rounded-xl bg-[#FAF7F2] p-3 sm:col-span-2"><input type="checkbox" [(ngModel)]="giftAnonymous" class="mt-0.5 accent-[#800020]" /><span><strong>Gửi ẩn danh</strong><span class="mt-1 block font-normal text-slate-500">Trên thiệp và phiếu giao chỉ hiển thị người gửi là Giftory.</span></span></label>
                   <div>
                     <label for="greeting-heading" class="block text-xs font-bold text-slate-700 mb-1">Tiêu đề thiệp *</label>
                     <input id="greeting-heading" [(ngModel)]="greetingCardHeading" maxlength="80" aria-describedby="greeting-heading-help" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:border-[#800020] focus:outline-none text-sm" placeholder="Ví dụ: Gửi người bạn đặc biệt của mình">
@@ -257,7 +266,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 </fieldset>
                 @if (selectedGreetingCardTemplate(); as template) {
                   <p class="text-xs font-bold text-slate-500">Xem trước thiệp</p>
-                  <app-greeting-card-preview [templateId]="template.id" [heading]="greetingCardHeading.trim()" [message]="greetingCardMessage.trim()" />
+                  <app-greeting-card-preview [templateId]="template.id" [heading]="greetingCardHeading.trim()" [message]="greetingCardMessage.trim()" [senderName]="cardSenderName" [recipientName]="cardRecipientName" />
                 }
             </section>
             }
@@ -265,18 +274,17 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
             <!-- Section 2: Shipping Method Selector (AC 4, PF Step 5-6) -->
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#EBD3AE]">
               <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
-                <span class="w-7 h-7 rounded-xl bg-[#800020] text-[#FFF5E1] flex items-center justify-center font-bold text-xs">{{ directGift() ? 3 : 2 }}</span>
+                <span class="w-7 h-7 rounded-xl bg-[#800020] text-[#FFF5E1] flex items-center justify-center font-bold text-xs">{{ directGift() ? 4 : 3 }}</span>
                 <h2 class="text-base sm:text-lg font-bold text-[#2B1A1A]">Lựa Chọn Phương Thức Giao Hàng</h2>
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <!-- Standard Shipping -->
                 <label 
-                  (click)="!pendingOrder() && changeShipping('STANDARD')"
                   class="flex items-start gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all"
                   [ngClass]="selectedShippingMethod() === 'STANDARD' ? 'border-[#800020] bg-[#FCF7F9] shadow-sm' : 'border-[#E8E3E5] hover:border-[#CBA9B3] bg-white'"
                 >
-                  <input type="radio" name="shippingMethod" [checked]="selectedShippingMethod() === 'STANDARD'" [disabled]="!!pendingOrder()" class="mt-1 accent-[#800020]">
+                  <input type="radio" name="shippingMethod" [value]="'STANDARD'" [ngModel]="selectedShippingMethod()" (ngModelChange)="changeShipping($event)" [disabled]="!!pendingOrder() || shippingSyncPending() || isSubmitting()" class="mt-1 accent-[#800020]">
                   <div>
                     <div class="font-bold text-sm text-[#2B1A1A]">Giao Tiêu Chuẩn</div>
                     <p class="text-xs text-slate-500 mt-0.5">3 - 5 ngày làm việc</p>
@@ -288,11 +296,10 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
 
                 <!-- Express Shipping -->
                 <label 
-                  (click)="!pendingOrder() && changeShipping('EXPRESS')"
                   class="flex items-start gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all"
                   [ngClass]="selectedShippingMethod() === 'EXPRESS' ? 'border-[#800020] bg-[#FCF7F9] shadow-sm' : 'border-[#E8E3E5] hover:border-[#CBA9B3] bg-white'"
                 >
-                  <input type="radio" name="shippingMethod" [checked]="selectedShippingMethod() === 'EXPRESS'" [disabled]="!!pendingOrder()" class="mt-1 accent-[#800020]">
+                  <input type="radio" name="shippingMethod" [value]="'EXPRESS'" [ngModel]="selectedShippingMethod()" (ngModelChange)="changeShipping($event)" [disabled]="!!pendingOrder() || shippingSyncPending() || isSubmitting()" class="mt-1 accent-[#800020]">
                   <div>
                     <div class="flex items-center gap-1.5 font-bold text-sm text-[#2B1A1A]">
                       <span>Giao Hỏa Tốc</span>
@@ -308,7 +315,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
             <!-- Section 3: Payment Method Selector (BR-02, BR-03, BR-04, BR-07) -->
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-shop-card border border-[#EBD3AE]">
               <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
-                <span class="w-7 h-7 rounded-xl bg-[#800020] text-[#FFF5E1] flex items-center justify-center font-bold text-xs">{{ directGift() ? 4 : 3 }}</span>
+                <span class="w-7 h-7 rounded-xl bg-[#800020] text-[#FFF5E1] flex items-center justify-center font-bold text-xs">{{ directGift() ? 5 : 4 }}</span>
                 <h2 class="text-base sm:text-lg font-bold text-[#2B1A1A]">Phương Thức Thanh Toán</h2>
               </div>
 
@@ -695,6 +702,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   greetingCardTemplateId = signal('BIRTHDAY');
   greetingCardHeading = 'Gửi bạn thật nhiều yêu thương';
   greetingCardMessage = '';
+  greetingCardSenderName: string | null = null;
+  greetingCardRecipientName: string | null = null;
+  get cardSenderName(): string { return this.giftAnonymous ? 'Giftory' : (this.greetingCardSenderName ?? this.buyerName).trim(); }
+  get cardRecipientName(): string { return (this.greetingCardRecipientName ?? this.customerName).trim(); }
   greetingCardTemplates = signal<GreetingCardTemplate[]>([]);
   greetingCardTemplatesLoading = signal(false);
   greetingCardTemplatesError = signal(false);
@@ -756,7 +767,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   selectedShippingMethod = signal<'STANDARD' | 'EXPRESS'>(this.cartService.cart()?.shippingMethod || 'STANDARD');
   shippingSyncPending = signal(false);
   changeShipping(method: 'STANDARD' | 'EXPRESS') {
-    if (this.shippingSyncPending() || this.pendingOrder()) return;
+    if (this.shippingSyncPending() || this.pendingOrder() || this.isSubmitting() || method === this.selectedShippingMethod()) return;
     this.selectedShippingMethod.set(method);
     if (this.isBuyNowMode()) return;
     this.shippingSyncPending.set(true);
@@ -1106,7 +1117,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
     const orderPayload: any = {
       ...(this.directGift() ? { gift: { enabled: true, anonymous: this.giftAnonymous, sender: { name: this.buyerName.trim(), phone: this.buyerPhone.trim(), email: this.buyerEmail.trim() } } } : {}),
-      ...(this.includeGreetingCard() ? { greetingCard: { templateId: this.greetingCardTemplateId(), heading: this.greetingCardHeading.trim().replace(/\s+/g, ' '), message: this.greetingCardMessage.trim() } } : {}),
+      ...(this.includeGreetingCard() ? { greetingCard: { templateId: this.greetingCardTemplateId(), heading: this.greetingCardHeading.trim().replace(/\s+/g, ' '), message: this.greetingCardMessage.trim(), senderName: this.cardSenderName, recipientName: this.cardRecipientName } } : {}),
       customerInfo: {
         name: this.customerName.trim(),
         phone: this.customerPhone.replace(/[\s().-]/g, '').replace(/^\+?84/, '0'),

@@ -17,7 +17,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
         <p class="mt-3 rounded-xl bg-[#FCF7F9] p-3 text-xs leading-relaxed text-[#765965]">Bạn không cần thanh toán khi nhận quà. Giftory hỗ trợ bạn xác nhận thời gian giao và bảo hành/đổi sản phẩm bị lỗi.</p>
         @for (item of g.items; track $index) { <div class="mt-4 flex items-center gap-3"><img [src]="item.image" [alt]="item.name" class="h-16 w-16 rounded-xl object-cover" /><div><strong class="text-sm">{{ item.name }}</strong><p class="mt-1 text-xs text-slate-500">{{ item.variant }} · {{ item.quantity }} món</p></div></div> }
       </section>
-      @if (g.greetingCard; as card) { <app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" /> }
+      @if (g.greetingCard; as card) { <app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" [senderName]="card.senderName || ''" [recipientName]="card.recipientName || ''" /> }
       @if (g.delivery.needsReschedule) {
         <section class="rounded-3xl border border-[#E8D7DD] bg-white p-6"><h2 class="font-bold">Chọn thời gian nhận quà thuận tiện</h2><p class="mt-2 text-xs text-slate-500">Giftory sẽ chuyển thời gian bạn chọn cho bộ phận giao hàng.</p><label class="mt-4 block text-xs">Thời gian nhận quà<input type="datetime-local" [(ngModel)]="deliveryWindow" class="mt-2 block w-full rounded-xl border p-3 text-sm" /></label><button (click)="schedule()" [disabled]="busy() || !deliveryWindow" class="mt-4 rounded-xl bg-[#800020] px-4 py-3 text-sm font-bold text-white disabled:opacity-50">Xác nhận thời gian nhận</button></section>
       }

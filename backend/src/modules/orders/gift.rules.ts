@@ -16,6 +16,7 @@ export function normalizeGift(input: any, recipient: any, card: any, method: str
   if (method === 'COD') throw new BadRequestException('Đơn gửi quà trực tiếp không hỗ trợ COD. Người đặt phải thanh toán trước 100%');
   if (!card || Array.from(card.message).length > 200) throw new BadRequestException('Đơn gửi quà cần thiệp và lời chúc tối đa 200 ký tự');
   const anonymous = input.anonymous === true;
+  if (anonymous) card.senderName = 'Giftory';
   if (anonymous && `${card.heading} ${card.message}`.toLocaleLowerCase('vi').includes(name.toLocaleLowerCase('vi')))
     throw new BadRequestException('Thiệp ẩn danh không được chứa họ tên người đặt');
   const token = randomBytes(32).toString('base64url');
@@ -47,7 +48,8 @@ export function giftRecipientView(order: any) {
   return { orderCode: order.orderCode, orderStatus: order.orderStatus,
     recipient: { name: order.customerInfo.name, phone: order.customerInfo.phone, address: order.customerInfo.address },
     senderLabel: order.gift.anonymous ? 'Giftory' : order.gift.sender.name,
-    greetingCard: order.greetingCard ? { templateId: order.greetingCard.templateId, heading: order.greetingCard.heading, message: order.greetingCard.message } : null,
+    greetingCard: order.greetingCard ? { templateId: order.greetingCard.templateId, heading: order.greetingCard.heading, message: order.greetingCard.message,
+      senderName: order.gift.anonymous ? 'Giftory' : order.greetingCard.senderName, recipientName: order.greetingCard.recipientName } : null,
     items: order.items.map((item: any) => ({ id: String(item.productId), name: item.productName, image: item.productImage, variant: item.variantName, quantity: item.quantity })),
     wrapping: { giftWrap: true, ribbon: true }, hidePrices: true, collectPayment: false,
     delivery: { carrier: order.deliveryInfo?.carrier || order.shippingCarrier, trackingCode: ['IN_TRANSIT','SHIPPING','DELIVERED'].includes(order.orderStatus) ? order.trackingCode : '',

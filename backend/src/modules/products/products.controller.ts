@@ -23,6 +23,22 @@ import { UserRole } from '../../common/enums/role.enum';
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @Get('admin/export')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
+  async exportAll() {
+    return this.productsService.exportAll();
+  }
+
+  @Post('admin/import')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
+  async importAll(@Body() body: { products: unknown[] }) {
+    return this.productsService.importAll(body?.products);
+  }
+
   @Get()
   @ApiOperation({ summary: 'Lấy danh sách sản phẩm có phân trang, tìm kiếm và bộ lọc' })
   async findAll(@Query() query: ProductQueryDto) {

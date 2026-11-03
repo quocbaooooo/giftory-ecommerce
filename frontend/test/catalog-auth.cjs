@@ -27,7 +27,7 @@ function sent(method, endpoint) {
 for (const endpoint of ['products?view=catalog', 'products/best-sellers', 'products/slug/mug', 'categories', 'categories/display-settings']) {
   assert.equal(sent('GET', endpoint).setHeaders, undefined, `${endpoint} stays public`);
 }
-for (const [method, endpoint] of [['POST', 'products'], ['PATCH', 'products/id'], ['GET', 'categories/admin'], ['GET', 'cart'], ['GET', 'orders'], ['GET', 'auth/me']]) {
+for (const [method, endpoint] of [['GET', 'products/admin/export'], ['POST', 'products/admin/import'], ['POST', 'products'], ['PATCH', 'products/id'], ['GET', 'categories/admin'], ['GET', 'cart'], ['GET', 'orders'], ['GET', 'auth/me']]) {
   assert.equal(sent(method, endpoint).setHeaders.Authorization, 'Bearer test-token', `${method} ${endpoint} retains auth`);
 }
 console.log('Catalog auth: public reads avoid bearer preflights; admin, cart, orders and profile retain authentication');

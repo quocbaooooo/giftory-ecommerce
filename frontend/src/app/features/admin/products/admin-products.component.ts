@@ -1,4 +1,6 @@
 import { Component, OnInit, signal, inject, computed, ViewChild } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { productTable, excelTable, encodeCsv, parseCsv, tableProducts } from './product-transfer';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -24,8 +26,10 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
           <p class="text-xs text-giftory-ink/60 mt-1">Cấu hình phôi quà 2 mặt, quản lý thư viện clipart và chính sách cọc 50%</p>
         </div>
 
-        <div class="flex items-center gap-3 self-start sm:self-auto">
+        <div class="flex flex-wrap items-center gap-3 self-start sm:self-auto shrink-0">
           @if (activeTab() === 'PRODUCTS') {
+            <button type="button" (click)="productFile.click()" [disabled]="transferBusy()" class="px-4 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-bold text-xs disabled:opacity-50">Nhập CSV / Excel</button>
+            <input #productFile type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" (change)="importProductsCsv($event)" class="hidden" />
             <button
               (click)="openCreateModal()"
               class="px-5 py-2.5 bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] text-xs font-bold rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
@@ -87,12 +91,15 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
           <span class="material-symbols-outlined text-[18px]">palette</span>
           <span>Thư Viện Clipart Studio ({{ studioAssets().length }})</span>
         </button>
-        <button type="button" (click)="exportProductsCsv()" class="px-4 py-2.5 rounded-xl bg-[#FFF5E1] text-[#800020] font-bold text-xs">Xuất Excel (CSV)</button>
-        <label class="px-4 py-2.5 rounded-xl bg-[#800020] text-[#FFF5E1] font-bold text-xs cursor-pointer">Nhập Excel (CSV)<input type="file" accept=".csv,text/csv" (change)="importProductsCsv($event)" class="hidden" /></label>
+
       </div>
 
       @if (activeTab() === 'CLIPART_IMPORT') {
         <app-openclipart-importer (imported)="loadStudioAssets()"></app-openclipart-importer>
+      }
+
+      @if (transferMessage()) {
+        <div role="status" aria-live="polite" class="rounded-xl bg-[#FFF5E1] text-[#800020] p-4 text-sm whitespace-pre-line">{{ transferMessage() }}</div>
       }
 
       <!-- ================= TAB 1: PRODUCTS & BLANKS TABLE ================= -->
@@ -101,6 +108,10 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div class="text-xs font-bold text-giftory-ink">
               Tổng cộng: <span class="text-[#800020] font-black">{{ products().length }} món quà trong Database</span>
+              <div class="flex flex-wrap gap-2 mt-3">
+                <button type="button" (click)="exportProductsCsv()" [disabled]="transferBusy()" class="px-3 py-2 rounded-xl bg-[#FFF5E1] text-[#800020] font-bold text-xs disabled:opacity-50">Xuất đầy đủ CSV</button>
+                <button type="button" (click)="exportProductsCsv(true)" [disabled]="transferBusy()" class="px-3 py-2 rounded-xl bg-[#FFF5E1] text-[#800020] font-bold text-xs disabled:opacity-50">Xuất Excel (.xlsx)</button>
+              </div>
             </div>
 
             <div class="relative max-w-xs w-full">
@@ -396,17 +407,21 @@ import { AdminCategoriesComponent } from '../categories/admin-categories.compone
 
                   <div class="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/60 p-4">
                     <div>
-                      <h4 class="text-xs font-bold text-slate-800">Metadata tư vấn catalog</h4>
-                      <p class="text-[11px] text-slate-600">Nhập audience và occasions theo tag đã được duyệt. Sản phẩm thiếu tag sẽ không khớp bộ lọc chatbot.</p>
+                      <h4 class="text-xs font-bold text-slate-800">Phân loại và từ khóa tìm kiếm</h4>
+                      <p class="text-[11px] text-slate-600">Người nhận và dịp tặng dùng chung cho bộ lọc cửa hàng và trợ lý tư vấn. Từ khóa bổ sung mô tả đặc điểm sản phẩm. Mỗi mục phân tách bằng dấu phẩy.</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <label class="space-y-1 text-xs font-semibold">Audience (phân tách bằng dấu phẩy)
+                      <label class="space-y-1 text-xs font-semibold">Dành cho ai (audience)
                         <input type="text" formControlName="audienceCsv" placeholder="mẹ, người yêu, bố" class="w-full rounded-lg border p-2 font-normal" />
                       </label>
-                      <label class="space-y-1 text-xs font-semibold">Occasions (phân tách bằng dấu phẩy)
+                      <label class="space-y-1 text-xs font-semibold">Dịp tặng (occasions)
                         <input type="text" formControlName="occasionsCsv" placeholder="sinh nhật, kỷ niệm, 20/10" class="w-full rounded-lg border p-2 font-normal" />
                       </label>
                     </div>
+                    <label class="block space-y-1 text-xs font-semibold">Từ khóa bổ sung (tags)
+                      <input type="text" formControlName="tagsCsv" placeholder="khắc tên, handmade, phong cách vintage" class="w-full rounded-lg border p-2 font-normal" />
+                      <span class="block text-[11px] font-normal text-slate-600">Không cần nhập lại người nhận hoặc dịp tặng vào đây.</span>
+                    </label>
                   </div>
                 </div>
               }
@@ -1138,6 +1153,8 @@ export class AdminProductsComponent implements OnInit {
   categories = signal<Category[]>([]);
   studioAssets = signal<StudioAsset[]>([]);
   searchQuery = '';
+  transferBusy = signal(false);
+  transferMessage = signal('');
 
   isModalOpen = signal<boolean>(false);
   isAssetModalOpen = signal<boolean>(false);
@@ -1487,7 +1504,7 @@ export class AdminProductsComponent implements OnInit {
   }
 
   loadProducts() {
-    this.productService.getProducts({ limit: 100 }).subscribe({
+    this.api.get<Product[]>('products/admin/export').subscribe({
       next: (res: any) => {
         const list = Array.isArray(res) ? res : (res?.data || res?.items || []);
         this.products.set(list);
@@ -1495,33 +1512,78 @@ export class AdminProductsComponent implements OnInit {
     });
   }
 
-  exportProductsCsv(): void {
-    const headers = ['name', 'sku', 'price', 'salePrice', 'stock', 'status', 'categoryId', 'isCustomizable'];
-    const rows = this.products().map(p => [p.name, p.sku || '', p.price, p.salePrice || '', p.stock || 0, p.status, (p.category as any)?._id || p.category || '', !!p.isCustomizable]);
-    const csv = [headers, ...rows].map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n');
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob); link.download = 'giftory-products.csv'; link.click();
-    URL.revokeObjectURL(link.href);
+  async exportProductsCsv(excel = false): Promise<void> {
+    if (this.transferBusy()) return;
+    this.transferBusy.set(true);
+    this.transferMessage.set('Đang xuất toàn bộ sản phẩm…');
+    try {
+      const products = await firstValueFrom(this.api.get<any[]>('products/admin/export'));
+      const table = productTable(products);
+      let blob: Blob;
+      if (excel) {
+        if (table.some(row => row.some(cell => cell.length > 32767))) {
+          throw new Error('Dữ liệu có ô vượt giới hạn 32.767 ký tự của Excel. Hãy chọn “Xuất đầy đủ CSV” để giữ nguyên dữ liệu.');
+        }
+        const { Workbook } = await import('exceljs');
+        const workbook = new Workbook();
+        const sheet = workbook.addWorksheet('Products');
+        sheet.addRows(excelTable(table));
+        sheet.getRow(1).font = { bold: true };
+        sheet.views = [{ state: 'frozen', ySplit: 1 }];
+        sheet.columns.forEach(column => column.width = 24);
+        const buffer = await workbook.xlsx.writeBuffer();
+        blob = new Blob([buffer as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      } else blob = new Blob([encodeCsv(table)], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `giftory-products.${excel ? 'xlsx' : 'csv'}`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      this.transferMessage.set(`Đã xuất ${products.length} sản phẩm với đầy đủ ảnh, biến thể, thông số và cấu hình Studio. Giữ nguyên tên cột khi nhập lại; các cột danh sách/cấu hình dùng JSON.`);
+    } catch (error: any) {
+      this.transferMessage.set(error.error?.message || error.message || 'Không thể xuất sản phẩm.');
+    } finally { this.transferBusy.set(false); }
   }
 
-  importProductsCsv(event: Event): void {
+  async importProductsCsv(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const lines = String(reader.result || '').replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean);
-      const headers = (lines.shift() || '').split(',').map(cell => cell.replace(/^"|"$/g, '').toLowerCase());
-      const imported = lines.map(line => {
-        const values = line.match(/("(?:[^"]|"")*"|[^,]*)(,|$)/g)?.map(value => value.replace(/,$/, '').replace(/^"|"$/g, '').replace(/""/g, '"')) || [];
-        return Object.fromEntries(headers.map((header, i) => [header, values[i] || '']));
-      }).filter(row => row['name'] && row['price']);
-      if (!imported.length) { alert('CSV không có dòng hợp lệ. Cần cột name và price.'); input.value = ''; return; }
-      alert(`Đã đọc ${imported.length} dòng. Vui lòng lưu từng sản phẩm qua biểu mẫu quản trị để kiểm tra danh mục, SKU và biến thể trước khi cập nhật.`);
-      input.value = '';
-    };
-    reader.readAsText(file, 'UTF-8');
+    input.value = '';
+    if (!file || this.transferBusy()) return;
+    this.transferBusy.set(true);
+    this.transferMessage.set('Đang đọc và kiểm tra tệp…');
+    try {
+      if (file.size > 15 * 1024 * 1024) throw new Error('Tệp vượt quá 15 MB. Vui lòng chia thành các tệp nhỏ hơn.');
+      let table: string[][];
+      if (/\.xlsx$/i.test(file.name)) {
+        const { Workbook } = await import('exceljs');
+        const workbook = new Workbook();
+        await workbook.xlsx.load(await file.arrayBuffer());
+        const sheet = workbook.getWorksheet('Products') || workbook.worksheets[0];
+        if (!sheet) throw new Error('Excel không có trang tính.');
+        table = [];
+        sheet.eachRow(row => {
+          const cells = Array.from({ length: Math.max(sheet.columnCount, row.cellCount) }, (_, i) => {
+            const cell = row.getCell(i + 1);
+            if (cell.type === 6) throw new Error(`Ô ${cell.address}: hãy thay công thức bằng giá trị trước khi nhập.`);
+            return cell.text;
+          });
+          if (cells.some(cell => cell.trim())) table.push(cells);
+        });
+      } else if (/\.csv$/i.test(file.name)) table = parseCsv(await file.text());
+      else throw new Error('Vui lòng chọn tệp .csv hoặc .xlsx.');
+      const products = tableProducts(table);
+      if (products.length > 5000) throw new Error('Mỗi lần nhập tối đa 5000 sản phẩm.');
+      this.transferMessage.set(`Đang nhập ${products.length} sản phẩm…`);
+      const result = await firstValueFrom(this.api.post<{ created: number; updated: number; errors: Array<{ row: number; message: string }> }>('products/admin/import', { products }));
+      this.productService.invalidateCatalog();
+      this.loadProducts();
+      this.transferMessage.set(`Đã tạo ${result.created}, cập nhật ${result.updated} sản phẩm.`
+        + (result.errors.length ? '\n' + result.errors.map(error => `Dòng ${error.row}: ${error.message}`).join('\n') : '\nNhập hoàn tất.'));
+    } catch (error: any) {
+      this.transferMessage.set(error.error?.message || error.message || 'Không thể nhập sản phẩm.');
+    } finally { this.transferBusy.set(false); }
   }
 
   filteredProducts(): Product[] {
@@ -1579,6 +1641,7 @@ export class AdminProductsComponent implements OnInit {
       loyaltyEligible: p.loyaltyEligible !== false,
       isCustomizable: p.isCustomizable,
       studioSupported: p.studioSupported === true,
+      tagsCsv: (p.tags || []).join(', '),
       audienceCsv: (p.audience || []).join(', '),
       occasionsCsv: (p.occasions || []).join(', '),
       customBaseFee: p.customBaseFee || 30000,
@@ -1833,6 +1896,7 @@ export class AdminProductsComponent implements OnInit {
       loyaltyEligible: [true],
       isCustomizable: [false],
       studioSupported: [false],
+      tagsCsv: [''],
       audienceCsv: [''],
       occasionsCsv: [''],
       customBaseFee: [30000],
@@ -1892,6 +1956,7 @@ export class AdminProductsComponent implements OnInit {
       isCustomizable: val.isCustomizable,
       supportsCustomization: !!val.isCustomizable,
       studioSupported: !!val.studioSupported && !!val.isCustomizable,
+      tags: String(val.tagsCsv || '').split(',').map((tag: string) => tag.trim()).filter(Boolean),
       audience: String(val.audienceCsv || '').split(',').map((tag: string) => tag.trim()).filter(Boolean),
       occasions: String(val.occasionsCsv || '').split(',').map((tag: string) => tag.trim()).filter(Boolean),
       customBaseFee: Number(val.customBaseFee) || 30000,

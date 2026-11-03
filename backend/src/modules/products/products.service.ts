@@ -5,6 +5,7 @@ import { Product, ProductDocument } from '../../database/schemas/product.schema'
 import { Category, CategoryDocument } from '../../database/schemas/category.schema';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductQueryDto } from './dto/product-query.dto';
+import { catalogMetadataRegex, normalizeProductMetadata } from '../../common/utils/catalog-metadata';
 import { buildVietnameseRegex } from '../../common/utils/vietnamese.util';
 import { isStudioSupportedProduct, supportsCustomization } from '../../common/utils/studio-support';
 
@@ -24,6 +25,78 @@ export class ProductsService {
     @InjectModel(Category.name) private readonly categoryModel: Model<CategoryDocument>,
   ) {}
 
+  async exportAll() {
+    // Do not use the public, ACTIVE-only and paginated catalog for backups.
+    return this.productModel.find().populate('category', 'name slug').lean().exec();
+  }
+
+  async importAll(rows: unknown) {
+    if (!Array.isArray(rows) || !rows.length || rows.length > 5000) {
+      throw new BadRequestException('Tệp phải chứa từ 1 đến 5000 sản phẩm.');
+    }
+    const categories = await this.categoryModel.find().lean().exec();
+    const fields = Object.keys(this.productModel.schema.paths).filter(key => !['_id', '__v', 'createdAt', 'updatedAt'].includes(key));
+    const prepared: Array<{ doc: any; existing: boolean; row: number }> = [];
+    const errors: Array<{ row: number; message: string }> = [];
+    const identities = new Set<string>();
+    for (let index = 0; index < rows.length; index++) {
+      try {
+        const row = rows[index];
+        if (!row || typeof row !== 'object' || Array.isArray(row)) throw new Error('Dữ liệu sản phẩm không hợp lệ.');
+        const data = row as Record<string, any>;
+        const category = categories.find((cat: any) => String(cat._id) === String(data.categoryId || data.category))
+          || categories.find((cat: any) => data.categorySlug && cat.slug === data.categorySlug);
+        if (!category) throw new Error('Danh mục không tồn tại. Hãy tạo danh mục trước khi nhập.');
+        if (!data.name || !String(data.name).trim()) throw new Error('Thiếu tên sản phẩm.');
+        if (typeof data.price !== 'number' || !Number.isFinite(data.price) || data.price < 0) throw new Error('Giá phải là số không âm.');
+        if (data._id && !Types.ObjectId.isValid(data._id)) throw new Error('ID sản phẩm không hợp lệ.');
+        let existing = data._id ? await this.productModel.findById(data._id) : null;
+        if (!existing && data.slug) existing = await this.productModel.findOne({ slug: data.slug });
+        if (!existing && data.sku) {
+          const matches = await this.productModel.find({ sku: data.sku }).limit(2);
+          if (matches.length > 1) throw new Error('SKU trùng nhiều sản phẩm; cần ID hoặc slug.');
+          existing = matches[0] || null;
+        }
+        const payload: Record<string, any> = {};
+        for (const field of fields) if (Object.prototype.hasOwnProperty.call(data, field)) payload[field] = data[field];
+        // Older exports have blank optional enums. Blank means keep the stored value,
+        // or use the schema default for a new/legacy product, never an empty enum.
+        for (const field of ['packagingSize', 'status']) {
+          if (payload[field] == null || (typeof payload[field] === 'string' && !payload[field].trim())) delete payload[field];
+          else if (typeof payload[field] === 'string') payload[field] = payload[field].trim();
+        }
+        normalizeProductMetadata(payload);
+        payload.category = category._id;
+        if (!payload.slug && !existing) payload.slug = `${String(data.name).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/đ/g, 'd').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${new Types.ObjectId()}`;
+        const doc = existing || new this.productModel(data._id ? { _id: data._id } : {});
+        doc.set(payload);
+        if (!doc.packagingSize) doc.packagingSize = 'MEDIUM';
+        if (!doc.status) doc.status = 'ACTIVE';
+        await doc.validate();
+        const keys = [`id:${doc._id}`, `slug:${doc.slug}`];
+        if (keys.some(key => identities.has(key))) throw new Error('Sản phẩm xuất hiện nhiều lần trong tệp.');
+        const slugOwner = await this.productModel.findOne({ slug: doc.slug });
+        if (slugOwner && String(slugOwner._id) !== String(doc._id)) throw new Error('Slug đã thuộc sản phẩm khác.');
+        keys.forEach(key => identities.add(key));
+        prepared.push({ doc, existing: !!existing, row: index + 2 });
+      } catch (error: any) {
+        errors.push({ row: index + 2, message: error.message });
+      }
+    }
+    // Validate the entire file before writing any row.
+    if (errors.length) return { created: 0, updated: 0, errors };
+    let created = 0, updated = 0;
+    for (const entry of prepared) {
+      try {
+        await entry.doc.save();
+        entry.existing ? updated++ : created++;
+      } catch (error: any) {
+        errors.push({ row: entry.row, message: error.message });
+      }
+    }
+    return { created, updated, errors };
+  }
+
   async findAll(query: ProductQueryDto) {
     const catalog = query.view === 'catalog';
     const categoryFields = catalog ? 'name slug' : 'name slug emoji icon';
@@ -35,27 +108,15 @@ export class ProductsService {
       filter.$or = [
         { name: searchRegex },
         { description: searchRegex },
-        { tags: searchRegex }
+        { tags: searchRegex },
+        { audience: searchRegex },
+        { occasions: searchRegex }
       ];
     }
 
-    // Occasion filter (Sinh nhật, Kỷ niệm, Tri ân, Tình yêu, Tân gia, Giáng sinh...)
-    if (query.occasion && query.occasion.trim()) {
-      const occasionRegex = buildVietnameseRegex(query.occasion.trim());
-      filter.$and = filter.$and || [];
-      filter.$and.push({
-        $or: [{ tags: occasionRegex }, { description: occasionRegex }, { name: occasionRegex }]
-      });
-    }
-
-    // Recipient filter (Mẹ, Bố, Người yêu, Bạn bè, Đồng nghiệp, Sếp...)
-    if (query.recipient && query.recipient.trim()) {
-      const recipientRegex = buildVietnameseRegex(query.recipient.trim());
-      filter.$and = filter.$and || [];
-      filter.$and.push({
-        $or: [{ tags: recipientRegex }, { description: recipientRegex }, { name: recipientRegex }]
-      });
-    }
+    // Structured metadata is authoritative for both storefront filters and chatbot matching.
+    if (query.occasion?.trim()) filter.occasions = catalogMetadataRegex(query.occasion, 'occasion');
+    if (query.recipient?.trim()) filter.audience = catalogMetadataRegex(query.recipient, 'audience');
 
     // Tags filter
     if (query.tags && query.tags.trim()) {
@@ -162,7 +223,7 @@ export class ProductsService {
     const products = await this.productModel
       .find({
         status: 'ACTIVE',
-        $or: [{ name: regex }, { tags: regex }]
+        $or: [{ name: regex }, { description: regex }, { tags: regex }, { audience: regex }, { occasions: regex }]
       })
       .select('name slug price salePrice images rating isCustomizable category')
       .populate('category', 'name slug')
@@ -262,6 +323,7 @@ export class ProductsService {
   }
 
   async create(createDto: CreateProductDto) {
+    normalizeProductMetadata(createDto);
     let slug = createDto.slug;
     if (!slug || !slug.trim()) {
       slug = createDto.name
@@ -314,6 +376,7 @@ export class ProductsService {
   }
 
   async update(id: string, updateDto: any) {
+    normalizeProductMetadata(updateDto);
     if (updateDto.packagingSize !== undefined && !['SMALL', 'MEDIUM', 'LARGE', 'OVERSIZED'].includes(updateDto.packagingSize)) throw new BadRequestException('Kích thước đóng gói không hợp lệ.');
     if (updateDto.packagingUnits != null && (!Number.isFinite(Number(updateDto.packagingUnits)) || Number(updateDto.packagingUnits) < 1)) throw new BadRequestException('Dung tích quy đổi phải lớn hơn hoặc bằng 1.');
     if (updateDto.supportsCustomization === undefined && updateDto.isCustomizable !== undefined) {

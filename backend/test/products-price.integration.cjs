@@ -46,7 +46,7 @@ const prices = items => items.map(item => item.salePrice > 0 ? item.salePrice : 
     { slug: 'boundary-200', price: 200000 },
     { slug: 'tie-175', price: 280000, salePrice: 175000 },
   ];
-  await Product.create(examples.map(item => ({ ...item, name: `Quà ${item.slug}`, description: 'Quà sinh nhật cho mẹ', category: category._id, tags: ['Sinh nhật', 'Mẹ'], rating: 4.8 })));
+  await Product.create(examples.map(item => ({ ...item, name: `Quà ${item.slug}`, description: 'Quà sinh nhật cho mẹ', category: category._id, tags: ['handmade'], audience: ['Mẹ'], occasions: ['Sinh nhật'], rating: 4.8 })));
   await Product.updateOne({ slug: 'missing-discount-170' }, { $unset: { salePrice: 1 } });
   await Product.create({ name: 'Ẩn', slug: 'inactive', description: 'Không hiển thị', category: category._id, price: 100, status: 'INACTIVE' });
   const expected = [165000, 170000, 175000, 175000, 179000, 180000, 190000, 199000, 200000, 215000];
@@ -94,6 +94,31 @@ const prices = items => items.map(item => item.salePrice > 0 ? item.salePrice : 
     assert.equal(empty.meta.total, 0);
     assert.deepEqual(empty.items, []);
   });
+  await test('structured audience and occasions control filtering independently from tags and descriptions', async () => {
+    const yes = await Product.create({ name: 'Metadata only', slug: 'metadata-only', description: 'Plain description', price: 1,
+      category: category._id, audience: ['  MẸ  '], occasions: ['Sinh   nhật'], tags: ['wood'] });
+    const no = await Product.create({ name: 'Sinh nhật cho mẹ', slug: 'misleading-tags', description: 'Sinh nhật cho mẹ', price: 2,
+      category: category._id, audience: ['Bố'], occasions: ['Tân gia'], tags: ['mẹ', 'sinh nhật'] });
+    const result = await service.findAll({ recipient: 'me', occasion: 'sinh nhat', limit: 100 });
+    assert.ok(result.items.some(item => item.slug === yes.slug));
+    assert.ok(!result.items.some(item => item.slug === no.slug));
+    assert.equal((await service.findAll({ recipient: 'm', limit: 100 })).meta.total, 0, 'no substring matching');
+    await service.update(String(yes._id), { audience: ['  Người yêu ', 'nguoi yeu', ''], occasions: ['20/10'], tags: [' handmade ', 'HANDMADE'] });
+    const updated = await Product.findById(yes._id);
+    assert.deepEqual([...updated.audience], ['Người yêu']);
+    assert.deepEqual([...updated.tags], ['handmade']);
+    assert.equal((await service.findAll({ recipient: 'bạn gái', occasion: '8/3 - 20/10' })).meta.total, 1);
+    const { catalogMetadataRegex, catalogTagAliases, normalizeCatalogTag } = require('../dist/common/utils/catalog-metadata');
+    for (const [kind, query, values] of [
+      ['audience', 'bạn gái', ['Người yêu', 'Mẹ']], ['occasion', '8/3 - 20/10', ['20/10', '8/3', 'Sinh nhật']],
+      ['occasion', 'Giáng sinh', ['Noel', 'Tân gia']]
+    ]) {
+      const regex = catalogMetadataRegex(query, kind), aliases = catalogTagAliases(query, kind);
+      for (const value of values) assert.equal(regex.test(value), aliases.has(normalizeCatalogTag(value)), 'storefront and chatbot agree');
+    }
+    await assert.rejects(() => service.update(String(yes._id), { audience: [123] }), /danh sách chuỗi/);
+    await Product.deleteMany({ _id: { $in: [yes._id, no._id] } });
+  });
   await test('compact catalog preserves prices and filters while excluding heavy Studio and category payloads', async () => {
     const heavy = 'data:image/png;base64,' + 'A'.repeat(300000);
     await Category.updateOne({ _id: category._id }, { $set: { emoji: heavy } });
@@ -121,6 +146,55 @@ const prices = items => items.map(item => item.salePrice > 0 ? item.salePrice : 
     assert.equal(flash[0].category.emoji, undefined);
     const best = await service.getBestSellers(4, true);
     assert.ok(best.every(item => item.customConfig === undefined && item.category.emoji === undefined));
+  });
+  await test('full export/import restores hidden products, original IDs and nested fields without duplication', async () => {
+    const source = await Product.create({ name: 'Full backup', slug: 'full-backup', description: 'Line 1\nLine 2', category: category._id,
+      price: 0, salePrice: 0, stock: 0, sku: '0000123', status: 'DRAFT', loyaltyEligible: false,
+      images: ['one', 'two'], tags: ['Mother'], audience: ['Mother'], occasions: ['Birthday'],
+      variants: [{ name: 'Free', price: 0, stock: 0, images: ['a', 'b'], status: 'HIDDEN' }],
+      specs: [{ key: 'Material', value: 'Wood' }], customConfig: { blanks: [{ name: 'White', frontBlankImage: 'front', backBlankImage: 'back' }] }
+    });
+    const backup = (await service.exportAll()).find(item => String(item._id) === String(source._id));
+    assert.equal(backup.status, 'DRAFT');
+    const row = JSON.parse(JSON.stringify({ ...backup, categoryId: String(category._id) }));
+    delete row.category;
+    const before = await Product.countDocuments();
+    assert.deepEqual(await service.importAll([row]), { created: 0, updated: 1, errors: [] });
+    assert.equal(await Product.countDocuments(), before);
+    const restored = await Product.findById(source._id).lean();
+    for (const field of ['name', 'description', 'price', 'stock', 'sku', 'status', 'loyaltyEligible', 'images', 'variants', 'specs', 'customConfig']) {
+      assert.deepEqual(JSON.parse(JSON.stringify(restored[field])), JSON.parse(JSON.stringify(backup[field])), field);
+    }
+    await Product.deleteOne({ _id: source._id });
+    assert.deepEqual(await service.importAll([row]), { created: 1, updated: 0, errors: [] });
+    assert.ok(await Product.findById(source._id));
+    const invalid = await service.importAll([{ ...row, name: 'Do not save' }, { name: 'Bad', price: -1, categoryId: String(category._id) }]);
+    assert.equal(invalid.updated, 0);
+    assert.equal(invalid.errors[0].row, 3);
+    assert.equal((await Product.findById(source._id)).name, 'Full backup');
+    assert.equal((await service.importAll([row, row])).errors.length, 1);
+    assert.equal((await service.importAll([{ ...row, categoryId: String(new mongoose.Types.ObjectId()) }])).errors.length, 1);
+    assert.equal((await service.exportAll()).length, await Product.countDocuments());
+  });
+  await test('blank optional enums preserve existing values or apply defaults on import', async () => {
+    const source = await Product.create({ name: 'Packaging test', slug: 'packaging-test', description: 'Test', price: 1,
+      category: category._id, packagingSize: 'LARGE', status: 'DRAFT' });
+    const row = { _id: String(source._id), name: source.name, price: 1, categoryId: String(category._id), packagingSize: '', status: '  ' };
+    assert.deepEqual(await service.importAll([row]), { created: 0, updated: 1, errors: [] });
+    let saved = await Product.findById(source._id);
+    assert.equal(saved.packagingSize, 'LARGE');
+    assert.equal(saved.status, 'DRAFT');
+    // Simulate a product predating the packagingSize schema default.
+    await Product.collection.updateOne({ _id: source._id }, { $set: { packagingSize: '' } });
+    assert.equal((await service.importAll([row])).errors.length, 0);
+    assert.equal((await Product.findById(source._id)).packagingSize, 'MEDIUM');
+    const result = await service.importAll([{ name: 'New packaging', slug: 'new-packaging', description: 'Test', price: 1,
+      categoryId: String(category._id), packagingSize: ' ', status: '' }]);
+    assert.deepEqual(result, { created: 1, updated: 0, errors: [] });
+    saved = await Product.findOne({ slug: 'new-packaging' });
+    assert.equal(saved.packagingSize, 'MEDIUM');
+    assert.equal(saved.status, 'ACTIVE');
+    assert.equal((await service.importAll([{ ...row, packagingSize: 'INVALID' }])).errors.length, 1, 'invalid nonblank values remain errors');
   });
   console.log(`${count} product price integration checks passed`);
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(async () => {

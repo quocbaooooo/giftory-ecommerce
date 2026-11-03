@@ -162,7 +162,7 @@ test('gift greeting card is submitted separately from delivery notes', () => {
   f.component.greetingCardMessage = '  Thương bạn nhiều!\nMột ngày thật vui nhé.  ';
   f.component.customerNote = 'Gọi trước khi giao';
   f.component.submitOrder();
-  assert.deepEqual(f.orders[0].greetingCard, { templateId: 'LOVE', heading: 'Gửi người bạn thân nhất', message: 'Thương bạn nhiều!\nMột ngày thật vui nhé.' });
+  assert.deepEqual(f.orders[0].greetingCard, { templateId: 'LOVE', heading: 'Gửi người bạn thân nhất', message: 'Thương bạn nhiều!\nMột ngày thật vui nhé.', senderName: 'Gift Buyer', recipientName: saved.name });
   assert.equal(f.orders[0].customerInfo.note, 'Gọi trước khi giao');
 });
 test('blank or overflowing greeting card blocks placing an order', () => {

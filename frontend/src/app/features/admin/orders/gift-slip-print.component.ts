@@ -17,7 +17,7 @@ import { GreetingCardPreviewComponent } from '../../../shared/components/greetin
         <h3 class="mt-4 text-lg font-bold">{{ s.recipient.name }}</h3><p class="text-sm">{{ s.recipient.phone }}</p><p class="mt-1 text-sm">{{ s.recipient.address }}</p>
         @for (item of s.items; track $index) { <p class="mt-3 text-sm">{{ item.name }} · {{ item.variant }} × {{ item.quantity }}</p> }
         <p class="mt-4 text-xs">Gói quà · Ruy băng · Thiệp chúc mừng</p>
-        @if (s.greetingCard; as card) { <div class="mt-5"><app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" /></div> }
+        @if (s.greetingCard; as card) { <div class="mt-5"><app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" [senderName]="card.senderName || ''" [recipientName]="card.recipientName || ''" /></div> }
         <div class="mt-5 flex items-center gap-4"><img [src]="s.qrImage" alt="QR nhận quà và yêu cầu bảo hành" class="h-28 w-28" /><div><strong class="text-sm">Giftory luôn ở đây để hỗ trợ bạn</strong><p class="mt-2 text-xs">Quét mã để hẹn nhận quà hoặc yêu cầu bảo hành/đổi sản phẩm lỗi.</p><a [href]="s.recipientUrl" class="mt-2 block break-all text-[10px] text-[#800020]">{{ s.recipientUrl }}</a></div></div>
       </div>
     }

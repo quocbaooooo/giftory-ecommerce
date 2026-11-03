@@ -25,7 +25,7 @@ import { GreetingCardPreviewComponent } from '../../../shared/components/greetin
         <button type="button" (click)="printCard()" class="px-5 py-3 rounded-xl bg-[#800020] text-[#FFF5E1] font-bold">In thiệp</button>
         <div class="overflow-x-auto pb-4">
           <div class="greeting-card-sheet">
-            <app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" />
+            <app-greeting-card-preview [templateId]="card.templateId" [heading]="card.heading" [message]="card.message" [senderName]="card.senderName || ''" [recipientName]="card.recipientName || ''" />
           </div>
         </div>
       } @else {

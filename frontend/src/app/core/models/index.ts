@@ -346,6 +346,8 @@ export interface GreetingCardTemplate {
 }
 
 export interface GreetingCard {
+  senderName?: string;
+  recipientName?: string;
   templateId: string;
   templateName: string;
   heading: string;

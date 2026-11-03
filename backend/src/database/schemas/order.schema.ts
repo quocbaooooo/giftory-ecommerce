@@ -13,6 +13,8 @@ export type OrderDocument = Order & Document;
 
 @Schema({ _id: false })
 export class GreetingCard {
+  @Prop({ maxlength: 100 }) senderName?: string;
+  @Prop({ maxlength: 100 }) recipientName?: string;
   @Prop({ required: true, enum: ['BIRTHDAY', 'LOVE', 'THANK_YOU'] }) templateId: string;
   @Prop({ required: true }) templateName: string;
   @Prop({ required: true, maxlength: 80 }) heading: string;

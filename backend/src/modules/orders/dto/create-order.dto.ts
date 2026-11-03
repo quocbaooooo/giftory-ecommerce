@@ -76,6 +76,16 @@ export class BuyNowItemDto {
 
 export class GreetingCardDto {
   @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  senderName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  recipientName?: string;
+
+  @IsOptional()
   @Transform(({ value }) => typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value)
   @IsString()
   @IsNotEmpty()
