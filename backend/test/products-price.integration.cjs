@@ -196,6 +196,31 @@ const prices = items => items.map(item => item.salePrice > 0 ? item.salePrice : 
     assert.equal(saved.status, 'ACTIVE');
     assert.equal((await service.importAll([{ ...row, packagingSize: 'INVALID' }])).errors.length, 1, 'invalid nonblank values remain errors');
   });
+  await test('repair legacy category strings so slug/ID filters work for every sort', async () => {
+    const { repairProductCategories } = require('../scripts/repair-product-categories.cjs');
+    const apronCategory = await Category.create({ name: 'Tạp dề', slug: 'tap-de' });
+    const apron = await Product.create({ name: 'Tạp dề linen', slug: 'legacy-apron', description: 'Test', price: 210000,
+      salePrice: 175000, category: apronCategory._id });
+    await Product.collection.updateOne({ _id: apron._id }, { $set: { category: String(apronCategory._id) } });
+    const missingCategory = new mongoose.Types.ObjectId();
+    const orphan = await Product.collection.insertOne({ name: 'Orphan', slug: 'orphan-category', category: String(missingCategory) });
+    const invalid = await Product.collection.insertOne({ name: 'Invalid', slug: 'invalid-category', category: 'invalid-category' });
+    assert.equal((await service.findAll({ category: 'tap-de' })).meta.total, 0, 'reproduces the reported missing apron');
+    assert.deepEqual(await repairProductCategories(connection), { candidates: 1, repaired: 0, skipped: 2 });
+    assert.equal(typeof (await Product.collection.findOne({ _id: apron._id })).category, 'string', 'preview never writes');
+    assert.deepEqual(await repairProductCategories(connection, true), { candidates: 1, repaired: 1, skipped: 2 });
+    for (const category of ['tap-de', String(apronCategory._id)]) {
+      for (const sort of ['popular', 'price_asc', 'price_desc', 'newest']) {
+        const result = await service.findAll({ category, sort, view: 'catalog', maxPrice: 200000 });
+        assert.equal(result.meta.total, 1);
+        assert.equal(result.items[0].slug, 'legacy-apron');
+        assert.equal(result.items[0].category.slug, 'tap-de');
+      }
+    }
+    assert.deepEqual(await repairProductCategories(connection, true), { candidates: 0, repaired: 0, skipped: 2 });
+    assert.equal((await Product.collection.findOne({ _id: orphan.insertedId })).category, String(missingCategory));
+    assert.equal((await Product.collection.findOne({ _id: invalid.insertedId })).category, 'invalid-category');
+  });
   console.log(`${count} product price integration checks passed`);
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(async () => {
   if (connection) await connection.close();
