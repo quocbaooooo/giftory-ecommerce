@@ -21,18 +21,35 @@ assert.throws(() => quotePackaging(items, {mode:'INDIVIDUAL',allocations:allocat
 assert.throws(() => quotePackaging(items, {mode:'PARTIAL',allocations:[allocations[0],allocations[0]]},config));
 assert.throws(() => quotePackaging(items, {mode:'PARTIAL',allocations:[{...allocations[0],quantity:2}]},config));
 assert.throws(() => quotePackaging(items, {mode:'PARTIAL',allocations:[{...allocations[0],itemId:'removed'}]},config));
-assert.throws(() => quotePackaging([line('A','MEDIUM')],{mode:'BUNDLED',boxStyle:'STANDARD'},config), /kích thước|dung tích/);
-assert.throws(() => quotePackaging([line('A','MEDIUM',3)],{mode:'BUNDLED',boxStyle:'SILK'},config), /dung tích/);
+assert.equal(quotePackaging([line('A','MEDIUM')],{mode:'BUNDLED',boxStyle:'STANDARD'},config).boxes[0].size, 'M');
+assert.equal(quotePackaging([line('A','MEDIUM',3)],{mode:'BUNDLED',boxStyle:'SILK'},config).boxes[0].size, 'L');
 assert.equal(quotePackaging([line('A','MEDIUM',3)],{mode:'BUNDLED',boxStyle:'LUXURY'},config).boxCount,1);
 assert.throws(() => quotePackaging([line('A','LARGE',3)],{mode:'BUNDLED',boxStyle:'LUXURY'},config));
 assert.throws(() => quotePackaging([line('A','OVERSIZED')],{mode:'PARTIAL',allocations:[allocations[0]]},config), /đặc thù/);
 plan = quotePackaging([line('A'),line('oversized','OVERSIZED')],{mode:'BUNDLED',boxStyle:'STANDARD'},config);
 assert.equal(plan.boxes[0].items.length,1,'oversized items retain dedicated packaging outside the bundle');
 assert.throws(() => quotePackaging(items,{mode:'BUNDLED',boxStyle:'SILK'},config.map(b=>({...b,available:false}))));
-assert.throws(() => quotePackaging(items,{mode:'BUNDLED',boxStyle:'SILK'},config.map(b=>({...b,capacity:NaN}))));
+assert.throws(() => quotePackaging(items,{mode:'BUNDLED',boxStyle:'SILK'},config.map(b=>({...b,fee:NaN}))));
 assert.equal(quotePackaging(items,{mode:'NONE'},config).totalFee,0);
 const old = [Object.assign(line('A'),{giftBoxStyle:'SILK',giftBoxFee:1})];
 assert.equal(quotePackaging(old,legacyPackaging(old),config).totalFee,45000,'legacy carts use current authoritative box prices');
+for (const style of ['STANDARD', 'SILK', 'LUXURY']) {
+  for (const [productSize, expectedSize] of [['SMALL', 'S'], ['MEDIUM', 'M'], ['LARGE', 'L']]) {
+    const result = quotePackaging([line('sized', productSize)], { mode: 'BUNDLED', boxStyle: style }, DEFAULT_GIFT_BOXES);
+    assert.equal(result.boxes[0].size, expectedSize, `${style} supports ${expectedSize}`);
+    assert.equal(result.totalFee, config.find(box => box.id === style).fee);
+    assert.ok(result.boxes[0].dimensions);
+  }
+  assert.deepEqual(config.find(box => box.id === style).sizes.map(size => size.size), ['S', 'M', 'L']);
+  const multi = quotePackaging([line('sized', 'SMALL', 7)], { mode: 'BUNDLED', boxStyle: style }, config);
+  assert.equal(multi.boxes[0].size, 'L', 'quantity controls required capacity');
+  const separate = quotePackaging([line('sized', 'MEDIUM', 3)], { mode: 'INDIVIDUAL', allocations: [{ itemId: 'sized', boxStyle: style }] }, config);
+  assert.equal(separate.boxes[0].size, 'M');
+  assert.equal(separate.boxCount, 3);
+  const legacy = normalizeBoxes(DEFAULT_GIFT_BOXES.map(box => ({ ...box, size: 'S', capacity: 1 })));
+  assert.equal(quotePackaging([line('large', 'LARGE')], { mode: 'BUNDLED', boxStyle: style }, legacy).boxes[0].size, 'L');
+}
+console.log('PASS every box style supports automatic S/M/L, shared fees and legacy configurations');
 console.log('PASS packaging modes, per-box pricing, quantities, fit, capacity, oversized, disabled boxes, and tampered requests');
 (async()=>{
   let created;

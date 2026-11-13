@@ -4,6 +4,11 @@ export const PACKAGING_UNITS = { SMALL: 1, MEDIUM: 3, LARGE: 6, OVERSIZED: 0 };
 const RANK = { SMALL: 1, MEDIUM: 2, LARGE: 3, OVERSIZED: 4, S: 1, M: 2, L: 3 };
 export const OVERSIZED_NOTICE =
   'Sản phẩm này có kích thước đặc thù, đã được đóng gói chuyên dụng và không áp dụng hộp quà nắp gập.';
+export const GIFT_BOX_SIZES = [
+  { size: 'S', capacity: 3, dimensions: '24 × 18 × 12 cm' },
+  { size: 'M', capacity: 6, dimensions: '30 × 22 × 15 cm' },
+  { size: 'L', capacity: 12, dimensions: '36 × 28 × 18 cm' },
+];
 export const DEFAULT_GIFT_BOXES = [
   {
     id: 'NONE',
@@ -56,11 +61,13 @@ export const DEFAULT_GIFT_BOXES = [
 ];
 export function normalizeBoxes(boxes: any[] = DEFAULT_GIFT_BOXES) {
   return boxes.map((box) => {
-    const defaults = DEFAULT_GIFT_BOXES.find((b) => b.id === box.id);
     return {
       ...box,
-      size: box.size || defaults?.size || 'M',
-      capacity: box.capacity ?? defaults?.capacity ?? 6,
+      // Styles all share the full size range; ignore legacy fixed-size settings.
+      sizes: box.id === 'NONE' ? [] : GIFT_BOX_SIZES.map(size => ({ ...size })),
+      size: box.id === 'NONE' ? 'S' : 'L',
+      capacity: box.id === 'NONE' ? 0 : 12,
+      dimensions: box.id === 'NONE' ? 'Không áp dụng' : 'S · M · L',
     };
   });
 }
@@ -99,6 +106,7 @@ export function legacyPackaging(items: any[]) {
     : { mode: 'NONE', allocations: [] };
 }
 export function quotePackaging(items: any[], request: any, config: any[]) {
+  config = normalizeBoxes(config);
   const fail = (message: string): never => {
     throw new BadRequestException(message);
   };
@@ -130,14 +138,13 @@ export function quotePackaging(items: any[], request: any, config: any[]) {
     );
     if (members.some((m) => itemPackaging(m.item).size === 'OVERSIZED'))
       fail(OVERSIZED_NOTICE);
-    if (
-      members.some((m) => RANK[itemPackaging(m.item).size] > RANK[box.size]) ||
-      units > box.capacity
-    )
+    const fittingSize = box.sizes.find(size => units <= size.capacity &&
+      members.every(m => RANK[itemPackaging(m.item).size] <= RANK[size.size]));
+    if (!fittingSize)
       fail(
-        'Hộp đã chọn không đủ kích thước hoặc dung tích. Vui lòng chọn hộp lớn hơn.',
+        'Tổng sản phẩm vượt dung tích hộp size L. Vui lòng chọn đóng riêng hoặc đóng gói một phần.',
       );
-    return box;
+    return { ...box, ...fittingSize };
   };
   if (mode === 'BUNDLED') {
     if (!eligible.length)
@@ -151,6 +158,7 @@ export function quotePackaging(items: any[], request: any, config: any[]) {
       name: box.name,
       image: box.image,
       size: box.size,
+      dimensions: box.dimensions,
       unitFee: box.fee,
       quantity: 1,
       items: eligible.map((i) => ({
@@ -184,6 +192,7 @@ export function quotePackaging(items: any[], request: any, config: any[]) {
         name: box.name,
         image: box.image,
         size: box.size,
+        dimensions: box.dimensions,
         unitFee: box.fee,
         quantity,
         items: [

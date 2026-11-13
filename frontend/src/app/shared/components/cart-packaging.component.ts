@@ -14,6 +14,7 @@ interface GiftBox {
   capacity: number;
   dimensions: string;
   available: boolean;
+  sizes: { size: 'S' | 'M' | 'L'; capacity: number; dimensions: string }[];
   shortDescription: string;
 }
 interface Row {
@@ -129,7 +130,7 @@ const OVERSIZED =
                   >
                 </div>
                 <p class="mb-4 text-xs leading-relaxed text-slate-500">
-                  Xem tất cả mẫu hộp bên dưới. Hộp không vừa sẽ được đánh dấu; phí tính một lần cho cả hộp.
+                  Mỗi mẫu hộp có đủ size S, M, L. Tự chọn size vừa các món; phí tính một lần cho cả hộp.
                 </p>
                 <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   @for (box of catalogBoxes(); track box.id) {
@@ -149,17 +150,17 @@ const OVERSIZED =
                         [alt]="box.name"
                         class="h-28 w-full rounded-xl bg-[#FAF7F2] object-contain p-2"
                       /><span class="mt-2 block text-[10px] text-[#967581]"
-                        >Size {{ box.size }} · {{ box.dimensions }}</span
+                        >{{ sizeLabel(box) }}</span
                       ><strong class="mt-1 block text-xs text-[#42202E]">{{ box.name }}</strong
                       ><span class="mt-1 block text-xs font-bold text-[#800020]"
                         >{{ box.fee | number }}đ / hộp</span
                       >
                       @if (boxIssue(box)) {
                         <span class="mt-2 block text-[10px] leading-relaxed text-slate-500">{{ boxIssue(box) }}</span>
-                      } @else if (box.id === bundleBoxes()[0]?.id) {
+                      } @else {
                         <span
                           class="mt-2 inline-block rounded-full bg-[#F5E7EC] px-2 py-1 text-[9px] font-bold text-[#800020]"
-                          >Gợi ý vừa vặn nhất</span
+                          >Có đủ size S · M · L</span
                         >
                       }
                     </button>
@@ -227,7 +228,7 @@ const OVERSIZED =
                                   [class.ring-[#800020]]="row(item).boxStyle === box.id"
                                   [class.border-[#E7DBDF]]="row(item).boxStyle !== box.id">
                                   <img [src]="box.image" [alt]="box.name" class="h-20 w-full rounded-lg bg-[#FAF7F2] object-contain p-1" />
-                                  <span class="mt-2 block text-[10px] text-[#967581]">Size {{ box.size }} · {{ box.dimensions }}</span>
+                                  <span class="mt-2 block text-[10px] text-[#967581]">{{ sizeLabel(box, item) }}</span>
                                   <strong class="mt-1 block text-xs text-[#42202E]">{{ box.name }}</strong>
                                   <span class="mt-1 block text-xs font-bold text-[#800020]">{{ box.fee | number }}đ / hộp</span>
                                   @if (boxIssue(box, item)) {
@@ -352,10 +353,17 @@ export class CartPackagingComponent implements OnInit {
     if (!box.available) return 'Tạm hết hộp';
     const items = item ? [item] : this.eligibleItems();
     if (!items.length) return 'Không áp dụng cho sản phẩm quá cỡ';
-    if (items.some((i) => RANK[box.size] < RANK[this.size(i)]))
-      return 'Không vừa kích thước sản phẩm';
+    return this.fittingSize(box, item) ? '' : 'Không đủ dung tích; hãy chia thành các hộp riêng';
+  }
+  fittingSize(box: GiftBox, item?: CartItem) {
+    const items = item ? [item] : this.eligibleItems();
     const units = item ? this.units(item) : this.bundleUnits();
-    return box.capacity < units ? 'Không đủ dung tích' : '';
+    return box.sizes?.find(size => size.capacity >= units &&
+      items.every(i => RANK[size.size] >= RANK[this.size(i)]));
+  }
+  sizeLabel(box: GiftBox, item?: CartItem) {
+    const fit = this.fittingSize(box, item);
+    return fit ? `Tự chọn size ${fit.size} · ${fit.dimensions}` : 'Có đủ size S · M · L';
   }
   sortedBoxes() {
     return this.boxes()
@@ -363,20 +371,14 @@ export class CartPackagingComponent implements OnInit {
       .sort((a, b) => a.capacity - b.capacity || a.fee - b.fee);
   }
   fits(item: CartItem) {
-    return this.sortedBoxes().filter(
-      (b) => RANK[b.size] >= RANK[this.size(item)] && b.capacity >= this.units(item),
-    );
+    return this.sortedBoxes().filter(b => !this.boxIssue(b, item));
   }
   bundleUnits() {
     return this.eligibleItems().reduce((sum, item) => sum + this.units(item) * item.quantity, 0);
   }
   bundleBoxes() {
     return this.eligibleItems().length
-      ? this.sortedBoxes().filter(
-          (b) =>
-            b.capacity >= this.bundleUnits() &&
-            this.eligibleItems().every((i) => RANK[b.size] >= RANK[this.size(i)]),
-        )
+      ? this.sortedBoxes().filter(b => !this.boxIssue(b))
       : [];
   }
   row(item: CartItem): Row {
