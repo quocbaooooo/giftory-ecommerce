@@ -263,6 +263,13 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
 
               <div class="space-y-1 flex-1 text-xs">
                 <h4 class="font-bold text-slate-900">{{ item.productName || item.name }} (x{{ item.quantity }})</h4>
+                @if (activeOrder()?.orderStatus === 'DELIVERED' && authService.isAuthenticated()) {
+                  <a routerLink="/care" [queryParams]="{ orderId: activeOrder()?._id, productId: item.productId?._id || item.productId, intent: 'review' }"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-[#EBD3AE] bg-[#FFF5E1] px-3 py-2 font-semibold text-[#800020] hover:bg-[#F8E8C9]"
+                    [attr.aria-label]="'Đánh giá ' + (item.productName || item.name)">
+                    <span class="material-symbols-outlined text-base" aria-hidden="true">rate_review</span>Đánh giá sản phẩm
+                  </a>
+                }
                 <p class="text-[11px] text-slate-500">Phân loại: <strong class="text-slate-700">{{ item.variantName || 'Tiêu chuẩn' }}</strong></p>
                 <p *ngIf="item.giftBoxStyle && item.giftBoxStyle !== 'NONE'" class="text-[11px] font-semibold text-[#800020]">Hộp quà: {{ giftBoxName(item.giftBoxStyle) }} · {{ item.giftBoxFee | number:'1.0-0' }}đ × {{ item.quantity }}</p>
                 

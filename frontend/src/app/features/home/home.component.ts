@@ -66,7 +66,7 @@ import { FlashSaleCountdownService } from '../../core/services/flash-sale-countd
                       <span class="material-symbols-outlined text-base">{{ activeCampaign()!.icon || 'campaign' }}</span>
                       {{ activeCampaign()!.eyebrow }}
                     </span>
-                    <h2 class="mt-5 text-3xl font-extrabold leading-[1.08] tracking-tight text-[#800020] sm:text-4xl lg:text-[2.8rem]">{{ activeCampaign()!.title }}</h2>
+                    <h2 class="mt-5 text-3xl font-extrabold tracking-tight text-[#800020] sm:text-4xl lg:text-[2.8rem]" style="line-height: 1.3">{{ activeCampaign()!.title }}</h2>
                     <p class="mt-4 max-w-lg text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">{{ activeCampaign()!.description }}</p>
                     <div class="mt-7 flex flex-wrap items-center gap-3">
                       <a [routerLink]="activeCampaign()!.primaryLink" class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#800020] to-[#540015] px-5 py-3 text-sm font-bold text-[#FFF5E1] shadow-lg shadow-[#800020]/25 transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800020] sm:px-6">

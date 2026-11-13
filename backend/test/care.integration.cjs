@@ -268,6 +268,13 @@ async function test(name, fn) {
     );
   });
   let review;
+  await test('Reviews require delivered orders and a product belonging to that order', async () => {
+    for (const orderStatus of ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPING', 'CANCELLED']) {
+      const pending = await order({ orderStatus });
+      await assert.rejects(care.submitReview(uid, { orderId: String(pending._id), productId: String(productId), rating: 5, content: 'Sản phẩm đẹp và chất lượng' }), /đã giao thành công/);
+    }
+    await assert.rejects(care.submitReview(uid, { orderId: String(delivered._id), productId: String(new mongoose.Types.ObjectId()), rating: 5, content: 'Sản phẩm đẹp và chất lượng' }), /không thuộc đơn/);
+  });
   await test('Review held from public until approved, rejection allows editing', async () => {
     review = await care.submitReview(uid, {
       orderId: String(delivered._id),
