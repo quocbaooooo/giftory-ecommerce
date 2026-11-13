@@ -521,7 +521,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   ];
 
   recipients = [
-    'Người yêu', 'Mẹ', 'Bố', 'Bạn bè', 'Đồng nghiệp', 'Sếp', 'Bé yêu'
+    'Người yêu', 'Mẹ', 'Bố', 'Bạn bè', 'Đồng nghiệp', 'Sếp'
   ];
 
   ngOnInit(): void {

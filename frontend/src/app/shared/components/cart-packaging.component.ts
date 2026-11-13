@@ -540,7 +540,7 @@ export class CartPackagingComponent implements OnInit {
         };
     this.saving.set(true);
     this.error.set('');
-    this.cart.updatePackaging(request).subscribe({
+    this.cart.updatePackaging(request, clear ? 0 : this.draftFee()).subscribe({
       next: () => {
         this.saving.set(false);
         if (!keepEditor) this.initialize();

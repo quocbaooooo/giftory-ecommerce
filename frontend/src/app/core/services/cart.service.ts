@@ -53,7 +53,8 @@ export class CartService {
   productCount = computed(() => this.items().length);
   itemsCount = computed(() => this.items().reduce((sum, i) => sum + i.quantity, 0));
   itemCount = computed(() => this.itemsCount()); // alias for template compatibility
-  pricing = computed(() => this.cart()?.pricing || {
+  private packagingFeePreview = signal<number | null>(null);
+  private confirmedPricing = computed(() => this.cart()?.pricing || {
     itemsTotal: 0,
     voucherDiscount: 0,
     shippingFee: 0,
@@ -62,6 +63,16 @@ export class CartService {
     depositAmount: 0,
     remainingCodAmount: 0,
     totalCustomItems: 0
+  });
+  pricing = computed(() => {
+    const pricing = this.confirmedPricing();
+    const fee = this.packagingFeePreview();
+    if (fee === null) return pricing;
+    const totalAmount = Math.max(0, pricing.totalAmount - pricing.giftWrapFee + fee);
+    const depositAmount = this.paymentMode() === 'FULL_PAYMENT'
+      ? totalAmount : Math.min(totalAmount, pricing.depositAmount);
+    return { ...pricing, giftWrapFee: fee, totalAmount, depositAmount,
+      remainingCodAmount: Math.max(0, totalAmount - depositAmount) };
   });
   paymentMode = computed(() => this.cart()?.paymentMode || 'DEPOSIT_50');
   packagingSyncPending = signal(false);
@@ -128,7 +139,7 @@ export class CartService {
     const rawDepositAmount = confirmed.paymentMode === 'FULL_PAYMENT' ? totalAmount
       : items.reduce((sum, item) => sum + (item.isCustom ? Math.round(item.price * item.quantity * 0.5) : 0), 0);
     const depositAmount = Math.min(totalAmount, rawDepositAmount);
-    this.cart.set({ ...confirmed, items, pricing: { ...confirmed.pricing, itemsTotal, totalCustomItems, shippingFee, baseShippingFee, shippingDiscount, voucherDiscount, totalAmount, depositAmount, remainingCodAmount: Math.max(0, totalAmount - depositAmount) } });
+    this.cart.set({ ...confirmed, items, pricing: { ...confirmed.pricing, itemsTotal, totalCustomItems, shippingFee, baseShippingFee, shippingDiscount, voucherDiscount, giftWrapFee, totalAmount, depositAmount, remainingCodAmount: Math.max(0, totalAmount - depositAmount) } });
   }
 
   private flushQuantityUpdates(): void {
@@ -261,12 +272,18 @@ export class CartService {
     });
   }
 
-  updatePackaging(packaging: GiftPackaging) {
+  updatePackaging(packaging: GiftPackaging, previewFee?: number) {
     return defer(() => {
       this.packagingSyncPending.set(true);
+      if (previewFee !== undefined && Number.isFinite(previewFee) && previewFee >= 0) {
+        this.packagingFeePreview.set(previewFee);
+      }
       return from(this.waitForQuantityUpdates()).pipe(
         switchMap(() => this.mutate(() => this.api.post<Cart>('cart/packaging', { packaging, sessionId: this.getSessionId() }))),
-        finalize(() => this.packagingSyncPending.set(false)),
+        finalize(() => {
+          this.packagingFeePreview.set(null);
+          this.packagingSyncPending.set(false);
+        }),
       );
     });
   }

@@ -1,0 +1,236 @@
+<div class="guide">
+  <nav class="breadcrumb" aria-label="Đường dẫn">
+    <a routerLink="/">Trang chủ</a><span aria-hidden="true">/</span
+    ><span aria-current="page">Hướng dẫn mua hàng</span>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">GIFTORY · HƯỚNG DẪN MUA HÀNG</p>
+      <h1>Một món quà đúng ý.<br /><em>Một hành trình thật dễ.</em></h1>
+      <p class="hero-description">
+        Từ chọn quà đến trao tay, Giftory giúp bạn nắm rõ từng bước. Dành một chút thời gian để món
+        quà đến đúng người, trọn vẹn lời muốn nói.
+      </p>
+      <div class="actions">
+        <a routerLink="/products" class="button primary"
+          >Khám phá quà tặng
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a
+        ><a href="#quy-trinh" class="text-link"
+          >Xem cách đặt hàng <span aria-hidden="true">↗</span></a
+        >
+      </div>
+      <div class="hero-note">
+        <span class="material-symbols-outlined" aria-hidden="true">favorite</span> Chọn quà · Thêm
+        dấu ấn · Gửi yêu thương
+      </div>
+    </div>
+    <div class="gift-scene" aria-hidden="true">
+      <span class="scene-orbit"></span><span class="scene-spark spark-one">✦</span
+      ><span class="scene-spark spark-two">✧</span>
+      <div class="gift-tag">Một chút riêng bạn.<br /><i>Một món quà riêng ai.</i></div>
+      <div class="gift-box">
+        <div class="bow left"></div>
+        <div class="bow right"></div>
+        <div class="gift-lid"></div>
+        <div class="ribbon"></div>
+        <span class="gift-brand">Giftory</span>
+      </div>
+      <span class="scene-label">MADE PERSONAL, GIVEN WITH LOVE</span>
+    </div>
+  </header>
+
+  <nav class="quick-nav" aria-label="Mục lục hướng dẫn">
+    <span>TRONG HƯỚNG DẪN NÀY</span><a href="#quy-trinh">01. Cách đặt quà</a
+    ><a href="#thanh-toan">02. Thanh toán</a><a href="#giao-nhan">03. Giao & nhận</a
+    ><a href="#cau-hoi">04. Câu hỏi thường gặp</a>
+  </nav>
+
+  <section id="quy-trinh" aria-labelledby="process-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">01 / BẮT ĐẦU TỪ ĐÂY</p>
+        <h2 id="process-title">Bạn muốn đặt món quà nào?</h2>
+      </div>
+      <p>Chọn hành trình phù hợp với bạn.<br />Mọi chi tiết đều có thể kiểm tra trước khi đặt.</p>
+    </div>
+    <div class="journey-switch" role="group" aria-label="Loại quà cần hướng dẫn">
+      <button
+        type="button"
+        [class.selected]="!custom()"
+        [attr.aria-pressed]="!custom()"
+        (click)="custom.set(false)"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">redeem</span> Quà có sẵn</button
+      ><button
+        type="button"
+        [class.selected]="custom()"
+        [attr.aria-pressed]="custom()"
+        (click)="custom.set(true)"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">draw</span> Quà thiết kế riêng
+      </button>
+    </div>
+    <p class="journey-intro" aria-live="polite">
+      {{
+        custom()
+          ? 'Biến ý tưởng của bạn thành món quà mang dấu ấn cá nhân trong Custom Studio.'
+          : 'Chọn từ bộ sưu tập có sẵn, thêm lời chúc và gửi đến người bạn thương.'
+      }}
+    </p>
+    <ol class="steps">
+      <li *ngFor="let step of custom() ? customSteps : standardSteps; let i = index">
+        <div class="step-top">
+          <span class="step-icon material-symbols-outlined" aria-hidden="true">{{ step.icon }}</span
+          ><span class="step-number">0{{ i + 1 }}</span>
+        </div>
+        <h3>{{ step.title }}</h3>
+        <p>{{ step.desc }}</p>
+        <div class="step-tip">{{ step.tip }}</div>
+      </li>
+    </ol>
+    <a class="text-link process-link" [routerLink]="custom() ? '/custom-studio' : '/products'"
+      >{{ custom() ? 'Mở Custom Studio' : 'Chọn món quà đầu tiên' }}
+      <span aria-hidden="true">→</span></a
+    >
+  </section>
+
+  <section id="thanh-toan" class="payment-section" aria-labelledby="payment-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">02 / RÕ RÀNG TỪ ĐẦU</p>
+        <h2 id="payment-title">Thanh toán theo cách bạn chọn</h2>
+      </div>
+      <p>Kiểm tra khoản trả trước và số tiền còn lại<br />ngay tại bước Thanh toán.</p>
+    </div>
+    <div class="payment-grid">
+      <article class="payment-card">
+        <span class="material-symbols-outlined payment-icon" aria-hidden="true"
+          >local_shipping</span
+        >
+        <p class="card-label">QUÀ CÓ SẴN · COD</p>
+        <h3>Nhận quà rồi thanh toán</h3>
+        <p>Không cần đặt cọc trước. Thanh toán toàn bộ đơn hàng khi nhận hàng.</p>
+        <span class="payment-badge">0đ trả trước</span>
+      </article>
+      <article class="payment-card featured">
+        <span class="material-symbols-outlined payment-icon" aria-hidden="true">handyman</span>
+        <p class="card-label">CÓ QUÀ CUSTOM · COD</p>
+        <h3>Cọc 50% tiền quà Custom</h3>
+        <p>Đặt cọc qua QR. Phần còn lại, quà có sẵn và phí giao hàng thanh toán khi nhận.</p>
+        <span class="payment-badge">50% giá trị sản phẩm Custom</span>
+      </article>
+      <article class="payment-card">
+        <span class="material-symbols-outlined payment-icon" aria-hidden="true">qr_code_2</span>
+        <p class="card-label">THANH TOÁN TRỰC TUYẾN</p>
+        <h3>Thanh toán trọn đơn</h3>
+        <p>Thanh toán trước 100% tổng đơn theo hướng dẫn ở bước Thanh toán.</p>
+        <span class="payment-badge">100% tổng đơn</span>
+      </article>
+    </div>
+    <div class="payment-example">
+      <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
+      <div>
+        <strong>Ví dụ nhỏ, dễ hình dung</strong>
+        <p>
+          Quà Custom 400.000đ + quà có sẵn 200.000đ + phí giao 30.000đ → chọn COD:
+          <b>cọc 200.000đ</b>, trả khi nhận <b>430.000đ</b>. Ví dụ chưa áp dụng ưu đãi; số tiền thực
+          tế xem tại Thanh toán.
+        </p>
+      </div>
+    </div>
+    <div class="direct-gift">
+      <span class="material-symbols-outlined" aria-hidden="true">volunteer_activism</span>
+      <p>
+        <strong>Gửi quà thẳng đến người thương?</strong> Chọn “Gửi quà trực tiếp” và thanh toán
+        trước 100%. Giá tiền được giấu với người nhận, người nhận không phải trả COD.
+      </p>
+    </div>
+  </section>
+
+  <section id="giao-nhan" class="delivery-grid" aria-label="Chuẩn bị và nhận quà">
+    <article class="checklist">
+      <p class="eyebrow">03 / THÊM MỘT CHÚT CHỈN CHU</p>
+      <h2>Trước khi nhấn đặt hàng</h2>
+      <p class="section-description">Một phút kiểm tra để món quà được trao trọn vẹn.</p>
+      <ul>
+        <li *ngFor="let item of checklist">
+          <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>{{ item }}
+        </li>
+      </ul>
+      <a routerLink="/cart" class="text-link"
+        >Kiểm tra giỏ hàng <span aria-hidden="true">→</span></a
+      >
+    </article>
+    <article class="delivery-card">
+      <span class="material-symbols-outlined delivery-icon" aria-hidden="true">package_2</span>
+      <h2>Từ xưởng đến tay bạn</h2>
+      <p>
+        Quà thiết kế riêng cần thêm thời gian chế tác. Tiến độ giao hàng còn phụ thuộc địa chỉ nhận
+        và tình trạng xử lý đơn.
+      </p>
+      <div class="delivery-detail">
+        <h3>Cần quà cho một ngày đặc biệt?</h3>
+        <p>Liên hệ hỗ trợ trước khi đặt để kiểm tra thời gian có thể đáp ứng.</p>
+      </div>
+      <div class="delivery-detail">
+        <h3>Khi nhận hàng</h3>
+        <p>Kiểm tra món quà, giữ bao bì và lưu ảnh nếu có lỗi để bộ phận hỗ trợ dễ đối chiếu.</p>
+      </div>
+      <a routerLink="/orders" class="text-link"
+        >Theo dõi đơn của bạn <span aria-hidden="true">→</span></a
+      >
+    </article>
+  </section>
+
+  <section id="cau-hoi" class="faq-section" aria-labelledby="faq-title">
+    <div class="faq-heading">
+      <p class="eyebrow">04 / GIẢI ĐÁP CÙNG BẠN</p>
+      <h2 id="faq-title">Bạn còn băn khoăn?</h2>
+      <p>Những điều thường được hỏi trước khi gửi đi một món quà.</p>
+      <a routerLink="/care" class="text-link"
+        >Đến trung tâm hỗ trợ <span aria-hidden="true">↗</span></a
+      >
+    </div>
+    <div class="faq-list">
+      <article *ngFor="let faq of faqs; let i = index" [class.open]="expandedFaq() === i">
+        <h3>
+          <button
+            type="button"
+            [id]="'faq-button-' + i"
+            (click)="toggleFaq(i)"
+            [attr.aria-expanded]="expandedFaq() === i"
+            [attr.aria-controls]="'faq-answer-' + i"
+          >
+            <span>{{ faq.q }}</span
+            ><span class="material-symbols-outlined" aria-hidden="true">{{
+              expandedFaq() === i ? 'remove' : 'add'
+            }}</span>
+          </button>
+        </h3>
+        <div
+          [id]="'faq-answer-' + i"
+          role="region"
+          [attr.aria-labelledby]="'faq-button-' + i"
+          [hidden]="expandedFaq() !== i"
+          class="faq-answer"
+        >
+          {{ faq.a }}
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div>
+      <p class="eyebrow">MÓN QUÀ ĐẸP NHẤT LÀ MÓN QUÀ CÓ TÂM</p>
+      <h2>Sẵn sàng gửi một chút yêu thương?</h2>
+      <p>Chọn một món quà, phần dấu ấn riêng để bạn kể tiếp.</p>
+    </div>
+    <div class="actions">
+      <a routerLink="/products" class="button primary"
+        >Chọn quà ngay <span aria-hidden="true">→</span></a
+      ><a routerLink="/custom-studio" class="button secondary">Tự tay thiết kế</a>
+    </div>
+  </section>
+</div>

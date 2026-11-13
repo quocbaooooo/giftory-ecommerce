@@ -205,5 +205,45 @@ async function test(name, run) { await run(); count++; console.log(`PASS ${name}
     await f.reply(f.requests[1]);
     assert.equal(f.service.packagingSyncPending(), false);
   });
+  await test('packaging fee and totals update immediately, then use server pricing', async () => {
+    for (const paymentMode of ['DEPOSIT_50', 'FULL_PAYMENT']) {
+      const f = await fixture({ custom: true, paymentMode });
+      const before = clone(f.service.pricing());
+      f.service.updatePackaging({ mode: 'BUNDLED', boxStyle: 'SILK' }, 45000).subscribe();
+      assert.equal(f.service.pricing().giftWrapFee, 45000);
+      assert.equal(f.service.pricing().totalAmount, before.totalAmount + 45000);
+      assert.equal(f.service.pricing().depositAmount, before.depositAmount + (paymentMode === 'FULL_PAYMENT' ? 45000 : 0));
+      assert.equal(f.service.pricing().remainingCodAmount, before.remainingCodAmount + (paymentMode === 'FULL_PAYMENT' ? 0 : 45000));
+      assert.equal(f.service.packagingSyncPending(), true);
+      await tick();
+      const confirmed = clone(f.service.cart());
+      confirmed.pricing.giftWrapFee = 47000;
+      confirmed.pricing.totalAmount += 47000;
+      if (paymentMode === 'FULL_PAYMENT') confirmed.pricing.depositAmount += 47000;
+      else confirmed.pricing.remainingCodAmount += 47000;
+      f.requests[0].response.next(confirmed); f.requests[0].response.complete(); await tick();
+      assert.deepEqual(f.service.pricing(), confirmed.pricing, 'server price remains authoritative');
+      assert.equal(f.service.packagingSyncPending(), false);
+    }
+  });
+  await test('failed packaging save restores confirmed fee and allows retry; clearing previews zero', async () => {
+    const f = await fixture();
+    const original = clone(f.service.pricing());
+    f.service.updatePackaging({ mode: 'BUNDLED', boxStyle: 'SILK' }, 45000).subscribe({ error() {} });
+    await tick();
+    f.requests[0].response.error(new Error('Offline')); await tick();
+    assert.deepEqual(f.service.pricing(), original);
+    assert.equal(f.service.packagingSyncPending(), false);
+    f.service.updatePackaging({ mode: 'BUNDLED', boxStyle: 'SILK' }, 45000).subscribe(); await tick();
+    const confirmed = clone(f.service.cart());
+    confirmed.pricing.giftWrapFee = 45000;
+    confirmed.pricing.totalAmount += 45000;
+    confirmed.pricing.remainingCodAmount += 45000;
+    f.requests[1].response.next(confirmed); f.requests[1].response.complete(); await tick();
+    f.service.updatePackaging({ mode: 'NONE' }, 0).subscribe();
+    assert.equal(f.service.pricing().giftWrapFee, 0);
+    assert.equal(f.service.pricing().totalAmount, original.totalAmount);
+    await tick(); await f.reply(f.requests[2]);
+  });
   console.log(`${count} cart quantity checks passed`);
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -6,157 +6,101 @@ import { RouterModule } from '@angular/router';
   selector: 'app-shopping-guide',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  template: `
-    <div class="max-w-5xl mx-auto px-4 py-8 space-y-12 animate-fade-in">
-      <!-- Guide Hero (Stitch Screen 13609092178183298075) -->
-      <div class="text-center max-w-2xl mx-auto space-y-3">
-        <span class="text-xs font-bold tracking-widest text-giftory-primary uppercase">Cẩm Nang Quà Tặng</span>
-        <h1 class="text-3xl md:text-5xl font-display font-black text-giftory-ink">Quy Trình Đặt Quà & Chính Sách Bespoke</h1>
-        <p class="text-sm text-giftory-ink/60">
-          Tất cả những điều bạn cần biết khi đặt các sản phẩm quà tặng tiêu chuẩn hoặc chế tác theo yêu cầu riêng tại Giftory.
-        </p>
-      </div>
-
-      <!-- 4-Step Bespoke Process Cards -->
-      <div class="space-y-6">
-        <h2 class="text-xl font-display font-black text-giftory-ink text-center">4 Bước Chế Tác Quà Tặng Độc Bản</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div *ngFor="let step of steps" class="bg-white rounded-3xl p-6 border border-giftory-border shadow-sm space-y-4 relative group hover:border-giftory-primary/40 transition">
-            <div class="w-12 h-12 rounded-2xl bg-giftory-primary/10 text-giftory-primary flex items-center justify-center font-display font-black text-xl">
-              {{ step.step }}
-            </div>
-            <div>
-              <h3 class="text-base font-bold text-giftory-ink">{{ step.title }}</h3>
-              <p class="text-xs text-giftory-ink/60 mt-1 leading-relaxed">{{ step.desc }}</p>
-            </div>
-            <div class="text-[11px] font-bold text-giftory-primary flex items-center gap-1">
-              <span class="material-symbols-outlined text-sm">{{ step.icon }}</span>
-              {{ step.highlight }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Policy Clarification: 50% Deposit (BR-PAY05) -->
-      <div class="bg-gradient-to-br from-giftory-canvas via-white to-giftory-canvas rounded-3xl p-8 border border-giftory-primary/30 shadow-sm space-y-6">
-        <div class="flex items-center gap-4">
-          <div class="w-14 h-14 rounded-2xl bg-giftory-emerald/10 text-giftory-emerald flex items-center justify-center shrink-0">
-            <span class="material-symbols-outlined text-3xl">verified</span>
-          </div>
-          <div>
-            <h3 class="text-lg font-bold text-giftory-ink">Chính Sách Đặt Cọc 50% Cho Quà Bespoke</h3>
-            <p class="text-xs text-giftory-ink/60">Đảm bảo quyền lợi khách hàng và nguồn nguyên liệu chế tác thủ công chất lượng cao</p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-giftory-ink/70">
-          <div class="p-4 bg-white rounded-2xl border border-giftory-border space-y-2">
-            <h4 class="font-bold text-giftory-ink text-sm flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-giftory-emerald text-base">payments</span>
-              Tại sao cần đặt cọc 50%?
-            </h4>
-            <p>
-              Các sản phẩm khắc tên, in chân dung hoặc may đo theo số đo riêng mang tính độc bản duy nhất và không thể tái bán cho khách hàng khác. Khoản cọc 50% giúp xưởng nhập phôi cao cấp và phân công nghệ nhân chế tác ngay lập tức.
-            </p>
-          </div>
-
-          <div class="p-4 bg-white rounded-2xl border border-giftory-border space-y-2">
-            <h4 class="font-bold text-giftory-ink text-sm flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-giftory-primary text-base">lock</span>
-              50% còn lại thanh toán khi nào?
-            </h4>
-            <p>
-              Sau khi xưởng hoàn tất sản phẩm và chụp ảnh nghiệm thu gửi bạn duyệt, bạn có thể thanh toán 50% còn lại qua chuyển khoản VietQR hoặc chọn thanh toán tiền mặt (COD) khi bưu tá giao hàng tận tay.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- FAQ Accordion -->
-      <div class="space-y-4 max-w-3xl mx-auto">
-        <h3 class="text-xl font-display font-black text-giftory-ink text-center mb-6">Câu Hỏi Thường Gặp</h3>
-        
-        <div *ngFor="let faq of faqs; let i = index" class="bg-white rounded-2xl border border-giftory-border overflow-hidden">
-          <button
-            (click)="toggleFaq(i)"
-            class="w-full p-5 text-left text-sm font-bold text-giftory-ink flex items-center justify-between hover:bg-giftory-canvas transition"
-          >
-            <span>{{ faq.q }}</span>
-            <span class="material-symbols-outlined text-giftory-primary transition-transform duration-300" [ngClass]="expandedFaq() === i ? 'rotate-180' : ''">
-              expand_more
-            </span>
-          </button>
-          <div *ngIf="expandedFaq() === i" class="p-5 pt-0 text-xs text-giftory-ink/70 border-t border-giftory-border/40 leading-relaxed animate-fade-in">
-            {{ faq.a }}
-          </div>
-        </div>
-      </div>
-
-      <!-- CTA -->
-      <div class="text-center pt-4">
-        <a routerLink="/custom-studio" class="inline-flex items-center gap-2 px-8 py-3.5 bg-giftory-primary hover:bg-giftory-primary-dark text-white text-sm font-bold rounded-2xl shadow-lg transition">
-          <span class="material-symbols-outlined">brush</span>
-          Trải Nghiệm Tự Tay Thiết Kế Ngay
-        </a>
-      </div>
-    </div>
-  `
+  templateUrl: './shopping-guide.component.html',
+  styleUrls: ['./shopping-guide.component.css'],
 })
 export class ShoppingGuideComponent {
+  custom = signal(false);
   expandedFaq = signal<number | null>(0);
-
-  steps = [
+  readonly standardSteps = [
     {
-      step: '01',
-      title: 'Chọn Mẫu Quà',
-      desc: 'Lựa chọn dòng sản phẩm từ danh mục hộp quà, cốc sứ, sổ da hoặc trang sức theo nhu cầu.',
-      icon: 'inventory_2',
-      highlight: 'Hàng trăm phôi quà'
-    },
-    {
-      step: '02',
-      title: 'Tùy Biến 2D/3D',
-      desc: 'Nhập thông điệp khắc laser, chọn màu ruy băng, tải ảnh chân dung và xem giả lập tức thì.',
-      icon: 'palette',
-      highlight: 'Live preview trực quan'
-    },
-    {
-      step: '03',
-      title: 'Đặt Cọc 50%',
-      desc: 'Xác nhận đơn và thanh toán 50% giá trị để xưởng may/khắc bắt đầu chế tác thủ công.',
-      icon: 'receipt_long',
-      highlight: 'Đặt cọc linh hoạt 50%'
-    },
-    {
-      step: '04',
-      title: 'Nghiệm Thu & Giao',
-      desc: 'Kiểm tra ảnh sản phẩm thực tế, thanh toán 50% còn lại và nhận hộp quà đóng gói chỉn chu.',
       icon: 'redeem',
-      highlight: 'Hộp nhung cao cấp'
-    }
-  ];
-
-  faqs = [
-    {
-      q: 'Thời gian gia công một món quà tùy biến mất bao lâu?',
-      a: 'Thông thường thời gian chế tác tại xưởng thủ công từ 24h đến 48h làm việc. Sau khi hoàn tất kiểm định chất lượng, quà sẽ được giao hỏa tốc trong 2-4h (nội thành TP.HCM/Hà Nội) hoặc 1-2 ngày đối với các tỉnh thành khác.'
+      title: 'Chọn món quà phù hợp',
+      desc: 'Khám phá sản phẩm, đọc mô tả, chọn phân loại và số lượng rồi thêm vào giỏ hàng.',
+      tip: 'Kiểm tra đúng màu và mẫu bạn muốn.',
     },
     {
-      q: 'Tôi có thể đổi trả sản phẩm quà tặng không?',
-      a: 'Đối với các sản phẩm quà tặng tiêu chuẩn (chưa qua khắc tên hoặc may đo), bạn có quyền đổi trả trong vòng 7 ngày nếu còn nguyên tem niêm phong. Đối với quà bespoke khắc tên cá nhân, Giftory cam kết chế tác lại 100% miễn phí nếu có lỗi sai chính tả từ phía xưởng so với bản thiết kế bạn đã duyệt.'
+      icon: 'local_shipping',
+      title: 'Điền thông tin nhận quà',
+      desc: 'Nhập tên, số điện thoại và địa chỉ nhận hàng. Chọn mẫu thiệp và viết lời chúc tại bước thanh toán.',
+      tip: 'Có thể gửi trực tiếp đến người nhận.',
     },
     {
-      q: 'Giftory có hỗ trợ viết thiệp tay và gói quà giấu giá không?',
-      a: 'Có! 100% đơn hàng tại Giftory đều được giấu hóa đơn giá tiền bên trong hộp, đi kèm hộp cứng bọc ruy băng lụa và thiệp in theo nội dung lời chúc khi bạn chọn thêm thiệp tại bước Thanh toán.'
-    }
+      icon: 'payments',
+      title: 'Xác nhận & thanh toán',
+      desc: 'Kiểm tra tổng tiền, phí giao hàng và ưu đãi. Chọn thanh toán trực tuyến toàn bộ hoặc COD khi nhận hàng.',
+      tip: 'Quà có sẵn chọn COD không cần cọc.',
+    },
+    {
+      icon: 'package_2',
+      title: 'Theo dõi & nhận quà',
+      desc: 'Lưu mã đơn để theo dõi tiến độ. Khi nhận hàng, kiểm tra sản phẩm và liên hệ hỗ trợ nếu có vấn đề.',
+      tip: 'Tra cứu tại mục Đơn hàng.',
+    },
   ];
-
+  readonly customSteps = [
+    {
+      icon: 'redeem',
+      title: 'Chọn phôi quà',
+      desc: 'Vào Custom Studio, chọn sản phẩm phù hợp với ý tưởng và người bạn muốn gửi tặng.',
+      tip: 'Bắt đầu từ một món quà bạn yêu thích.',
+    },
+    {
+      icon: 'draw',
+      title: 'Thiết kế dấu ấn riêng',
+      desc: 'Thêm chữ, hình ảnh và sắp xếp thiết kế. Xem trước, kiểm tra chính tả rồi thêm sản phẩm vào giỏ.',
+      tip: 'Rà soát kỹ tên, ngày và nội dung khắc.',
+    },
+    {
+      icon: 'payments',
+      title: 'Xác nhận & đặt cọc',
+      desc: 'Chọn COD để cọc 50% tiền sản phẩm Custom qua QR; hoặc chọn thanh toán trực tuyến 100% tổng đơn.',
+      tip: 'Số tiền chính xác hiển thị ở Thanh toán.',
+    },
+    {
+      icon: 'package_2',
+      title: 'Chế tác & giao quà',
+      desc: 'Theo dõi tiến độ chế tác và giao hàng trong mục Đơn hàng. Nếu chọn COD, thanh toán phần còn lại khi nhận.',
+      tip: 'Thời gian phụ thuộc từng sản phẩm.',
+    },
+  ];
+  readonly checklist = [
+    'Đúng sản phẩm, phân loại và số lượng',
+    'Nội dung thiết kế, tên và lời chúc không sai chính tả',
+    'Tên, số điện thoại và địa chỉ người nhận đầy đủ',
+    'Đã kiểm tra ưu đãi, phí giao hàng và số tiền thanh toán',
+  ];
+  readonly faqs = [
+    {
+      q: 'Tôi có cần tài khoản để đặt hàng không?',
+      a: 'Bạn có thể đặt hàng với tư cách khách. Với đơn COD, hệ thống có thể yêu cầu xác minh OTP trước khi xác nhận. Hãy lưu mã đơn và sử dụng đúng thông tin đã đặt để tra cứu hoặc liên hệ hỗ trợ.',
+    },
+    {
+      q: 'Đặt cọc 50% tính trên toàn bộ đơn hàng hay chỉ quà Custom?',
+      a: 'Khi chọn COD, khoản cọc được tính bằng 50% tiền sản phẩm Custom, không phải 50% toàn bộ đơn. Tiền sản phẩm có sẵn, phần Custom còn lại và phí giao hàng được tính vào khoản còn lại. Số tiền cuối cùng luôn hiển thị ở bước Thanh toán.',
+    },
+    {
+      q: 'Tôi có thể gửi quà trực tiếp và giấu giá không?',
+      a: 'Có. Chọn gửi quà trực tiếp ở bước Thanh toán và điền thông tin người nhận. Chế độ này giấu giá với người nhận và yêu cầu người đặt thanh toán trước 100%, để người nhận không phải trả COD. Bạn cũng có thể chọn thiệp và nhập lời chúc.',
+    },
+    {
+      q: 'Bao lâu thì quà được giao đến?',
+      a: 'Thời gian phụ thuộc sản phẩm có sẵn hay cần chế tác, địa chỉ nhận và tình trạng xử lý đơn. Theo dõi tiến độ tại mục Đơn hàng. Nếu cần quà cho một ngày cụ thể, hãy trao đổi với bộ phận hỗ trợ trước khi đặt để kiểm tra khả năng đáp ứng.',
+    },
+    {
+      q: 'Tôi có thể sửa thiết kế hoặc đổi địa chỉ sau khi đặt không?',
+      a: 'Hãy liên hệ hỗ trợ sớm và cung cấp mã đơn cùng nội dung cần sửa. Khả năng thay đổi phụ thuộc trạng thái xử lý; thiết kế đã chế tác hoặc đơn đã bàn giao vận chuyển có thể không sửa được. Kiểm tra kỹ trước khi xác nhận để tránh phát sinh.',
+    },
+    {
+      q: 'Nếu sản phẩm bị lỗi hoặc không đúng thiết kế thì làm gì?',
+      a: 'Giữ lại bao bì, chụp ảnh hoặc video thể hiện tình trạng sản phẩm, chuẩn bị mã đơn và gửi yêu cầu ở Trung tâm hỗ trợ. Với quà cá nhân hóa, cung cấp thêm bản thiết kế đã đặt để bộ phận hỗ trợ đối chiếu và hướng dẫn phương án xử lý.',
+    },
+    {
+      q: 'Chuyển khoản rồi nhưng đơn chưa cập nhật thì sao?',
+      a: 'Kiểm tra số tiền và nội dung chuyển khoản theo hướng dẫn QR của đơn. Không thanh toán lặp lại khi chưa kiểm tra trạng thái. Giữ biên nhận và liên hệ hỗ trợ kèm mã đơn nếu trạng thái chưa được cập nhật.',
+    },
+  ];
   toggleFaq(index: number) {
-    if (this.expandedFaq() === index) {
-      this.expandedFaq.set(null);
-    } else {
-      this.expandedFaq.set(index);
-    }
+    this.expandedFaq.update((current) => (current === index ? null : index));
   }
 }
