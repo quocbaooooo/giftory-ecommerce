@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard, adminGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
+  { path: 'reviews', canActivate: [authGuard], loadComponent: () => import('./features/reviews/reviews.component').then(m => m.ReviewsComponent) },
   { path: 'care', canActivate: [authGuard], loadComponent: () => import('./features/care/care.component').then(m => m.CareComponent) },
   // Customer Storefront Routes
   {

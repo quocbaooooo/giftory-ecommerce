@@ -24,7 +24,8 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
           <p class="text-sm text-slate-500">{{ orders().length }} đơn hàng · Mới nhất trước</p>
           <div class="bg-white border border-[#EBD3AE] rounded-3xl overflow-hidden">
             @for (order of orders(); track order._id) {
-              <a [routerLink]="['/orders', order.orderCode]" [attr.aria-label]="'Xem chi tiết đơn ' + order.orderCode" class="grid grid-cols-[56px_minmax(0,1fr)] sm:grid-cols-[64px_minmax(0,1fr)_auto] gap-4 items-center p-4 sm:p-6 border-b border-slate-100 last:border-b-0 hover:bg-[#FFF5E1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#800020] focus-visible:outline-offset-[-3px] transition-colors">
+              <div class="border-b border-slate-100 last:border-b-0">
+              <a [routerLink]="['/orders', order.orderCode]" [attr.aria-label]="'Xem chi tiết đơn ' + order.orderCode" class="grid grid-cols-[56px_minmax(0,1fr)] sm:grid-cols-[64px_minmax(0,1fr)_auto] gap-4 items-center p-4 sm:p-6 hover:bg-[#FFF5E1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#800020] focus-visible:outline-offset-[-3px] transition-colors">
                 <img [src]="order.items[0]?.productImage || '/logo.png'" [alt]="order.items[0]?.productName || 'Quà tặng Giftory'" (error)="onThumbnailError($event)" loading="lazy" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-2xl bg-[#FFF5E1] border border-slate-100">
                 <div class="min-w-0">
                   <div class="flex flex-wrap gap-x-3 gap-y-1 items-center"><strong class="font-mono text-sm text-slate-900">#{{ order.orderCode }}</strong><span class="text-xs text-slate-500">{{ order.createdAt | date:'dd/MM/yyyy · HH:mm':'+0700' }}</span></div>
@@ -33,6 +34,17 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
                 </div>
                 <div class="col-start-2 sm:col-start-auto flex items-center justify-between sm:justify-end gap-3"><span class="font-bold text-slate-900">{{ (order.pricing?.totalAmount ?? order.totalAmount) | number }} đ</span><span class="material-symbols-outlined text-slate-400" aria-hidden="true">chevron_right</span></div>
               </a>
+              @if (order.orderStatus === 'DELIVERED') {
+                <div class="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 pb-5 sm:pl-[104px]">
+                  <span class="text-xs text-slate-500">Bạn đã nhận quà? Chia sẻ cảm nhận về sản phẩm.</span>
+                  <a routerLink="/reviews" [queryParams]="{ orderId: order._id, productId: order.items.length === 1 ? order.items[0].productId : undefined }"
+                    [attr.aria-label]="'Viết đánh giá cho đơn ' + order.orderCode"
+                    class="inline-flex items-center gap-2 rounded-xl bg-[#800020] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#660019] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800020]">
+                    <span class="material-symbols-outlined text-base" aria-hidden="true">rate_review</span>Viết đánh giá
+                  </a>
+                </div>
+              }
+              </div>
             } @empty {
               <div class="text-center px-6 py-14"><span class="material-symbols-outlined text-5xl text-[#800020]/40" aria-hidden="true">shopping_bag</span><h2 class="text-lg font-bold mt-4 text-[#800020]">Bạn chưa có đơn hàng nào</h2><p class="text-sm text-slate-500 mt-2">Những món quà bạn đặt sẽ xuất hiện tại đây.</p><a routerLink="/products" class="inline-block mt-6 px-5 py-3 rounded-xl bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] text-sm font-semibold">Khám phá quà tặng</a></div>
             }
@@ -113,7 +125,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
 
       }
       @if (activeOrder()) {
-      <a routerLink="/care" class="inline-block text-sm font-semibold text-[#800020] hover:underline">Thông báo, đánh giá & hỗ trợ đơn hàng</a>
+      <a routerLink="/care" class="inline-block text-sm font-semibold text-[#800020] hover:underline">Thông báo & hỗ trợ đơn hàng</a>
       @if (activeOrder()?.gift?.enabled) {
         <section class="space-y-3 rounded-3xl border border-[#E6D2DA] bg-[#FCF7F9] p-6 text-sm text-[#552337]">
           <h2 class="font-bold">Món quà gửi tới {{ activeOrder()?.customerInfo?.name }}</h2>
@@ -264,7 +276,7 @@ import { GreetingCardPreviewComponent } from '../../shared/components/greeting-c
               <div class="space-y-1 flex-1 text-xs">
                 <h4 class="font-bold text-slate-900">{{ item.productName || item.name }} (x{{ item.quantity }})</h4>
                 @if (activeOrder()?.orderStatus === 'DELIVERED' && authService.isAuthenticated()) {
-                  <a routerLink="/care" [queryParams]="{ orderId: activeOrder()?._id, productId: item.productId?._id || item.productId, intent: 'review' }"
+                  <a routerLink="/reviews" [queryParams]="{ orderId: activeOrder()?._id, productId: item.productId?._id || item.productId }"
                     class="inline-flex items-center gap-1.5 rounded-lg border border-[#EBD3AE] bg-[#FFF5E1] px-3 py-2 font-semibold text-[#800020] hover:bg-[#F8E8C9]"
                     [attr.aria-label]="'Đánh giá ' + (item.productName || item.name)">
                     <span class="material-symbols-outlined text-base" aria-hidden="true">rate_review</span>Đánh giá sản phẩm

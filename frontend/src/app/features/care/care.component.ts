@@ -1,7 +1,7 @@
-import { Component, OnInit, inject, signal, computed, afterNextRender, Injector } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
@@ -167,10 +167,10 @@ import { environment } from '../../../environments/environment';
                     <div class="flex items-center gap-2 shrink-0">
                       @if (n.status === 'SENT') {
                         @if (n.kind === 'REVIEW_INVITE') {
-                          <button type="button" (click)="selectOrder(n.orderId)"
+                          <a routerLink="/reviews" [queryParams]="{ orderId: n.orderId }"
                             class="px-3.5 py-1.5 rounded-xl bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] text-xs font-bold transition shadow-xs">
                             Viết đánh giá
-                          </button>
+                          </a>
                         }
                         <button type="button" [disabled]="busy()" (click)="dismiss(n)"
                           class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-medium transition">
@@ -195,7 +195,7 @@ import { environment } from '../../../environments/environment';
                     <span class="material-symbols-outlined text-[#800020] text-[20px]">inventory_2</span>
                     <span>Chọn Đơn Hàng Cần Hỗ Trợ</span>
                   </h2>
-                  <p class="text-xs text-slate-500 mt-0.5">Chọn đơn hàng để đánh giá chất lượng, sửa chi tiết khắc, hủy hoặc gửi yêu cầu bảo hành</p>
+                  <p class="text-xs text-slate-500 mt-0.5">Chọn đơn hàng để sửa chi tiết khắc, hủy hoặc gửi yêu cầu hỗ trợ, đổi trả, bảo hành</p>
                 </div>
               </div>
 
@@ -254,7 +254,7 @@ import { environment } from '../../../environments/environment';
                   @if (o.items && o.items.length > 0) {
                     <div>
                       <label class="block text-xs font-bold text-slate-700 mb-1">Sản phẩm liên quan đến yêu cầu:</label>
-                      <select [ngModel]="productId" (ngModelChange)="selectReviewProduct($event)"
+                      <select [ngModel]="productId" (ngModelChange)="selectProduct($event)"
                         class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#800020]">
                         <option value="">Toàn bộ đơn hàng</option>
                         @for (i of o.items; track $index) {
@@ -324,68 +324,10 @@ import { environment } from '../../../environments/environment';
                     </button>
                   </div>
 
-                  <!-- Đánh giá đơn hàng nếu đã giao (DELIVERED) -->
-                  @if (o.orderStatus === 'DELIVERED') {
-                    <div id="product-review-form" tabindex="-1" aria-label="Đánh giá sản phẩm đã nhận" class="pt-4 border-t border-[#EBD3AE] space-y-3 focus:outline-none">
-                      <div class="flex items-center justify-between">
-                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                          <span class="material-symbols-outlined text-amber-500 text-[18px]">star</span>
-                          <span>Đánh Giá Trải Nghiệm Món Quà</span>
-                        </h3>
-                        <span class="text-xs font-bold text-pink-600 bg-pink-50 px-2.5 py-0.5 rounded-full border border-pink-200">
-                          +50 Điểm Thưởng
-                        </span>
-                      </div>
-
-                      <p class="text-xs leading-relaxed text-slate-500">Chọn sản phẩm ở trên và chia sẻ trải nghiệm sau khi nhận hàng. Đánh giá sẽ được kiểm duyệt trước khi hiển thị công khai.</p>
-                      @if (selectedReview; as review) {
-                        <p role="status" class="rounded-xl bg-[#FFF5E1] p-3 text-xs text-[#800020]">
-                          {{ review.status === 'REJECTED' ? 'Đánh giá cần chỉnh sửa: ' + (review.moderationNote || 'Vui lòng bổ sung nội dung.') : review.status === 'APPROVED' ? 'Bạn đã đánh giá sản phẩm này. Đánh giá đã được xuất bản.' : 'Bạn đã gửi đánh giá sản phẩm này. Đang chờ kiểm duyệt.' }}
-                        </p>
-                      }
-                      <fieldset class="space-y-3 disabled:opacity-60" [disabled]="busy() || (!!selectedReview && selectedReview.status !== 'REJECTED')">
-                      <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold text-slate-700">Mức độ hài lòng:</span>
-                        <div class="flex items-center gap-1">
-                          @for (r of [1, 2, 3, 4, 5]; track r) {
-                            <button type="button" (click)="rating = r" [attr.aria-label]="r + ' sao'" [attr.aria-pressed]="rating === r"
-                              class="text-xl transition hover:scale-125"
-                              [class]="rating >= r ? 'text-amber-400' : 'text-slate-300'">
-                              ★
-                            </button>
-                          }
-                          <span class="text-xs font-bold text-slate-600 ml-2">({{ rating }} sao)</span>
-                        </div>
-                      </div>
-
-                      <textarea [(ngModel)]="reviewContent" aria-label="Nội dung đánh giá sản phẩm" maxlength="3000" rows="2"
-                        placeholder="Chia sẻ cảm xúc khi mở hộp quà, chất lượng khắc laser hoặc độ đẹp của nơ lụa (tối thiểu 10 ký tự)..."
-                        class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]"></textarea>
-
-                      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div class="flex items-center gap-2">
-                          <input type="file" accept="image/png,image/jpeg,image/webp,video/mp4" multiple
-                            (change)="upload($event, 'review')" [disabled]="busy()"
-                            class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700">
-                          @if (reviewFiles.length) {
-                            <span class="text-xs text-[#800020] font-semibold">{{ reviewFiles.length }} ảnh/video</span>
-                            <button type="button" (click)="reviewFiles = []" class="text-xs text-rose-500 hover:underline">Xóa</button>
-                          }
-                        </div>
-
-                        <button type="button" (click)="submitReview()"
-                          [disabled]="busy() || !productId || reviewContent.trim().length < 10"
-                          class="px-5 py-2.5 rounded-xl bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] font-bold text-xs shadow-sm transition disabled:opacity-40">
-                          Gửi Đánh Giá (+50 Điểm)
-                        </button>
-                      </div>
-                      </fieldset>
-                    </div>
-                  }
                 </div>
               } @else {
                 <div class="text-center py-6 bg-slate-50/70 rounded-2xl border border-dashed border-[#EBD3AE] text-xs text-slate-500">
-                  Vui lòng chọn một đơn hàng ở trên để bắt đầu tạo yêu cầu khiếu nại, hủy hoặc đánh giá.
+                  Vui lòng chọn một đơn hàng ở trên để bắt đầu tạo yêu cầu hỗ trợ, đổi trả hoặc khiếu nại.
                 </div>
               }
             </section>
@@ -548,6 +490,7 @@ import { environment } from '../../../environments/environment';
           </section>
 
           <!-- 4. REVIEWS HISTORY & MODERATION -->
+          @if (admin) {
           <section class="bg-white rounded-3xl p-6 sm:p-7 shadow-xs border border-[#EBD3AE] space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-[#EBD3AE]">
               <div class="flex items-center gap-2">
@@ -592,11 +535,6 @@ import { environment } from '../../../environments/environment';
                         Từ chối
                       </button>
                     </div>
-                  } @else if (r.status === 'REJECTED') {
-                    <button type="button" (click)="editReview(r)"
-                      class="px-3 py-1 rounded-lg bg-[#800020] text-[#FFF5E1] text-xs font-bold">
-                      Sửa và gửi lại
-                    </button>
                   }
                 </article>
               } @empty {
@@ -606,6 +544,7 @@ import { environment } from '../../../environments/environment';
               }
             </div>
           </section>
+          }
 
           <!-- 5. REFUND TRACKER (Admin only) -->
           @if (admin) {
@@ -736,8 +675,7 @@ export class CareComponent implements OnInit {
   private api = inject(ApiService);
   private http = inject(HttpClient);
   private route = inject(ActivatedRoute);
-  private injector = inject(Injector);
-  private reviewLinkHandled = false;
+  private router = inject(Router);
 
   admin = this.route.snapshot.data['admin'] === true;
   orders = signal<any[]>([]);
@@ -751,9 +689,6 @@ export class CareComponent implements OnInit {
   message = signal('');
   orderId = '';
   productId = '';
-  rating = 5;
-  reviewContent = '';
-  reviewFiles: string[] = [];
   caseType = 'SUPPORT';
   reason = '';
   description = '';
@@ -763,11 +698,13 @@ export class CareComponent implements OnInit {
   get selectedOrder() {
     return this.orders().find((o) => o._id === this.orderId);
   }
-  get selectedReview() {
-    return this.reviews().find(review => review.orderId === this.orderId && review.productId === this.productId);
-  }
-
   ngOnInit() {
+    if (!this.admin && this.route.snapshot.queryParamMap.get('intent') === 'review') {
+      const queryParams = { ...this.route.snapshot.queryParams };
+      delete queryParams['intent'];
+      void this.router.navigate(['/reviews'], { queryParams, replaceUrl: true });
+      return;
+    }
     this.load();
   }
 
@@ -809,17 +746,17 @@ export class CareComponent implements OnInit {
     this.error.set('');
     const paths = this.admin
       ? ['care/admin/reviews', 'care/admin/cases', 'care/admin/refunds']
-      : ['care/reviews', 'care/cases', 'orders', 'care/notifications'];
+      : ['care/cases', 'orders', 'care/notifications'];
     forkJoin(paths.map((p) => this.api.get<any[]>(p))).subscribe({
       next: (data) => {
-        this.reviews.set(data[0] || []);
-        this.cases.set(data[1] || []);
         if (this.admin) {
+          this.reviews.set(data[0] || []);
+          this.cases.set(data[1] || []);
           this.refunds.set(data[2] || []);
         } else {
-          this.orders.set(data[2] || []);
-          this.notices.set(data[3] || []);
-          this.openLinkedReview();
+          this.cases.set(data[0] || []);
+          this.orders.set(data[1] || []);
+          this.notices.set(data[2] || []);
         }
         this.loading.set(false);
       },
@@ -858,39 +795,9 @@ export class CareComponent implements OnInit {
     this.orderId = id;
     const items = this.selectedOrder?.items || [];
     this.productId = items.length === 1 ? String(items[0].productId?._id || items[0].productId) : '';
-    this.reviewContent = '';
-    this.reviewFiles = [];
-    this.rating = 5;
   }
-  selectReviewProduct(id: string) {
+  selectProduct(id: string) {
     this.productId = id;
-    this.rating = 5;
-    this.reviewContent = '';
-    this.reviewFiles = [];
-    if (this.selectedReview?.status === 'REJECTED') {
-      this.rating = this.selectedReview.rating;
-      this.reviewContent = this.selectedReview.content;
-      this.reviewFiles = [...(this.selectedReview.attachments || [])];
-    }
-  }
-  private openLinkedReview() {
-    if (this.reviewLinkHandled || this.route.snapshot.queryParamMap.get('intent') !== 'review') return;
-    this.reviewLinkHandled = true;
-    const orderId = this.route.snapshot.queryParamMap.get('orderId');
-    const productId = this.route.snapshot.queryParamMap.get('productId');
-    const order = this.orders().find(order => order._id === orderId && order.orderStatus === 'DELIVERED');
-    if (!order || !order.items.some((item: any) => String(item.productId?._id || item.productId) === productId)) {
-      this.error.set('Chỉ có thể đánh giá sản phẩm trong đơn của bạn đã giao thành công.');
-      return;
-    }
-    this.selectOrder(order._id);
-    this.productId = productId!;
-    if (this.selectedReview?.status === 'REJECTED') this.editReview(this.selectedReview);
-    afterNextRender(() => {
-      const form = document.getElementById('product-review-form');
-      form?.scrollIntoView({ block: 'center' });
-      form?.focus({ preventScroll: true });
-    }, { injector: this.injector });
   }
 
   canCancel(o: any) {
@@ -906,34 +813,6 @@ export class CareComponent implements OnInit {
 
   dismiss(n: any) {
     this.act(`care/notifications/${n._id}/dismiss`, {}, true);
-  }
-
-  submitReview() {
-    if (this.selectedOrder?.orderStatus !== 'DELIVERED' || !this.productId || (this.selectedReview && this.selectedReview.status !== 'REJECTED')) return;
-    this.act(
-      'care/reviews',
-      {
-        orderId: this.orderId,
-        productId: this.productId,
-        rating: this.rating,
-        content: this.reviewContent,
-        attachments: this.reviewFiles,
-      },
-      false,
-      () => {
-        this.reviewContent = '';
-        this.reviewFiles = [];
-      },
-    );
-  }
-
-  editReview(r: any) {
-    this.orderId = r.orderId;
-    this.productId = r.productId;
-    this.rating = r.rating;
-    this.reviewContent = r.content;
-    this.reviewFiles = [...r.attachments];
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   createCase() {
@@ -984,11 +863,7 @@ export class CareComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files || []);
     const existing =
-      target === 'review'
-        ? this.reviewFiles
-        : target === 'case'
-          ? this.caseFiles
-          : target.replyFiles || [];
+      target === 'case' ? this.caseFiles : target.replyFiles || [];
     if (!files.length) return;
     if (existing.length + files.length > 5 || files.some((f) => f.size > 10 * 1024 * 1024)) {
       this.error.set('Tối đa 5 tệp, mỗi tệp không quá 10 MB.');
@@ -1005,8 +880,7 @@ export class CareComponent implements OnInit {
     ).subscribe({
       next: (results) => {
         const ids = [...existing, ...results.map((r) => r.data._id)];
-        if (target === 'review') this.reviewFiles = ids;
-        else if (target === 'case') this.caseFiles = ids;
+        if (target === 'case') this.caseFiles = ids;
         else target.replyFiles = ids;
         this.busy.set(false);
         input.value = '';

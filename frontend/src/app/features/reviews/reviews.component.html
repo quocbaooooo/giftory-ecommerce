@@ -1,0 +1,40 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-8 pb-36 space-y-6 animate-fade-in">
+  <a routerLink="/orders" class="inline-flex items-center gap-2 text-sm font-semibold text-[#800020] hover:underline"><span class="material-symbols-outlined text-base" aria-hidden="true">arrow_back</span>Đơn hàng của tôi</a>
+  <header class="space-y-2">
+    <h1 class="text-3xl font-display font-black text-slate-900">Đánh giá sản phẩm</h1>
+    <p class="text-sm text-slate-500">Chia sẻ cảm nhận về món quà đã nhận. Đánh giá sẽ được kiểm duyệt trước khi hiển thị công khai.</p>
+  </header>
+  @if (message()) { <div role="status" class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">{{ message() }}</div> }
+  @if (error()) { <div role="alert" class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{{ error() }} <button type="button" (click)="load()" [disabled]="busy()" class="ml-2 underline font-semibold">Thử lại</button></div> }
+  @if (loading()) {
+    <div role="status" class="rounded-3xl border border-[#EBD3AE] bg-white p-10 text-center text-slate-500">Đang tải sản phẩm đã nhận…</div>
+  } @else if (!orders().length) {
+    <section class="rounded-3xl border border-[#EBD3AE] bg-white p-10 text-center space-y-4"><span class="material-symbols-outlined text-4xl text-[#800020]" aria-hidden="true">rate_review</span><h2 class="text-lg font-bold">Chưa có sản phẩm để đánh giá</h2><p class="text-sm text-slate-500">Bạn có thể viết đánh giá khi đơn hàng được giao thành công.</p><a routerLink="/orders" class="inline-block rounded-xl bg-[#800020] px-5 py-3 text-sm font-bold text-white">Xem đơn hàng</a></section>
+  } @else {
+    <section class="rounded-3xl border border-[#EBD3AE] bg-white p-5 sm:p-7 space-y-5">
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div><label for="review-order" class="block text-sm font-bold text-slate-700 mb-2">Đơn đã giao thành công</label><select id="review-order" [ngModel]="orderId" (ngModelChange)="selectOrder($event)" [disabled]="busy()" class="w-full rounded-xl border border-slate-200 p-3 text-sm"><option value="" disabled>Chọn đơn hàng</option>@for (order of orders(); track order._id) { <option [value]="order._id">#{{ order.orderCode }}</option> }</select></div>
+        <div><label for="review-product" class="block text-sm font-bold text-slate-700 mb-2">Sản phẩm đánh giá</label><select id="review-product" [ngModel]="productId" (ngModelChange)="selectProduct($event)" [disabled]="busy() || !selectedOrder" class="w-full rounded-xl border border-slate-200 p-3 text-sm"><option value="" disabled>Chọn sản phẩm</option>@for (item of selectedOrder?.items || []; track $index) { <option [value]="itemId(item)">{{ item.productName || item.name }}</option> }</select></div>
+      </div>
+      @if (selectedItem; as item) {
+        <div class="flex items-center gap-4 rounded-2xl bg-[#FFF5E1]/60 p-4"><img [src]="item.productImage || '/logo.png'" [alt]="item.productName || item.name || 'Sản phẩm'" class="w-16 h-16 rounded-xl object-cover"><div><strong class="text-sm text-slate-900">{{ item.productName || item.name }}</strong><p class="text-xs text-emerald-700 mt-1">Đã giao thành công · #{{ selectedOrder?.orderCode }}</p></div></div>
+        <div id="product-review-form" class="space-y-5 pt-2">
+          <h2 class="text-lg font-bold text-slate-900">Trải nghiệm món quà của bạn</h2>
+          @if (selectedReview; as review) {
+            <p role="status" class="rounded-xl bg-[#FFF5E1] p-3 text-sm text-[#800020]">{{ review.status === 'REJECTED' ? 'Đánh giá cần chỉnh sửa: ' + (review.moderationNote || 'Vui lòng bổ sung nội dung rồi gửi lại.') : review.status === 'APPROVED' ? 'Đánh giá của bạn đã được xuất bản.' : 'Bạn đã gửi đánh giá cho sản phẩm này. Đang chờ kiểm duyệt.' }}</p>
+          }
+          <fieldset [disabled]="busy() || readOnly" class="space-y-5 disabled:opacity-70">
+            <legend class="text-sm font-bold text-slate-700 mb-2">Mức độ hài lòng</legend>
+            <div class="flex items-center gap-2">@for (star of [1, 2, 3, 4, 5]; track star) { <button type="button" (click)="rating = star" [attr.aria-label]="star + ' sao'" [attr.aria-pressed]="rating === star" class="text-3xl hover:scale-110 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#800020]" [class.text-amber-400]="rating >= star" [class.text-slate-300]="rating < star">★</button> }<span class="text-sm text-slate-500 ml-2">{{ rating }}/5 sao</span></div>
+            <div><label for="review-content" class="block text-sm font-bold text-slate-700 mb-2">Cảm nhận của bạn</label><textarea id="review-content" [(ngModel)]="content" maxlength="3000" rows="5" placeholder="Chia sẻ về chất lượng sản phẩm, đóng gói và trải nghiệm khi nhận quà (tối thiểu 10 ký tự)…" class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]"></textarea><p class="text-xs text-slate-400 mt-1">{{ content.length }}/3000 ký tự · Tối thiểu 10 ký tự</p></div>
+            <div><label for="review-files" class="block text-sm font-bold text-slate-700 mb-2">Thêm ảnh hoặc video <span class="font-normal text-slate-400">(không bắt buộc)</span></label><input id="review-files" type="file" multiple accept="image/png,image/jpeg,image/webp,video/mp4" (change)="upload($event)" class="max-w-full text-xs text-slate-500 file:mr-3 file:rounded-xl file:border-0 file:bg-[#FFF5E1] file:px-4 file:py-2.5 file:font-bold file:text-[#800020]"><p class="mt-2 text-xs text-slate-400">Tối đa 5 tệp, mỗi tệp không quá 10 MB.</p>@if (attachments.length) { <div class="mt-2 flex items-center gap-3 text-xs"><span>{{ attachments.length }} ảnh/video đã đính kèm</span><button type="button" (click)="attachments = []" class="text-rose-600 underline">Xóa tệp đính kèm</button></div> }</div>
+            @if (!readOnly) { <button type="button" (click)="submitReview()" [disabled]="!canSubmit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#800020] px-6 py-3 text-sm font-bold text-white hover:bg-[#660019] disabled:opacity-40"><span class="material-symbols-outlined text-base" aria-hidden="true">send</span>{{ busy() ? 'Đang xử lý…' : selectedReview ? 'Gửi lại đánh giá' : 'Gửi đánh giá' }}</button> }
+          </fieldset>
+        </div>
+      }
+    </section>
+  }
+  @if (reviews().length) {
+    <section class="rounded-3xl border border-[#EBD3AE] bg-white p-5 sm:p-7 space-y-4"><h2 class="text-lg font-bold text-slate-900">Đánh giá của bạn</h2>@for (review of reviews(); track review._id) { <article class="rounded-2xl border border-slate-100 p-4 space-y-2"><div class="flex flex-wrap justify-between gap-2 text-xs"><span class="font-bold text-amber-600">{{ review.rating }} ★</span><span class="rounded-full bg-[#FFF5E1] px-3 py-1 text-[#800020]">{{ reviewLabel(review.status) }}</span></div><p class="text-sm text-slate-600 whitespace-pre-line">{{ review.content }}</p>@if (review.status === 'REJECTED') { <p class="text-xs text-rose-600">{{ review.moderationNote }}</p><a routerLink="/reviews" [queryParams]="{ orderId: review.orderId, productId: review.productId }" class="inline-block text-sm font-semibold text-[#800020] hover:underline">Chỉnh sửa và gửi lại</a> }</article> }</section>
+  }
+</div>
