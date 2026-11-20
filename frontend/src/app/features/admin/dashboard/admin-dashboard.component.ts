@@ -186,7 +186,7 @@ export class AdminDashboardComponent implements OnInit {
       }
     });
 
-    this.adminService.getAdminOrders({ limit: 5 }).subscribe({
+    this.adminService.getAdminOrders({ limit: 5, view: 'summary' }).subscribe({
       next: (res: any) => {
         const list = Array.isArray(res) ? res : (res?.data || res?.items || []);
         this.recentOrders.set(list);

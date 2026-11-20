@@ -1,4 +1,5 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, signal, computed, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -51,7 +52,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
           <div>
             <h4 class="font-bold text-amber-900 text-sm">Phiên làm việc Quản trị viên đã hết hạn hoặc chưa xác thực (401)</h4>
             <p class="text-xs text-amber-800/80 mt-0.5">
-              Để tải toàn bộ 15 đơn hàng hiện có trong database và thao tác thực thi BP-04, bạn có thể bấm nút bên dưới để khôi phục phiên Admin ngay lập tức.
+              Đăng nhập lại để tiếp tục tải và xử lý đơn hàng.
             </p>
           </div>
         </div>
@@ -121,7 +122,8 @@ import { Order, OrderItemDetail } from '../../../core/models';
           <span class="material-symbols-outlined absolute left-3 top-2.5 text-giftory-ink/40 text-lg">search</span>
           <input
             type="text"
-            [(ngModel)]="searchQuery"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="updateSearch($event)"
             placeholder="Tìm theo mã đơn, SĐT hoặc tên..."
             class="w-full pl-9 pr-4 py-2 bg-giftory-canvas rounded-xl border border-giftory-border focus:outline-none focus:border-[#800020] text-xs"
           />
@@ -130,6 +132,13 @@ import { Order, OrderItemDetail } from '../../../core/models';
 
       <!-- Orders List Table -->
       <div class="bg-white rounded-3xl p-5 border border-giftory-border shadow-xs space-y-4">
+        <p *ngIf="listError()" role="alert" class="text-xs text-rose-700">
+          Chưa tải được danh sách đơn hàng. Bấm Làm mới để thử lại.
+        </p>
+        <div *ngIf="detailError() as id" role="alert" class="flex items-center gap-2 text-xs text-rose-700">
+          <span>Chưa tải được chi tiết đơn hàng.</span>
+          <button type="button" class="font-bold underline" (click)="openProcessModal(id)">Thử lại</button>
+        </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
             <thead>
@@ -155,7 +164,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
               </tr>
 
               <!-- Empty State -->
-              <tr *ngIf="!loading() && filteredOrders().length === 0">
+              <tr *ngIf="!loading() && !listError() && !authError() && filteredOrders().length === 0">
                 <td colspan="7" class="py-12 text-center text-giftory-ink/60">
                   <div class="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
                     <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
@@ -166,8 +175,8 @@ import { Order, OrderItemDetail } from '../../../core/models';
                       Hiện không có đơn hàng nào ở giai đoạn này hoặc khớp với từ khóa tìm kiếm.
                     </p>
                     <button
-                      *ngIf="activeFilter() !== 'ALL' || searchQuery"
-                      (click)="activeFilter.set('ALL'); searchQuery=''"
+                      *ngIf="activeFilter() !== 'ALL' || searchQuery()"
+                      (click)="selectFilter('ALL'); updateSearch('')"
                       class="mt-2 px-3.5 py-1.5 rounded-xl bg-[#FFF5E1] text-[#800020] hover:bg-[#FDF0D5] font-bold text-xs transition cursor-pointer"
                     >
                       Hiển thị tất cả đơn hàng
@@ -176,7 +185,7 @@ import { Order, OrderItemDetail } from '../../../core/models';
                 </td>
               </tr>
 
-              <tr *ngFor="let ord of filteredOrders()" class="hover:bg-giftory-canvas/60 transition">
+              <tr *ngFor="let ord of visibleOrders(); trackBy: trackOrder" class="hover:bg-giftory-canvas/60 transition">
                 <!-- Mã Đơn & Thời gian chờ xác nhận -->
                 <td class="py-3.5 px-3">
                   <span class="font-mono font-bold text-[#800020] block text-sm">#{{ ord.orderCode }}</span>
@@ -246,15 +255,18 @@ import { Order, OrderItemDetail } from '../../../core/models';
 
                 <!-- Nút thao tác -->
                 <td class="py-3.5 px-3 text-right">
-                  <button (click)="openProcessModal(ord)" class="px-3.5 py-1.5 bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1 ml-auto cursor-pointer">
+                  <button (click)="openProcessModal(ord._id)" [disabled]="!!loadingDetail() || authError()" class="px-3.5 py-1.5 bg-[#800020] hover:bg-[#660019] text-[#FFF5E1] rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1 ml-auto cursor-pointer disabled:opacity-60">
                     <span class="material-symbols-outlined text-sm">tune</span>
-                    Xử Lý BP-04
+                    {{ loadingDetail() === ord._id ? 'Đang tải chi tiết…' : 'Xử Lý BP-04' }}
                   </button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+        <button *ngIf="visibleOrders().length < filteredOrders().length" type="button" (click)="showMoreOrders()" class="block mx-auto px-4 py-2 rounded-xl border border-giftory-border text-xs font-bold text-giftory-ink">
+          Xem thêm đơn hàng
+        </button>
       </div>
 
       <!-- ============================================================== -->
@@ -962,14 +974,21 @@ export class AdminOrdersComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
   giftBoxName(style?: string): string { return ({ NONE: 'Không lấy hộp', STANDARD: 'Hộp tiêu chuẩn', SILK: 'Hộp lụa cao cấp', LUXURY: 'Hộp quà sang trọng' } as Record<string, string>)[style || ''] || 'Hộp quà'; }
 
   orders = signal<Order[]>([]);
   activeFilter = signal<string>('ALL');
-  searchQuery = '';
+  searchQuery = signal('');
   selectedOrder = signal<Order | null>(null);
   loading = signal<boolean>(false);
   authError = signal<boolean>(false);
+  listError = signal(false);
+  loadingDetail = signal<string | null>(null);
+  detailError = signal<string | null>(null);
+  private readonly ordersPerBatch = 20;
+  private visibleLimit = signal(this.ordersPerBatch);
+  visibleOrders = computed(() => this.filteredOrders().slice(0, this.visibleLimit()));
 
   // Sub modals
   selectedCustomItem = signal<OrderItemDetail | null>(null);
@@ -1003,10 +1022,11 @@ export class AdminOrdersComponent implements OnInit {
   ];
 
   ngOnInit() {
-    this.loadOrders();
     const queryCode = this.route.snapshot.queryParamMap.get('code');
+    this.loadOrders();
     if (queryCode) {
-      this.searchQuery = queryCode;
+      this.updateSearch(queryCode);
+      this.openProcessModal(queryCode.trim());
     }
   }
 
@@ -1018,21 +1038,20 @@ export class AdminOrdersComponent implements OnInit {
   loadOrders() {
     this.loading.set(true);
     this.authError.set(false);
-    this.adminService.getAdminOrders({ limit: 100 }).subscribe({
-      next: (res: any) => {
+    this.listError.set(false);
+    this.adminService.getAdminOrders({ limit: 100, view: 'summary' }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res) => {
         this.loading.set(false);
         const list = Array.isArray(res) ? res : (res?.data || res?.items || []);
         this.orders.set(list);
-        if (this.searchQuery) {
-          const match = list.find((o: Order) => o.orderCode === this.searchQuery);
-          if (match) this.openProcessModal(match);
-        }
       },
       error: (err) => {
         this.loading.set(false);
         console.error('Lỗi tải danh sách đơn hàng:', err);
         if (err.status === 401 || err.status === 403) {
           this.authError.set(true);
+        } else {
+          this.listError.set(true);
         }
       }
     });
@@ -1040,27 +1059,27 @@ export class AdminOrdersComponent implements OnInit {
 
   selectFilter(key: string) {
     this.activeFilter.set(key);
+    this.visibleLimit.set(this.ordersPerBatch);
   }
 
-  filteredOrders(): Order[] {
-    let list = this.orders();
+  updateSearch(query: string) {
+    this.searchQuery.set(query);
+    this.visibleLimit.set(this.ordersPerBatch);
+  }
+
+  showMoreOrders() {
+    this.visibleLimit.update(limit => limit + this.ordersPerBatch);
+  }
+
+  trackOrder(_index: number, order: Order) {
+    return order._id;
+  }
+
+  filteredOrders = computed(() => {
     const filter = this.activeFilter();
+    let list = this.orders().filter(order => this.matchesStage(order, filter));
 
-    if (filter === 'AWAITING_CONFIRMATION') {
-      list = list.filter(o => o.orderStatus === 'AWAITING_CONFIRMATION' || o.orderStatus === 'PENDING');
-    } else if (filter === 'CONFIRMED') {
-      list = list.filter(o => o.orderStatus === 'CONFIRMED' && !o.isPackaged);
-    } else if (filter === 'PACKAGED') {
-      list = list.filter(o => o.isPackaged && o.orderStatus !== 'IN_TRANSIT' && o.orderStatus !== 'DELIVERED' && o.orderStatus !== 'RETURNED_BP06');
-    } else if (filter === 'IN_TRANSIT') {
-      list = list.filter(o => o.orderStatus === 'IN_TRANSIT' || o.orderStatus === 'SHIPPING');
-    } else if (filter === 'DELIVERED') {
-      list = list.filter(o => o.orderStatus === 'DELIVERED');
-    } else if (filter === 'RETURNED') {
-      list = list.filter(o => o.fulfillmentStatus === 'RETURNING' || o.fulfillmentStatus === 'RETURNED_RECEIVED' || o.orderStatus === 'RETURNED_BP06');
-    }
-
-    const q = this.searchQuery.toLowerCase().trim();
+    const q = this.searchQuery().toLowerCase().trim();
     if (q) {
       list = list.filter(o =>
         o.orderCode.toLowerCase().includes(q) ||
@@ -1070,32 +1089,55 @@ export class AdminOrdersComponent implements OnInit {
       );
     }
     return list;
-  }
+  });
+
+  private stageCounts = computed(() => new Map(this.statusFilters.map(({ key }) => [
+    key, this.orders().filter(order => this.matchesStage(order, key)).length,
+  ])));
 
   countStage(stageKey: string): number {
-    const all = this.orders();
+    return this.stageCounts().get(stageKey) ?? 0;
+  }
+
+  private matchesStage(order: Order, stageKey: string): boolean {
     switch (stageKey) {
       case 'AWAITING_CONFIRMATION':
-        return all.filter(o => o.orderStatus === 'AWAITING_CONFIRMATION' || o.orderStatus === 'PENDING').length;
+        return order.orderStatus === 'AWAITING_CONFIRMATION' || order.orderStatus === 'PENDING';
       case 'CONFIRMED':
-        return all.filter(o => o.orderStatus === 'CONFIRMED' && !o.isPackaged).length;
+        return order.orderStatus === 'CONFIRMED' && !order.isPackaged;
       case 'PACKAGED':
-        return all.filter(o => o.isPackaged && o.orderStatus !== 'IN_TRANSIT' && o.orderStatus !== 'DELIVERED' && o.orderStatus !== 'RETURNED_BP06').length;
+        return !!order.isPackaged && order.orderStatus !== 'IN_TRANSIT' && order.orderStatus !== 'DELIVERED' && order.orderStatus !== 'RETURNED_BP06';
       case 'IN_TRANSIT':
-        return all.filter(o => o.orderStatus === 'IN_TRANSIT' || o.orderStatus === 'SHIPPING').length;
+        return order.orderStatus === 'IN_TRANSIT' || order.orderStatus === 'SHIPPING';
       case 'DELIVERED':
-        return all.filter(o => o.orderStatus === 'DELIVERED').length;
+        return order.orderStatus === 'DELIVERED';
       case 'RETURNED':
-        return all.filter(o => o.fulfillmentStatus === 'RETURNING' || o.fulfillmentStatus === 'RETURNED_RECEIVED' || o.orderStatus === 'RETURNED_BP06').length;
+        return order.fulfillmentStatus === 'RETURNING' || order.fulfillmentStatus === 'RETURNED_RECEIVED' || order.orderStatus === 'RETURNED_BP06';
       default:
-        return 0;
+        return true;
     }
   }
 
-  openProcessModal(ord: Order) {
-    this.selectedOrder.set(ord);
-    this.dispatchTracking = ord.deliveryInfo?.trackingCode || ord.trackingCode || `GHTK-VN-${Math.floor(1000000 + Math.random() * 9000000)}`;
-    this.dispatchCarrier = ord.deliveryInfo?.carrier || ord.shippingCarrier || 'Giao Hàng Tiết Kiệm (GHTK)';
+  openProcessModal(id: string) {
+    if (!id || this.loadingDetail()) return;
+    this.loadingDetail.set(id);
+    this.detailError.set(null);
+    this.adminService.getOrderById(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (order: Order) => {
+        this.loadingDetail.set(null);
+        this.dispatchTracking = order.deliveryInfo?.trackingCode || order.trackingCode || `GHTK-VN-${Math.floor(1000000 + Math.random() * 9000000)}`;
+        this.dispatchCarrier = order.deliveryInfo?.carrier || order.shippingCarrier || 'Giao Hàng Tiết Kiệm (GHTK)';
+        this.selectedOrder.set(order);
+      },
+      error: (err) => {
+        this.loadingDetail.set(null);
+        if (err.status === 401 || err.status === 403) {
+          this.authError.set(true);
+        } else {
+          this.detailError.set(id);
+        }
+      },
+    });
   }
 
   // Check if all items in order are ready for packaging (BR-09)
@@ -1339,7 +1381,7 @@ export class AdminOrdersComponent implements OnInit {
 
   updateLocalOrder(updated: Order) {
     this.orders.update(list => list.map(o => o._id === updated._id || o.orderCode === updated.orderCode ? { ...o, ...updated } : o));
-    this.selectedOrder.set(updated);
+    if (this.selectedOrder()?._id === updated._id) this.selectedOrder.set(updated);
   }
 
   // UI Badges helpers

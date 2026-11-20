@@ -237,13 +237,6 @@
           </div>
         }
 
-        @if (ssoNotice()) {
-          <div class="w-full p-3 rounded-xl bg-[#FFF5E1] text-[#800020] text-xs font-medium flex items-center gap-2 mb-3 border border-[#EBD3AE] animate-pulse">
-            <span class="material-symbols-outlined text-[18px] text-[#800020]">sync</span>
-            <span>{{ ssoNotice() }}</span>
-          </div>
-        }
-
         <!-- Giao diện khi thành công (Reset / Forgot Email Sent) -->
         @if (success()) {
           <div class="w-full bg-white rounded-2xl p-6 border border-[#EBD3AE] shadow-sm text-center flex flex-col items-center">
@@ -645,7 +638,7 @@
           <div class="relative flex items-center justify-center w-full my-4">
             <div class="w-full h-[1px] bg-slate-200"></div>
             <span class="absolute bg-[#FFFBF2] px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              Hoặc tiếp tục với
+              Đăng nhập mạng xã hội
             </span>
           </div>
 
@@ -653,6 +646,7 @@
           <div class="grid grid-cols-2 gap-3 w-full">
             <button
               type="button"
+              aria-describedby="social-login-notice"
               (click)="onSocialLogin('Google')"
               class="w-full h-10 sm:h-11 bg-white hover:bg-slate-50 hover:border-[#800020] text-slate-800 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 border border-slate-200 shadow-sm hover:shadow transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
             >
@@ -667,6 +661,7 @@
 
             <button
               type="button"
+              aria-describedby="social-login-notice"
               (click)="onSocialLogin('Facebook')"
               class="w-full h-10 sm:h-11 bg-white hover:bg-slate-50 hover:border-[#800020] text-slate-800 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 border border-slate-200 shadow-sm hover:shadow transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
             >
@@ -675,6 +670,10 @@
               </svg>
               <span>Facebook</span>
             </button>
+          </div>
+          <div id="social-login-notice" role="status" class="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
+            <span aria-hidden="true" class="material-symbols-outlined text-[18px]">info</span>
+            <p>{{ ssoNotice() || 'Đăng nhập bằng Google và Facebook đang ở chế độ mô phỏng. Vui lòng sử dụng email và mật khẩu.' }}</p>
           </div>
 
           <!-- Mua hàng nhanh không cần tài khoản (Guest-First Experience) -->

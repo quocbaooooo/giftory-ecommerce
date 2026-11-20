@@ -318,6 +318,7 @@ OrderSchema.index({ userId: 1 });
 OrderSchema.index({ orderStatus: 1 });
 OrderSchema.index({ paymentStatus: 1 });
 OrderSchema.index({ fulfillmentStatus: 1 });
+OrderSchema.index({ createdAt: -1, _id: -1 });
 
 OrderSchema.set('toJSON', { transform: (_doc, value: any) => {
   if (value.gift) { delete value.gift.recipientAccessToken; delete value.gift.recipientAccessHash; }

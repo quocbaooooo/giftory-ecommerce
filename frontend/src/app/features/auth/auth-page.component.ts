@@ -203,10 +203,7 @@ export class AuthPageComponent implements OnInit, OnDestroy {
   }
 
   onSocialLogin(provider: 'Google' | 'Facebook') {
-    this.ssoNotice.set(`Đang chuyển hướng kết nối an toàn với ${provider}...`);
-    setTimeout(() => {
-      this.ssoNotice.set('');
-    }, 4000);
+    this.ssoNotice.set(`Đăng nhập bằng ${provider} đang ở chế độ mô phỏng. Vui lòng sử dụng email và mật khẩu.`);
   }
 
   guestCheckout() {

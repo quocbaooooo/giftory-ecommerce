@@ -564,9 +564,23 @@ export class OrdersService {
     const page = Math.max(1, Number(query.page || 1));
     const limit = Math.max(1, Math.min(100, Number(query.limit || 15)));
     const skip = (page - 1) * limit;
+    const orders = this.orderModel.find(filter).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(limit);
+
+    if (query.view === 'summary') {
+      return orders.select([
+        'orderCode', 'createdAt', 'orderStatus', 'fulfillmentStatus', 'isPackaged',
+        'customerInfo.name', 'customerInfo.phone', 'customerInfo.address',
+        'shippingAddress.fullName', 'shippingAddress.phone', 'shippingAddress.detailAddress',
+        'items.productName', 'items.name', 'items.quantity', 'items.isCustom', 'items.status',
+        'pricing.totalAmount', 'pricing.depositAmount', 'totalAmount', 'depositAmount',
+        'paymentMode', 'paymentMethod', 'paymentStatus', 'trackingCode', 'shippingCarrier',
+        'deliveryInfo.trackingCode', 'deliveryInfo.carrier', 'deliveryInfo.deliveryAttempts.attemptNumber',
+        'confirmationWait.eligibleAt', 'confirmationWait.deadlineAt',
+      ]).exec();
+    }
 
     const [items, total] = await Promise.all([
-      this.orderModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+      orders.exec(),
       this.orderModel.countDocuments(filter).exec(),
     ]);
 
